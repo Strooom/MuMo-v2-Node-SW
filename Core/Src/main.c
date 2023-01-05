@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,10 +57,10 @@ UART_HandleTypeDef huart1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC_Init(void);
-static void MX_I2C2_Init(void);
 static void MX_RTC_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_I2C2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -99,11 +99,18 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ADC_Init();
-  MX_I2C2_Init();
   MX_RTC_Init();
   MX_SPI2_Init();
   MX_USART1_UART_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
+
+  uint8_t StartMSG[] = "Start I2C Scan:\r\n";
+  uint8_t EndMSG[] = "Ready\r\n";
+  uint8_t Buffer[10];
+  HAL_GPIO_WritePin(EN3V3_GPIO_Port, EN3V3_Pin, 1U); // Enabling 3.3V on the board...
+
+  HAL_Delay(1000);
 
   /* USER CODE END 2 */
 
@@ -111,6 +118,36 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  //HAL_GPIO_TogglePin(chipSelect_GPIO_Port, chipSelect_Pin);
+/*	  HAL_GPIO_WritePin(SDA_GPIO_Port, SDA_Pin, 1U);
+	  HAL_Delay(10U);
+	  HAL_GPIO_WritePin(SDA_GPIO_Port, SDA_Pin, 0U);
+	  HAL_GPIO_WritePin(SCL_GPIO_Port, SCL_Pin, 1U);
+	  HAL_Delay(10U);
+	  HAL_GPIO_WritePin(SCL_GPIO_Port, SCL_Pin, 0U);
+*/
+
+	  HAL_UART_Transmit(&huart1, StartMSG, 17, 10000);
+
+	  for(uint8_t i=1; i<128; i++)
+	      {
+		  if (HAL_I2C_IsDeviceReady(&hi2c2, (uint16_t)(i<<1), 3, 5) == HAL_OK) {
+
+			  sprintf(Buffer, "0x%2X, ", i);
+			              HAL_UART_Transmit(&huart1, Buffer, 5, 10000);
+
+		  	  } else {
+
+		  	  }
+		  	  //if (i > 0 && (i + 1) % 16 == 0) printf("\n");
+	      }
+	      HAL_UART_Transmit(&huart1, EndMSG, 6, 10000);
+
+	  HAL_Delay(1000U);
+
+
+
+	  //HAL_UART_Transmit(&huart1, ".", 1, 100U);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -407,14 +444,24 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(writeProtect_GPIO_Port, writeProtect_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(chipSelect_GPIO_Port, chipSelect_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : writeProtect_Pin */
-  GPIO_InitStruct.Pin = writeProtect_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, writeProtect_Pin|EN3V3_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : chipSelect_Pin */
+  GPIO_InitStruct.Pin = chipSelect_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(writeProtect_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(chipSelect_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : writeProtect_Pin EN3V3_Pin */
+  GPIO_InitStruct.Pin = writeProtect_Pin|EN3V3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
