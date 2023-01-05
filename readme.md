@@ -4,3 +4,9 @@ The hardware can be found here : https://github.com/Strooom/MuMo-V2-Node-PCB
 More information can be found in the Wiki:
 
 https://github.com/Strooom/MuMo-v2-Node-SW/wiki
+
+# Progress indicator
+* 2023/01/05 : got I2C working - an I2C scan on the Wio-E5 development board
+* 2023/01/05 : got UART working, transmitting to serial monitor
+* 2023/01/05 : got development environment working, with simple Blink application
+

@@ -10,8 +10,9 @@
 * maybe buy another ST-Link V2 to hack and enable debugging
 
 # Logbook
-2023/01/05 : built a simple Blink application, similar as in ST tutorials. Using LED on PB5
+2023/01/05 : got I2C working, at least an I2C scan on the Wio-E5 development board
 2023/01/05 : added transmitting a '.' through serial for every toggle of the LED
+2023/01/05 : built a simple Blink application, similar as in ST tutorials. Using LED on PB5
 
 # IDEAS
 1. if the firmware detects an empty eeprom, it should perform PCB-HW self test.
