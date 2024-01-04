@@ -68,7 +68,8 @@ void mainController::initializeLogging() {
         logging::enable(logging::destination::uart);        // enable the output to UART
     }
 
-    logging::snprintf("MuMo v2 - %s - %s\n", version::getIsVersionAsString(), buildInfo::buildTimeStamp);
+    logging::snprintf("MuMo v2 - %s - %s\n", version::getIsVersionAsString());
+    logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
     logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
 
     if (logging::isActive(logging::destination::debugProbe)) {

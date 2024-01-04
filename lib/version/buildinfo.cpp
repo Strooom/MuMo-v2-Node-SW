@@ -5,12 +5,12 @@
 // ### Changes will be overwritten on the next build                      ###
 // ##########################################################################
 
-#include "buildinfo.hpp"
+#include <buildinfo.hpp>
 
 const buildEnvironment buildInfo::theBuildEnvironment{buildEnvironment::local};
 const buildType buildInfo::theBuildType{buildType::development};
-const int buildInfo::mainVersionDigit   = 1;
-const int buildInfo::minorVersionDigit  = 1;
-const int buildInfo::patchVersionDigit  = 7;
-const char* buildInfo::lastCommitTag    = "0bc1d97";
-const char* buildInfo::buildTimeStamp   = "2023-Dec-06 13:20:38";
+const int buildInfo::mainVersionDigit   = 0;
+const int buildInfo::minorVersionDigit  = 0;
+const int buildInfo::patchVersionDigit  = 1;
+const char* buildInfo::lastCommitTag    = "4841a4e";
+const char* buildInfo::buildTimeStamp   = "2024-Jan-04 16:00:22";
