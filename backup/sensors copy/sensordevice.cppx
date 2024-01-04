@@ -1,0 +1,4 @@
+#include <sensordevice.hpp>
+
+sensorDevice::sensorDevice(sensorDeviceType theSensorDeviceType) : type(theSensorDeviceType), state(sensorDeviceState::unknown) {}
+

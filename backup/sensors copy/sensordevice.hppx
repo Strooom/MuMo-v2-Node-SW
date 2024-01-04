@@ -1,0 +1,29 @@
+// ######################################################################################
+// ### MuMo node : https://github.com/Strooom/MuMo-v2-Node-SW                         ###
+// ### Author : Pascal Roobrouck - https://github.com/Strooom                         ###
+// ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
+// ######################################################################################
+
+// TODO : this should be the base class for all actual sensors (eg. battery, bme680, tsl2591, ...) to enforce a common minimum interface
+
+#pragma once
+#include <stdint.h>
+#include <sensordevicetype.hpp>
+#include <sensordevicestate.hpp>
+
+class sensorDevice {
+  public:
+    sensorDevice(sensorDeviceType theSensorDeviceType);
+
+    // Interface
+    virtual void initialize() = 0;
+    sensorDeviceState getState() { return state; };
+
+    sensorDeviceType getSensorDeviceType();
+
+  private:
+    sensorDeviceType type;
+    sensorDeviceState state;
+
+    friend class sensorDeviceCollection;
+};

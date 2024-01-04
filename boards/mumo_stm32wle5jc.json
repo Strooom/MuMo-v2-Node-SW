@@ -1,0 +1,44 @@
+{
+  "build": {
+    "core": "stm32",
+    "cpu": "cortex-m4",
+    "extra_flags": "-DSTM32WLxx -DSTM32WLE5xx",
+    "f_cpu": "48000000L",
+    "framework_extra_flags": {
+      "arduino": "-DUSE_CM4_STARTUP_FILE"
+    },
+    "mcu": "stm32wle5jc",
+    "product_line": "STM32WLE5XX",
+    "variant": "STM32WLxx/WL54JCI_WL55JCI_WLE4J(8-B-C)I_WLE5J(8-B-C)I"
+  },
+  "debug": {
+    "default_tools": [
+      "stlink"
+    ],
+    "jlink_device": "STM32WLE5JC",
+    "onboard_tools": [
+      "stlink"
+    ],
+    "openocd_target": "stm32wlx",
+    "svd_path": "STM32WL5x_CM4.svd"
+  },
+  "frameworks": [
+    "arduino",
+    "stm32cube",
+    "zephyr"
+  ],
+  "name": "MuMo V2+",
+  "upload": {
+    "maximum_ram_size": 65536,
+    "maximum_size": 262144,
+    "protocol": "stlink",
+    "protocols": [
+      "jlink",
+      "cmsis-dap",
+      "stlink",
+      "mbed"
+    ]
+  },
+  "url": "https://github.com/Strooom/MuMo-V2-Node-PCB",
+  "vendor": "Strooom"
+}
