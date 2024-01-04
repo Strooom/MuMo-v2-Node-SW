@@ -9,6 +9,7 @@
 #include <applicationevent.hpp>
 #include <circularbuffer.hpp>
 #include <version.hpp>
+#include <buildinfo.hpp>
 #include <logging.hpp>
 #include <sensordevicecollection.hpp>
 #include <display.hpp>
@@ -67,7 +68,7 @@ void mainController::initializeLogging() {
         logging::enable(logging::destination::uart);        // enable the output to UART
     }
 
-    logging::snprintf("MuMo v2 - %s - Boot\n", version::getIsVersionAsString());
+    logging::snprintf("MuMo v2 - %s - %s\n", version::getIsVersionAsString(), buildInfo::buildTimeStamp);
     logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
 
     if (logging::isActive(logging::destination::debugProbe)) {
