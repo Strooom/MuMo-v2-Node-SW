@@ -28,6 +28,15 @@ void test_initalize() {
     TEST_ASSERT_EQUAL_UINT32(sensorChannel::maxPrescaler, testChannel2.prescalerHighPower);
 }
 
+void test_set() {
+    sensorChannel testChannel1{sensorChannelType::batteryChargeLevel, 0, 0, 0, 0};
+    testChannel1.set(4, 360, 8, 15);
+    TEST_ASSERT_EQUAL_UINT32(4, testChannel1.oversamplingLowPower);
+    TEST_ASSERT_EQUAL_UINT32(360, testChannel1.prescalerLowPower);
+    TEST_ASSERT_EQUAL_UINT32(8, testChannel1.oversamplingHighPower);
+    TEST_ASSERT_EQUAL_UINT32(15, testChannel1.prescalerHighPower);
+}
+
 void test_getCurrentPrescaler() {
     sensorChannel testChannel{sensorChannelType::none, 1, 2, 3, 4};
     power::mockUsbPower = false;
@@ -220,6 +229,7 @@ void test_dummy() {
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initalize);
+    RUN_TEST(test_set);
     RUN_TEST(test_getCurrentPrescaler);
     RUN_TEST(test_getCurrentOversampling);
     RUN_TEST(test_getNextAction);

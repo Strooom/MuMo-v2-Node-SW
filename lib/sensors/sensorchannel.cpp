@@ -9,6 +9,14 @@ sensorChannel::sensorChannel(sensorChannelType type, uint32_t oversamplingLowPow
     limitOversamplingAndPrescaler();
 }
 
+void sensorChannel::set(uint32_t newOversamplingLowPower, uint32_t newPrescalerLowPower, uint32_t newOversamplingHighPower, uint32_t newPrescalerHighPower) {
+    oversamplingLowPower  = newOversamplingLowPower;
+    prescalerLowPower     = newPrescalerLowPower;
+    oversamplingHighPower = newOversamplingHighPower;
+    prescalerHighPower    = newPrescalerHighPower;
+    limitOversamplingAndPrescaler();
+}
+
 bool sensorChannel::needsSampling() {
     action anAction = getNextAction();
     return ((anAction == action::sample) || (anAction == action::sampleAndOutput));
