@@ -108,6 +108,17 @@ void setUp(void) {
 
 void tearDown(void) {}        // after test
 
+void test_sort() {
+    uint32_t ten{10};
+    uint32_t twenty{20};
+    graphics::sort(ten, twenty);
+    TEST_ASSERT_EQUAL(10, ten);
+    TEST_ASSERT_EQUAL(20, twenty);
+    graphics::sort(twenty, ten);
+    TEST_ASSERT_EQUAL(20, ten);
+    TEST_ASSERT_EQUAL(10, twenty);
+}
+
 void test_drawPixel() {
     uint32_t testX{10};
     uint32_t testY{10};
@@ -157,31 +168,34 @@ void test_drawVerticalLine() {
     TEST_ASSERT_FALSE(display::getPixel(testX, endY + 1));
 }
 
-// void test_drawRectangle() {
-//     graphics::drawRectangle(0, 0, display::widthInPixels - 1, display::heightInPixels - 1, graphics::color::black);
-//     for (auto i = 0; i < 25; i++) {
-//         TEST_ASSERT_EQUAL(0xFF, display::displayBuffer[i]);
-//     }
-//     for (auto i = 4975; i < 5000; i++) {
-//         TEST_ASSERT_EQUAL(0xFF, display::displayBuffer[i]);
-//     }
-//     for (auto i = 1; i < 199; i++) {
-//         TEST_ASSERT_EQUAL(0b11111110, display::displayBuffer[i * 25]);
-//     }
-//     for (auto i = 1; i < 199; i++) {
-//         TEST_ASSERT_EQUAL(0b11111110, display::displayBuffer[(i * 25) + 24]);
-//     }
-// }
+void test_drawRectangle() {
+    graphics::drawRectangle(10, 10, 12, 12, graphics::color::black);
+    TEST_ASSERT_TRUE(display::getPixel(11, 10));
+    TEST_ASSERT_FALSE(display::getPixel(11, 11));
+    TEST_ASSERT_TRUE(display::getPixel(11, 12));
 
-// void test_drawFilledRectangle() {
-//     graphics::drawFilledRectangle(0, 0, display::widthInPixels - 1, 7, graphics::color::black);
-//     for (auto i = 0; i < (25 * 8); i++) {
-//         TEST_ASSERT_EQUAL(0xFF, display::displayBuffer[i]);
-//     }
-//     for (auto i = (25 * 8); i < 5000; i++) {
-//         TEST_ASSERT_EQUAL(0x00, display::displayBuffer[i]);
-//     }
-// }
+    TEST_ASSERT_TRUE(display::getPixel(10, 11));
+    TEST_ASSERT_FALSE(display::getPixel(11, 11));
+    TEST_ASSERT_TRUE(display::getPixel(12, 11));
+}
+
+void test_drawFilledRectangle() {
+    graphics::drawFilledRectangle(10, 10, 11, 11, graphics::color::black);
+    TEST_ASSERT_TRUE(display::getPixel(10, 10));
+    TEST_ASSERT_TRUE(display::getPixel(10, 11));
+    TEST_ASSERT_TRUE(display::getPixel(11, 10));
+    TEST_ASSERT_TRUE(display::getPixel(11, 11));
+
+    TEST_ASSERT_FALSE(display::getPixel(9, 10));
+    TEST_ASSERT_FALSE(display::getPixel(12, 10));
+    TEST_ASSERT_FALSE(display::getPixel(9, 11));
+    TEST_ASSERT_FALSE(display::getPixel(12, 11));
+
+    TEST_ASSERT_FALSE(display::getPixel(10, 9));
+    TEST_ASSERT_FALSE(display::getPixel(10, 12));
+    TEST_ASSERT_FALSE(display::getPixel(11, 9));
+    TEST_ASSERT_FALSE(display::getPixel(11, 12));
+}
 
 // void test_drawBitMap() {
 //     const uint8_t testPixelData[8] = {0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA};
@@ -220,11 +234,12 @@ void test_drawVerticalLine() {
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
+    RUN_TEST(test_sort);
     RUN_TEST(test_drawPixel);
     RUN_TEST(test_drawHorizontalLine);
     RUN_TEST(test_drawVerticalLine);
-    // RUN_TEST(test_drawRectangle);
-    // RUN_TEST(test_drawFilledRectangle);
+    RUN_TEST(test_drawRectangle);
+    RUN_TEST(test_drawFilledRectangle);
     // RUN_TEST(test_drawBitMap);
     // RUN_TEST(test_drawCharacter);
     // RUN_TEST(test_drawText);
