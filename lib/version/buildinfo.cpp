@@ -12,5 +12,5 @@ const buildType buildInfo::theBuildType{buildType::development};
 const int buildInfo::mainVersionDigit   = 0;
 const int buildInfo::minorVersionDigit  = 0;
 const int buildInfo::patchVersionDigit  = 1;
-const char* buildInfo::lastCommitTag    = "ec27974";
-const char* buildInfo::buildTimeStamp   = "2024-Jan-04 16:02:15";
+const char* buildInfo::lastCommitTag    = "3c9acb9";
+const char* buildInfo::buildTimeStamp   = "2024-Jan-05 14:43:21";
