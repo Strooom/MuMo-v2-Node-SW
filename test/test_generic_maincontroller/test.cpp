@@ -22,6 +22,23 @@ void test_initialize() {
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
 }
 
+void test_handleEvents() {
+    // Not really testing a lot yet... Need to check state transitions
+    mainController::handleEvents();
+    applicationEventBuffer.push(applicationEvent::usbConnected);
+    mainController::handleEvents();
+    applicationEventBuffer.push(applicationEvent::usbRemoved);
+    mainController::handleEvents();
+    applicationEventBuffer.push(applicationEvent::realTimeClockTick);
+    mainController::handleEvents();
+    applicationEventBuffer.push(applicationEvent::lowPowerTimerExpired);
+    mainController::handleEvents();
+    applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
+    mainController::handleEvents();
+    applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
+    mainController::handleEvents();
+}
+
 void test_toString() {
     // for test coverage only
     TEST_ASSERT_EQUAL_STRING("boot", toString(mainState::boot));
