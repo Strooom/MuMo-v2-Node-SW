@@ -7,30 +7,22 @@
 
 #pragma once
 #include <stdint.h>
+#include <circularbuffer.hpp>
 
-class gpio {
+class cli {
   public:
-    gpio() = delete;
-    enum class group : uint32_t {
-        none = 0,
-        rfControl,
-        i2c,
-        writeProtect,
-        i2cSensors,
-        i2cEeprom,
-        spiDisplay,
-        debugPort,
-        uart1,
-        uart2,
-        usbPresent
-    };
-
-    static void enableGpio(group aGroup);
-    static void disableGpio(group aGroup);
-
-#ifndef unitTesting
+    static void handleRxEvent();
 
   private:
-#endif
-    static void enableDisableGpio(group theGroup, bool enable);
+    static void handleEvents();
+    static void jumpToBootLoader();
+
+    static constexpr uint32_t commandBufferLength{256};
+    static constexpr uint32_t responseBufferLength{256};
+
+    static circularBuffer<uint8_t, commandBufferLength> commandBuffer;
+    static circularBuffer<uint8_t, responseBufferLength> responseBuffer;
+
+    static constexpr uint8_t bootLoaderMagicValue{0x7F};
+
 };
