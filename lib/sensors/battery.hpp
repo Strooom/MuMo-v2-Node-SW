@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
+#include <batterytype.hpp>
 
 class battery {
   public:
@@ -29,4 +30,5 @@ class battery {
 #endif
     static sensorDeviceState state;
     static bool anyChannelNeedsSampling();
+    static batteryType type;
 };

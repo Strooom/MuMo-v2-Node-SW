@@ -13,6 +13,7 @@ print ("\033[93;1;4mLatest Release Tag     : " + latest_release_tag + "\033[0m")
 # determine last release version
 latest_release_tag_parts = latest_release_tag.split("-")
 latest_release_semver_incl_v = latest_release_tag_parts[0]
+number_of_commits_ahead = latest_release_tag_parts[1]
 latest_release_semver = latest_release_semver_incl_v[1:]
 latest_release_digits = latest_release_semver.split(".")
 latest_release_main = latest_release_digits[0]
@@ -25,7 +26,8 @@ print ("\033[93;1;4mLatest Release Patch   : " + latest_release_patch + "\033[0m
 # determine current commit hash
 current_commit_hash = subprocess.run(["git", "rev-parse", "--short", "HEAD"], stdout=subprocess.PIPE, text=True)
 current_commit_hash = current_commit_hash.stdout.strip()
-print ("\033[93;1;4mCurrent Commit Hash    : " + current_commit_hash + "\033[0m")
+print ("\033[93;1;4mCurrent Commit Hash     : " + current_commit_hash + "\033[0m")
+print ("\033[93;1;4mNumber of Commits ahead : " + number_of_commits_ahead + "\033[0m")
 
 # determine the build timstamp
 build_timestamp = datetime.now().strftime("%Y-%b-%d %H:%M:%S")
