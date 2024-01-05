@@ -2,6 +2,7 @@
 
 const char *toString(sensorDeviceState aState) {
     switch (aState) {
+        default:
         case sensorDeviceState::unknown:
             return "unknown";
         case sensorDeviceState::unpowered:
@@ -12,7 +13,5 @@ const char *toString(sensorDeviceState aState) {
             return "standby";
         case sensorDeviceState::sampling:
             return "sampling";
-        default:
-            return "unknown";
     }
 }

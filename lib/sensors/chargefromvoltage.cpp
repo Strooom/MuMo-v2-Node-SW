@@ -76,6 +76,6 @@ float chargeFromVoltage::calculateChargeLevel(float voltage, batteryType type) {
             return (A + B * (C / D));
         }
     }
-    return 0;
+    return 0.0f;
 }
 
