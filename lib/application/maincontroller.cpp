@@ -32,7 +32,6 @@ void mainController::initialize() {
     // gpio::enableGpio(gpio::group::writeProtect);
     // gpio::enableGpio(gpio::group::rfControl);
 
-
     sensorDeviceCollection::discover();
 
     if (nonVolatileStorage::isPresent()) {
@@ -47,7 +46,6 @@ void mainController::initialize() {
     // } else {
     //     logging::snprintf("Display not present\n");
     // }
-
 
     // LoRaWAN::initialize(); // initialize the LoRaWAN network driver
     state = mainState::idle;
@@ -91,7 +89,6 @@ void mainController::initializeLogging() {
     logging::enable(logging::source::criticalError);
     logging::enable(logging::source::error);
     logging::enable(logging::source::applicationEvents);
-
 }
 
 void mainController::handleEvents() {
@@ -113,56 +110,7 @@ void mainController::handleEvents() {
             } break;
 
             case applicationEvent::realTimeClockTick: {
-                // sensorDeviceCollection::run();
-                //  measurementCollection::run();
-                //   3. check if we should do a transmission, ie. we have data to send
-
-                // sensorCollection::runResult theResult = theSensors.run();
-                // if (theResult == sensorCollection::runResult::newMeasurements) {
-                //     // 2. Send them as payload in an UpLink message
-                //     uint8_t tempData[256]{};
-                //     uint32_t tempDataIndex{0};
-
-                //     tempData[tempDataIndex] = static_cast<uint8_t>(payloadEncodingVersion::mumo_v2_0);        // first byte of payload identifies how the rest should be interpreted
-                //     tempDataIndex++;
-
-                //     for (uint32_t measurementIndex = 0; measurementIndex < theSensors.actualNumberOfMeasurements; measurementIndex++) {        // for each measurement, store the 9 bytes (type, timestamp, value) in the payload
-                //         tempData[tempDataIndex] = static_cast<uint8_t>(theSensors.latestMeasurements[measurementIndex].type);
-
-                //         tempData[tempDataIndex + 1] = theSensors.latestMeasurements[measurementIndex].timestamp.asBytes[0];
-                //         tempData[tempDataIndex + 2] = theSensors.latestMeasurements[measurementIndex].timestamp.asBytes[1];
-                //         tempData[tempDataIndex + 3] = theSensors.latestMeasurements[measurementIndex].timestamp.asBytes[2];
-                //         tempData[tempDataIndex + 4] = theSensors.latestMeasurements[measurementIndex].timestamp.asBytes[3];
-
-                //         tempData[tempDataIndex + 5] = theSensors.latestMeasurements[measurementIndex].value.asBytes[0];
-                //         tempData[tempDataIndex + 6] = theSensors.latestMeasurements[measurementIndex].value.asBytes[1];
-                //         tempData[tempDataIndex + 7] = theSensors.latestMeasurements[measurementIndex].value.asBytes[2];
-                //         tempData[tempDataIndex + 8] = theSensors.latestMeasurements[measurementIndex].value.asBytes[3];
-
-                //         tempDataIndex += 9;
-                //     }
-                //     LoRaWAN::checkNetwork();
-                //     LoRaWAN::sendUplink(0x10, tempData, tempDataIndex);
-                // }
-
-                // 2. check if we have enough unsent data to send uplink
-                //     uint32_t maxUplinkPayloadNow =                     LoRaWAN::getMaxApplicationPayloadLength();
-                //     uint32_t measurementToBeTransmitted =                     theMeasurements.getNmbrToBeTransmitted();
-                //     if (((measurementToBeTransmitted + 1) * measurement::length) > maxUplinkPayloadNow) {
-                //         logging::snprintf(
-                //             "[%u] measurement bytes to transmit, [%u] bytes payload capacity\n",
-                //             (measurementToBeTransmitted + 1) * measurement::length,
-                //             maxUplinkPayloadNow);
-                //         if (LoRaWAN::isReadyToTransmit()) {
-                //             logging::snprintf("LoRaWAN layer ready to transmit\n");
-                //             byteBuffer thePayload;        //
-                //             thePayload.setFromHexAscii(
-                //                 "000102030405060708090A0B0C0D0E0F");        // TODO - TEST msg
-                //             LoRaWAN::sendUplink(thePayload, 0x10);
-                //         }
-                //     } else {
-                //         logging::snprintf("Not enough data to transmit\n");
-                //     }
+                sensorDeviceCollection::tick();
             } break;
 
             default:

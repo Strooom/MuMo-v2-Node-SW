@@ -13,7 +13,7 @@ enum class sensorChannelType : uint32_t {
     none = 0x00,
 
     batteryVoltage     = 0x01,              // [mV]
-    batteryChargeLevel = 0x02,              // [%] 0, 1-254, 255
+    batteryChargeLevel = 0x02,              // [] 0..1
 
     BME680Temperature        = 0x10,        // [°C]
     BME680RelativeHumidity   = 0x11,        // [%]

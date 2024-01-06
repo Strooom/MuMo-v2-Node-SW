@@ -16,6 +16,7 @@ void test_initilization() {
 }
 
 void test_needsSampling() {
+    battery::channels[battery::voltage].set(0, 0, 0, 0);
     TEST_ASSERT_FALSE(battery::anyChannelNeedsSampling());
     battery::channels[battery::voltage].set(1, 1, 1, 1);
     TEST_ASSERT_TRUE(battery::anyChannelNeedsSampling());
@@ -37,6 +38,19 @@ void test_tick() {
     TEST_ASSERT_EQUAL(sensorDeviceState::sampling, battery::state);
 }
 
+void test_run() {
+    battery::initalize();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::state);
+    battery::run();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::state);
+
+    battery::tick();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sampling, battery::state);
+    TEST_ASSERT_TRUE(battery::samplingIsReady());
+    battery::run();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::state);
+}
+
 void test_measurements() {
     // TEST_ASSERT_TRUE(battery::isPresent());
     // battery::initalize();
@@ -51,6 +65,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_initilization);
     RUN_TEST(test_needsSampling);
     RUN_TEST(test_tick);
+    RUN_TEST(test_run);
     RUN_TEST(test_measurements);
     UNITY_END();
 }

@@ -52,7 +52,7 @@ void sensorDeviceCollection::run() {
         if (isPresent[index]) {
             switch (static_cast<sensorDeviceType>(index)) {
                 case sensorDeviceType::battery:
-                    // battery::run();
+                    battery::run();
                     break;
                 case sensorDeviceType::bme680:
                     // bme680::run();

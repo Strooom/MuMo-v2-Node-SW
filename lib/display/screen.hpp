@@ -6,8 +6,14 @@
 
 #pragma once
 #include <stdint.h>
+#include <sensortype.hpp>
 
 class screen {
   public:
     static void show();
+
+  private:
+    static const char* getLastMeasurement(sensorChannelType);
+    static constexpr uint32_t maxNumberOfLines{4};
+    static sensorChannelType lines[maxNumberOfLines];
 };
