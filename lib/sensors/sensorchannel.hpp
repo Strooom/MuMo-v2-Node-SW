@@ -32,7 +32,6 @@ class sensorChannel {
 
   private:
 #endif
-
     float lastValue{0.0F};
     bool hasNewValue{false};
 

@@ -2,6 +2,8 @@
 #include <battery.hpp>
 #include <settingscollection.hpp>
 #include <sensorchannel.hpp>
+#include <chargefromvoltage.hpp>
+
 
 #ifndef generic
 #include <main.h>
@@ -30,43 +32,52 @@ float battery::getLastChannelValue(uint32_t index) {
 }
 
 void battery::tick() {
+    if (state != sensorDeviceState::sleeping) {
+        adjustAllCounters();
+        return;
+    }
+
     if (anyChannelNeedsSampling()) {
-        // TODO : should I check if sensorDevice is in sleeping state ?
         battery::startSampling();
         state = sensorDeviceState::sampling;
     } else {
-        channels[voltage].adjustCounters();
-        channels[percentCharged].adjustCounters();
+        adjustAllCounters();
     }
 }
 
 void battery::run() {
     if ((state == sensorDeviceState::sampling) && battery::samplingIsReady()) {
         uint32_t rawADC = readSample();
-        // volatile float batteryVoltage  = static_cast<float>(__HAL_ADC_CALC_VREFANALOG_VOLTAGE((rawADC), ADC_RESOLUTION_12B)) / 1000.0f;
 
-
-    	if (channels[voltage].needsSampling()) {
-            // channels[voltage].lastValue = ADC::getVoltage();
+        if (channels[voltage].needsSampling()) {
+            float batteryVoltage = voltageFromRaw(rawADC);
+            channels[voltage].addSample(batteryVoltage);
+            if (channels[voltage].hasOutput()) {
+                channels[voltage].hasNewValue = true;
+            }
         }
+
         if (channels[percentCharged].needsSampling()) {
-            // channels[percentCharged].lastValue = ADC::getChargeLevel();
-        }
-
-        for (auto index = 0U; index < nmbrChannels; index++) {
-            if (channels[index].hasOutput()) {
-                channels[index].hasNewValue = true;
+            float batteryVoltage = voltageFromRaw(rawADC);
+            float batteryPercentCharged = chargeFromVoltage::calculateChargeLevel(batteryVoltage, type);
+            channels[percentCharged].addSample(batteryPercentCharged);
+            if (channels[percentCharged].hasOutput()) {
+                channels[percentCharged].hasNewValue = true;
             }
         }
 
         state = sensorDeviceState::sleeping;
-        channels[voltage].adjustCounters();
-        channels[percentCharged].adjustCounters();
+        adjustAllCounters();
     }
 }
 
 bool battery::anyChannelNeedsSampling() {
     return (channels[voltage].needsSampling() || channels[percentCharged].needsSampling());
+}
+
+void battery::adjustAllCounters() {
+    channels[voltage].adjustCounters();
+    channels[percentCharged].adjustCounters();
 }
 
 void battery::startSampling() {
@@ -82,7 +93,8 @@ void battery::startSampling() {
 
 bool battery::samplingIsReady() {
 #ifndef generic
-    return (HAL_ADC_GetState(&hadc) == HAL_ADC_STATE_REG_EOC);
+    HAL_StatusTypeDef result = HAL_ADC_PollForConversion(&hadc, 0);
+    return (result == HAL_OK);
 #else
     return true;
 #endif
@@ -90,9 +102,16 @@ bool battery::samplingIsReady() {
 
 uint32_t battery::readSample() {
 #ifndef generic
-    uint32_t adcRawResult = HAL_ADC_GetValue(&hadc);
+    return HAL_ADC_GetValue(&hadc);
 #else
-    uint32_t adcRawResult = 1234;        // MOCK value
+    return 1234;        // MOCK value
 #endif
-    return adcRawResult;
+}
+
+float battery::voltageFromRaw(uint32_t rawADC) {
+#ifndef generic
+    return static_cast<float>(__HAL_ADC_CALC_VREFANALOG_VOLTAGE((rawADC), ADC_RESOLUTION_12B)) / 125.0f;
+#else
+    return 3.2F;        // MOCK value
+#endif
 }

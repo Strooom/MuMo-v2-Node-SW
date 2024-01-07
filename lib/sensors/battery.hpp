@@ -30,8 +30,10 @@ class battery {
 #endif
     static sensorDeviceState state;
     static bool anyChannelNeedsSampling();
+    static void adjustAllCounters();
     static void startSampling();
     static bool samplingIsReady();
     static uint32_t readSample();
+    static float voltageFromRaw(uint32_t rawADC);
     static batteryType type;
 };

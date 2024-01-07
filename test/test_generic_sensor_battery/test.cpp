@@ -52,6 +52,7 @@ void test_run() {
 }
 
 void test_measurements() {
+    //TEST_MESSAGE("hello");
     // TEST_ASSERT_TRUE(battery::isPresent());
     // battery::initalize();
     // battery::sample();
