@@ -1,4 +1,4 @@
-#include <sensortype.hpp>
+#include <sensorchanneltype.hpp>
 #include <battery.hpp>
 #include <settingscollection.hpp>
 #include <sensorchannel.hpp>

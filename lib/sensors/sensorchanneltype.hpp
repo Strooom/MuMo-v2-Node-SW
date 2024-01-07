@@ -22,6 +22,9 @@ enum class sensorChannelType : uint32_t {
     TSL25911VisibleLight = 0x20,            // lux
     TSL25911Infrared     = 0x21,            // lux
 
+    SX126xRSSI = 0x30,                      // [dBm]
+    SX126xSNR  = 0x31,                      // [dB]
+
     status = 0xE0,
     events = 0xF0
 };

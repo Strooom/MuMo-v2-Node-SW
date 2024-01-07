@@ -4,7 +4,7 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
-#include "bme680.hpp"
+#include <bme680.hpp>
 
 #ifndef generic
 #include "main.h"

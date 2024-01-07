@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
-#include "sensortype.hpp"
 
 class tsl2591 {
   public:

@@ -6,8 +6,7 @@
 
 #pragma once
 #include <stdint.h>
-#include "sensortype.hpp"
-#include "sensorstate.hpp"
+#include <sensorchanneltype.hpp>
 
 class sensorChannel {
   public:

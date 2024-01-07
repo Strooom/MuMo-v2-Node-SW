@@ -6,7 +6,7 @@
 
 #pragma once
 #include <stdint.h>
-#include <sensortype.hpp>
+#include <sensorchanneltype.hpp>
 
 class screen {
   public:

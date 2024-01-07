@@ -4,7 +4,7 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
-#include "sensortype.hpp"
+#include <sensorchanneltype.hpp>
 
 const char* toString(sensorChannelType type) {
     switch (type) {
