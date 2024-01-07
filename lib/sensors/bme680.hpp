@@ -5,6 +5,7 @@
 // ######################################################################################
 
 #pragma once
+
 #include <stdint.h>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
@@ -15,7 +16,6 @@ class bme680 {
     static void initialize();
     static sensorDeviceState getState() { return state; };
     static float getLastChannelValue(uint32_t index);
-
     static void tick();
     static void run();
 
@@ -31,17 +31,19 @@ class bme680 {
 #endif
     static sensorDeviceState state;
     static bool anyChannelNeedsSampling();
+    static void adjustAllCounters();
+    static void startSampling();
+    static bool samplingIsReady();
+    static void readSample();
+
+
+    static float calculateTemperature();
+    static float calculateRelativeHumidity();
+    static float calculateBarometricPressure();
 
     static constexpr uint8_t i2cAddress{0x76};        // default I2C address for this sensorChannel, DSO tied to GND on our hardware
     static constexpr uint8_t halTrials{0x03};         // ST HAL requires a 'retry' parameters
     static constexpr uint8_t halTimeout{0x10};        // ST HAL requires a 'timeout' in ms
-
-    static void startSampling();
-    static bool samplingIsReady();
-    static void getRawData();
-    static float getTemperature();
-    static float getRelativeHumidity();
-    static float getBarometricPressure();
 
     // Registers
     enum class registers : uint8_t {

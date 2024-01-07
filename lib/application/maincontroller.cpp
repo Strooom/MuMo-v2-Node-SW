@@ -88,8 +88,8 @@ void mainController::initializeLogging() {
 
     logging::enable(logging::source::criticalError);
     logging::enable(logging::source::error);
-    logging::enable(logging::source::applicationEvents);
-    logging::enable(logging::source::sensorEvents);
+    //logging::enable(logging::source::applicationEvents);
+    logging::enable(logging::source::sensorData);
 }
 
 void mainController::handleEvents() {

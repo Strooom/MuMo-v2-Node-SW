@@ -3,7 +3,7 @@
 #include <settingscollection.hpp>
 #include <sensorchannel.hpp>
 #include <chargefromvoltage.hpp>
-
+#include <logging.hpp>
 
 #ifndef generic
 #include <main.h>
@@ -14,8 +14,8 @@ extern ADC_HandleTypeDef hadc;
 batteryType battery::type{batteryType::liFePO4_700mAh};
 sensorDeviceState battery::state{sensorDeviceState::unknown};
 sensorChannel battery::channels[nmbrChannels]{
-    {sensorChannelType::batteryVoltage, 0, 1, 0, 1},
-    {sensorChannelType::batteryChargeLevel, 0, 0, 0, 0},
+    {sensorChannelType::batteryVoltage},
+    {sensorChannelType::batteryChargeLevel},
 };
 
 void battery::initalize() {
@@ -23,6 +23,11 @@ void battery::initalize() {
     if (typeIndex >= nmbrBatteryTypes) {
         typeIndex = 0;
     }
+
+    // TODO : need to read the sensorChannel settins from EEPROM and restore them
+    channels[voltage].set(0,1,0,1);
+    channels[percentCharged].set(0,1,0,1);
+
     type  = static_cast<batteryType>(typeIndex);
     state = sensorDeviceState::sleeping;
 }
@@ -38,7 +43,7 @@ void battery::tick() {
     }
 
     if (anyChannelNeedsSampling()) {
-        battery::startSampling();
+        startSampling();
         state = sensorDeviceState::sampling;
     } else {
         adjustAllCounters();
@@ -46,21 +51,23 @@ void battery::tick() {
 }
 
 void battery::run() {
-    if ((state == sensorDeviceState::sampling) && battery::samplingIsReady()) {
+    if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
         uint32_t rawADC = readSample();
 
         if (channels[voltage].needsSampling()) {
             float batteryVoltage = voltageFromRaw(rawADC);
             channels[voltage].addSample(batteryVoltage);
+            logging::snprintf(logging::source::sensorData, "vbat = %f V\n", batteryVoltage);
             if (channels[voltage].hasOutput()) {
                 channels[voltage].hasNewValue = true;
             }
         }
 
         if (channels[percentCharged].needsSampling()) {
-            float batteryVoltage = voltageFromRaw(rawADC);
+            float batteryVoltage        = voltageFromRaw(rawADC);
             float batteryPercentCharged = chargeFromVoltage::calculateChargeLevel(batteryVoltage, type);
             channels[percentCharged].addSample(batteryPercentCharged);
+            logging::snprintf(logging::source::sensorData, "stateOfCharge = %f \n", batteryPercentCharged);
             if (channels[percentCharged].hasOutput()) {
                 channels[percentCharged].hasNewValue = true;
             }
@@ -110,7 +117,7 @@ uint32_t battery::readSample() {
 
 float battery::voltageFromRaw(uint32_t rawADC) {
 #ifndef generic
-    return static_cast<float>(__HAL_ADC_CALC_VREFANALOG_VOLTAGE((rawADC), ADC_RESOLUTION_12B)) / 125.0f;
+    return static_cast<float>(__HAL_ADC_CALC_VREFANALOG_VOLTAGE((rawADC), ADC_RESOLUTION_12B)) / 1000.0f;
 #else
     return 3.2F;        // MOCK value
 #endif

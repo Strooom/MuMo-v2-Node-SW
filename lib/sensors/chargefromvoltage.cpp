@@ -65,7 +65,7 @@ float chargeFromVoltage::calculateChargeLevel(float voltage, batteryType type) {
     if (voltage >= voltageVsCharge[typeIndex][nmbrInterpolationPoints - 1].voltage) {
         return 1.0f;
     }
-    for (uint32_t interpolationPointIndex = 0; interpolationPointIndex < nmbrInterpolationPoints - 2; interpolationPointIndex++) {
+    for (uint32_t interpolationPointIndex = 0; interpolationPointIndex < nmbrInterpolationPoints - 1; interpolationPointIndex++) {
         if ((voltage >= voltageVsCharge[typeIndex][interpolationPointIndex].voltage) &&
             (voltage <= voltageVsCharge[typeIndex][interpolationPointIndex + 1].voltage)) {
             float A = voltageVsCharge[typeIndex][interpolationPointIndex].charge;

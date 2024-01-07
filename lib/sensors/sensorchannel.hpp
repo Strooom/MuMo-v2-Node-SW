@@ -10,7 +10,7 @@
 
 class sensorChannel {
   public:
-    sensorChannel(sensorChannelType type, uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower);
+    sensorChannel(sensorChannelType type);
     void set(uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower);
     enum class action : uint32_t {
         none,

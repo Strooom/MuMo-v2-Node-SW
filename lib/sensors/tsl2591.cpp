@@ -10,8 +10,8 @@ extern uint8_t mockTSL2591Registers[256];
 
 sensorDeviceState tsl2591::state{sensorDeviceState::unknown};
 sensorChannel tsl2591::channels[nmbrChannels]{
-    {sensorChannelType::TSL25911Infrared, 0, 0, 0, 0},
-    {sensorChannelType::TSL25911VisibleLight, 0, 0, 0, 0},
+    {sensorChannelType::TSL25911Infrared},
+    {sensorChannelType::TSL25911VisibleLight},
 };
 
 tsl2591::integrationTimes tsl2591::integrationTime{integrationTimes::integrationTime100ms};

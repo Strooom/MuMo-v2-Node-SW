@@ -17,9 +17,9 @@ extern uint8_t mockBME680Registers[256];
 
 sensorDeviceState bme680::state{sensorDeviceState::unknown};
 sensorChannel bme680::channels[nmbrChannels]{
-    {sensorChannelType::BME680Temperature, 0, 0, 0, 0},
-    {sensorChannelType::BME680RelativeHumidity, 0, 0, 0, 0},
-    {sensorChannelType::BME680BarometricPressure, 0, 0, 0, 0},
+    {sensorChannelType::BME680Temperature},
+    {sensorChannelType::BME680RelativeHumidity},
+    {sensorChannelType::BME680BarometricPressure},
 };
 
 uint32_t bme680::rawDataTemperature;
@@ -97,39 +97,49 @@ float bme680::getLastChannelValue(uint32_t index) {
 }
 
 void bme680::tick() {
+    if (state != sensorDeviceState::sleeping) {
+        adjustAllCounters();
+        return;
+    }
+
     if (anyChannelNeedsSampling()) {
-        // TODO : should I check if sensorDevice is in sleeping state ?
-        // ADC.initalize();
-        // ADC.startSampling();
+        startSampling();
         state = sensorDeviceState::sampling;
     } else {
-        channels[temperature].adjustCounters();
-        channels[relativeHumidity].adjustCounters();
-        channels[barometricPressure].adjustCounters();
+        adjustAllCounters();
     }
 }
 
 void bme680::run() {
     if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
+        readSample();
+
         if (channels[temperature].needsSampling()) {
-            channels[temperature].lastValue = getTemperature();
+            float bme680Temperature = calculateTemperature();
+            channels[temperature].addSample(bme680Temperature);
+            if (channels[temperature].hasOutput()) {
+                channels[temperature].hasNewValue = true;
+            }
         }
+
         if (channels[relativeHumidity].needsSampling()) {
-            channels[relativeHumidity].lastValue = getRelativeHumidity();
+            float bme680RelativeHumidity = calculateRelativeHumidity();
+            channels[relativeHumidity].addSample(bme680RelativeHumidity);
+            if (channels[relativeHumidity].hasOutput()) {
+                channels[relativeHumidity].hasNewValue = true;
+            }
         }
+
         if (channels[barometricPressure].needsSampling()) {
-            channels[barometricPressure].lastValue = getBarometricPressure();
-        }
-        for (auto index = 0U; index < nmbrChannels; index++) {
-            if (channels[index].hasOutput()) {
-                channels[index].hasNewValue = true;
+            float bme680BarometricPressure = calculateBarometricPressure();
+            channels[barometricPressure].addSample(bme680BarometricPressure);
+            if (channels[barometricPressure].hasOutput()) {
+                channels[barometricPressure].hasNewValue = true;
             }
         }
 
         state = sensorDeviceState::sleeping;
-        channels[temperature].adjustCounters();
-        channels[relativeHumidity].adjustCounters();
-        channels[barometricPressure].adjustCounters();
+        adjustAllCounters();
     }
 }
 
@@ -137,6 +147,12 @@ bool bme680::anyChannelNeedsSampling() {
     return (channels[temperature].needsSampling() ||
             channels[relativeHumidity].needsSampling() ||
             channels[barometricPressure].needsSampling());
+}
+
+void bme680::adjustAllCounters() {
+    channels[temperature].adjustCounters();
+    channels[relativeHumidity].adjustCounters();
+    channels[barometricPressure].adjustCounters();
 }
 
 void bme680::startSampling() {
@@ -154,7 +170,7 @@ bool bme680::samplingIsReady() {
     return !noNewData;
 }
 
-void bme680::getRawData() {
+void bme680::readSample() {
     constexpr uint32_t nmbrRegisters{8};
     uint8_t registerData[nmbrRegisters];
     readRegisters(0x1F, nmbrRegisters, registerData);        // reads 8 registers, from 0x1F up to 0x26, they contain the raw ADC results for temperature, relativeHumidity and pressure
@@ -163,14 +179,14 @@ void bme680::getRawData() {
     rawDataBarometricPressure = ((static_cast<uint32_t>(registerData[0]) << 12) | (static_cast<uint32_t>(registerData[1]) << 4) | (static_cast<uint32_t>(registerData[2]) >> 4));
 }
 
-float bme680::getTemperature() {
+float bme680::calculateTemperature() {
     float var1                         = ((((float)rawDataTemperature / 16384.0f) - (calibrationCoefficientTemperature1 / 1024.0f)) * (calibrationCoefficientTemperature2));
     float var2                         = (((((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f)) * (((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f))) * (calibrationCoefficientTemperature3 * 16.0f));
     calibrationCoefficientTemperature4 = var1 + var2;
     return (calibrationCoefficientTemperature4 / 5120.0f);
 }
 
-float bme680::getRelativeHumidity() {
+float bme680::calculateRelativeHumidity() {
     float calc_hum;
 
     float temp_comp = ((calibrationCoefficientTemperature4) / 5120.0f);
@@ -188,7 +204,7 @@ float bme680::getRelativeHumidity() {
     return calc_hum;
 }
 
-float bme680::getBarometricPressure() {
+float bme680::calculateBarometricPressure() {
     float var1   = ((calibrationCoefficientTemperature4 / 2.0f) - 64000.0f);
     float var2   = var1 * var1 * ((calibrationCoefficientPressure6) / (131072.0f));
     var2         = var2 + (var1 * (calibrationCoefficientPressure5) * 2.0f);
