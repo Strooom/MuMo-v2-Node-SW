@@ -23,23 +23,25 @@ class tsl2591 {
     static constexpr uint32_t visible{1};
     static sensorChannel channels[nmbrChannels];
 
-    static void sample();
-    static void goSleep();
-
 #ifndef unitTesting
 
   private:
 #endif
     static sensorDeviceState state;
+    static bool anyChannelNeedsSampling();
+    static void adjustAllCounters();
+    static void startSampling();
+    static bool samplingIsReady();
+    static void readSample();
+
+    static float calculateVisibleLight();
+    static float calculateInfraredLight();
+
+    static void goSleep();
+
     static constexpr uint8_t i2cAddress{0x29};        // default I2C address for this sensor
     static constexpr uint8_t halTrials{0x03};         // ST HAL requires a 'retry' parameters
     static constexpr uint8_t halTimeout{0x10};        // ST HAL requires a 'timeout' in ms
-
-    static void startSampling();
-    static bool samplingIsReady();
-    static void getRawData();
-    static float getVisibleLight();
-    static float getInfraredLight();
 
     // Registers
     enum class registers : uint8_t {

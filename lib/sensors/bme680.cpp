@@ -5,6 +5,7 @@
 // ######################################################################################
 
 #include <bme680.hpp>
+#include <logging.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -61,6 +62,9 @@ bool bme680::isPresent() {
 }
 
 void bme680::initialize() {
+    channels[temperature].set(0, 1, 0, 1);
+    channels[relativeHumidity].set(0, 1, 0, 1);
+
     uint8_t registerData[42]{};
     readRegisters(0x8A, 23, registerData);             // read all calibration data from the sensorChannel and convert to proper coefficients
     readRegisters(0xE1, 14, registerData + 23);        //
@@ -117,6 +121,8 @@ void bme680::run() {
         if (channels[temperature].needsSampling()) {
             float bme680Temperature = calculateTemperature();
             channels[temperature].addSample(bme680Temperature);
+            logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[temperature].type), bme680Temperature, postfix(channels[temperature].type));
+
             if (channels[temperature].hasOutput()) {
                 channels[temperature].hasNewValue = true;
             }
@@ -125,6 +131,7 @@ void bme680::run() {
         if (channels[relativeHumidity].needsSampling()) {
             float bme680RelativeHumidity = calculateRelativeHumidity();
             channels[relativeHumidity].addSample(bme680RelativeHumidity);
+            logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[relativeHumidity].type), bme680RelativeHumidity, postfix(channels[relativeHumidity].type));
             if (channels[relativeHumidity].hasOutput()) {
                 channels[relativeHumidity].hasNewValue = true;
             }

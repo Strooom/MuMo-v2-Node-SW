@@ -1,7 +1,5 @@
-#include <sensorchanneltype.hpp>
 #include <battery.hpp>
 #include <settingscollection.hpp>
-#include <sensorchannel.hpp>
 #include <chargefromvoltage.hpp>
 #include <logging.hpp>
 
@@ -57,7 +55,7 @@ void battery::run() {
         if (channels[voltage].needsSampling()) {
             float batteryVoltage = voltageFromRaw(rawADC);
             channels[voltage].addSample(batteryVoltage);
-            logging::snprintf(logging::source::sensorData, "vbat = %f V\n", batteryVoltage);
+            logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[voltage].type), batteryVoltage, postfix(channels[voltage].type));
             if (channels[voltage].hasOutput()) {
                 channels[voltage].hasNewValue = true;
             }
@@ -67,7 +65,7 @@ void battery::run() {
             float batteryVoltage        = voltageFromRaw(rawADC);
             float batteryPercentCharged = chargeFromVoltage::calculateChargeLevel(batteryVoltage, type);
             channels[percentCharged].addSample(batteryPercentCharged);
-            logging::snprintf(logging::source::sensorData, "stateOfCharge = %f \n", batteryPercentCharged);
+            logging::snprintf(logging::source::sensorData, "%s = %.2f\n", toString(channels[percentCharged].type), batteryPercentCharged, postfix(channels[percentCharged].type));
             if (channels[percentCharged].hasOutput()) {
                 channels[percentCharged].hasNewValue = true;
             }

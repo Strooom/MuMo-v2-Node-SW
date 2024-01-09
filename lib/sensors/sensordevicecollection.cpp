@@ -55,7 +55,7 @@ void sensorDeviceCollection::run() {
                     battery::run();
                     break;
                 case sensorDeviceType::bme680:
-                    // bme680::run();
+                    bme680::run();
                     break;
                 case sensorDeviceType::tsl2591:
                     // tsl2591::run();

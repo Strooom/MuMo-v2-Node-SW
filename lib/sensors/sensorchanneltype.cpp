@@ -9,11 +9,11 @@
 const char* toString(sensorChannelType type) {
     switch (type) {
         case sensorChannelType::batteryChargeLevel:
-            return "batteryChargeLevel";
+            return "battery State of Charge";
             break;
 
         case sensorChannelType::batteryVoltage:
-            return "batteryChargeLevel";
+            return "battery Voltage";
             break;
 
         case sensorChannelType::BME680Temperature:
@@ -41,3 +41,42 @@ const char* toString(sensorChannelType type) {
             break;
     }
 }
+
+
+const char* postfix(sensorChannelType type) {
+    switch (type) {
+        case sensorChannelType::batteryChargeLevel:
+            return "%";
+            break;
+
+        case sensorChannelType::batteryVoltage:
+            return "V";
+            break;
+
+        case sensorChannelType::BME680Temperature:
+            return "C";
+            break;
+
+        case sensorChannelType::BME680RelativeHumidity:
+            return "%";
+            break;
+
+        case sensorChannelType::BME680BarometricPressure:
+            return "hPa";
+            break;
+
+        case sensorChannelType::TSL25911VisibleLight:
+            return "lux";
+            break;
+
+        case sensorChannelType::TSL25911Infrared:
+            return "lux";
+            break;
+
+        default:
+            return "";
+            break;
+    }
+}
+
+

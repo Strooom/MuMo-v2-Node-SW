@@ -1,4 +1,6 @@
 #include <tsl2591.hpp>
+#include <settingscollection.hpp>
+#include <logging.hpp>
 
 #ifndef generic
 #include <main.h>
@@ -47,30 +49,38 @@ void tsl2591::goSleep() {
     writeRegister(registers::enable, powerOff);
 }
 
-void tsl2591::sample() {
-    // 1. Enable the sensor
+void tsl2591::startSampling() {
     writeRegister(registers::enable, 0x03);
+    state = sensorDeviceState::sampling;
+}
 
-    // 2. Wait for the ADC to have new data
-    // TODO : HAL_Delay(700); The sensor needs 100 ms per integration time step... But we could also poll it for being ready
+bool tsl2591::samplingIsReady() {
+    return (readRegister(registers::status) & 0x01) == 0x01;
+}
 
-    // 3. Read the data // CHAN0 must be read before CHAN1 See: https://forums.adafruit.com/viewtopic.php?f=19&t=124176
+void tsl2591::readSample() {
+    // CHAN0 must be read before CHAN1 See: https://forums.adafruit.com/viewtopic.php?f=19&t=124176
     uint32_t raw1 = readRegister(registers::c0datah);
     uint32_t raw2 = readRegister(registers::c0datal);
     uint32_t raw3 = readRegister(registers::c1datah);
     uint32_t raw4 = readRegister(registers::c1datal);
+    rawChannel0   = (raw1 << 8) + raw2;
+    rawChannel1   = (raw3 << 8) + raw4;
+}
 
-    rawChannel0 = (raw1 << 8) + raw2;
-    rawChannel1 = (raw3 << 8) + raw4;
+bool tsl2591::anyChannelNeedsSampling() {
+    return (channels[infrared].needsSampling() || channels[visible].needsSampling());
+}
+void tsl2591::adjustAllCounters() {
+    channels[infrared].adjustCounters();
+    channels[visible].adjustCounters();
+}
 
-    if ((rawChannel0 == 0xFFFF) || (rawChannel1 == 0xFFFF)) {
-        decreaseSensitivity();
-    }
+float tsl2591::calculateVisibleLight() {
+    return 0.0F;
+}
 
-    if ((rawChannel0 < 0x3333) || (rawChannel1 < 0x3333)) {
-        increaseSensitivity();
-    }
-
+float tsl2591::calculateInfraredLight() {
     float integrationTimeFactor = static_cast<float>((static_cast<uint32_t>(integrationTime) + 1) * 100);
     float gainFactor;
     switch (gain) {
@@ -94,6 +104,7 @@ void tsl2591::sample() {
 
     float totalFactor = (integrationTimeFactor * gainFactor) / luxCoefficient;
     float lux         = (((float)rawChannel0 - (float)rawChannel1)) * (1.0F - ((float)rawChannel1 / (float)rawChannel0)) / totalFactor;
+    return lux;
 }
 
 void tsl2591::setIntegrationTime(integrationTimes theIntegrationTime) {
@@ -113,7 +124,8 @@ void tsl2591::setGain(gains theGain) {
 // With integration time factors is 6 (600 / 100)
 
 void tsl2591::increaseSensitivity() {
-    // When the ADC reading is below 20% (of maximum reading), we first increase integration time, then gain
+    // If ADC reading is below 2500 (~64K/25), we can increase gain one step.
+    // If we are at maximum gain, or reading is above 2500 we may improve the integration time : 
 }
 void tsl2591::decreaseSensitivity() {
     // When the ADC reading overflow, we first reduce integration time, then gain
@@ -148,6 +160,54 @@ void tsl2591::writeRegister(registers registerAddress, uint8_t value) {
 #endif
 }
 
-void tsl2591::tick() {}
+void tsl2591::tick() {
+    if (state != sensorDeviceState::sleeping) {
+        adjustAllCounters();
+        return;
+    }
 
-void tsl2591::run() {}
+    if (anyChannelNeedsSampling()) {
+        startSampling();
+        state = sensorDeviceState::sampling;
+    } else {
+        adjustAllCounters();
+    }
+}
+
+void tsl2591::run() {
+    if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
+        readSample();
+
+        // check sensitivity and restart with different settings if needed
+
+        if ((rawChannel0 == 0xFFFF) || (rawChannel1 == 0xFFFF)) {
+            decreaseSensitivity();
+        }
+
+        if ((rawChannel0 < 0x3333) || (rawChannel1 < 0x3333)) {
+            increaseSensitivity();
+        }
+
+        if (channels[visible].needsSampling()) {
+            float tsl2591visible = calculateVisibleLight();
+            channels[visible].addSample(tsl2591visible);
+            logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[visible].type), tsl2591visible, postfix(channels[visible].type));
+
+            if (channels[visible].hasOutput()) {
+                channels[visible].hasNewValue = true;
+            }
+        }
+
+        if (channels[infrared].needsSampling()) {
+            float tsl2591infrared = calculateInfraredLight();
+            channels[infrared].addSample(tsl2591infrared);
+            logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[infrared].type), tsl2591infrared, postfix(channels[infrared].type));
+            if (channels[infrared].hasOutput()) {
+                channels[infrared].hasNewValue = true;
+            }
+        }
+
+        state = sensorDeviceState::sleeping;
+        adjustAllCounters();
+    }
+}

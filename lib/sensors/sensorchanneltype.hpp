@@ -30,4 +30,5 @@ enum class sensorChannelType : uint32_t {
 };
 
 const char *toString(sensorChannelType aChannel);
+const char *postfix(sensorChannelType aChannel);
 

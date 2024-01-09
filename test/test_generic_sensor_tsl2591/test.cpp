@@ -20,7 +20,7 @@ void test_initialize() {
 }
 
 void test_sample() {
-    tsl2591::sample();
+    tsl2591::startSampling();
     TEST_ASSERT_EQUAL_UINT32(0, tsl2591::rawChannel0);
     TEST_ASSERT_EQUAL_UINT32(0, tsl2591::rawChannel1);
 
