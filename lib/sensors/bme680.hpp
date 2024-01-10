@@ -15,7 +15,11 @@ class bme680 {
     static bool isPresent();
     static void initialize();
     static sensorDeviceState getState() { return state; };
-    static float getLastChannelValue(uint32_t index);
+    static float lastChannelValue(uint32_t channelIndex);
+    static const char* channelName(uint32_t channelIndex);
+    static const char* channelUnit(uint32_t channelIndex);
+        static const char* name();
+
     static void tick();
     static void run();
 

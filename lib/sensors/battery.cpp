@@ -27,7 +27,7 @@ void battery::initalize() {
     state = sensorDeviceState::sleeping;
 }
 
-float battery::getLastChannelValue(uint32_t index) {
+float battery::lastChannelValue(uint32_t index) {
     return channels[index].getOutput();
 }
 
@@ -52,7 +52,7 @@ void battery::run() {
         if (channels[voltage].needsSampling()) {
             float batteryVoltage = voltageFromRaw(rawADC);
             channels[voltage].addSample(batteryVoltage);
-            //logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[voltage].type), batteryVoltage, postfix(channels[voltage].type));
+            // logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[voltage].type), batteryVoltage, postfix(channels[voltage].type));
             if (channels[voltage].hasOutput()) {
                 channels[voltage].hasNewValue = true;
             }
@@ -62,7 +62,7 @@ void battery::run() {
             float batteryVoltage        = voltageFromRaw(rawADC);
             float batteryPercentCharged = chargeFromVoltage::calculateChargeLevel(batteryVoltage, type);
             channels[percentCharged].addSample(batteryPercentCharged);
-            //logging::snprintf(logging::source::sensorData, "%s = %.2f\n", toString(channels[percentCharged].type), batteryPercentCharged, postfix(channels[percentCharged].type));
+            // logging::snprintf(logging::source::sensorData, "%s = %.2f\n", toString(channels[percentCharged].type), batteryPercentCharged, postfix(channels[percentCharged].type));
             if (channels[percentCharged].hasOutput()) {
                 channels[percentCharged].hasNewValue = true;
             }
@@ -116,4 +116,29 @@ float battery::voltageFromRaw(uint32_t rawADC) {
 #else
     return 3.2F;        // MOCK value
 #endif
+}
+
+const char* battery::name() {
+    return "battery";
+}
+
+const char* battery::channelName(uint32_t channelIndex) {
+    switch (channelIndex) {
+        case voltage:
+            return "voltage";
+        case percentCharged:
+            return "percentCharged";
+        default:
+            return "";
+    }
+}
+const char* battery::channelUnit(uint32_t channelIndex) {
+    switch (channelIndex) {
+        case voltage:
+            return "V";
+        case percentCharged:
+            return "%";
+        default:
+            return "";
+    }
 }

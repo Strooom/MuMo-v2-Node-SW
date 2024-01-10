@@ -92,10 +92,6 @@ void bme680::initialize() {
     state = sensorDeviceState::sleeping;
 }
 
-float bme680::getLastChannelValue(uint32_t index) {
-    return channels[index].getOutput();
-}
-
 void bme680::tick() {
     if (state != sensorDeviceState::sleeping) {
         adjustAllCounters();
@@ -117,7 +113,7 @@ void bme680::run() {
         if (channels[temperature].needsSampling()) {
             float bme680Temperature = calculateTemperature();
             channels[temperature].addSample(bme680Temperature);
-            //logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[temperature].type), bme680Temperature, postfix(channels[temperature].type));
+            // logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[temperature].type), bme680Temperature, postfix(channels[temperature].type));
 
             if (channels[temperature].hasOutput()) {
                 channels[temperature].hasNewValue = true;
@@ -127,7 +123,7 @@ void bme680::run() {
         if (channels[relativeHumidity].needsSampling()) {
             float bme680RelativeHumidity = calculateRelativeHumidity();
             channels[relativeHumidity].addSample(bme680RelativeHumidity);
-            //logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[relativeHumidity].type), bme680RelativeHumidity, postfix(channels[relativeHumidity].type));
+            // logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[relativeHumidity].type), bme680RelativeHumidity, postfix(channels[relativeHumidity].type));
             if (channels[relativeHumidity].hasOutput()) {
                 channels[relativeHumidity].hasNewValue = true;
             }
@@ -263,4 +259,33 @@ void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* dest
 #else
     memcpy(destination, mockBME680Registers + startAddress, length);
 #endif
+}
+
+const char* bme680::name() {
+    return "BME680";
+}
+
+const char* bme680::channelName(uint32_t channelIndex) {
+    switch (channelIndex) {
+        case temperature:
+            return "temperature";
+        case relativeHumidity:
+            return "relativeHumidity";
+        case barometricPressure:
+            return "barometricPressure";
+        default:
+            return "";
+    }
+}
+const char* bme680::channelUnit(uint32_t channelIndex) {
+    switch (channelIndex) {
+        case temperature:
+            return "°C";
+        case relativeHumidity:
+            return "%";
+        case barometricPressure:
+            return "hPa";
+        default:
+            return "";
+    }
 }

@@ -6,22 +6,23 @@
 
 #pragma once
 #include <stdint.h>
-
+#include <sensordevicetype.hpp>
 
 class screen {
   public:
     static void show();
 
   private:
-    static constexpr uint32_t maxNumberOfLines{4};
+    static constexpr uint32_t numberOfLines{4};
     static constexpr uint32_t maxTextLength{8};
 
-    //static sensorChannelType lineTypes[maxNumberOfLines];
-    static char bigText[maxTextLength + 1][maxNumberOfLines];
-    static char smallText[maxTextLength + 1][maxNumberOfLines];
+    static sensorDeviceType Device[numberOfLines];
+    static uint32_t lineChannel[numberOfLines];
+    static char bigText[maxTextLength + 1][numberOfLines];
+    static char smallText[maxTextLength + 1][numberOfLines];
 
     static bool isModified;
 
     static void getContents();
-        static void drawContents();
+    static void drawContents();
 };

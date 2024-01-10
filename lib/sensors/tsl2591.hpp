@@ -14,7 +14,10 @@ class tsl2591 {
     static bool isPresent();        // detect if there is an TSL2591 on the I2C bus
     static void initialize();
     static sensorDeviceState getState() { return state; };
-    static float getLastChannelValue(uint32_t index);
+    static float lastChannelValue(uint32_t channelIndex);
+    static const char* channelName(uint32_t channelIndex);
+    static const char* channelUnit(uint32_t channelIndex);
+    static const char* name();
     static void tick();
     static void run();
 

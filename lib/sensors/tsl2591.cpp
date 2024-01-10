@@ -69,7 +69,6 @@ bool tsl2591::anyChannelNeedsSampling() {
 
 void tsl2591::adjustAllCounters() {
     channels[visibleLight].adjustCounters();
-    
 }
 
 float tsl2591::integrationTimeFactor() {
@@ -205,7 +204,7 @@ void tsl2591::run() {
         if (channels[visibleLight].needsSampling()) {
             float tsl2591visible = calculateLux();
             channels[visibleLight].addSample(tsl2591visible);
-            //logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[channel1].type), tsl2591visible, postfix(channels[channel1].type));
+            // logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[channel1].type), tsl2591visible, postfix(channels[channel1].type));
 
             if (channels[visibleLight].hasOutput()) {
                 channels[visibleLight].hasNewValue = true;
@@ -215,4 +214,16 @@ void tsl2591::run() {
         state = sensorDeviceState::sleeping;
         adjustAllCounters();
     }
+}
+
+const char* tsl2591::name() {
+    return "TSL2591";
+}
+
+const char* tsl2591::channelName(uint32_t channelIndex) {
+    return "visibleLight";
+}
+
+const char* tsl2591::channelUnit(uint32_t channelIndex) {
+    return "lux";
 }
