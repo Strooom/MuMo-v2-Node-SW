@@ -38,15 +38,17 @@ bool tsl2591::isPresent() {
 }
 
 void tsl2591::initialize() {
+    channels[channel1].set(0, 1, 0, 1);
+
     writeRegister(registers::enable, powerOn);
     setIntegrationTime(integrationTimes::integrationTime100ms);
-    setGain(gains::gain428x);
-
-    state = sensorDeviceState::standby;
+    setGain(gains::gain25x);
+    goSleep();
 }
 
 void tsl2591::goSleep() {
     writeRegister(registers::enable, powerOff);
+    state = sensorDeviceState::sleeping;
 }
 
 void tsl2591::startSampling() {
@@ -60,20 +62,58 @@ bool tsl2591::samplingIsReady() {
 
 void tsl2591::readSample() {
     // CHAN0 must be read before CHAN1 See: https://forums.adafruit.com/viewtopic.php?f=19&t=124176
-    uint32_t raw1 = readRegister(registers::c0datah);
-    uint32_t raw2 = readRegister(registers::c0datal);
-    uint32_t raw3 = readRegister(registers::c1datah);
-    uint32_t raw4 = readRegister(registers::c1datal);
-    rawChannel0   = (raw1 << 8) + raw2;
-    rawChannel1   = (raw3 << 8) + raw4;
+    rawChannel0 = (readRegister(registers::c0datah) << 8) + readRegister(registers::c0datal);
+    rawChannel1 = (readRegister(registers::c1datah) << 8) + readRegister(registers::c1datal);
 }
 
 bool tsl2591::anyChannelNeedsSampling() {
-    return (channels[infrared].needsSampling() || channels[visible].needsSampling());
+    return (channels[channel0].needsSampling() || channels[channel1].needsSampling());
 }
+
 void tsl2591::adjustAllCounters() {
-    channels[infrared].adjustCounters();
-    channels[visible].adjustCounters();
+    channels[channel0].adjustCounters();
+    channels[channel1].adjustCounters();
+}
+
+float tsl2591::integrationTimeFactor() {
+    return static_cast<float>((static_cast<uint32_t>(integrationTime) + 1) * 100);        // According to datasheet, the factor to be used in formula is integration time in ms
+}
+
+float tsl2591::gainFactor() {
+    switch (gain) {
+        case gains::gain1x:
+        default:
+            return 1.0F;
+            break;
+
+        case gains::gain25x:
+            return 25.0F;
+            break;
+
+        case gains::gain428x:
+            return 428.0F;
+            break;
+
+        case gains::gain9876x:
+            return 9876.0F;
+            break;
+    }
+}
+
+float tsl2591::calculateLux() {
+    float CPL  = (integrationTimeFactor() * gainFactor()) / 53.0F;
+    float Lux1 = (rawChannel0 - (2 * rawChannel1)) / CPL;
+    float Lux2 = ((0.6F * rawChannel0) - rawChannel1) / CPL;
+
+    float Lux = 0.0F;
+    if (Lux1 > Lux) {
+        Lux = Lux1;
+    }
+    if (Lux2 > Lux) {
+        Lux = Lux2;
+    }
+
+    return Lux;
 }
 
 float tsl2591::calculateVisibleLight() {
@@ -81,30 +121,7 @@ float tsl2591::calculateVisibleLight() {
 }
 
 float tsl2591::calculateInfraredLight() {
-    float integrationTimeFactor = static_cast<float>((static_cast<uint32_t>(integrationTime) + 1) * 100);
-    float gainFactor;
-    switch (gain) {
-        case gains::gain1x:
-        default:
-            gainFactor = 1.0F;
-            break;
-
-        case gains::gain25x:
-            gainFactor = 25.0F;
-            break;
-
-        case gains::gain428x:
-            gainFactor = 428.0F;
-            break;
-
-        case gains::gain9876x:
-            gainFactor = 9876.0F;
-            break;
-    }
-
-    float totalFactor = (integrationTimeFactor * gainFactor) / luxCoefficient;
-    float lux         = (((float)rawChannel0 - (float)rawChannel1)) * (1.0F - ((float)rawChannel1 / (float)rawChannel0)) / totalFactor;
-    return lux;
+    return 0.0F;
 }
 
 void tsl2591::setIntegrationTime(integrationTimes theIntegrationTime) {
@@ -125,7 +142,7 @@ void tsl2591::setGain(gains theGain) {
 
 void tsl2591::increaseSensitivity() {
     // If ADC reading is below 2500 (~64K/25), we can increase gain one step.
-    // If we are at maximum gain, or reading is above 2500 we may improve the integration time : 
+    // If we are at maximum gain, or reading is above 2500 we may improve the integration time :
 }
 void tsl2591::decreaseSensitivity() {
     // When the ADC reading overflow, we first reduce integration time, then gain
@@ -188,22 +205,22 @@ void tsl2591::run() {
             increaseSensitivity();
         }
 
-        if (channels[visible].needsSampling()) {
-            float tsl2591visible = calculateVisibleLight();
-            channels[visible].addSample(tsl2591visible);
-            logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[visible].type), tsl2591visible, postfix(channels[visible].type));
+        if (channels[channel1].needsSampling()) {
+            float tsl2591visible = calculateLux();
+            channels[channel1].addSample(tsl2591visible);
+            logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[channel1].type), tsl2591visible, postfix(channels[channel1].type));
 
-            if (channels[visible].hasOutput()) {
-                channels[visible].hasNewValue = true;
+            if (channels[channel1].hasOutput()) {
+                channels[channel1].hasNewValue = true;
             }
         }
 
-        if (channels[infrared].needsSampling()) {
-            float tsl2591infrared = calculateInfraredLight();
-            channels[infrared].addSample(tsl2591infrared);
-            logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[infrared].type), tsl2591infrared, postfix(channels[infrared].type));
-            if (channels[infrared].hasOutput()) {
-                channels[infrared].hasNewValue = true;
+        if (channels[channel0].needsSampling()) {
+            float tsl2591infrared = calculateLux();
+            channels[channel0].addSample(tsl2591infrared);
+            logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[channel0].type), tsl2591infrared, postfix(channels[channel0].type));
+            if (channels[channel0].hasOutput()) {
+                channels[channel0].hasNewValue = true;
             }
         }
 

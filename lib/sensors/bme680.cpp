@@ -62,8 +62,8 @@ bool bme680::isPresent() {
 }
 
 void bme680::initialize() {
-    channels[temperature].set(0, 1, 0, 1);
-    channels[relativeHumidity].set(0, 1, 0, 1);
+    // channels[temperature].set(0, 1, 0, 1);
+    // channels[relativeHumidity].set(0, 1, 0, 1);
 
     uint8_t registerData[42]{};
     readRegisters(0x8A, 23, registerData);             // read all calibration data from the sensorChannel and convert to proper coefficients

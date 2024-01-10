@@ -58,7 +58,7 @@ void sensorDeviceCollection::run() {
                     bme680::run();
                     break;
                 case sensorDeviceType::tsl2591:
-                    // tsl2591::run();
+                    tsl2591::run();
                     break;
                 // Add more types of sensors here
                 default:
@@ -94,4 +94,12 @@ bool sensorDeviceCollection::isSleeping() {
         }
     }
     return true;
+}
+
+bool sensorDeviceCollection::hasNewMeasurement(sensorChannelType aChannelType) {
+    return false;
+}
+
+float sensorDeviceCollection::getMeasurement(sensorChannelType aChannelType) {
+    return 0.0F;
 }

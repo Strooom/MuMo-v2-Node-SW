@@ -13,7 +13,15 @@ class screen {
     static void show();
 
   private:
-    static const char* getLastMeasurement(sensorChannelType);
     static constexpr uint32_t maxNumberOfLines{4};
-    static sensorChannelType lines[maxNumberOfLines];
+    static constexpr uint32_t maxTextLength{8};
+
+    static sensorChannelType lineTypes[maxNumberOfLines];
+    static char bigText[maxTextLength + 1][maxNumberOfLines];
+    static char smallText[maxTextLength + 1][maxNumberOfLines];
+
+    static bool isModified;
+
+    static void getContents();
+        static void drawContents();
 };

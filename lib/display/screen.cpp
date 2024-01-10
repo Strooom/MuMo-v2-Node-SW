@@ -4,12 +4,29 @@
 #include <ux.hpp>
 #include <font.hpp>
 
-sensorChannelType screen::lines[maxNumberOfLines]{sensorChannelType::none, sensorChannelType::none, sensorChannelType::none, sensorChannelType::none};
+bool screen::isModified{false};
+sensorChannelType screen::lineTypes[maxNumberOfLines]{sensorChannelType::none, sensorChannelType::none, sensorChannelType::none, sensorChannelType::none};
+char screen::bigText[maxTextLength + 1][maxNumberOfLines]{};
+char screen::smallText[maxTextLength + 1][maxNumberOfLines]{};
 
-extern font roboto16;
-extern font roboto38bold;
+extern font roboto36bold;
+extern font tahoma24bold;
 
 void screen::show() {
+    isModified = false;
+    getContents();
+
+    if (isModified) {
+        drawContents();
+    }
+}
+
+void screen::getContents() {
+    for (uint32_t lineIndex = 0; lineIndex < maxNumberOfLines; lineIndex++) {
+    }
+}
+
+void screen::drawContents() {
     display::initialize();
 
     graphics::drawFilledRectangle(ux::marginLeft, 49, display::widthInPixels - ux::marginLeft, 50, graphics::color::black);
@@ -17,13 +34,10 @@ void screen::show() {
     graphics::drawFilledRectangle(ux::marginLeft, 149, display::widthInPixels - ux::marginLeft, 150, graphics::color::black);
 
     for (uint32_t lineIndex = 0; lineIndex < maxNumberOfLines; lineIndex++) {
-        graphics::drawText(ux::marginLeft, 6 * (lineIndex * 50), roboto38bold, getLastMeasurement(lines[lineIndex]));
+        graphics::drawText(ux::marginLeft, 6 * (lineIndex * 50), roboto36bold, bigText[lineIndex]);
+        graphics::drawText(100, 6 * (lineIndex * 50), roboto36bold, smallText[lineIndex]);
     }
 
     display::update(updateMode::full);
     display::goSleep();
-}
-
-const char* screen::getLastMeasurement(sensorChannelType) {
-    return "Some Text";
 }

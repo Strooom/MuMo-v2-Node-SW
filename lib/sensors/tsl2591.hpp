@@ -19,8 +19,8 @@ class tsl2591 {
     static void run();
 
     static constexpr uint32_t nmbrChannels{2};
-    static constexpr uint32_t infrared{0};
-    static constexpr uint32_t visible{1};
+    static constexpr uint32_t channel0{0};
+    static constexpr uint32_t channel1{1};
     static sensorChannel channels[nmbrChannels];
 
 #ifndef unitTesting
@@ -34,6 +34,7 @@ class tsl2591 {
     static bool samplingIsReady();
     static void readSample();
 
+    static float calculateLux();
     static float calculateVisibleLight();
     static float calculateInfraredLight();
 
@@ -99,14 +100,16 @@ class tsl2591 {
     static uint32_t rawChannel0;
     static uint32_t rawChannel1;
 
-    static bool testI2cAddress(uint8_t addressToTest);                          //
-    static uint8_t readRegister(registers aRegister);                           //
-    static void writeRegister(registers aRegister, const uint8_t value);        //
-    static void calculateLight();                                               //
-    static void setIntegrationTime(integrationTimes someTime);                  //
-    static void setGain(gains someGain);                                        //
-    static void increaseSensitivity();                                          //
-    static void decreaseSensitivity();                                          //
+    static bool testI2cAddress(uint8_t addressToTest);
+    static uint8_t readRegister(registers aRegister);
+    static void writeRegister(registers aRegister, const uint8_t value);
+    static void calculateLight();
+    static void setIntegrationTime(integrationTimes someTime);
+    static void setGain(gains someGain);
+    static void increaseSensitivity();
+    static void decreaseSensitivity();
+    static float gainFactor();
+    static float integrationTimeFactor();
 
     static integrationTimes integrationTime;        // current integration time
     static gains gain;

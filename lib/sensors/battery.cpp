@@ -23,8 +23,8 @@ void battery::initalize() {
     }
 
     // TODO : need to read the sensorChannel settins from EEPROM and restore them
-    channels[voltage].set(0,1,0,1);
-    channels[percentCharged].set(0,1,0,1);
+    // channels[voltage].set(0,1,0,1);
+    // channels[percentCharged].set(0,1,0,1);
 
     type  = static_cast<batteryType>(typeIndex);
     state = sensorDeviceState::sleeping;
