@@ -5,7 +5,6 @@
 #include <font.hpp>
 
 bool screen::isModified{false};
-sensorChannelType screen::lineTypes[maxNumberOfLines]{sensorChannelType::none, sensorChannelType::none, sensorChannelType::none, sensorChannelType::none};
 char screen::bigText[maxTextLength + 1][maxNumberOfLines]{};
 char screen::smallText[maxTextLength + 1][maxNumberOfLines]{};
 

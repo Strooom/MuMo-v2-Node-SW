@@ -18,9 +18,8 @@ class tsl2591 {
     static void tick();
     static void run();
 
-    static constexpr uint32_t nmbrChannels{2};
-    static constexpr uint32_t channel0{0};
-    static constexpr uint32_t channel1{1};
+    static constexpr uint32_t nmbrChannels{1};
+    static constexpr uint32_t visibleLight{0};
     static sensorChannel channels[nmbrChannels];
 
 #ifndef unitTesting

@@ -7,7 +7,6 @@
 #pragma once
 #include <stdint.h>
 #include <sensordevicetype.hpp>
-#include <sensorchanneltype.hpp>
 
 class sensorDeviceCollection {
   public:
@@ -17,8 +16,8 @@ class sensorDeviceCollection {
     static void run();                        // service all sensor devices until they are back to sleep
     static bool isSleeping();                 // return true if all sensor devices are sleeping, so MCU could go to sleep as well
 
-    static bool hasNewMeasurement(sensorChannelType aChannelType);
-    static float getMeasurement(sensorChannelType aChannelType);
+    //static bool hasNewMeasurement(sensorChannelType aChannelType);
+    //static float getMeasurement(sensorChannelType aChannelType);
 
 #ifndef unitTesting
 

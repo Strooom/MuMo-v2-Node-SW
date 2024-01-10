@@ -17,11 +17,7 @@ extern uint8_t mockBME680Registers[256];
 #endif
 
 sensorDeviceState bme680::state{sensorDeviceState::unknown};
-sensorChannel bme680::channels[nmbrChannels]{
-    {sensorChannelType::BME680Temperature},
-    {sensorChannelType::BME680RelativeHumidity},
-    {sensorChannelType::BME680BarometricPressure},
-};
+sensorChannel bme680::channels[nmbrChannels];
 
 uint32_t bme680::rawDataTemperature;
 uint32_t bme680::rawDataBarometricPressure;
@@ -121,7 +117,7 @@ void bme680::run() {
         if (channels[temperature].needsSampling()) {
             float bme680Temperature = calculateTemperature();
             channels[temperature].addSample(bme680Temperature);
-            logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[temperature].type), bme680Temperature, postfix(channels[temperature].type));
+            //logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[temperature].type), bme680Temperature, postfix(channels[temperature].type));
 
             if (channels[temperature].hasOutput()) {
                 channels[temperature].hasNewValue = true;
@@ -131,7 +127,7 @@ void bme680::run() {
         if (channels[relativeHumidity].needsSampling()) {
             float bme680RelativeHumidity = calculateRelativeHumidity();
             channels[relativeHumidity].addSample(bme680RelativeHumidity);
-            logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[relativeHumidity].type), bme680RelativeHumidity, postfix(channels[relativeHumidity].type));
+            //logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[relativeHumidity].type), bme680RelativeHumidity, postfix(channels[relativeHumidity].type));
             if (channels[relativeHumidity].hasOutput()) {
                 channels[relativeHumidity].hasNewValue = true;
             }

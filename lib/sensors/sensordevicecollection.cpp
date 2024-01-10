@@ -96,10 +96,10 @@ bool sensorDeviceCollection::isSleeping() {
     return true;
 }
 
-bool sensorDeviceCollection::hasNewMeasurement(sensorChannelType aChannelType) {
-    return false;
-}
+// bool sensorDeviceCollection::hasNewMeasurement(sensorChannelType aChannelType) {
+//     return false;
+// }
 
-float sensorDeviceCollection::getMeasurement(sensorChannelType aChannelType) {
-    return 0.0F;
-}
+// float sensorDeviceCollection::getMeasurement(sensorChannelType aChannelType) {
+//     return 0.0F;
+// }

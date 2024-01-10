@@ -11,10 +11,7 @@ extern uint8_t mockTSL2591Registers[256];
 #endif
 
 sensorDeviceState tsl2591::state{sensorDeviceState::unknown};
-sensorChannel tsl2591::channels[nmbrChannels]{
-    {sensorChannelType::TSL25911Infrared},
-    {sensorChannelType::TSL25911VisibleLight},
-};
+sensorChannel tsl2591::channels[nmbrChannels];
 
 tsl2591::integrationTimes tsl2591::integrationTime{integrationTimes::integrationTime100ms};
 tsl2591::gains tsl2591::gain{gains::gain1x};
@@ -38,7 +35,7 @@ bool tsl2591::isPresent() {
 }
 
 void tsl2591::initialize() {
-    channels[channel1].set(0, 1, 0, 1);
+    channels[visibleLight].set(0, 1, 0, 1);
 
     writeRegister(registers::enable, powerOn);
     setIntegrationTime(integrationTimes::integrationTime100ms);
@@ -67,12 +64,12 @@ void tsl2591::readSample() {
 }
 
 bool tsl2591::anyChannelNeedsSampling() {
-    return (channels[channel0].needsSampling() || channels[channel1].needsSampling());
+    return (channels[visibleLight].needsSampling());
 }
 
 void tsl2591::adjustAllCounters() {
-    channels[channel0].adjustCounters();
-    channels[channel1].adjustCounters();
+    channels[visibleLight].adjustCounters();
+    
 }
 
 float tsl2591::integrationTimeFactor() {
@@ -205,22 +202,13 @@ void tsl2591::run() {
             increaseSensitivity();
         }
 
-        if (channels[channel1].needsSampling()) {
+        if (channels[visibleLight].needsSampling()) {
             float tsl2591visible = calculateLux();
-            channels[channel1].addSample(tsl2591visible);
-            logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[channel1].type), tsl2591visible, postfix(channels[channel1].type));
+            channels[visibleLight].addSample(tsl2591visible);
+            //logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[channel1].type), tsl2591visible, postfix(channels[channel1].type));
 
-            if (channels[channel1].hasOutput()) {
-                channels[channel1].hasNewValue = true;
-            }
-        }
-
-        if (channels[channel0].needsSampling()) {
-            float tsl2591infrared = calculateLux();
-            channels[channel0].addSample(tsl2591infrared);
-            logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[channel0].type), tsl2591infrared, postfix(channels[channel0].type));
-            if (channels[channel0].hasOutput()) {
-                channels[channel0].hasNewValue = true;
+            if (channels[visibleLight].hasOutput()) {
+                channels[visibleLight].hasNewValue = true;
             }
         }
 

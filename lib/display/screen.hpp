@@ -6,7 +6,7 @@
 
 #pragma once
 #include <stdint.h>
-#include <sensorchanneltype.hpp>
+
 
 class screen {
   public:
@@ -16,7 +16,7 @@ class screen {
     static constexpr uint32_t maxNumberOfLines{4};
     static constexpr uint32_t maxTextLength{8};
 
-    static sensorChannelType lineTypes[maxNumberOfLines];
+    //static sensorChannelType lineTypes[maxNumberOfLines];
     static char bigText[maxTextLength + 1][maxNumberOfLines];
     static char smallText[maxTextLength + 1][maxNumberOfLines];
 
