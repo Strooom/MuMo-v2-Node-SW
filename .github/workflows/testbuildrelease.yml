@@ -165,7 +165,7 @@ jobs:
 
       - name: Install PlatformIO Core
         run: |
-          pip install platformio=6.1.11
+          pip install platformio==6.1.11
           pio pkg install --environment dummy
           
       - name: Install STM32CubeWL

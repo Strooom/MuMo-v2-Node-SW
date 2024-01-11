@@ -9,7 +9,7 @@
 
 class sensorChannel {
   public:
-  sensorChannel();
+    sensorChannel();
     void set(uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower);
     enum class action : uint32_t {
         none,
@@ -25,6 +25,7 @@ class sensorChannel {
 
     void addSample(float theSample);
     float getOutput();
+    
 
 #ifndef unitTesting
 

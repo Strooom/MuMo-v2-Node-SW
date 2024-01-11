@@ -21,7 +21,9 @@ void screen::show() {
 }
 
 void screen::getContents() {
+    char tmpText[maxTextLength + 1]{};
     for (uint32_t lineIndex = 0; lineIndex < numberOfLines; lineIndex++) {
+        
     }
 }
 

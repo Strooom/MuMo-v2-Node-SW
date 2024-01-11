@@ -14,7 +14,9 @@ class tsl2591 {
     static bool isPresent();        // detect if there is an TSL2591 on the I2C bus
     static void initialize();
     static sensorDeviceState getState() { return state; };
-    static float lastChannelValue(uint32_t channelIndex);
+    static float valueAsFloat(uint32_t channelIndex);
+    static const char* valueAsString(uint32_t channelIndex);
+
     static const char* channelName(uint32_t channelIndex);
     static const char* channelUnit(uint32_t channelIndex);
     static const char* name();
@@ -35,11 +37,7 @@ class tsl2591 {
     static void startSampling();
     static bool samplingIsReady();
     static void readSample();
-
     static float calculateLux();
-    static float calculateVisibleLight();
-    static float calculateInfraredLight();
-
     static void goSleep();
 
     static constexpr uint8_t i2cAddress{0x29};        // default I2C address for this sensor
@@ -78,41 +76,10 @@ class tsl2591 {
     static constexpr uint8_t powerOn     = 0x01;
     static constexpr uint8_t powerOff    = 0x00;
 
-    enum class integrationTimes : uint32_t {
-        integrationTime100ms = 0x00,        // 100[ms]
-        integrationTime200ms = 0x01,
-        integrationTime300ms = 0x02,
-        integrationTime400ms = 0x03,
-        integrationTime500ms = 0x04,
-        integrationTime600ms = 0x05
-    };
-
-    enum class gains : uint32_t {
-        gain1x    = 0x00,
-        gain25x   = 0x10,
-        gain428x  = 0x20,
-        gain9876x = 0x30,
-    };
-
-    static float luxCoefficient;
-    static float ch0Coefficient;
-    static float ch1Coefficient;
-    static float ch2Coefficient;
-
     static uint32_t rawChannel0;
     static uint32_t rawChannel1;
 
     static bool testI2cAddress(uint8_t addressToTest);
     static uint8_t readRegister(registers aRegister);
     static void writeRegister(registers aRegister, const uint8_t value);
-    static void calculateLight();
-    static void setIntegrationTime(integrationTimes someTime);
-    static void setGain(gains someGain);
-    static void increaseSensitivity();
-    static void decreaseSensitivity();
-    static float gainFactor();
-    static float integrationTimeFactor();
-
-    static integrationTimes integrationTime;        // current integration time
-    static gains gain;
 };

@@ -15,9 +15,10 @@ class battery {
   public:
     static void initalize();
     static sensorDeviceState getState() { return state; };
-    static float lastChannelValue(uint32_t channelIndex);
+    static float valueAsFloat(uint32_t channelIndex);
     static const char* channelName(uint32_t channelIndex);
     static const char* channelUnit(uint32_t channelIndex);
+    static const char* channelFormat(uint32_t channelIndex);
     static const char* name();
 
     static void tick();
@@ -27,6 +28,7 @@ class battery {
     static constexpr uint32_t voltage{0};
     static constexpr uint32_t percentCharged{1};
     static sensorChannel channels[nmbrChannels];
+    static char text[9][nmbrChannels];
 
 #ifndef unitTesting
 
