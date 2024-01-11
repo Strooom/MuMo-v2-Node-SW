@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
+#include <sensorchannelformat.hpp>
 #include <batterytype.hpp>
 
 class battery {
@@ -19,8 +20,7 @@ class battery {
     static const char* channelName(uint32_t channelIndex);
     static const char* channelUnit(uint32_t channelIndex);
     static const char* channelFormat(uint32_t channelIndex);
-    static const char* name();
-
+    
     static void tick();
     static void run();
 
@@ -28,7 +28,7 @@ class battery {
     static constexpr uint32_t voltage{0};
     static constexpr uint32_t percentCharged{1};
     static sensorChannel channels[nmbrChannels];
-    static char text[9][nmbrChannels];
+    static sensorChannelFormat channelFormats[nmbrChannels];
 
 #ifndef unitTesting
 

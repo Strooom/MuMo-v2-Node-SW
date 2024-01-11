@@ -10,9 +10,9 @@
 
 class sensorChannelFormat {
   public:
-    static constexpr uint32_t textLength{8};
-    const char name[textLength];
-    const char fullFormat[textLength];          // format string to derive the text output for eg. loggging. Example "%.1f °C" resulting in "20.5 °C"
-    const char baseFormat[textLength];          // format string to derive the text to be shown on display in big font. Example "%.0f" resulting in "20"
-    const char suffixFormat[textLength];        // format string to derive the text to be shown on display in small font. Example "%0.1f°C" resulting in ".5°C"
+    static constexpr uint32_t maxNameLength{16};
+    static constexpr uint32_t maxUnitLength{4};
+    const char name[maxNameLength+1];
+    const char unit[maxUnitLength + 1];
+    const uint32_t decimals;                       // number of decimals to be shown on display
 };

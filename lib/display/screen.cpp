@@ -3,6 +3,8 @@
 #include <graphics.hpp>
 #include <ux.hpp>
 #include <font.hpp>
+#include <stdio.h>        // snprintf
+#include <sensordevicecollection.hpp>
 
 bool screen::isModified{false};
 char screen::bigText[maxTextLength + 1][numberOfLines]{};
@@ -23,9 +25,30 @@ void screen::show() {
 void screen::getContents() {
     char tmpText[maxTextLength + 1]{};
     for (uint32_t lineIndex = 0; lineIndex < numberOfLines; lineIndex++) {
-        
+        float value       = sensorDeviceCollection::valueAsFloat(deviceIndex[lineIndex], channelIndex[lineIndex]);
+        uint32_t decimals = sensorDeviceCollection::channelDecimals(deviceIndex[lineIndex], channelIndex[lineIndex]);
+
+        uint32_t integerPart;
+        uint32_t fractionalPart;
+
+        integerPart = static_cast<uint32_t>(value);        // TODO : take care of rounding io truncating
+
+        float remainder = value - integerPart;
+        for (auto n = 0; n < decimals; n++) {
+            remainder *= 10.0F;
+        }
+        fractionalPart = static_cast<uint32_t>(remainder);        // TODO : take care of rounding io truncating
+
+        char base[8];
+        char suffix[8];
+
+        snprintf(base, 8, "%d", integerPart);
+        snprintf(suffix, 8, "%d%s", fractionalPart, sensorDeviceCollection::channelUnits(deviceIndex[lineIndex], channelIndex[lineIndex]));
     }
 }
+
+
+
 
 void screen::drawContents() {
     display::initialize();

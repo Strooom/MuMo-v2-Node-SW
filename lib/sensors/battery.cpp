@@ -12,7 +12,11 @@ extern ADC_HandleTypeDef hadc;
 batteryType battery::type{batteryType::liFePO4_700mAh};
 sensorDeviceState battery::state{sensorDeviceState::unknown};
 sensorChannel battery::channels[nmbrChannels];
-char battery::text[9][nmbrChannels];
+sensorChannelFormat battery::channelFormats[nmbrChannels] = {
+    {"voltage", "V", 2},
+    {"percentCharged", "%", 0},
+};
+
 
 void battery::initalize() {
     uint8_t typeIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryVersion);
@@ -119,9 +123,6 @@ float battery::voltageFromRaw(uint32_t rawADC) {
 #endif
 }
 
-const char* battery::name() {
-    return "battery";
-}
 
 const char* battery::channelName(uint32_t channelIndex) {
     switch (channelIndex) {

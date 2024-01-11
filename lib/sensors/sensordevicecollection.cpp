@@ -103,3 +103,76 @@ bool sensorDeviceCollection::isSleeping() {
 // float sensorDeviceCollection::getMeasurement(sensorChannelType aChannelType) {
 //     return 0.0F;
 // }
+
+const char* sensorDeviceCollection::name(uint32_t index) {
+    switch (static_cast<sensorDeviceType>(index)) {
+        case sensorDeviceType::battery:
+            return "battery";
+        case sensorDeviceType::bme680:
+            return "bme680";
+        case sensorDeviceType::tsl2591:
+            return "tsl2591";
+        // Add more types of sensors here
+        default:
+            return "unknown";
+    }
+}
+
+float sensorDeviceCollection::valueAsFloat(uint32_t deviceIndex, uint32_t channelIndex) {
+    switch (static_cast<sensorDeviceType>(deviceIndex)) {
+        case sensorDeviceType::battery:
+            return battery::valueAsFloat(channelIndex);
+            break;
+        // case sensorDeviceType::bme680:
+        //     return "bme680";
+        // case sensorDeviceType::tsl2591:
+        //     return "tsl2591";
+        // Add more types of sensors here
+        default:
+            return 0.0F;
+    }
+}
+uint32_t sensorDeviceCollection::channelDecimals(uint32_t deviceIndex, uint32_t channelIndex) {
+    switch (static_cast<sensorDeviceType>(deviceIndex)) {
+        case sensorDeviceType::battery:
+            return battery::channelFormats[channelIndex].decimals;
+            break;
+        // case sensorDeviceType::bme680:
+        //     return bme680::channelFormats[channelIndex].decimals;
+        // case sensorDeviceType::tsl2591:
+        //     return tsl2591::channelFormats[channelIndex].decimals;
+        // Add more types of sensors here
+        default:
+            return 0;
+    }
+}
+
+const char* sensorDeviceCollection::channelName(uint32_t deviceIndex, uint32_t channelIndex) {
+    switch (static_cast<sensorDeviceType>(deviceIndex)) {
+        case sensorDeviceType::battery:
+            return battery::channelFormats[channelIndex].name;
+            break;
+        // case sensorDeviceType::bme680:
+        //     return bme680::channelFormats[channelIndex].name;
+        // case sensorDeviceType::tsl2591:
+        //     return tsl2591::channelFormats[channelIndex].name;
+        // Add more types of sensors here
+        default:
+            return "";
+    }
+}
+
+const char* sensorDeviceCollection::channelUnits(uint32_t deviceIndex, uint32_t channelIndex) {
+    switch (static_cast<sensorDeviceType>(deviceIndex)) {
+        case sensorDeviceType::battery:
+            return battery::channelFormats[channelIndex].unit;
+            break;
+        // case sensorDeviceType::bme680:
+        //     return bme680::channelFormats[channelIndex].units;
+        // case sensorDeviceType::tsl2591:
+        //     return tsl2591::channelFormats[channelIndex].units;
+        // Add more types of sensors here
+        default:
+            return "";
+    }
+}
