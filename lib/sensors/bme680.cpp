@@ -5,6 +5,7 @@
 // ######################################################################################
 
 #include <bme680.hpp>
+#include <settingscollection.hpp>
 #include <logging.hpp>
 
 #ifndef generic
@@ -18,6 +19,11 @@ extern uint8_t mockBME680Registers[256];
 
 sensorDeviceState bme680::state{sensorDeviceState::unknown};
 sensorChannel bme680::channels[nmbrChannels];
+sensorChannelFormat bme680::channelFormats[nmbrChannels] = {
+    {"temperature", "°C", 2},
+    {"relativeHumidity", "%", 0},
+    {"barometricPressure", "hPa", 0},
+};
 
 uint32_t bme680::rawDataTemperature;
 uint32_t bme680::rawDataBarometricPressure;
@@ -58,6 +64,7 @@ bool bme680::isPresent() {
 }
 
 void bme680::initialize() {
+    // TODO : need to read the sensorChannel settins from EEPROM and restore them
     // channels[temperature].set(0, 1, 0, 1);
     // channels[relativeHumidity].set(0, 1, 0, 1);
 
@@ -90,6 +97,10 @@ void bme680::initialize() {
     calibrationCoefficientPressure10 = static_cast<float>(static_cast<uint8_t>(registerData[22]));
 
     state = sensorDeviceState::sleeping;
+}
+
+float bme680::valueAsFloat(uint32_t index) {
+    return channels[index].getOutput();
 }
 
 void bme680::tick() {
@@ -261,31 +272,3 @@ void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* dest
 #endif
 }
 
-const char* bme680::name() {
-    return "BME680";
-}
-
-const char* bme680::channelName(uint32_t channelIndex) {
-    switch (channelIndex) {
-        case temperature:
-            return "temperature";
-        case relativeHumidity:
-            return "relativeHumidity";
-        case barometricPressure:
-            return "barometricPressure";
-        default:
-            return "";
-    }
-}
-const char* bme680::channelUnit(uint32_t channelIndex) {
-    switch (channelIndex) {
-        case temperature:
-            return "°C";
-        case relativeHumidity:
-            return "%";
-        case barometricPressure:
-            return "hPa";
-        default:
-            return "";
-    }
-}

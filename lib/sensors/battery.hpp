@@ -17,10 +17,7 @@ class battery {
     static void initalize();
     static sensorDeviceState getState() { return state; };
     static float valueAsFloat(uint32_t channelIndex);
-    static const char* channelName(uint32_t channelIndex);
-    static const char* channelUnit(uint32_t channelIndex);
-    static const char* channelFormat(uint32_t channelIndex);
-    
+        
     static void tick();
     static void run();
 

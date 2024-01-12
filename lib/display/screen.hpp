@@ -9,6 +9,7 @@
 
 class screen {
   public:
+  static void initialize();
     static void show();
 
   private:

@@ -20,6 +20,7 @@ class mainController {
 
   private:
 #endif
+    static void goTo(mainState newState);
     static void initializeLogging();
     static mainState state;
 };

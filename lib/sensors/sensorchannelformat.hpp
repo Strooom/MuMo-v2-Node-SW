@@ -10,7 +10,7 @@
 
 class sensorChannelFormat {
   public:
-    static constexpr uint32_t maxNameLength{16};
+    static constexpr uint32_t maxNameLength{24};
     static constexpr uint32_t maxUnitLength{4};
     const char name[maxNameLength+1];
     const char unit[maxUnitLength + 1];

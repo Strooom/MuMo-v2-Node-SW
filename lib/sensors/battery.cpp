@@ -1,3 +1,9 @@
+// ######################################################################################
+// ### MuMo node : https://github.com/Strooom/MuMo-v2-Node-SW                         ###
+// ### Author : Pascal Roobrouck - https://github.com/Strooom                         ###
+// ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
+// ######################################################################################
+
 #include <battery.hpp>
 #include <settingscollection.hpp>
 #include <chargefromvoltage.hpp>
@@ -16,7 +22,6 @@ sensorChannelFormat battery::channelFormats[nmbrChannels] = {
     {"voltage", "V", 2},
     {"percentCharged", "%", 0},
 };
-
 
 void battery::initalize() {
     uint8_t typeIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryVersion);
@@ -123,35 +128,3 @@ float battery::voltageFromRaw(uint32_t rawADC) {
 #endif
 }
 
-
-const char* battery::channelName(uint32_t channelIndex) {
-    switch (channelIndex) {
-        case voltage:
-            return "voltage";
-        case percentCharged:
-            return "percentCharged";
-        default:
-            return "";
-    }
-}
-const char* battery::channelUnit(uint32_t channelIndex) {
-    switch (channelIndex) {
-        case voltage:
-            return "V";
-        case percentCharged:
-            return "%";
-        default:
-            return "";
-    }
-}
-
-const char* battery::channelFormat(uint32_t channelIndex) {
-    switch (channelIndex) {
-        case voltage:
-            return "%.2f";
-        case percentCharged:
-            return "%.0f";
-        default:
-            return "";
-    }
-}

@@ -1,3 +1,9 @@
+// ######################################################################################
+// ### MuMo node : https://github.com/Strooom/MuMo-v2-Node-SW                         ###
+// ### Author : Pascal Roobrouck - https://github.com/Strooom                         ###
+// ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
+// ######################################################################################
+
 #include <tsl2591.hpp>
 #include <settingscollection.hpp>
 #include <logging.hpp>
@@ -12,7 +18,10 @@ extern uint8_t mockTSL2591Registers[256];
 
 sensorDeviceState tsl2591::state{sensorDeviceState::unknown};
 sensorChannel tsl2591::channels[nmbrChannels];
-
+sensorChannelFormat tsl2591::channelFormats[nmbrChannels] =
+    {
+        {"visibleLight", "lux", 0},
+};
 uint32_t tsl2591::rawChannel0{0};
 uint32_t tsl2591::rawChannel1{0};
 
@@ -28,12 +37,18 @@ bool tsl2591::isPresent() {
 
 void tsl2591::initialize() {
     channels[visibleLight].set(0, 1, 0, 1);
+    // TODO : need to read the sensorChannel settins from EEPROM and restore them
 
     writeRegister(registers::enable, powerOn);
     writeRegister(registers::config, 0x01);        // gain 1x, integration time 200 ms. I found out these fixed settings are more than sufficient for my use case
 
     goSleep();
 }
+
+float tsl2591::valueAsFloat(uint32_t index) {
+    return channels[index].getOutput();
+}
+
 
 void tsl2591::goSleep() {
     writeRegister(registers::enable, powerOff);
@@ -139,16 +154,4 @@ void tsl2591::run() {
         state = sensorDeviceState::sleeping;
         adjustAllCounters();
     }
-}
-
-const char* tsl2591::name() {
-    return "TSL2591";
-}
-
-const char* tsl2591::channelName(uint32_t channelIndex) {
-    return "visibleLight";
-}
-
-const char* tsl2591::channelUnit(uint32_t channelIndex) {
-    return "lux";
 }

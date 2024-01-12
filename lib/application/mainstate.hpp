@@ -11,7 +11,9 @@ enum class mainState : uint32_t {
     boot,
     idle,
     measuring,
-    storingAndDisplaying,
+    logging,
+    storing,
+    displaying, 
     networking,
     sleeping
 };

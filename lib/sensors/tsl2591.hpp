@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
+#include <sensorchannelformat.hpp>
 
 class tsl2591 {
   public:
@@ -15,17 +16,14 @@ class tsl2591 {
     static void initialize();
     static sensorDeviceState getState() { return state; };
     static float valueAsFloat(uint32_t channelIndex);
-    static const char* valueAsString(uint32_t channelIndex);
 
-    static const char* channelName(uint32_t channelIndex);
-    static const char* channelUnit(uint32_t channelIndex);
-    static const char* name();
     static void tick();
     static void run();
 
     static constexpr uint32_t nmbrChannels{1};
     static constexpr uint32_t visibleLight{0};
     static sensorChannel channels[nmbrChannels];
+    static sensorChannelFormat channelFormats[nmbrChannels];
 
 #ifndef unitTesting
 
