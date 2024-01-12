@@ -48,7 +48,7 @@ void mainController::initialize() {
     // }
 
     // LoRaWAN::initialize(); // initialize the LoRaWAN network driver
-    state = mainState::idle;
+    goTo(mainState::idle);
 }
 
 void mainController::initializeLogging() {
@@ -88,14 +88,14 @@ void mainController::initializeLogging() {
 
     logging::enable(logging::source::criticalError);
     logging::enable(logging::source::error);
-    //logging::enable(logging::source::applicationEvents);
+    // logging::enable(logging::source::applicationEvents);
     logging::enable(logging::source::sensorData);
 }
 
 void mainController::handleEvents() {
     while (applicationEventBuffer.hasEvents()) {
         applicationEvent theEvent = applicationEventBuffer.pop();
-        logging::snprintf(logging::source::applicationEvents, "Application Event [%u] : %s\n", static_cast<uint8_t>(theEvent), toString(theEvent));
+        logging::snprintf(logging::source::applicationEvents, "Application event : %s[%u]\n", toString(theEvent), static_cast<uint8_t>(theEvent));
         switch (theEvent) {
             case applicationEvent::usbConnected:
                 // MX_USART2_UART_Init();
@@ -118,4 +118,9 @@ void mainController::handleEvents() {
                 break;
         }
     }
+}
+
+void mainController::goTo(mainState newState) {
+    logging::snprintf(logging::source::applicationEvents, "MainController stateChange : %s[%d] -> %s[%d]\n", toString(state), static_cast<uint32_t>(state), toString(newState), static_cast<uint32_t>(newState));
+    state = newState;
 }

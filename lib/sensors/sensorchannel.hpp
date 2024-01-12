@@ -6,11 +6,10 @@
 
 #pragma once
 #include <stdint.h>
-#include <sensorchanneltype.hpp>
 
 class sensorChannel {
   public:
-    sensorChannel(sensorChannelType type);
+    sensorChannel();
     void set(uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower);
     enum class action : uint32_t {
         none,
@@ -26,6 +25,7 @@ class sensorChannel {
 
     void addSample(float theSample);
     float getOutput();
+    
 
 #ifndef unitTesting
 
@@ -34,7 +34,6 @@ class sensorChannel {
     float lastValue{0.0F};
     bool hasNewValue{false};
 
-    sensorChannelType type;
     uint32_t oversamplingLowPower;        // low power = on battery
     uint32_t prescalerLowPower;
     uint32_t oversamplingHighPower;        // high power =  on USB power

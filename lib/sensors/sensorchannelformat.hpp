@@ -5,17 +5,14 @@
 // ######################################################################################
 
 #pragma once
+
 #include <stdint.h>
 
-enum class mainState : uint32_t {
-    boot,
-    idle,
-    measuring,
-    logging,
-    storing,
-    displaying, 
-    networking,
-    sleeping
+class sensorChannelFormat {
+  public:
+    static constexpr uint32_t maxNameLength{24};
+    static constexpr uint32_t maxUnitLength{4};
+    const char name[maxNameLength+1];
+    const char unit[maxUnitLength + 1];
+    const uint32_t decimals;                       // number of decimals to be shown on display
 };
-
-const char* toString(const mainState aState);

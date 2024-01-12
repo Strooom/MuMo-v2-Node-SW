@@ -1,7 +1,7 @@
 #include "sensorchannel.hpp"
 #include "power.hpp"
 
-sensorChannel::sensorChannel(sensorChannelType type) : type{type}, oversamplingLowPower{0}, prescalerLowPower{0}, oversamplingHighPower{0}, prescalerHighPower{0} {
+sensorChannel::sensorChannel() : oversamplingLowPower{0}, prescalerLowPower{0}, oversamplingHighPower{0}, prescalerHighPower{0} {
     limitOversamplingAndPrescaler();
 }
 

@@ -44,7 +44,9 @@ void test_toString() {
     TEST_ASSERT_EQUAL_STRING("boot", toString(mainState::boot));
     TEST_ASSERT_EQUAL_STRING("idle", toString(mainState::idle));
     TEST_ASSERT_EQUAL_STRING("measuring", toString(mainState::measuring));
-    TEST_ASSERT_EQUAL_STRING("storing and displaying", toString(mainState::storingAndDisplaying));
+    TEST_ASSERT_EQUAL_STRING("logging", toString(mainState::logging));
+    TEST_ASSERT_EQUAL_STRING("storing", toString(mainState::storing));
+    TEST_ASSERT_EQUAL_STRING("displaying", toString(mainState::displaying));
     TEST_ASSERT_EQUAL_STRING("networking", toString(mainState::networking));
     TEST_ASSERT_EQUAL_STRING("sleeping", toString(mainState::sleeping));
 }

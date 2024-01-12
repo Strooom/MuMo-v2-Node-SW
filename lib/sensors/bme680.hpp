@@ -9,13 +9,17 @@
 #include <stdint.h>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
+#include <sensorchannelformat.hpp>
 
 class bme680 {
   public:
     static bool isPresent();
     static void initialize();
     static sensorDeviceState getState() { return state; };
-    static float getLastChannelValue(uint32_t index);
+    static float valueAsFloat(uint32_t channelIndex);
+    static const char* channelName(uint32_t channelIndex);
+    static const char* channelUnit(uint32_t channelIndex);
+    
     static void tick();
     static void run();
 
@@ -24,6 +28,7 @@ class bme680 {
     static constexpr uint32_t relativeHumidity{1};
     static constexpr uint32_t barometricPressure{2};
     static sensorChannel channels[nmbrChannels];
+    static sensorChannelFormat channelFormats[nmbrChannels];
 
 #ifndef unitTesting
 
@@ -35,7 +40,6 @@ class bme680 {
     static void startSampling();
     static bool samplingIsReady();
     static void readSample();
-
 
     static float calculateTemperature();
     static float calculateRelativeHumidity();

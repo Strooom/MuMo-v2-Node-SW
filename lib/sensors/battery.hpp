@@ -9,13 +9,15 @@
 #include <stdint.h>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
+#include <sensorchannelformat.hpp>
 #include <batterytype.hpp>
 
 class battery {
   public:
     static void initalize();
     static sensorDeviceState getState() { return state; };
-    static float getLastChannelValue(uint32_t index);
+    static float valueAsFloat(uint32_t channelIndex);
+        
     static void tick();
     static void run();
 
@@ -23,6 +25,7 @@ class battery {
     static constexpr uint32_t voltage{0};
     static constexpr uint32_t percentCharged{1};
     static sensorChannel channels[nmbrChannels];
+    static sensorChannelFormat channelFormats[nmbrChannels];
 
 #ifndef unitTesting
 
@@ -36,6 +39,6 @@ class battery {
     static uint32_t readSample();
 
     static float voltageFromRaw(uint32_t rawADC);
-    
+
     static batteryType type;
 };

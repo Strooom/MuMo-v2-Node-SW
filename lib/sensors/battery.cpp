@@ -1,3 +1,9 @@
+// ######################################################################################
+// ### MuMo node : https://github.com/Strooom/MuMo-v2-Node-SW                         ###
+// ### Author : Pascal Roobrouck - https://github.com/Strooom                         ###
+// ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
+// ######################################################################################
+
 #include <battery.hpp>
 #include <settingscollection.hpp>
 #include <chargefromvoltage.hpp>
@@ -11,9 +17,10 @@ extern ADC_HandleTypeDef hadc;
 // ### initialize static members ###
 batteryType battery::type{batteryType::liFePO4_700mAh};
 sensorDeviceState battery::state{sensorDeviceState::unknown};
-sensorChannel battery::channels[nmbrChannels]{
-    {sensorChannelType::batteryVoltage},
-    {sensorChannelType::batteryChargeLevel},
+sensorChannel battery::channels[nmbrChannels];
+sensorChannelFormat battery::channelFormats[nmbrChannels] = {
+    {"voltage", "V", 2},
+    {"percentCharged", "%", 0},
 };
 
 void battery::initalize() {
@@ -30,7 +37,7 @@ void battery::initalize() {
     state = sensorDeviceState::sleeping;
 }
 
-float battery::getLastChannelValue(uint32_t index) {
+float battery::valueAsFloat(uint32_t index) {
     return channels[index].getOutput();
 }
 
@@ -55,7 +62,7 @@ void battery::run() {
         if (channels[voltage].needsSampling()) {
             float batteryVoltage = voltageFromRaw(rawADC);
             channels[voltage].addSample(batteryVoltage);
-            logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[voltage].type), batteryVoltage, postfix(channels[voltage].type));
+            // logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[voltage].type), batteryVoltage, postfix(channels[voltage].type));
             if (channels[voltage].hasOutput()) {
                 channels[voltage].hasNewValue = true;
             }
@@ -65,7 +72,7 @@ void battery::run() {
             float batteryVoltage        = voltageFromRaw(rawADC);
             float batteryPercentCharged = chargeFromVoltage::calculateChargeLevel(batteryVoltage, type);
             channels[percentCharged].addSample(batteryPercentCharged);
-            logging::snprintf(logging::source::sensorData, "%s = %.2f\n", toString(channels[percentCharged].type), batteryPercentCharged, postfix(channels[percentCharged].type));
+            // logging::snprintf(logging::source::sensorData, "%s = %.2f\n", toString(channels[percentCharged].type), batteryPercentCharged, postfix(channels[percentCharged].type));
             if (channels[percentCharged].hasOutput()) {
                 channels[percentCharged].hasNewValue = true;
             }
@@ -120,3 +127,4 @@ float battery::voltageFromRaw(uint32_t rawADC) {
     return 3.2F;        // MOCK value
 #endif
 }
+

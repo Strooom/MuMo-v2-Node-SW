@@ -1,3 +1,9 @@
+// ######################################################################################
+// ### MuMo node : https://github.com/Strooom/MuMo-v2-Node-SW                         ###
+// ### Author : Pascal Roobrouck - https://github.com/Strooom                         ###
+// ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
+// ######################################################################################
+
 #include <tsl2591.hpp>
 #include <settingscollection.hpp>
 #include <logging.hpp>
@@ -11,21 +17,13 @@ extern uint8_t mockTSL2591Registers[256];
 #endif
 
 sensorDeviceState tsl2591::state{sensorDeviceState::unknown};
-sensorChannel tsl2591::channels[nmbrChannels]{
-    {sensorChannelType::TSL25911Infrared},
-    {sensorChannelType::TSL25911VisibleLight},
+sensorChannel tsl2591::channels[nmbrChannels];
+sensorChannelFormat tsl2591::channelFormats[nmbrChannels] =
+    {
+        {"visibleLight", "lux", 0},
 };
-
-tsl2591::integrationTimes tsl2591::integrationTime{integrationTimes::integrationTime100ms};
-tsl2591::gains tsl2591::gain{gains::gain1x};
-
 uint32_t tsl2591::rawChannel0{0};
 uint32_t tsl2591::rawChannel1{0};
-
-float tsl2591::luxCoefficient{408.0F};
-float tsl2591::ch0Coefficient{1.64F};
-float tsl2591::ch1Coefficient{0.59F};
-float tsl2591::ch2Coefficient{0.86F};
 
 bool tsl2591::isPresent() {
     // 1. Check if something is connected to the I2C bus at the address of the bme680
@@ -38,13 +36,19 @@ bool tsl2591::isPresent() {
 }
 
 void tsl2591::initialize() {
-    channels[channel1].set(0, 1, 0, 1);
+    channels[visibleLight].set(0, 1, 0, 1);
+    // TODO : need to read the sensorChannel settins from EEPROM and restore them
 
     writeRegister(registers::enable, powerOn);
-    setIntegrationTime(integrationTimes::integrationTime100ms);
-    setGain(gains::gain25x);
+    writeRegister(registers::config, 0x01);        // gain 1x, integration time 200 ms. I found out these fixed settings are more than sufficient for my use case
+
     goSleep();
 }
+
+float tsl2591::valueAsFloat(uint32_t index) {
+    return channels[index].getOutput();
+}
+
 
 void tsl2591::goSleep() {
     writeRegister(registers::enable, powerOff);
@@ -67,41 +71,15 @@ void tsl2591::readSample() {
 }
 
 bool tsl2591::anyChannelNeedsSampling() {
-    return (channels[channel0].needsSampling() || channels[channel1].needsSampling());
+    return (channels[visibleLight].needsSampling());
 }
 
 void tsl2591::adjustAllCounters() {
-    channels[channel0].adjustCounters();
-    channels[channel1].adjustCounters();
-}
-
-float tsl2591::integrationTimeFactor() {
-    return static_cast<float>((static_cast<uint32_t>(integrationTime) + 1) * 100);        // According to datasheet, the factor to be used in formula is integration time in ms
-}
-
-float tsl2591::gainFactor() {
-    switch (gain) {
-        case gains::gain1x:
-        default:
-            return 1.0F;
-            break;
-
-        case gains::gain25x:
-            return 25.0F;
-            break;
-
-        case gains::gain428x:
-            return 428.0F;
-            break;
-
-        case gains::gain9876x:
-            return 9876.0F;
-            break;
-    }
+    channels[visibleLight].adjustCounters();
 }
 
 float tsl2591::calculateLux() {
-    float CPL  = (integrationTimeFactor() * gainFactor()) / 53.0F;
+    float CPL  = 200.0F / 53.0F;
     float Lux1 = (rawChannel0 - (2 * rawChannel1)) / CPL;
     float Lux2 = ((0.6F * rawChannel0) - rawChannel1) / CPL;
 
@@ -114,38 +92,6 @@ float tsl2591::calculateLux() {
     }
 
     return Lux;
-}
-
-float tsl2591::calculateVisibleLight() {
-    return 0.0F;
-}
-
-float tsl2591::calculateInfraredLight() {
-    return 0.0F;
-}
-
-void tsl2591::setIntegrationTime(integrationTimes theIntegrationTime) {
-    integrationTime = theIntegrationTime;
-    uint8_t control = (static_cast<uint8_t>(integrationTime)) | (static_cast<uint8_t>(gain));
-    writeRegister(registers::config, control);
-}
-
-void tsl2591::setGain(gains theGain) {
-    gain            = theGain;
-    uint8_t control = (static_cast<uint8_t>(integrationTime)) | (static_cast<uint8_t>(gain));
-    writeRegister(registers::config, control);
-}
-
-// If the RAW ADC readings are too low, we need to increase the gain or integrationtime, otherwise we would lose precision
-// Notes : factors between gains are ~25
-// With integration time factors is 6 (600 / 100)
-
-void tsl2591::increaseSensitivity() {
-    // If ADC reading is below 2500 (~64K/25), we can increase gain one step.
-    // If we are at maximum gain, or reading is above 2500 we may improve the integration time :
-}
-void tsl2591::decreaseSensitivity() {
-    // When the ADC reading overflow, we first reduce integration time, then gain
 }
 
 bool tsl2591::testI2cAddress(uint8_t addressToTest) {
@@ -195,32 +141,13 @@ void tsl2591::run() {
     if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
         readSample();
 
-        // check sensitivity and restart with different settings if needed
-
-        if ((rawChannel0 == 0xFFFF) || (rawChannel1 == 0xFFFF)) {
-            decreaseSensitivity();
-        }
-
-        if ((rawChannel0 < 0x3333) || (rawChannel1 < 0x3333)) {
-            increaseSensitivity();
-        }
-
-        if (channels[channel1].needsSampling()) {
+        if (channels[visibleLight].needsSampling()) {
             float tsl2591visible = calculateLux();
-            channels[channel1].addSample(tsl2591visible);
-            logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[channel1].type), tsl2591visible, postfix(channels[channel1].type));
+            channels[visibleLight].addSample(tsl2591visible);
+            // logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[channel1].type), tsl2591visible, postfix(channels[channel1].type));
 
-            if (channels[channel1].hasOutput()) {
-                channels[channel1].hasNewValue = true;
-            }
-        }
-
-        if (channels[channel0].needsSampling()) {
-            float tsl2591infrared = calculateLux();
-            channels[channel0].addSample(tsl2591infrared);
-            logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[channel0].type), tsl2591infrared, postfix(channels[channel0].type));
-            if (channels[channel0].hasOutput()) {
-                channels[channel0].hasNewValue = true;
+            if (channels[visibleLight].hasOutput()) {
+                channels[visibleLight].hasNewValue = true;
             }
         }
 

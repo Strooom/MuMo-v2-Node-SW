@@ -5,6 +5,7 @@
 // ######################################################################################
 
 #include <bme680.hpp>
+#include <settingscollection.hpp>
 #include <logging.hpp>
 
 #ifndef generic
@@ -17,10 +18,11 @@ extern uint8_t mockBME680Registers[256];
 #endif
 
 sensorDeviceState bme680::state{sensorDeviceState::unknown};
-sensorChannel bme680::channels[nmbrChannels]{
-    {sensorChannelType::BME680Temperature},
-    {sensorChannelType::BME680RelativeHumidity},
-    {sensorChannelType::BME680BarometricPressure},
+sensorChannel bme680::channels[nmbrChannels];
+sensorChannelFormat bme680::channelFormats[nmbrChannels] = {
+    {"temperature", "°C", 2},
+    {"relativeHumidity", "%", 0},
+    {"barometricPressure", "hPa", 0},
 };
 
 uint32_t bme680::rawDataTemperature;
@@ -62,6 +64,7 @@ bool bme680::isPresent() {
 }
 
 void bme680::initialize() {
+    // TODO : need to read the sensorChannel settins from EEPROM and restore them
     // channels[temperature].set(0, 1, 0, 1);
     // channels[relativeHumidity].set(0, 1, 0, 1);
 
@@ -96,7 +99,7 @@ void bme680::initialize() {
     state = sensorDeviceState::sleeping;
 }
 
-float bme680::getLastChannelValue(uint32_t index) {
+float bme680::valueAsFloat(uint32_t index) {
     return channels[index].getOutput();
 }
 
@@ -121,7 +124,7 @@ void bme680::run() {
         if (channels[temperature].needsSampling()) {
             float bme680Temperature = calculateTemperature();
             channels[temperature].addSample(bme680Temperature);
-            logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[temperature].type), bme680Temperature, postfix(channels[temperature].type));
+            // logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[temperature].type), bme680Temperature, postfix(channels[temperature].type));
 
             if (channels[temperature].hasOutput()) {
                 channels[temperature].hasNewValue = true;
@@ -131,7 +134,7 @@ void bme680::run() {
         if (channels[relativeHumidity].needsSampling()) {
             float bme680RelativeHumidity = calculateRelativeHumidity();
             channels[relativeHumidity].addSample(bme680RelativeHumidity);
-            logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[relativeHumidity].type), bme680RelativeHumidity, postfix(channels[relativeHumidity].type));
+            // logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[relativeHumidity].type), bme680RelativeHumidity, postfix(channels[relativeHumidity].type));
             if (channels[relativeHumidity].hasOutput()) {
                 channels[relativeHumidity].hasNewValue = true;
             }
@@ -268,3 +271,4 @@ void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* dest
     memcpy(destination, mockBME680Registers + startAddress, length);
 #endif
 }
+
