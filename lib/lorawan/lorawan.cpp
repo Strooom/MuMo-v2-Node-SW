@@ -9,6 +9,12 @@
 #include <maccommand.hpp>
 #include <aesblock.hpp>
 
+#ifndef generic
+#include "main.h"
+extern RNG_HandleTypeDef hrng;
+extern LPTIM_HandleTypeDef hlptim1;
+#endif
+
 // instantiate and initialize the static members
 
 deviceAddress LoRaWAN::DevAddr;
@@ -76,6 +82,11 @@ void LoRaWAN::run() {
         sendUplink();                                             // start an uplink cycle with the MAC stuff on port 0
         removeNonStickyMacStuff();                                // after all MAC stuff was sent, remove it from the macOut buffer, except for the sticky MAC stuff, which is only removed after receiving a donwlink
     }
+}
+
+bool LoRaWAN::isReady() {
+    // TODO : implement
+    return true;
 }
 
 void LoRaWAN::handleEvents() {
@@ -271,10 +282,10 @@ void LoRaWAN::goTo(txRxCycleState newState) {
             break;
 
         case txRxCycleState::waitForRandomTimeBeforeTransmit: {
-            uint32_t randomDelayAsTicks = getRandomNumber() % maxRandomDelayBeforeTx;                                                                                          // this results in a random delay of 0.. 8 seconds
-            float randomDelayAsFloat    = static_cast<float>(randomDelayAsTicks) / 2048.0f;                                                                                    // convert to seconds
-            //logging::snprintf(logging::source::lorawanTiming, "LoRaWAN random delay before transmit : %u ticks, %f seconds\n", randomDelayAsTicks, randomDelayAsFloat);        //
-            startTimer(randomDelayAsTicks);                                                                                                                                    //
+            uint32_t randomDelayAsTicks = getRandomNumber() % maxRandomDelayBeforeTx;              // this results in a random delay of 0.. 8 seconds
+            float randomDelayAsFloat    = static_cast<float>(randomDelayAsTicks) / 2048.0f;        // convert to seconds
+            // logging::snprintf(logging::source::lorawanTiming, "LoRaWAN random delay before transmit : %u ticks, %f seconds\n", randomDelayAsTicks, randomDelayAsFloat);        //
+            startTimer(randomDelayAsTicks);        //
         } break;
 
         case txRxCycleState::waitForTxComplete:
@@ -415,7 +426,7 @@ void LoRaWAN::decryptPayload(aesKey& theKey) {
     }
 }
 
-void LoRaWAN::insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, framePort theFramePort) {
+void LoRaWAN::insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort) {
     rawMessage[macHeaderOffset]         = macHeader(frameType::unconfirmedDataUp).asUint8();        //
     rawMessage[deviceAddressOffset]     = DevAddr.asUint8[0];                                       //
     rawMessage[deviceAddressOffset + 1] = DevAddr.asUint8[1];                                       //
@@ -500,7 +511,7 @@ bool LoRaWAN::isValidMic() {
     return true;
 }
 
-void LoRaWAN::sendUplink(framePort theFramePort, const uint8_t applicationData[], uint32_t applicationDataLength) {
+void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], uint32_t applicationDataLength) {
     if ((theFramePort == 0) && (applicationDataLength > 0)) {
         logging::snprintf(logging::source::error, "Error : cannot send application payload on framePort 0\n");
         return;
@@ -964,42 +975,27 @@ void LoRaWAN::logState() {
     }
 }
 
-#ifndef generic
-
-#include "main.h"
-
-extern RNG_HandleTypeDef hrng;
-extern LPTIM_HandleTypeDef hlptim1;
-
 uint32_t LoRaWAN::getRandomNumber() {
+#ifndef generic
     uint32_t result{0};
     HAL_RNG_GenerateRandomNumber(&hrng, &result);
     return result;
-}
-
-void LoRaWAN::startTimer(uint32_t timeOut) {
-    logging::snprintf(logging::source::lorawanTiming, "started = %u\n", HAL_GetTick());
-    HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, timeOut);
-}
-
-void LoRaWAN::stopTimer() {
-    logging::snprintf(logging::source::lorawanTiming, "stopped = %u\n", HAL_GetTick());
-    HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
-}
-
 #else
+    // result = rand();
+    return 0;
+#endif
+}
 
 void LoRaWAN::startTimer(uint32_t timeOut) {
+#ifndef generic
+    HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, timeOut);
+    // logging::snprintf(logging::source::lorawanTiming, "started = %u\n", HAL_GetTick());
+#endif
 }
 
 void LoRaWAN::stopTimer() {
-}
-
-uint32_t LoRaWAN::getRandomNumber() {
-    uint32_t result{0};
-    //result = rand();
-    result = 0;
-    return result;
-}
-
+#ifndef generic
+    // logging::snprintf(logging::source::lorawanTiming, "stopped = %u\n", HAL_GetTick());
+    HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
 #endif
+}

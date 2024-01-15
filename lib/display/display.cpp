@@ -90,6 +90,11 @@ void display::initialize() {
 void display::run() {
 }
 
+bool display::isReady() {
+    // TODO : implement : when updating is done, ie. busyflag no longer set, return true
+    return true;
+    }
+
 void display::goSleep() {
     uint8_t commandData[1]{0x01};
     writeCommand(SSD1681Commands::DEEP_SLEEP_MODE, commandData, 1);

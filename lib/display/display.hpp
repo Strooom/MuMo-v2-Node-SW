@@ -34,6 +34,7 @@ class display {
     static bool isPresent();                       // return displayPresent
     static void initialize();                      // wakeup through HW reset, then configure display
     static void run();
+    static bool isReady();                         // 
     static void goSleep();                         //
     static void set();                             // write displayBuffer to display
     static void clear();                           // write blank data to display

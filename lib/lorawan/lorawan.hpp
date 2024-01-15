@@ -9,14 +9,12 @@
 #include <stdint.h>
 #include <cstring>
 
-#include <frameport.hpp>
+#include <aeskey.hpp>
 #include <messagetype.hpp>
 #include <txrxcycle.hpp>
 #include <macheader.hpp>
 #include <deviceaddress.hpp>
-#include <aeskey.hpp>
 #include <framecount.hpp>
-#include <dutycycle.hpp>
 #include <mic.hpp>
 #include <datarate.hpp>
 #include <channelcollection.hpp>
@@ -30,10 +28,11 @@ class LoRaWAN {
   public:
     static void initialize();                                                                                     // initialize the LoRaWAN layer
     static void run();                                                                                            // run the LoRaWAN MAC layer
+    static bool isReady();                                                                                        // true when networking layer has completed all tasks and so MCU could go to sleep
     static void handleEvents();                                                                                   // handles events (timeouts and tx/rxComplete events)
     static bool isReadyToTransmit();                                                                              // is the LoRaWAN layer in a state, ready to transmit a message?
     static uint32_t getMaxApplicationPayloadLength();                                                             // how many [bytes] can the application send in one message? Depends on active dataRate and amount of MAC stuff waiting to be transmitted
-    static void sendUplink(framePort aFramePort = 0, const uint8_t data[] = nullptr, uint32_t length = 0);        // send an uplink message,
+    static void sendUplink(uint8_t aFramePort = 0, const uint8_t data[] = nullptr, uint32_t length = 0);        // send an uplink message,
     static void getDownlinkMessage();                                                                             //
     static void checkNetwork();
 
@@ -71,13 +70,13 @@ class LoRaWAN {
     // ### Encoding and Decoding of LoRaWAN messages ###
     // #################################################
 
-    static constexpr uint32_t maxLoRaPayloadLength{256};                         // limited to length of databuffer in SX126x
-    static constexpr uint32_t b0BlockLength{16};                                 // length of the so-called B0 block, in front of the LoRa payload, needed to calculate MIC
-    static constexpr uint32_t macHeaderLength{1};                                // length of MHDR in [bytes]
+    static constexpr uint32_t maxLoRaPayloadLength{256};                                // limited to length of databuffer in SX126x
+    static constexpr uint32_t b0BlockLength{16};                                        // length of the so-called B0 block, in front of the LoRa payload, needed to calculate MIC
+    static constexpr uint32_t macHeaderLength{1};                                       // length of MHDR in [bytes]
     static constexpr uint32_t deviceAddressLength{deviceAddress::lengthInBytes};        // length of DevAddr in [bytes]
-    static constexpr uint32_t frameControlLength{1};                             // length of FCtrl in [bytes]
-    static constexpr uint32_t frameCountLSHLength{2};                            // frameCount Least Significant Halve - truncated to 2 LSbytes only
-    static constexpr uint32_t micLength{messageIntegrityCode::length};           // length of MIC in [bytes]
+    static constexpr uint32_t frameControlLength{1};                                    // length of FCtrl in [bytes]
+    static constexpr uint32_t frameCountLSHLength{2};                                   // frameCount Least Significant Halve - truncated to 2 LSbytes only
+    static constexpr uint32_t micLength{messageIntegrityCode::length};                  // length of MIC in [bytes]
 
     static uint8_t rawMessage[maxLoRaPayloadLength + b0BlockLength];        // in this buffer, the message is contructed (Tx - Uplink) or decoded (Rx - Downlink)
 
@@ -110,7 +109,7 @@ class LoRaWAN {
     static void insertPayload(const uint8_t data[], const uint32_t length);                                                                                                // copy application payload to correct position in the rawMessage buffer
     static void encryptPayload(aesKey& theKey);                                                                                                                            // encrypt the payload in the rawMessage buffer
     static void decryptPayload(aesKey& theKey);                                                                                                                            // decrypt the payload in the rawMessage buffer
-    static void insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, framePort theFramePort);        // prepend the header to the rawMessage buffer
+    static void insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort);        // prepend the header to the rawMessage buffer
     static void insertBlockB0(linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t micPayloadLength);                                 //
     static void insertMic();                                                                                                                                               //
 

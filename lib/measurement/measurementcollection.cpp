@@ -32,8 +32,8 @@ void measurementCollection::read(uint32_t measurementIndex, measurement& destina
     destination.value.asBytes[1]     = rawData[5];
     destination.value.asBytes[2]     = rawData[6];
     destination.value.asBytes[3]     = rawData[7];
-    //destination.sensorDeviceId                 = static_cast<sensorChannelType>(rawData[8]);
-    //destination.channelAndFlags                = rawData[9];
+    // destination.sensorDeviceId                 = static_cast<sensorChannelType>(rawData[8]);
+    // destination.channelAndFlags                = rawData[9];
 }
 
 void measurementCollection::write(uint32_t measurementIndex, measurement& source) {
@@ -51,7 +51,16 @@ void measurementCollection::write(uint32_t measurementIndex, measurement& source
     rawData[6] = source.value.asBytes[2];
     rawData[7] = source.value.asBytes[3];
 
-    //rawData[8] = static_cast<uint8_t>(source.type);
-    //rawData[9] = source.flags;
+    // rawData[8] = static_cast<uint8_t>(source.type);
+    // rawData[9] = source.flags;
     nonVolatileStorage::write(startAddress, rawData, measurementBlockLength);
+}
+
+void measurementCollection::run() {
+    // TODO - implement
+}
+
+bool measurementCollection::isReady() {
+    // TODO - implement
+    return true;
 }

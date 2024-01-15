@@ -60,11 +60,15 @@ __ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {
 
 I2C_HandleTypeDef hi2c2;
 
+LPTIM_HandleTypeDef hlptim1;
+
 RNG_HandleTypeDef hrng;
 
 RTC_HandleTypeDef hrtc;
 
 SPI_HandleTypeDef hspi2;
+
+SUBGHZ_HandleTypeDef hsubghz;
 
 UART_HandleTypeDef huart2;
 
@@ -82,6 +86,8 @@ static void MX_ADC_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_AES_Init(void);
 static void MX_RNG_Init(void);
+static void MX_LPTIM1_Init(void);
+static void MX_SUBGHZ_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -126,6 +132,8 @@ int main(void)
   MX_I2C2_Init();
   MX_AES_Init();
   MX_RNG_Init();
+  MX_LPTIM1_Init();
+  MX_SUBGHZ_Init();
   /* USER CODE BEGIN 2 */
     HAL_Delay(5000);
     mainController::initialize();
@@ -137,6 +145,7 @@ int main(void)
         mainController::handleEvents();
         mainController::run();
     /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
     }
   /* USER CODE END 3 */
@@ -323,6 +332,40 @@ static void MX_I2C2_Init(void)
 }
 
 /**
+  * @brief LPTIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_LPTIM1_Init(void)
+{
+
+  /* USER CODE BEGIN LPTIM1_Init 0 */
+
+  /* USER CODE END LPTIM1_Init 0 */
+
+  /* USER CODE BEGIN LPTIM1_Init 1 */
+
+  /* USER CODE END LPTIM1_Init 1 */
+  hlptim1.Instance = LPTIM1;
+  hlptim1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
+  hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV16;
+  hlptim1.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
+  hlptim1.Init.OutputPolarity = LPTIM_OUTPUTPOLARITY_HIGH;
+  hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
+  hlptim1.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
+  hlptim1.Init.Input1Source = LPTIM_INPUT1SOURCE_GPIO;
+  hlptim1.Init.Input2Source = LPTIM_INPUT2SOURCE_GPIO;
+  if (HAL_LPTIM_Init(&hlptim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN LPTIM1_Init 2 */
+
+  /* USER CODE END LPTIM1_Init 2 */
+
+}
+
+/**
   * @brief RNG Initialization Function
   * @param None
   * @retval None
@@ -384,7 +427,7 @@ static void MX_RTC_Init(void)
 
   /** Enable the WakeUp
   */
-  if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 6143, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK)
+  if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK)
   {
     Error_Handler();
   }
@@ -431,6 +474,32 @@ static void MX_SPI2_Init(void)
   /* USER CODE BEGIN SPI2_Init 2 */
 
   /* USER CODE END SPI2_Init 2 */
+
+}
+
+/**
+  * @brief SUBGHZ Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SUBGHZ_Init(void)
+{
+
+  /* USER CODE BEGIN SUBGHZ_Init 0 */
+
+  /* USER CODE END SUBGHZ_Init 0 */
+
+  /* USER CODE BEGIN SUBGHZ_Init 1 */
+
+  /* USER CODE END SUBGHZ_Init 1 */
+  hsubghz.Init.BaudratePrescaler = SUBGHZSPI_BAUDRATEPRESCALER_2;
+  if (HAL_SUBGHZ_Init(&hsubghz) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SUBGHZ_Init 2 */
+
+  /* USER CODE END SUBGHZ_Init 2 */
 
 }
 

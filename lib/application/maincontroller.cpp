@@ -6,17 +6,30 @@
 // #############################################################################
 
 #include <maincontroller.hpp>
-#include <applicationevent.hpp>
 #include <circularbuffer.hpp>
+#include <linearbuffer.hpp>
+
+#include <applicationevent.hpp>
+
 #include <version.hpp>
 #include <buildinfo.hpp>
 #include <logging.hpp>
+
 #include <sensordevicecollection.hpp>
+
 #include <display.hpp>
+#include <screen.hpp>
+
 #include <gpio.hpp>
+
 #include <power.hpp>
 #include <settingscollection.hpp>
-#include <screen.hpp>
+#include <measurementcollection.hpp>
+
+#include <aeskey.hpp>
+#include <datarate.hpp>
+
+#include <lorawan.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -87,7 +100,7 @@ void mainController::initializeLogging() {
         logging::snprintf("USB connected\n");
     }
 
-    //logging::activeSources = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeloggingSources);
+    // logging::activeSources = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeloggingSources);
 }
 
 void mainController::handleEvents() {
@@ -137,19 +150,26 @@ void mainController::run() {
             break;
 
         case mainState::storing:
-            //measurementCollection::run();
-            goTo(mainState::displaying);
-            screen::show();
+            measurementCollection::run();
+            if (measurementCollection::isReady()) {
+                goTo(mainState::displaying);
+                screen::show();
+            }
             break;
 
         case mainState::displaying:
             display::run();
-            goTo(mainState::networking);
+            if (display::isReady()) {
+                // TODO : check if we need a transmission
+                goTo(mainState::networking);
+            }
             break;
 
         case mainState::networking:
-            //LoRaWAN::run();
-            goTo(mainState::idle);
+            LoRaWAN::run();
+            if (LoRaWAN::isReady()) {
+                goTo(mainState::idle);
+            }
             break;
 
         case mainState::idle:
