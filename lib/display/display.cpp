@@ -87,6 +87,9 @@ void display::initialize() {
     clearAllPixels();
 }
 
+void display::run() {
+}
+
 void display::goSleep() {
     uint8_t commandData[1]{0x01};
     writeCommand(SSD1681Commands::DEEP_SLEEP_MODE, commandData, 1);

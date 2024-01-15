@@ -1,7 +1,7 @@
 #include <unity.h>
-#include "aeskey.h"
-#include "sbox.h"
-#include "rcon.h"
+#include <aeskey.hpp>
+#include <sbox.hpp>
+#include <rcon.hpp>
 
 
 

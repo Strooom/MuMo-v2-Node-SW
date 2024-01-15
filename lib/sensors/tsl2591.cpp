@@ -49,6 +49,14 @@ float tsl2591::valueAsFloat(uint32_t index) {
     return channels[index].getOutput();
 }
 
+bool tsl2591::hasNewMeasurement() {
+    return (channels[visibleLight].hasNewValue);
+}
+
+void tsl2591::clearNewMeasurements() {
+    channels[visibleLight].hasNewValue        = false;
+}
+
 
 void tsl2591::goSleep() {
     writeRegister(registers::enable, powerOff);

@@ -16,8 +16,9 @@ class battery {
   public:
     static void initalize();
     static sensorDeviceState getState() { return state; };
+    static bool hasNewMeasurement();
     static float valueAsFloat(uint32_t channelIndex);
-        
+
     static void tick();
     static void run();
 
@@ -37,7 +38,7 @@ class battery {
     static void startSampling();
     static bool samplingIsReady();
     static uint32_t readSample();
-
+    static void clearNewMeasurements();
     static float voltageFromRaw(uint32_t rawADC);
 
     static batteryType type;

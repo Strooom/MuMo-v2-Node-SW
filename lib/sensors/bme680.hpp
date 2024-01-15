@@ -16,6 +16,7 @@ class bme680 {
     static bool isPresent();
     static void initialize();
     static sensorDeviceState getState() { return state; };
+    static bool hasNewMeasurement();
     static float valueAsFloat(uint32_t channelIndex);
     static const char* channelName(uint32_t channelIndex);
     static const char* channelUnit(uint32_t channelIndex);
@@ -44,6 +45,8 @@ class bme680 {
     static float calculateTemperature();
     static float calculateRelativeHumidity();
     static float calculateBarometricPressure();
+
+    static void clearNewMeasurements();
 
     static constexpr uint8_t i2cAddress{0x76};        // default I2C address for this sensorChannel, DSO tied to GND on our hardware
     static constexpr uint8_t halTrials{0x03};         // ST HAL requires a 'retry' parameters

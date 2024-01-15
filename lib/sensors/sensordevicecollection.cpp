@@ -96,13 +96,33 @@ bool sensorDeviceCollection::isSleeping() {
     return true;
 }
 
-// bool sensorDeviceCollection::hasNewMeasurement(sensorChannelType aChannelType) {
-//     return false;
-// }
-
-// float sensorDeviceCollection::getMeasurement(sensorChannelType aChannelType) {
-//     return 0.0F;
-// }
+bool sensorDeviceCollection::hasNewMeasurements() {
+    for (auto index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
+        if (isPresent[index]) {
+            switch (static_cast<sensorDeviceType>(index)) {
+                case sensorDeviceType::battery:
+                    if (battery::hasNewMeasurement()) {
+                        return true;
+                    }
+                    break;
+                case sensorDeviceType::bme680:
+                    if (bme680::hasNewMeasurement()) {
+                        return true;
+                    }
+                    break;
+                case sensorDeviceType::tsl2591:
+                    if (tsl2591::hasNewMeasurement()) {
+                        return true;
+                    }
+                    break;
+                // Add more types of sensors here
+                default:
+                    break;
+            }
+        }
+    }
+    return false;
+}
 
 const char* sensorDeviceCollection::name(uint32_t index) {
     switch (static_cast<sensorDeviceType>(index)) {

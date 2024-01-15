@@ -33,6 +33,7 @@ class display {
     display() = delete;
     static bool isPresent();                       // return displayPresent
     static void initialize();                      // wakeup through HW reset, then configure display
+    static void run();
     static void goSleep();                         //
     static void set();                             // write displayBuffer to display
     static void clear();                           // write blank data to display

@@ -1,6 +1,6 @@
 #include <unity.h>
-#include "aesblock.h"
-#include "aeskey.h"
+#include <aesblock.hpp>
+#include <aeskey.hpp>
 
 void setUp(void) {}
 void tearDown(void) {}

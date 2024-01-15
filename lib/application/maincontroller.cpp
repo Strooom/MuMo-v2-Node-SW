@@ -16,6 +16,7 @@
 #include <gpio.hpp>
 #include <power.hpp>
 #include <settingscollection.hpp>
+#include <screen.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -86,10 +87,7 @@ void mainController::initializeLogging() {
         logging::snprintf("USB connected\n");
     }
 
-    logging::enable(logging::source::criticalError);
-    logging::enable(logging::source::error);
-    // logging::enable(logging::source::applicationEvents);
-    logging::enable(logging::source::sensorData);
+    //logging::activeSources = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeloggingSources);
 }
 
 void mainController::handleEvents() {
@@ -117,6 +115,50 @@ void mainController::handleEvents() {
             default:
                 break;
         }
+    }
+}
+
+void mainController::run() {
+    switch (state) {
+        case mainState::measuring:
+            sensorDeviceCollection::run();
+            if (sensorDeviceCollection::isSleeping()) {
+                goTo(mainState::logging);
+            }
+            break;
+
+        case mainState::logging:
+            if (sensorDeviceCollection::hasNewMeasurements()) {
+                if (logging::isActive(logging::source::sensorData)) {
+                    // log all new data
+                }
+            }
+            goTo(mainState::storing);
+            break;
+
+        case mainState::storing:
+            //measurementCollection::run();
+            goTo(mainState::displaying);
+            screen::show();
+            break;
+
+        case mainState::displaying:
+            display::run();
+            goTo(mainState::networking);
+            break;
+
+        case mainState::networking:
+            //LoRaWAN::run();
+            goTo(mainState::idle);
+            break;
+
+        case mainState::idle:
+            // here we decide to go into deepSleep depending on external conditions
+            // OR  goTo(mainState::sleeping);
+            break;
+
+        default:
+            break;
     }
 }
 

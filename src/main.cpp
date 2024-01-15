@@ -135,13 +135,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
     while (1) {
         mainController::handleEvents();
-        sensorDeviceCollection::run();
-        // measurementCollection::run();
-        // display::run();
-        // LoRaWAN::run();
-
+        mainController::run();
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
     }
   /* USER CODE END 3 */

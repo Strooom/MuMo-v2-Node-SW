@@ -15,6 +15,7 @@ class mainController {
     mainController() = delete;
     static void initialize();
     static void handleEvents();
+    static void run();
 
 #ifndef unitTesting
 

@@ -37,6 +37,15 @@ void battery::initalize() {
     state = sensorDeviceState::sleeping;
 }
 
+bool battery::hasNewMeasurement() {
+    return (channels[voltage].hasNewValue || channels[percentCharged].hasNewValue);
+}
+
+void battery::clearNewMeasurements() {
+    channels[voltage].hasNewValue        = false;
+    channels[percentCharged].hasNewValue = false;
+}
+
 float battery::valueAsFloat(uint32_t index) {
     return channels[index].getOutput();
 }
@@ -48,6 +57,7 @@ void battery::tick() {
     }
 
     if (anyChannelNeedsSampling()) {
+        clearNewMeasurements();
         startSampling();
         state = sensorDeviceState::sampling;
     } else {
@@ -127,4 +137,3 @@ float battery::voltageFromRaw(uint32_t rawADC) {
     return 3.2F;        // MOCK value
 #endif
 }
-

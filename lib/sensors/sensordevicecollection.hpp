@@ -22,6 +22,7 @@ class sensorDeviceCollection {
     static const char* channelName(uint32_t deviceIndex, uint32_t channelIndex);
     static const char* channelUnits(uint32_t deviceIndex, uint32_t channelIndex);
 
+    static bool hasNewMeasurements();
 
 #ifndef unitTesting
 

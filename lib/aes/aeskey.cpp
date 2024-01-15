@@ -1,7 +1,7 @@
-#include "aeskey.h"
+#include <aeskey.hpp>
 #include <cstring>        // needed for memcpy()
-#include "sbox.h"
-#include "rcon.h"
+#include <sbox.hpp>
+#include <rcon.hpp>
 
 const uint8_t* aesKey::asBytes() {
     return key.asByte;

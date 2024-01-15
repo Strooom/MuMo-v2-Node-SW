@@ -1,8 +1,8 @@
-#include "aesblock.h"
+#include <aesblock.hpp>
 #include <cstring>        // needed for memcpy()
 #include <cstddef>        // std::size_t
-#include "aeskey.h"
-#include "sbox.h"
+#include <aeskey.hpp>
+#include <sbox.hpp>
 
 #ifndef generic
 #include "main.h"

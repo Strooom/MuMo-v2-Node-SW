@@ -99,6 +99,17 @@ void bme680::initialize() {
     state = sensorDeviceState::sleeping;
 }
 
+bool bme680::hasNewMeasurement() {
+    return (channels[temperature].hasNewValue || channels[relativeHumidity].hasNewValue || channels[barometricPressure].hasNewValue);
+}
+
+void bme680::clearNewMeasurements() {
+    channels[temperature].hasNewValue        = false;
+    channels[relativeHumidity].hasNewValue = false;
+    channels[barometricPressure].hasNewValue = false;
+}
+
+
 float bme680::valueAsFloat(uint32_t index) {
     return channels[index].getOutput();
 }
@@ -110,6 +121,7 @@ void bme680::tick() {
     }
 
     if (anyChannelNeedsSampling()) {
+        clearNewMeasurements();
         startSampling();
         state = sensorDeviceState::sampling;
     } else {
