@@ -50,12 +50,12 @@ void mainController::initialize() {
 
     sensorDeviceCollection::discover();
 
-    // gpio::enableGpio(gpio::group::spiDisplay);
-    // if (display::isPresent()) {
-    //     logging::snprintf("Display present\n");
-    // } else {
-    //     logging::snprintf("Display not present\n");
-    // }
+    gpio::enableGpio(gpio::group::spiDisplay);
+    if (display::isPresent()) {
+        logging::snprintf("Display present\n");
+    } else {
+        logging::snprintf("Display not present\n");
+    }
 
     // gpio::enableGpio(gpio::group::rfControl);
     // LoRaWAN::initialize(); // initialize the LoRaWAN network driver

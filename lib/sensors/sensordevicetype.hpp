@@ -8,11 +8,11 @@
 #include <stdint.h>
 
 enum class sensorDeviceType : uint32_t {
-    battery,
     mcu,
+    battery,
     bme680,
-    bme688,
     tsl2591,
+    bme688,
     sht40,
     lis3dh,
     sths34,

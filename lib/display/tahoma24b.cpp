@@ -1399,4 +1399,4 @@ const uint8_t tahoma24bPixelData[] =
         0x00, 0x00, 0x3F, 0xE0,        //                   #########
         0x00, 0x00, 0x0F, 0x80,        //                     #####
 };
-font tahoma24b{tahoma24bProperties, tahoma24bCharacters, tahoma24bPixelData};
+font tahoma24bold{tahoma24bProperties, tahoma24bCharacters, tahoma24bPixelData};

@@ -81,8 +81,8 @@ static float valueAsFloat(uint32_t channelIndex);
     static constexpr uint8_t powerOn     = 0x01;
     static constexpr uint8_t powerOff    = 0x00;
 
-    static uint32_t rawChannel0;
-    static uint32_t rawChannel1;
+    static int32_t rawChannel0;
+    static int32_t rawChannel1;
 
     static bool testI2cAddress(uint8_t addressToTest);
     static uint8_t readRegister(registers aRegister);

@@ -22,8 +22,8 @@ sensorChannelFormat tsl2591::channelFormats[nmbrChannels] =
     {
         {"visibleLight", "lux", 0},
 };
-uint32_t tsl2591::rawChannel0{0};
-uint32_t tsl2591::rawChannel1{0};
+int32_t tsl2591::rawChannel0{0};
+int32_t tsl2591::rawChannel1{0};
 
 bool tsl2591::isPresent() {
     // 1. Check if something is connected to the I2C bus at the address of the bme680

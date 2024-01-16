@@ -93,7 +93,7 @@ void display::run() {
 bool display::isReady() {
     // TODO : implement : when updating is done, ie. busyflag no longer set, return true
     return true;
-    }
+}
 
 void display::goSleep() {
     uint8_t commandData[1]{0x01};
@@ -291,107 +291,15 @@ void display::waitWhileBusy() {
     }
 }
 
-void display::set()
-// EPD* epd,
-// const unsigned char* image_buffer,
-// int x,
-// int y,
-// int image_width,
-// int image_height) {
-// int x_end;
-// int y_end;
-{
-    // if (
-    //     image_buffer == NULL ||
-    //     x < 0 || image_width < 0 ||
-    //     y < 0 || image_height < 0) {
-    //     return;
-    // }
-    // /* x point must be the multiple of 8 or the last 3 bits will be ignored */
-    // x &= 0xF8;
-    // image_width &= 0xF8;
-    // if (x + image_width >= epd->width) {
-    //     x_end = epd->width - 1;
-    // } else {
-    //     x_end = x + image_width - 1;
-    // }
-    // if (y + image_height >= epd->height) {
-    //     y_end = epd->height - 1;
-    // } else {
-    //     y_end = y + image_height - 1;
-    // }
-    // EPD_SetMemoryArea(epd, x, y, x_end, y_end);
-    // EPD_SetMemoryPointer(epd, x, y);
-    // EPD_SendCommand(epd, WRITE_RAM);
-    // /* send the image data */
-    // for (int j = 0; j < y_end - y + 1; j++) {
-    //     for (int i = 0; i < (x_end - x + 1) / 8; i++) {
-    //         EPD_SendData(epd, image_buffer[i + j * (image_width / 8)]);
-    //     }
-    // }
-}
 
-void display::clear() {
-    // EPD_SetMemoryArea(epd, 0, 0, epd->width - 1, epd->height - 1);
-    // EPD_SetMemoryPointer(epd, 0, 0);
-    // EPD_SendCommand(epd, WRITE_RAM);
-    // /* send the color data */
-    // for (int i = 0; i < epd->width / 8 * epd->height; i++) {
-    //     EPD_SendData(epd, color);
-    // }
-}
 
-void display::update(updateMode theMode) {
+void display::update() {
+    uint8_t commandData[4]{0};
     writeCommand(SSD1681Commands::WRITE_RAM, nullptr, 0);
     writeData(displayBuffer, bufferSize);
-
-    // uint8_t commandData[1]{0xC4};
-
-    writeCommand(SSD1681Commands::DISPLAY_UPDATE_CONTROL_2, nullptr, 0);
-    // writeData(0xF7);
-
-    switch (theMode) {
-        default:
-        case updateMode::full:
-            // ITM->PORT[0].u8 = 0xFF;
-            writeData(0xF7);
-            // EPD_W21_WriteDATA(0xF7);  TODO : some more commands need to be reverse engineered here..
-            break;
-        case updateMode::fast:
-            // EPD_W21_WriteDATA(0xC7);
-            break;
-        case updateMode::partial:
-            // EPD_W21_WriteDATA(0xFF);
-            break;
-    }
+    commandData[0] = 0xF7; // Full update
+    writeCommand(SSD1681Commands::DISPLAY_UPDATE_CONTROL_2, commandData, 1);
     writeCommand(SSD1681Commands::MASTER_ACTIVATION, nullptr, 0);
     waitWhileBusy();
-    // ITM->PORT[0].u8 = 0x00;
-
-    // writeCommand(SSD1681Commands::TERMINATE_FRAME_READ_WRITE, nullptr, 0);        // TODO : this does not seem to be used in example SW
 }
 
-// static void EPD_SetMemoryArea(EPD* epd, int x_start, int y_start, int x_end, int y_end) {
-//     EPD_SendCommand(epd, SET_RAM_X_ADDRESS_START_END_POSITION);
-//     /* x point must be the multiple of 8 or the last 3 bits will be ignored */
-//     EPD_SendData(epd, (x_start >> 3) & 0xFF);
-//     EPD_SendData(epd, (x_end >> 3) & 0xFF);
-//     EPD_SendCommand(epd, SET_RAM_Y_ADDRESS_START_END_POSITION);
-//     EPD_SendData(epd, y_start & 0xFF);
-//     EPD_SendData(epd, (y_start >> 8) & 0xFF);
-//     EPD_SendData(epd, y_end & 0xFF);
-//     EPD_SendData(epd, (y_end >> 8) & 0xFF);
-// }
-
-// /**
-//  *  @brief: private function to specify the start point for data R/W
-//  */
-// static void EPD_SetMemoryPointer(EPD* epd, int x, int y) {
-//     EPD_SendCommand(epd, SET_RAM_X_ADDRESS_COUNTER);
-//     /* x point must be the multiple of 8 or the last 3 bits will be ignored */
-//     EPD_SendData(epd, (x >> 3) & 0xFF);
-//     EPD_SendCommand(epd, SET_RAM_Y_ADDRESS_COUNTER);
-//     EPD_SendData(epd, y & 0xFF);
-//     EPD_SendData(epd, (y >> 8) & 0xFF);
-//     EPD_WaitUntilIdle(epd);
-// }

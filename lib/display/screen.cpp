@@ -6,19 +6,19 @@
 #include <stdio.h>                           // snprintf
 #include <sensordevicecollection.hpp>        //
 #include <cstring>                           // strncmp, strncpy
+#include <gpio.hpp>
 
 bool screen::isModified{false};
 char screen::bigText[maxTextLength + 1][numberOfLines]{};
 char screen::smallText[maxTextLength + 1][numberOfLines]{};
 
-uint32_t screen::deviceIndex[numberOfLines]{0, 1, 1, 2};
+uint32_t screen::deviceIndex[numberOfLines]{1, 2, 2, 3};
 uint32_t screen::channelIndex[numberOfLines]{0, 0, 1, 0};
 
 extern font roboto36bold;
 extern font tahoma24bold;
 
 void screen::initialize() {
-
 }
 
 void screen::show() {
@@ -71,9 +71,9 @@ void screen::drawContents() {
 
     for (uint32_t lineIndex = 0; lineIndex < numberOfLines; lineIndex++) {
         graphics::drawText(ux::marginLeft, 6 * (lineIndex * 50), roboto36bold, bigText[lineIndex]);
-        graphics::drawText(100, 6 * (lineIndex * 50), roboto36bold, smallText[lineIndex]);
+        graphics::drawText(100, 6 * (lineIndex * 50), tahoma24bold, smallText[lineIndex]);
     }
 
-    display::update(updateMode::full);
+    display::update();
     display::goSleep();
 }

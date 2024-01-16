@@ -118,7 +118,7 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
                 GPIO_InitStruct.Pin       = GPIO_PIN_10;
                 GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
                 GPIO_InitStruct.Pull      = GPIO_NOPULL;
-                GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
+                GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_MEDIUM;
                 GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
                 HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -126,7 +126,7 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
                 GPIO_InitStruct.Pin       = GPIO_PIN_13;
                 GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
                 GPIO_InitStruct.Pull      = GPIO_NOPULL;
-                GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
+                GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_MEDIUM;
                 GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
                 HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
             } else {
