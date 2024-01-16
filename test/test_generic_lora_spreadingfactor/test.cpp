@@ -11,6 +11,9 @@ void test_dummy_for_coverage() {
     TEST_ASSERT_EQUAL_STRING("SF10", toString(spreadingFactor::SF10));
     TEST_ASSERT_EQUAL_STRING("SF11", toString(spreadingFactor::SF11));
     TEST_ASSERT_EQUAL_STRING("SF12", toString(spreadingFactor::SF12));
+
+    TEST_ASSERT_EQUAL_STRING("Unknown spreading factor", toString(static_cast<spreadingFactor>(0)));
+
 }
 
 int main(int argc, char **argv) {
