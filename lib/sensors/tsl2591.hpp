@@ -21,6 +21,8 @@ static float valueAsFloat(uint32_t channelIndex);
 
     static void tick();
     static void run();
+    static void log();
+
 
     static constexpr uint32_t nmbrChannels{1};
     static constexpr uint32_t visibleLight{0};

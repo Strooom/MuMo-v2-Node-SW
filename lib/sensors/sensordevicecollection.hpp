@@ -14,6 +14,7 @@ class sensorDeviceCollection {
     static void discover();                         // discover all sensor devices that are present by scanning the I2C addresses and checking register-values
     static void tick();                             // service all sensor devices after a RTC tick
     static void run();                              // service all sensor devices until they are back to sleep
+    static void log();
     static bool isSleeping();                       // return true if all sensor devices are sleeping, so MCU could go to sleep as well
     static const char* name(uint32_t index);        // returns a printable name for the device
 

@@ -21,6 +21,7 @@ class battery {
 
     static void tick();
     static void run();
+    static void log();
 
     static constexpr uint32_t nmbrChannels{2};
     static constexpr uint32_t voltage{0};

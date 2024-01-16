@@ -40,19 +40,15 @@ extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
     version::setIsVersion();
-    initializeLogging();
-
-    // gpio::enableGpio(gpio::group::i2c);
-    // gpio::enableGpio(gpio::group::writeProtect);
-    // gpio::enableGpio(gpio::group::rfControl);
-
-    sensorDeviceCollection::discover();
+    initializeLogging();        // further initializes some gpio : usbPresent, i2C, writeProtect, debugPort, ...
 
     if (nonVolatileStorage::isPresent()) {
         if (!settingsCollection::isInitialized()) {
             settingsCollection::initializeOnce();
         }
     }
+
+    sensorDeviceCollection::discover();
 
     // gpio::enableGpio(gpio::group::spiDisplay);
     // if (display::isPresent()) {
@@ -61,6 +57,7 @@ void mainController::initialize() {
     //     logging::snprintf("Display not present\n");
     // }
 
+    // gpio::enableGpio(gpio::group::rfControl);
     // LoRaWAN::initialize(); // initialize the LoRaWAN network driver
     goTo(mainState::idle);
 }
@@ -100,7 +97,8 @@ void mainController::initializeLogging() {
         logging::snprintf("USB connected\n");
     }
 
-    // logging::activeSources = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeloggingSources);
+    gpio::enableGpio(gpio::group::i2cEeprom);
+    logging::setActiveSources(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));
 }
 
 void mainController::handleEvents() {
@@ -122,7 +120,12 @@ void mainController::handleEvents() {
             } break;
 
             case applicationEvent::realTimeClockTick: {
-                sensorDeviceCollection::tick();
+                if (state == mainState::idle) {
+                    sensorDeviceCollection::tick();
+                    goTo(mainState::measuring);
+                } else {
+                    logging::snprintf(logging::source::error, "RealTimeClockTick event received in state %s[%d] - Ignored\n", toString(state), static_cast<uint32_t>(state));
+                }
             } break;
 
             default:
@@ -143,7 +146,7 @@ void mainController::run() {
         case mainState::logging:
             if (sensorDeviceCollection::hasNewMeasurements()) {
                 if (logging::isActive(logging::source::sensorData)) {
-                    // log all new data
+                    sensorDeviceCollection::log();
                 }
             }
             goTo(mainState::storing);

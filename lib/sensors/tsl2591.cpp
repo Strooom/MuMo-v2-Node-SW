@@ -152,8 +152,6 @@ void tsl2591::run() {
         if (channels[visibleLight].needsSampling()) {
             float tsl2591visible = calculateLux();
             channels[visibleLight].addSample(tsl2591visible);
-            // logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[channel1].type), tsl2591visible, postfix(channels[channel1].type));
-
             if (channels[visibleLight].hasOutput()) {
                 channels[visibleLight].hasNewValue = true;
             }
@@ -161,5 +159,11 @@ void tsl2591::run() {
 
         state = sensorDeviceState::sleeping;
         adjustAllCounters();
+    }
+}
+
+void tsl2591::log() {
+    if (channels[visibleLight].hasNewValue) {
+        logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", channelFormats[visibleLight].name, channels[visibleLight].getOutput(), channelFormats[visibleLight].unit);
     }
 }

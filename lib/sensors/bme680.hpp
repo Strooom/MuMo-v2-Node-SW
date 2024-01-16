@@ -23,6 +23,8 @@ class bme680 {
     
     static void tick();
     static void run();
+    static void log();
+
 
     static constexpr uint32_t nmbrChannels{3};
     static constexpr uint32_t temperature{0};

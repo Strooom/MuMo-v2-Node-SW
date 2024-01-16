@@ -30,8 +30,8 @@ void battery::initalize() {
     }
 
     // TODO : need to read the sensorChannel settins from EEPROM and restore them
-    // channels[voltage].set(0,1,0,1);
-    // channels[percentCharged].set(0,1,0,1);
+    channels[voltage].set(0, 1, 0, 1);
+    channels[percentCharged].set(0, 1, 0, 1);
 
     type  = static_cast<batteryType>(typeIndex);
     state = sensorDeviceState::sleeping;
@@ -72,7 +72,6 @@ void battery::run() {
         if (channels[voltage].needsSampling()) {
             float batteryVoltage = voltageFromRaw(rawADC);
             channels[voltage].addSample(batteryVoltage);
-            // logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", toString(channels[voltage].type), batteryVoltage, postfix(channels[voltage].type));
             if (channels[voltage].hasOutput()) {
                 channels[voltage].hasNewValue = true;
             }
@@ -82,7 +81,6 @@ void battery::run() {
             float batteryVoltage        = voltageFromRaw(rawADC);
             float batteryPercentCharged = chargeFromVoltage::calculateChargeLevel(batteryVoltage, type);
             channels[percentCharged].addSample(batteryPercentCharged);
-            // logging::snprintf(logging::source::sensorData, "%s = %.2f\n", toString(channels[percentCharged].type), batteryPercentCharged, postfix(channels[percentCharged].type));
             if (channels[percentCharged].hasOutput()) {
                 channels[percentCharged].hasNewValue = true;
             }
@@ -136,4 +134,13 @@ float battery::voltageFromRaw(uint32_t rawADC) {
 #else
     return 3.2F;        // MOCK value
 #endif
+}
+
+void battery::log() {
+    if (channels[voltage].hasNewValue) {
+        logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", channelFormats[voltage].name, channels[voltage].getOutput(), channelFormats[voltage].unit);
+    }
+    if (channels[percentCharged].hasNewValue) {
+        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[percentCharged].name, channels[percentCharged].getOutput() * 100.0F, channelFormats[percentCharged].unit);
+    }
 }

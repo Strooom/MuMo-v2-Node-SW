@@ -52,6 +52,8 @@ class logging {
         uint32_t mask = 0x01 << static_cast<uint32_t>(aDestination);
         return ((activeDestinations & mask) != 0);
     }
+    static uint32_t getActiveSources() { return activeSources; }
+    static void setActiveSources(uint32_t aSources) { activeSources = aSources; }
 
 #ifndef unitTesting
 

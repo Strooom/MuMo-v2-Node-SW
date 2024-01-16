@@ -1,5 +1,5 @@
 #include <sensordevicecollection.hpp>
-
+#include <logging.hpp>
 #include <battery.hpp>
 #include <bme680.hpp>
 #include <tsl2591.hpp>
@@ -214,5 +214,32 @@ const char* sensorDeviceCollection::channelUnits(uint32_t deviceIndex, uint32_t 
         // Add more types of sensors here
         default:
             return "";
+    }
+}
+
+void sensorDeviceCollection::log() {
+    for (uint32_t index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
+        if (isPresent[index]) {
+            switch (static_cast<sensorDeviceType>(index)) {
+                case sensorDeviceType::battery:
+                    if (battery::hasNewMeasurement()) {
+                        battery::log();
+                    }
+                    break;
+                case sensorDeviceType::bme680:
+                    if (bme680::hasNewMeasurement()) {
+                        bme680::log();
+                    }
+                    break;
+                case sensorDeviceType::tsl2591:
+                    if (tsl2591::hasNewMeasurement()) {
+                        tsl2591::log();
+                    }
+                    break;
+                // Add more types of sensors here
+                default:
+                    break;
+            }
+        }
     }
 }

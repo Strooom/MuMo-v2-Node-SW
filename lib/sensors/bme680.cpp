@@ -20,7 +20,7 @@ extern uint8_t mockBME680Registers[256];
 sensorDeviceState bme680::state{sensorDeviceState::unknown};
 sensorChannel bme680::channels[nmbrChannels];
 sensorChannelFormat bme680::channelFormats[nmbrChannels] = {
-    {"temperature", "°C", 2},
+    {"temperature", "~C", 2},
     {"relativeHumidity", "%", 0},
     {"barometricPressure", "hPa", 0},
 };
@@ -65,8 +65,8 @@ bool bme680::isPresent() {
 
 void bme680::initialize() {
     // TODO : need to read the sensorChannel settins from EEPROM and restore them
-    // channels[temperature].set(0, 1, 0, 1);
-    // channels[relativeHumidity].set(0, 1, 0, 1);
+    channels[temperature].set(0, 1, 0, 1);
+    channels[relativeHumidity].set(0, 1, 0, 1);
 
     uint8_t registerData[42]{};
     readRegisters(0x8A, 23, registerData);             // read all calibration data from the sensorChannel and convert to proper coefficients
@@ -136,8 +136,6 @@ void bme680::run() {
         if (channels[temperature].needsSampling()) {
             float bme680Temperature = calculateTemperature();
             channels[temperature].addSample(bme680Temperature);
-            // logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[temperature].type), bme680Temperature, postfix(channels[temperature].type));
-
             if (channels[temperature].hasOutput()) {
                 channels[temperature].hasNewValue = true;
             }
@@ -146,7 +144,6 @@ void bme680::run() {
         if (channels[relativeHumidity].needsSampling()) {
             float bme680RelativeHumidity = calculateRelativeHumidity();
             channels[relativeHumidity].addSample(bme680RelativeHumidity);
-            // logging::snprintf(logging::source::sensorData, "%s = %.2f V\n", toString(channels[relativeHumidity].type), bme680RelativeHumidity, postfix(channels[relativeHumidity].type));
             if (channels[relativeHumidity].hasOutput()) {
                 channels[relativeHumidity].hasNewValue = true;
             }
@@ -284,3 +281,14 @@ void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* dest
 #endif
 }
 
+void bme680::log() {
+    if (channels[temperature].hasNewValue) {
+        logging::snprintf(logging::source::sensorData, "%s = %.2f *C\n", channelFormats[temperature].name, channels[temperature].getOutput());
+    }
+    if (channels[relativeHumidity].hasNewValue) {
+        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[relativeHumidity].name, channels[relativeHumidity].getOutput(), channelFormats[relativeHumidity].unit);
+    }
+    if (channels[barometricPressure].hasNewValue) {
+        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[barometricPressure].name, channels[barometricPressure].getOutput(), channelFormats[barometricPressure].unit);
+    }
+}
