@@ -248,6 +248,68 @@ void test_drawCharacter() {
     TEST_ASSERT_FALSE(display::getPixel(8, 8));
 }
 
+void test_drawLine1() {
+    uint32_t startX{10};
+    uint32_t endX{40};
+    uint32_t testY{10};
+
+    graphics::drawLine(startX, testY, endX, testY, graphics::color::black);
+    for (auto i = startX; i < endX; i++) {
+        TEST_ASSERT_TRUE(display::getPixel(i, testY));
+        TEST_ASSERT_FALSE(display::getPixel(i, testY - 1));
+        TEST_ASSERT_FALSE(display::getPixel(i, testY + 1));
+    }
+    TEST_ASSERT_FALSE(display::getPixel(startX - 1, testY));
+    TEST_ASSERT_FALSE(display::getPixel(endX + 1, testY));
+}
+
+void test_drawLine2() {
+    uint32_t startY{10};
+    uint32_t endY{40};
+    uint32_t testX{20};
+
+    graphics::drawLine(testX, startY, testX, endY, graphics::color::black);
+    for (auto i = startY; i < endY; i++) {
+        TEST_ASSERT_TRUE(display::getPixel(testX, i));
+        TEST_ASSERT_FALSE(display::getPixel(testX - 1, i));
+        TEST_ASSERT_FALSE(display::getPixel(testX + 1, i));
+    }
+    TEST_ASSERT_FALSE(display::getPixel(testX, startY - 1));
+    TEST_ASSERT_FALSE(display::getPixel(testX, endY + 1));
+}
+
+void test_drawLine3() {
+    graphics::drawLine(0, 0, display::widthInPixels, display::heightInPixels, graphics::color::black);
+    for (auto i = 1; i < (display::widthInPixels - 1); i++) {
+        TEST_ASSERT_TRUE(display::getPixel(i, i));
+        TEST_ASSERT_FALSE(display::getPixel(i - 1, i));
+        TEST_ASSERT_FALSE(display::getPixel(i + 1, i));
+        TEST_ASSERT_FALSE(display::getPixel(i, i - 1));
+        TEST_ASSERT_FALSE(display::getPixel(i, i + 1));
+    }
+}
+
+void test_drawCircle() {
+    uint32_t radius{50};
+    graphics::drawCircle(99, 99, 50, graphics::color::black);
+    TEST_ASSERT_TRUE(display::getPixel(99 - radius, 99));
+    TEST_ASSERT_TRUE(display::getPixel(99, 99 - radius));
+    TEST_ASSERT_TRUE(display::getPixel(99 + radius, 99));
+    TEST_ASSERT_TRUE(display::getPixel(99, 99 + radius));
+    TEST_ASSERT_FALSE(display::getPixel(99, 99));
+}
+
+void test_drawFilledCircle() {
+    uint32_t radius{50};
+    graphics::drawFilledCircle(99, 99, 50, graphics::color::black);
+    TEST_ASSERT_TRUE(display::getPixel(99 - radius, 99));
+    TEST_ASSERT_TRUE(display::getPixel(99, 99 - radius));
+    TEST_ASSERT_TRUE(display::getPixel(99 + radius, 99));
+    TEST_ASSERT_TRUE(display::getPixel(99, 99 + radius));
+    TEST_ASSERT_TRUE(display::getPixel(99, 99));
+}
+
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_sort);
@@ -258,5 +320,10 @@ int main(int argc, char **argv) {
     RUN_TEST(test_drawFilledRectangle);
     RUN_TEST(test_drawBitMap);
     RUN_TEST(test_drawCharacter);
+    RUN_TEST(test_drawLine1);
+    RUN_TEST(test_drawLine2);
+    RUN_TEST(test_drawLine3);
+    RUN_TEST(test_drawCircle);
+    RUN_TEST(test_drawFilledCircle);
     UNITY_END();
 }
