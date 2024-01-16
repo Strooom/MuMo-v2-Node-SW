@@ -165,9 +165,11 @@ jobs:
 
       - name: Install PlatformIO Core
         run: |
-          pip install platformio==6.1.11
+          pip install --upgrade platformio
           pio pkg install --environment dummy
-          
+
+      # pip install platformio==6.1.11 // installs a particular version of platformio io the latest
+
       - name: Install STM32CubeWL
         uses: actions/checkout@v4
         with:
