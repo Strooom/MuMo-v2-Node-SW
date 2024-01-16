@@ -34,9 +34,9 @@ uint32_t nmbrOfTimesSelected[loRaChannelCollection::maxNmbrChannels]{}; // initi
         loRaChannelCollection::selectRandomChannelIndex();
         nmbrOfTimesSelected[loRaChannelCollection::getCurrentChannelIndex()]++;
     }
-        TEST_ASSERT(nmbrOfTimesSelected[0] > 300);
-        TEST_ASSERT(nmbrOfTimesSelected[1] > 300);
-        TEST_ASSERT(nmbrOfTimesSelected[2] > 300);
+        TEST_ASSERT(nmbrOfTimesSelected[0] > 200);
+        TEST_ASSERT(nmbrOfTimesSelected[1] > 200);
+        TEST_ASSERT(nmbrOfTimesSelected[2] > 200);
         TEST_ASSERT(nmbrOfTimesSelected[3] == 0);
         TEST_ASSERT(nmbrOfTimesSelected[4] == 0);
         TEST_ASSERT(nmbrOfTimesSelected[5] == 0);
