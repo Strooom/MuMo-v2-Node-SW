@@ -18,8 +18,8 @@ class screen {
     static uint32_t channelIndex[numberOfLines];        // which channel of the device is shown on each line
 
     static constexpr uint32_t maxTextLength{8};
-    static char bigText[maxTextLength + 1][numberOfLines];
-    static char smallText[maxTextLength + 1][numberOfLines];
+    static char bigText[numberOfLines][maxTextLength + 1];
+    static char smallText[numberOfLines][maxTextLength + 1];
 
     static bool isModified;
 

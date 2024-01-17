@@ -155,8 +155,13 @@ void mainController::run() {
         case mainState::storing:
             measurementCollection::run();
             if (measurementCollection::isReady()) {
-                goTo(mainState::displaying);
-                screen::show();
+            	if (display::isPresent()) {
+                    goTo(mainState::displaying);
+                    screen::show();
+            	}
+            	else {
+                    goTo(mainState::networking);
+            	}
             }
             break;
 

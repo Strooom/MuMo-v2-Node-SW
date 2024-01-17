@@ -20,8 +20,8 @@ extern uint8_t mockBME680Registers[256];
 sensorDeviceState bme680::state{sensorDeviceState::unknown};
 sensorChannel bme680::channels[nmbrChannels];
 sensorChannelFormat bme680::channelFormats[nmbrChannels] = {
-    {"temperature", "~C", 2},
-    {"relativeHumidity", "%", 0},
+    {"temperature", "~C", 1},
+    {"relativeHumidity", "%RH", 0},
     {"barometricPressure", "hPa", 0},
 };
 

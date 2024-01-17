@@ -96,7 +96,7 @@ bool display::isReady() {
 }
 
 void display::goSleep() {
-    uint8_t commandData[1]{0x01};
+    uint8_t commandData[1]{0x03}; // Deep Sleep Mode 2 - SSD1681 Datasheet Rev 0l.13 Page 23
     writeCommand(SSD1681Commands::DEEP_SLEEP_MODE, commandData, 1);
 }
 
@@ -134,18 +134,6 @@ bool display::getPixel(uint32_t x, uint32_t y) {
         return false;
     }
 }
-
-// void display::changePixel(uint32_t x, uint32_t y, bool onOff) {
-//     if (!isInBounds(x, y)) {        // NOTE : as our display is 200 x 200, we could already perform this check earlier (eg in graphics::drawPixel), and avoid executing some code in case the pixel is out of bounds
-//         return;
-//     }
-//     rotateAndMirrorCoordinates(x, y);
-//     if (onOff) {
-//         setPixel(x, y);
-//     } else {
-//         clearPixel(x, y);
-//     }
-// }
 
 void display::swapCoordinates(uint32_t& c1, uint32_t& c2) {
     uint32_t temp = c1;
@@ -200,7 +188,7 @@ void display::hardwareReset() {
 #ifndef generic
     HAL_GPIO_WritePin(GPIOA, displayReset_Pin, GPIO_PIN_RESET);
     // PORTA_BSRR.write(1 << 0);               // reset = LOW
-    HAL_Delay(10U);        // datasheet, section 4.2
+    HAL_Delay(10U);        // SSD1681 Datasheet Rev 0l.13, section 4.2
     HAL_GPIO_WritePin(GPIOA, displayReset_Pin, GPIO_PIN_SET);
     // PORTA_BSRR.write(1 << (0 + 16));        // reset = HIGH
     HAL_Delay(10U);        //
@@ -210,7 +198,7 @@ void display::hardwareReset() {
 void display::softwareReset() {
     writeCommand(SSD1681Commands::SW_RESET, nullptr, 0);
 #ifndef generic
-    HAL_Delay(10U);        // datasheet, section 4.2
+    HAL_Delay(10U);        // SSD1681 Datasheet Rev 0l.13, section 4.2
 #endif
 }
 
@@ -297,7 +285,7 @@ void display::update() {
     uint8_t commandData[4]{0};
     writeCommand(SSD1681Commands::WRITE_RAM, nullptr, 0);
     writeData(displayBuffer, bufferSize);
-    commandData[0] = 0xF7; // Full update
+    commandData[0] = 0xF7; // SSD1681 Datasheet Rev 0l.13 - Full update Display Mode 1
     writeCommand(SSD1681Commands::DISPLAY_UPDATE_CONTROL_2, commandData, 1);
     writeCommand(SSD1681Commands::MASTER_ACTIVATION, nullptr, 0);
     waitWhileBusy();

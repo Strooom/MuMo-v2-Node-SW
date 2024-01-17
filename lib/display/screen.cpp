@@ -7,12 +7,13 @@
 #include <sensordevicecollection.hpp>        //
 #include <cstring>                           // strncmp, strncpy
 #include <gpio.hpp>
+#include <logging.hpp>
 
 bool screen::isModified{false};
-char screen::bigText[maxTextLength + 1][numberOfLines]{};
-char screen::smallText[maxTextLength + 1][numberOfLines]{};
+char screen::bigText[numberOfLines][maxTextLength + 1]{};
+char screen::smallText[numberOfLines][maxTextLength + 1]{};
 
-uint32_t screen::deviceIndex[numberOfLines]{1, 2, 2, 3};
+uint32_t screen::deviceIndex[numberOfLines]{1, 3, 2, 2};
 uint32_t screen::channelIndex[numberOfLines]{0, 0, 1, 0};
 
 extern font roboto36bold;
@@ -22,7 +23,6 @@ void screen::initialize() {
 }
 
 void screen::show() {
-    isModified = false;
     getContents();
 
     if (isModified) {
@@ -31,12 +31,12 @@ void screen::show() {
 }
 
 void screen::getContents() {
+    isModified = false;
     for (uint32_t lineIndex = 0; lineIndex < numberOfLines; lineIndex++) {
+        logging::snprintf("line[%d] : was [%s] - [%s]", lineIndex, bigText[lineIndex], smallText[lineIndex]);
         float value       = sensorDeviceCollection::valueAsFloat(deviceIndex[lineIndex], channelIndex[lineIndex]);
         uint32_t decimals = sensorDeviceCollection::channelDecimals(deviceIndex[lineIndex], channelIndex[lineIndex]);
-
         uint32_t integerPart;
-        uint32_t fractionalPart;
 
         integerPart = static_cast<uint32_t>(value);        // TODO : take care of rounding io truncating
 
@@ -44,21 +44,32 @@ void screen::getContents() {
         for (uint32_t n = 0; n < decimals; n++) {
             remainder *= 10.0F;
         }
-        fractionalPart = static_cast<uint32_t>(remainder);        // TODO : take care of rounding io truncating
 
         char base[8];
-        char suffix[8];
-
         snprintf(base, 8, "%d", integerPart);
         if (strncmp(base, bigText[lineIndex], maxTextLength) != 0) {
             strncpy(bigText[lineIndex], base, maxTextLength);
             isModified = true;
         }
-        snprintf(suffix, 8, "%d%s", fractionalPart, sensorDeviceCollection::channelUnits(deviceIndex[lineIndex], channelIndex[lineIndex]));
-        if (strncmp(suffix, smallText[lineIndex], maxTextLength) != 0) {
-            strncpy(smallText[lineIndex], suffix, maxTextLength);
-            isModified = true;
+
+        char suffix[8];
+        if (decimals > 0) {
+            uint32_t fractionalPart;
+            fractionalPart = static_cast<uint32_t>(remainder);        // TODO : take care of rounding io truncating
+
+            snprintf(suffix, 8, ".%d %s", fractionalPart, sensorDeviceCollection::channelUnits(deviceIndex[lineIndex], channelIndex[lineIndex]));
+            if (strncmp(suffix, smallText[lineIndex], maxTextLength) != 0) {
+                strncpy(smallText[lineIndex], suffix, maxTextLength);
+                isModified = true;
+            }
+        } else {
+            snprintf(suffix, 8, "%s", sensorDeviceCollection::channelUnits(deviceIndex[lineIndex], channelIndex[lineIndex]));
+            if (strncmp(suffix, smallText[lineIndex], maxTextLength) != 0) {
+                strncpy(smallText[lineIndex], suffix, maxTextLength);
+                isModified = true;
+            }
         }
+        logging::snprintf(", now [%s] - [%s] - %s\n", bigText[lineIndex], smallText[lineIndex], isModified ? "modified" : "not modified");
     }
 }
 
@@ -70,8 +81,8 @@ void screen::drawContents() {
     graphics::drawFilledRectangle(ux::marginLeft, 149, display::widthInPixels - ux::marginLeft, 150, graphics::color::black);
 
     for (uint32_t lineIndex = 0; lineIndex < numberOfLines; lineIndex++) {
-        graphics::drawText(ux::marginLeft, 6 * (lineIndex * 50), roboto36bold, bigText[lineIndex]);
-        graphics::drawText(100, 6 * (lineIndex * 50), tahoma24bold, smallText[lineIndex]);
+        graphics::drawText(ux::marginLeft, ux::marginBottomLarge + (lineIndex * 50), roboto36bold, bigText[lineIndex]);
+        graphics::drawText(100, ux::marginBottomSmall + (lineIndex * 50), tahoma24bold, smallText[lineIndex]);
     }
 
     display::update();

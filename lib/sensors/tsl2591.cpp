@@ -20,7 +20,7 @@ sensorDeviceState tsl2591::state{sensorDeviceState::unknown};
 sensorChannel tsl2591::channels[nmbrChannels];
 sensorChannelFormat tsl2591::channelFormats[nmbrChannels] =
     {
-        {"visibleLight", "lux", 0},
+        {"visibleLight", "LUX", 0},
 };
 int32_t tsl2591::rawChannel0{0};
 int32_t tsl2591::rawChannel1{0};
