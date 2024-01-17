@@ -104,7 +104,6 @@ void graphics::drawFilledCircle(uint32_t x, uint32_t y, uint32_t radius, color t
     } while (x_pos <= 0);
 }
 
-
 void graphics::drawRectangle(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_t yEnd, color theLineColor) {
     sort(xStart, xEnd);
     sort(yStart, yEnd);
@@ -158,6 +157,19 @@ void graphics::drawText(const uint32_t xStart, const uint32_t y, const font &the
         xPos = xPos + theFont.getCharacterWidthInPixels(theText[charachterIndex]) + theFont.properties.spaceBetweenCharactersInPixels;
         charachterIndex++;
     }
+}
+
+uint32_t graphics::getTextwidth(const font &theFont, const char *theText) {
+    uint32_t result{0};
+    uint32_t charachterIndex{0};
+    while (theText[charachterIndex] != '\0') {
+        result = result + theFont.getCharacterWidthInPixels(theText[charachterIndex]);
+        charachterIndex++;
+        if (theText[charachterIndex] != '\0') {
+            result = result + theFont.properties.spaceBetweenCharactersInPixels;
+        }
+    }
+    return result;
 }
 
 void graphics::sort(uint32_t &c1, uint32_t &c2) {

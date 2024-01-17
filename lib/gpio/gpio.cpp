@@ -14,6 +14,16 @@ void gpio::disableGpio(group aGroup) {
     enableDisableGpio(aGroup, false);
 }
 
+void gpio::disableAllGpio() {
+    enableDisableGpio(gpio::group::i2c, false);
+    enableDisableGpio(gpio::group::writeProtect, false);
+    enableDisableGpio(gpio::group::spiDisplay, false);
+    enableDisableGpio(gpio::group::usbPresent, false);
+    enableDisableGpio(gpio::group::uart2, false);
+    enableDisableGpio(gpio::group::rfControl, false);
+    // NOTE : debugPort is not disabled as it is used for logging
+}
+
 void gpio::enableDisableGpio(group theGroup, bool enable) {
 #ifndef generic
     __HAL_RCC_GPIOA_CLK_ENABLE();

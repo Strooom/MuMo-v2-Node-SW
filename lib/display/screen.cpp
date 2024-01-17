@@ -8,6 +8,7 @@
 #include <cstring>                           // strncmp, strncpy
 #include <gpio.hpp>
 #include <logging.hpp>
+#include <cmath>
 
 bool screen::isModified{false};
 char screen::bigText[numberOfLines][maxTextLength + 1]{};
@@ -33,12 +34,15 @@ void screen::show() {
 void screen::getContents() {
     isModified = false;
     for (uint32_t lineIndex = 0; lineIndex < numberOfLines; lineIndex++) {
-        logging::snprintf("line[%d] : was [%s] - [%s]", lineIndex, bigText[lineIndex], smallText[lineIndex]);
         float value       = sensorDeviceCollection::valueAsFloat(deviceIndex[lineIndex], channelIndex[lineIndex]);
         uint32_t decimals = sensorDeviceCollection::channelDecimals(deviceIndex[lineIndex], channelIndex[lineIndex]);
-        uint32_t integerPart;
+        int integerPart;
 
-        integerPart = static_cast<uint32_t>(value);        // TODO : take care of rounding io truncating
+        if (decimals > 0) {
+            integerPart = static_cast<int>(value);
+        } else {
+            integerPart = static_cast<int>(round(value));
+        }
 
         float remainder = value - integerPart;
         for (uint32_t n = 0; n < decimals; n++) {
@@ -54,10 +58,10 @@ void screen::getContents() {
 
         char suffix[8];
         if (decimals > 0) {
-            uint32_t fractionalPart;
-            fractionalPart = static_cast<uint32_t>(remainder);        // TODO : take care of rounding io truncating
+            int fractionalPart;
+            fractionalPart = static_cast<int>(round(remainder));
 
-            snprintf(suffix, 8, ".%d %s", fractionalPart, sensorDeviceCollection::channelUnits(deviceIndex[lineIndex], channelIndex[lineIndex]));
+            snprintf(suffix, 8, "%d %s", fractionalPart, sensorDeviceCollection::channelUnits(deviceIndex[lineIndex], channelIndex[lineIndex]));
             if (strncmp(suffix, smallText[lineIndex], maxTextLength) != 0) {
                 strncpy(smallText[lineIndex], suffix, maxTextLength);
                 isModified = true;
@@ -69,7 +73,6 @@ void screen::getContents() {
                 isModified = true;
             }
         }
-        logging::snprintf(", now [%s] - [%s] - %s\n", bigText[lineIndex], smallText[lineIndex], isModified ? "modified" : "not modified");
     }
 }
 
@@ -81,8 +84,9 @@ void screen::drawContents() {
     graphics::drawFilledRectangle(ux::marginLeft, 149, display::widthInPixels - ux::marginLeft, 150, graphics::color::black);
 
     for (uint32_t lineIndex = 0; lineIndex < numberOfLines; lineIndex++) {
-        graphics::drawText(ux::marginLeft, ux::marginBottomLarge + (lineIndex * 50), roboto36bold, bigText[lineIndex]);
-        graphics::drawText(100, ux::marginBottomSmall + (lineIndex * 50), tahoma24bold, smallText[lineIndex]);
+        uint32_t leftOffset = ux::mid - (graphics::getTextwidth(roboto36bold, bigText[lineIndex]) + roboto36bold.properties.spaceBetweenCharactersInPixels);
+        graphics::drawText(leftOffset, ux::marginBottomLarge + (lineIndex * 50), roboto36bold, bigText[lineIndex]);
+        graphics::drawText(ux::mid + tahoma24bold.properties.spaceBetweenCharactersInPixels, ux::marginBottomSmall + (lineIndex * 50), tahoma24bold, smallText[lineIndex]);
     }
 
     display::update();

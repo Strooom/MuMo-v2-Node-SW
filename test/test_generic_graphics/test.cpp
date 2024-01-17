@@ -309,6 +309,17 @@ void test_drawFilledCircle() {
     TEST_ASSERT_TRUE(display::getPixel(99, 99));
 }
 
+void test_getTextwidth() {
+    uint32_t toBeWidth{0};
+    toBeWidth += testRoboto16.characters[0].widthInPixels;
+    toBeWidth += testRoboto16.characters[1].widthInPixels;
+    toBeWidth += testRoboto16.characters[2].widthInPixels;
+    toBeWidth += testRoboto16.characters[3].widthInPixels;
+    toBeWidth += testRoboto16.characters[4].widthInPixels;
+    toBeWidth += testRoboto16.characters[5].widthInPixels;
+    toBeWidth += testRoboto16.properties.spaceBetweenCharactersInPixels * 5;
+    TEST_ASSERT_EQUAL(toBeWidth, graphics::getTextwidth(testRoboto16, "ABCDEF"));
+}
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
@@ -325,5 +336,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_drawLine3);
     RUN_TEST(test_drawCircle);
     RUN_TEST(test_drawFilledCircle);
+    RUN_TEST(test_getTextwidth);
     UNITY_END();
 }

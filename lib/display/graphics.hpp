@@ -28,8 +28,9 @@ class graphics {
     static void drawBitMap(uint32_t xStart, uint32_t yStart, const bitmap& theBitmap);
     static void drawCharacter(uint32_t xStart, uint32_t yStart, const font& theFont, uint8_t theCharacter);
     static void drawText(uint32_t xStart, uint32_t yStart, const font& theFont, const char* theText);
+    static uint32_t getTextwidth(const font& theFont, const char* theText);
 
-// TODO : make all parameters const
+    // TODO : make all parameters const
 
 #ifndef unitTesting
 

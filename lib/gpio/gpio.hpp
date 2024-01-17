@@ -27,6 +27,7 @@ class gpio {
 
     static void enableGpio(group aGroup);
     static void disableGpio(group aGroup);
+        static void disableAllGpio();
 
 #ifndef unitTesting
 

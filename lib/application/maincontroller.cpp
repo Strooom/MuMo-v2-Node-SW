@@ -33,6 +33,8 @@
 
 #ifndef generic
 #include "main.h"
+extern I2C_HandleTypeDef hi2c2;
+void MX_I2C2_Init(void);
 #endif
 
 mainState mainController::state{mainState::boot};
@@ -66,10 +68,10 @@ void mainController::initializeLogging() {
 #ifndef generic
     if ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001) {        // if there is a SWD debugprobe connected...
         logging::enable(logging::destination::debugProbe);                     // enable the output to SWO
+        LL_DBGMCU_EnableDBGStopMode();
+    } else {
+        LL_DBGMCU_DisableDBGStopMode();        // no debugging in low power -> the MCU will really stop the clock
     }
-#else
-    logging::disable(logging::destination::debugProbe);
-
 #endif
 
     gpio::enableGpio(gpio::group::usbPresent);
@@ -82,14 +84,8 @@ void mainController::initializeLogging() {
     logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
 
     if (logging::isActive(logging::destination::debugProbe)) {
-#ifndef generic
-        LL_DBGMCU_EnableDBGStopMode();
-#endif
         logging::snprintf("debugProbe connected\n");
     } else {
-#ifndef generic
-        LL_DBGMCU_DisableDBGStopMode();        // no debugging in low power -> the MCU will really stop the clock
-#endif
         gpio::disableGpio(gpio::group::debugPort);        // these IOs are enabled by default after reset, but as there is no debug probe, we disable them to reduce power consumption
     }
 
@@ -135,6 +131,13 @@ void mainController::handleEvents() {
 }
 
 void mainController::run() {
+        if (power::isUsbConnected()) {
+            applicationEventBuffer.push(applicationEvent::usbConnected);
+        }
+        if (power::isUsbRemoved()) {
+            applicationEventBuffer.push(applicationEvent::usbRemoved);
+        }
+
     switch (state) {
         case mainState::measuring:
             sensorDeviceCollection::run();
@@ -155,13 +158,12 @@ void mainController::run() {
         case mainState::storing:
             measurementCollection::run();
             if (measurementCollection::isReady()) {
-            	if (display::isPresent()) {
+                if (display::isPresent()) {
                     goTo(mainState::displaying);
                     screen::show();
-            	}
-            	else {
+                } else {
                     goTo(mainState::networking);
-            	}
+                }
             }
             break;
 
@@ -181,11 +183,38 @@ void mainController::run() {
             break;
 
         case mainState::idle:
-            // here we decide to go into deepSleep depending on external conditions
-            // OR  goTo(mainState::sleeping);
+            if (!power::hasUsbPower()) {
+                // gpio::disableAllGpio();
+                gpio::disableGpio(gpio::group::spiDisplay);
+                gpio::disableGpio(gpio::group::writeProtect);
+//                gpio::disableGpio(gpio::group::i2c);
+#ifndef generic
+                HAL_I2C_DeInit(&hi2c2);
+#endif
+                gpio::disableGpio(gpio::group::usbPresent);
+                gpio::disableGpio(gpio::group::rfControl);
+                goTo(mainState::sleeping);
+#ifndef generic
+                uint32_t currentPriMaskState = __get_PRIMASK();
+                __disable_irq();
+                HAL_SuspendTick();                                  // stop Systick
+                HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);        // go in STOP2 mode : only the RTC is running
+                HAL_ResumeTick();                                   // re-enable Systick
+                __set_PRIMASK(currentPriMaskState);
+#endif
+                gpio::disableGpio(gpio::group::rfControl);
+                gpio::enableGpio(gpio::group::usbPresent);
+#ifndef generic
+                MX_I2C2_Init();
+#endif
+                gpio::enableGpio(gpio::group::writeProtect);
+                gpio::enableGpio(gpio::group::spiDisplay);
+                goTo(mainState::idle);
+            }
             break;
 
         default:
+            // Error : we are in an unknown state
             break;
     }
 }

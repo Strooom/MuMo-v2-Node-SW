@@ -1,20 +1,10 @@
-# Plan
+# Plan / ToDo
 
-1. get display working
-    * detecting display from busy line
-    * initialize and show imagefile
-    * partial updates
-    * 
-
-2. get sensors working
-3. store measurements into eeprom
-4. get cli working
+1. get LowPower working again
+2. make display show non-blocking
+3. get cli working
+    * detect commands
+    * show version etc commands
+    * set config commands
+4. store measurements into eeprom
 5. get LoRaWAN working
-
-
-All subsystems need a function getState(). If they all return 'idle' or 'sleep', then the MCU can go sleep as well.
-This will ensure
-* display updates complete
-* sensor readins complete
-* eeprom writes complete
-* 
