@@ -6,7 +6,6 @@
 
 #pragma once
 #include <stdint.h>
-#include "updatemode.hpp"
 
 enum class displayRotation : uint32_t {        // rotation is clockwise
     rotation0,
@@ -31,12 +30,12 @@ enum class displayPresence : uint32_t {
 class display {
   public:
     display() = delete;
-    static bool isPresent();                       // return displayPresent
-    static void initialize();                      // wakeup through HW reset, then configure display
-    static void goSleep();                         //
-    static void set();                             // write displayBuffer to display
-    static void clear();                           // write blank data to display
-    static void update(updateMode theMode);        // refresh display
+    static bool isPresent();         // return displayPresent
+    static void initialize();        // wakeup through HW reset, then configure display
+    static void run();               //
+    static bool isReady();           //
+    static void goSleep();           //
+    static void update();            // refresh display
 
     static void setPixel(uint32_t x, uint32_t y);
     static void clearPixel(uint32_t x, uint32_t y);

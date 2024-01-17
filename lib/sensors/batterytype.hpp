@@ -17,4 +17,5 @@ enum class batteryType : uint8_t {
 
 constexpr uint32_t nmbrBatteryTypes{4};
 
-batteryType constrainToValidValue(uint32_t aBatteryTypeAsUint32);
+
+// TODO : using int8 and int32 here...

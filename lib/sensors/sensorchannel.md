@@ -15,3 +15,14 @@ The oversamplingCounter runs from (oversampling) to 0
 * calibratie coefficienten in array steken
 * code refactoren voor meer performantie : meer proberen op voorhand te berekenen
 * store the oversampling / prescaling etc for the measurement channels in NVS so the settings remain after reset
+
+# TODO
+* the SX126x also needs two sensorChannels, for RSSI and SNR, as we will measure those and log, store, send them
+
+We need an additional setting on each sensorChannel what to do with the measurement :
+* nothing
+* log to UART
+* store into EEPROM
+* transmit over LoRaWAN
+
+Showing on the display is controlled at the display itself, where we define up to four sensorChannelTypes to be shown on each of the 4 lines of the screen

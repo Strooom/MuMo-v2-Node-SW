@@ -15,11 +15,14 @@ class mainController {
     mainController() = delete;
     static void initialize();
     static void handleEvents();
+    static void run();
+    
 
 #ifndef unitTesting
 
   private:
 #endif
+    static void goTo(mainState newState);
     static void initializeLogging();
     static mainState state;
 };

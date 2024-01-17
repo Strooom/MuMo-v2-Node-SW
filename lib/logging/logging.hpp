@@ -17,25 +17,22 @@ class logging {
         uart
     };
     enum class source : uint32_t {        // We can send logging from the following sources, when they are enabled :
-        applicationEvents,
-
-        lorawanSettings,
-        lorawanState,
-        lorawanEvents,
-        lorawanMac,
-        lorawanTiming,
-
-        sx126xControl,
-        sx126xBufferData,
-
-        sensorEvents,
-        sensorData,
-
-        nvs,
-
-        error,
-        criticalError
+        applicationEvents = 0,
+        sensorEvents = 2,
+        sensorData = 3,
+        displayEvents = 4,
+        displayData = 5,
+        eepromData = 6,
+        eepromEvents = 7,
+        lorawanEvents = 16,
+        lorawanData = 17,
+        lorawanMac = 18,
+        sx126xControl = 24,
+        sx126xBufferData = 25,
+        error         = 30,
+        criticalError = 31
     };
+    
     static constexpr uint32_t bufferLength{256};
     static void reset() {
         activeSources      = 0;
@@ -55,6 +52,8 @@ class logging {
         uint32_t mask = 0x01 << static_cast<uint32_t>(aDestination);
         return ((activeDestinations & mask) != 0);
     }
+    static uint32_t getActiveSources() { return activeSources; }
+    static void setActiveSources(uint32_t aSources) { activeSources = aSources; }
 
 #ifndef unitTesting
 

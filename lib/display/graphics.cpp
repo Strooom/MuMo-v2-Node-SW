@@ -104,9 +104,6 @@ void graphics::drawFilledCircle(uint32_t x, uint32_t y, uint32_t radius, color t
     } while (x_pos <= 0);
 }
 
-// void Paint::DrawFilledCircle(int x, int y, int radius, int colored) {
-//     /* Bresenham algorithm */
-// }
 
 void graphics::drawRectangle(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_t yEnd, color theLineColor) {
     sort(xStart, xEnd);

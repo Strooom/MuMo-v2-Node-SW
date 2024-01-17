@@ -1,11 +1,15 @@
 #include "sensorchannel.hpp"
 #include "power.hpp"
 
-sensorChannel::sensorChannel(sensorChannelType type, uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower) : type{type},
-                                                                                                                                                                               oversamplingLowPower{oversamplingLowPower},
-                                                                                                                                                                               prescalerLowPower{prescalerLowPower},
-                                                                                                                                                                               oversamplingHighPower{oversamplingHighPower},
-                                                                                                                                                                               prescalerHighPower{prescalerHighPower} {
+sensorChannel::sensorChannel() : oversamplingLowPower{0}, prescalerLowPower{0}, oversamplingHighPower{0}, prescalerHighPower{0} {
+    limitOversamplingAndPrescaler();
+}
+
+void sensorChannel::set(uint32_t newOversamplingLowPower, uint32_t newPrescalerLowPower, uint32_t newOversamplingHighPower, uint32_t newPrescalerHighPower) {
+    oversamplingLowPower  = newOversamplingLowPower;
+    prescalerLowPower     = newPrescalerLowPower;
+    oversamplingHighPower = newOversamplingHighPower;
+    prescalerHighPower    = newPrescalerHighPower;
     limitOversamplingAndPrescaler();
 }
 

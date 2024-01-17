@@ -10,8 +10,8 @@ class settingsCollection {
         nvsMapVersion = 0,
         displayVersion,
         batteryVersion,
+        activeLoggingSources,
         unusedGeneral,
-        activeloggingSources,
 
         measurementWriteIndex,
         oldestUnsentMeasurementIndex,

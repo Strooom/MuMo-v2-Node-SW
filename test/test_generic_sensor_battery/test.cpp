@@ -1,47 +1,71 @@
 #include <unity.h>
+#include <settingscollection.hpp>
 #include <battery.hpp>
 
-void setUp(void) {}           // before test
+void setUp(void) {
+    battery::initalize();
+}
 void tearDown(void) {}        // after test
 
-// bool checkVoltageVsCharge(uint32_t batteryTypeIndex) {
-//     for (auto interpolationPointIndex = 0; interpolationPointIndex < nmbrInterpolationPoints - 2; interpolationPointIndex++) {
-//         if (battery::voltageVsCharge[batteryTypeIndex][interpolationPointIndex].voltage >= battery::voltageVsCharge[batteryTypeIndex][interpolationPointIndex + 1].voltage) {
-//             return false;
-//         }
-//     }
-//     return true;
-// }
+void test_initilization() {
+    TEST_ASSERT_EQUAL(batteryType::liFePO4_700mAh, battery::type);
+    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::state);
 
-// void test_checkVoltageVsCharge() {
-//     TEST_ASSERT_TRUE(checkVoltageVsCharge(0));
-//     TEST_ASSERT_FALSE(checkVoltageVsCharge(3));        // Battery type 3 has intentionally an error in its voltage vs charge table so we can test that case
-// }
+    batteryType testType = batteryType::saft;
+    settingsCollection::save<batteryType>(settingsCollection::settingIndex::batteryVersion, testType);
+    battery::initalize();
+    TEST_ASSERT_EQUAL(batteryType::saft, battery::type);
+}
 
-// void test_interpolation() {
-//     TEST_ASSERT_EQUAL_UINT8(0, battery::calculateChargeLevel(2.0F));           // voltage below minimum
-//     TEST_ASSERT_EQUAL_UINT8(0, battery::calculateChargeLevel(2.80F));          // voltage at minimum
-//     TEST_ASSERT_EQUAL_UINT8(255, battery::calculateChargeLevel(3.60F));        // voltage at maximum
-//     TEST_ASSERT_EQUAL_UINT8(255, battery::calculateChargeLevel(4.0F));         // voltage above maximum
+void test_needsSampling() {
+    battery::channels[battery::voltage].set(0, 0, 0, 0);
+    battery::channels[battery::percentCharged].set(0, 0, 0, 0);
+    TEST_ASSERT_FALSE(battery::anyChannelNeedsSampling());
+    battery::channels[battery::voltage].set(1, 1, 1, 1);
+    TEST_ASSERT_TRUE(battery::anyChannelNeedsSampling());
+    battery::channels[battery::percentCharged].set(1, 1, 1, 1);
+    TEST_ASSERT_TRUE(battery::anyChannelNeedsSampling());
+    battery::channels[battery::voltage].set(0, 0, 0, 0);
+    TEST_ASSERT_TRUE(battery::anyChannelNeedsSampling());
+    battery::channels[battery::percentCharged].set(0, 0, 0, 0);
+    TEST_ASSERT_FALSE(battery::anyChannelNeedsSampling());
+}
 
-//     TEST_ASSERT_EQUAL_UINT8(128, battery::calculateChargeLevel(3.2F));         // voltage at 50%
-// }
+void test_tick() {
+    battery::channels[battery::voltage].set(0, 0, 0, 0);
+    battery::channels[battery::percentCharged].set(0, 0, 0, 0);
 
-// void test_measurements() {
-//     TEST_ASSERT_TRUE(battery::isPresent());
-//     battery::initalize();
-//     battery::sample();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::state);
+    battery::tick();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::state);
 
-//     TEST_ASSERT_EQUAL_FLOAT(3.2F, battery::getVoltage());
-//     TEST_ASSERT_EQUAL_FLOAT(128.0F, battery::getChargeLevel());
-// }
+    battery::channels[battery::voltage].set(1, 1, 1, 1);
+    battery::tick();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sampling, battery::state);
+}
+
+void test_run() {
+    battery::initalize();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::state);
+    battery::run();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::state);
+
+    battery::tick();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sampling, battery::state);
+    TEST_ASSERT_TRUE(battery::samplingIsReady());
+    battery::run();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::state);
+}
+
+void test_measurements() {
+}
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
-    // RUN_TEST(test_checkVoltageVsCharge);
-    // RUN_TEST(test_interpolation);
-    // RUN_TEST(test_measurements);
+    RUN_TEST(test_initilization);
+    RUN_TEST(test_needsSampling);
+    RUN_TEST(test_tick);
+    RUN_TEST(test_run);
+    RUN_TEST(test_measurements);
     UNITY_END();
 }
-
-
