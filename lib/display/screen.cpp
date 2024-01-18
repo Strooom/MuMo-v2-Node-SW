@@ -36,43 +36,9 @@ void screen::getContents() {
     for (uint32_t lineIndex = 0; lineIndex < numberOfLines; lineIndex++) {
         float value       = sensorDeviceCollection::valueAsFloat(deviceIndex[lineIndex], channelIndex[lineIndex]);
         uint32_t decimals = sensorDeviceCollection::channelDecimals(deviceIndex[lineIndex], channelIndex[lineIndex]);
-        int integerPart;
 
-        if (decimals > 0) {
-            integerPart = static_cast<int>(value);
-        } else {
-            integerPart = static_cast<int>(round(value));
-        }
-
-        float remainder = value - integerPart;
-        for (uint32_t n = 0; n < decimals; n++) {
-            remainder *= 10.0F;
-        }
-
-        char base[8];
-        snprintf(base, 8, "%d", integerPart);
-        if (strncmp(base, bigText[lineIndex], maxTextLength) != 0) {
-            strncpy(bigText[lineIndex], base, maxTextLength);
-            isModified = true;
-        }
-
-        char suffix[8];
-        if (decimals > 0) {
-            int fractionalPart;
-            fractionalPart = static_cast<int>(round(remainder));
-
-            snprintf(suffix, 8, "%d %s", fractionalPart, sensorDeviceCollection::channelUnits(deviceIndex[lineIndex], channelIndex[lineIndex]));
-            if (strncmp(suffix, smallText[lineIndex], maxTextLength) != 0) {
-                strncpy(smallText[lineIndex], suffix, maxTextLength);
-                isModified = true;
-            }
-        } else {
-            snprintf(suffix, 8, "%s", sensorDeviceCollection::channelUnits(deviceIndex[lineIndex], channelIndex[lineIndex]));
-            if (strncmp(suffix, smallText[lineIndex], maxTextLength) != 0) {
-                strncpy(smallText[lineIndex], suffix, maxTextLength);
-                isModified = true;
-            }
-        }
+        buildBigTextString(integerPart(value, decimals), lineIndex);
+        buildSmallTextString(fractionalPart(value, decimals), decimals, sensorDeviceCollection::channelUnits(deviceIndex[lineIndex], channelIndex[lineIndex]), lineIndex);
     }
 }
 
@@ -91,4 +57,54 @@ void screen::drawContents() {
 
     display::update();
     display::goSleep();
+}
+
+int screen::integerPart(float value, uint32_t decimals) {
+    return (static_cast<int>(round(value * factorFloat(decimals))) / factorInt(decimals));
+}
+
+int screen::fractionalPart(float value, uint32_t decimals) {
+    return static_cast<int>(round(value * factorFloat(decimals))) - (integerPart(value, decimals) * factorInt(decimals));
+}
+
+float screen::factorFloat(uint32_t decimals) {
+    float result{1.0F};
+    for (uint32_t n = 0; n < decimals; n++) {
+        result *= 10.0F;
+    }
+    return result;
+}
+
+int screen::factorInt(uint32_t decimals) {
+    uint32_t result{1U};
+    for (uint32_t n = 0; n < decimals; n++) {
+        result *= 10;
+    }
+    return result;
+}
+
+void screen::buildBigTextString(uint32_t value, uint32_t lineIndex) {
+    char base[8];
+    snprintf(base, 8, "%d", value);
+    if (strncmp(base, bigText[lineIndex], maxTextLength) != 0) {
+        strncpy(bigText[lineIndex], base, maxTextLength);
+        isModified = true;
+    }
+}
+
+void screen::buildSmallTextString(uint32_t value, uint32_t decimals, const char* suffix, uint32_t lineIndex) {
+    char suffixString[8];
+    if (decimals > 0) {
+        snprintf(suffixString, 8, "%d %s", value, suffix);
+        if (strncmp(suffixString, smallText[lineIndex], maxTextLength) != 0) {
+            strncpy(smallText[lineIndex], suffixString, maxTextLength);
+            isModified = true;
+        }
+    } else {
+        snprintf(suffixString, 8, "%s", suffix);
+        if (strncmp(suffixString, smallText[lineIndex], maxTextLength) != 0) {
+            strncpy(smallText[lineIndex], suffixString, maxTextLength);
+            isModified = true;
+        }
+    }
 }

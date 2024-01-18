@@ -18,12 +18,12 @@ class ux {
     static constexpr uint32_t dividerLength{display::widthInPixels - (2 * marginLeft)};
 
 // Spacing for 36px font
-    static constexpr uint32_t marginBottomLarge{4};
+    static constexpr uint32_t marginBottomLarge{5};
 
 
 
 // Spacing for 24px font
-    static constexpr uint32_t marginBottomSmall{14};
+    static constexpr uint32_t marginBottomSmall{13};
 
 
     static constexpr uint32_t mid{display::widthInPixels / 2};
