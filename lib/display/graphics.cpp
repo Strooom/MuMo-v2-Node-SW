@@ -1,3 +1,4 @@
+#include <ux.hpp>
 #include "graphics.hpp"
 #include "display.hpp"
 
@@ -156,6 +157,26 @@ void graphics::drawText(const uint32_t xStart, const uint32_t y, const font &the
         drawCharacter(xPos, y, theFont, theText[charachterIndex]);
         xPos = xPos + theFont.getCharacterWidthInPixels(theText[charachterIndex]) + theFont.properties.spaceBetweenCharactersInPixels;
         charachterIndex++;
+    }
+}
+
+void graphics::drawBatteryIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level) {
+    for (int i = 0; i < ux::batteryIconThickness; i++) {
+        drawRectangle(xStart + i, yStart + i, xStart + ux::batteryIconWidth - i, yStart + ux::batteryIconHeight - i, color::black);
+    }
+    drawFilledRectangle(xStart + ux::batteryIconTipLeft, yStart + ux::batteryIconHeight, xStart + ux::batteryIconTipLeft + ux::batteryIconTipWidth, yStart + ux::batteryIconHeight + ux::batteryIconTipHeight, color::black);
+    uint32_t fill = (ux::batteryIconGaugeHeight * level) / 100;
+    drawFilledRectangle(xStart, yStart, xStart + ux::batteryIconWidth, yStart + fill, color::black);
+}
+
+void graphics::drawNetworkSignalStrengthIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level) {
+    for (int i = 0; i < 4; i++) {
+        if (level >= (i + 1) * 25) {
+            drawFilledRectangle(xStart + (i * ux::netwerkSignalStrengthBarWidth), yStart, xStart + (i * ux::netwerkSignalStrengthBarWidth) + ux::netwerkSignalStrengthBarWidth, yStart + ux::netwerkSignalStrengthBaseHeight + (i * ux::netwerkSignalStrengthStepHeight), color::black);
+        } else {
+            drawRectangle(xStart + (i * ux::netwerkSignalStrengthBarWidth), yStart, xStart + (i * ux::netwerkSignalStrengthBarWidth) + ux::netwerkSignalStrengthBarWidth, yStart + ux::netwerkSignalStrengthBaseHeight + (i * ux::netwerkSignalStrengthStepHeight), color::black);
+            drawRectangle(xStart + (i * ux::netwerkSignalStrengthBarWidth) + 1, yStart + 1, xStart + (i * ux::netwerkSignalStrengthBarWidth) + ux::netwerkSignalStrengthBarWidth - 1, yStart + ux::netwerkSignalStrengthBaseHeight + (i * ux::netwerkSignalStrengthStepHeight) - 1, color::black);
+        }
     }
 }
 

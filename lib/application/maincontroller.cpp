@@ -59,6 +59,8 @@ void mainController::initialize() {
         logging::snprintf("Display not present\n");
     }
 
+    gpio::enableGpio(gpio::group::uart1);        // TODO : blue and green LED are connected to PB6 and PB7 - for debugging Low Power
+
     // gpio::enableGpio(gpio::group::rfControl);
     // LoRaWAN::initialize(); // initialize the LoRaWAN network driver
     goTo(mainState::idle);
@@ -131,12 +133,12 @@ void mainController::handleEvents() {
 }
 
 void mainController::run() {
-        if (power::isUsbConnected()) {
-            applicationEventBuffer.push(applicationEvent::usbConnected);
-        }
-        if (power::isUsbRemoved()) {
-            applicationEventBuffer.push(applicationEvent::usbRemoved);
-        }
+    if (power::isUsbConnected()) {
+        applicationEventBuffer.push(applicationEvent::usbConnected);
+    }
+    if (power::isUsbRemoved()) {
+        applicationEventBuffer.push(applicationEvent::usbRemoved);
+    }
 
     switch (state) {
         case mainState::measuring:
@@ -187,7 +189,7 @@ void mainController::run() {
                 // gpio::disableAllGpio();
                 gpio::disableGpio(gpio::group::spiDisplay);
                 gpio::disableGpio(gpio::group::writeProtect);
-//                gpio::disableGpio(gpio::group::i2c);
+                gpio::disableGpio(gpio::group::uart1);
 #ifndef generic
                 HAL_I2C_DeInit(&hi2c2);
 #endif
@@ -207,8 +209,14 @@ void mainController::run() {
 #ifndef generic
                 MX_I2C2_Init();
 #endif
+                gpio::enableGpio(gpio::group::uart1);
                 gpio::enableGpio(gpio::group::writeProtect);
                 gpio::enableGpio(gpio::group::spiDisplay);
+
+                // HAL_GPIO_WritePin(GPIOB, 0x0001 << 7, GPIO_PIN_SET);
+                // HAL_Delay(200U);
+                // HAL_GPIO_WritePin(GPIOB, 0x0001 << 7, GPIO_PIN_RESET);
+
                 goTo(mainState::idle);
             }
             break;

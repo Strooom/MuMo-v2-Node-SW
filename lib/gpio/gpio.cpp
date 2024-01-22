@@ -157,13 +157,11 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
         case gpio::group::uart1:
             if (enable) {
                 GPIO_InitTypeDef GPIO_InitStruct{0};
-                // PB7     ------> USART1_RX
-                // PB6     ------> USART1_TX
                 GPIO_InitStruct.Pin       = GPIO_PIN_7 | GPIO_PIN_6;
-                GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+                GPIO_InitStruct.Mode      = GPIO_MODE_OUTPUT_PP;
                 GPIO_InitStruct.Pull      = GPIO_NOPULL;
                 GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
-                GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
+                // GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
                 HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
             } else {
                 HAL_GPIO_DeInit(GPIOB, GPIO_PIN_7 | GPIO_PIN_6);

@@ -49,11 +49,15 @@ void screen::drawContents() {
     graphics::drawFilledRectangle(ux::marginLeft, 99, display::widthInPixels - ux::marginLeft, 100, graphics::color::black);
     graphics::drawFilledRectangle(ux::marginLeft, 149, display::widthInPixels - ux::marginLeft, 150, graphics::color::black);
 
-    for (uint32_t lineIndex = 0; lineIndex < numberOfLines; lineIndex++) {
+    for (uint32_t lineIndex = 1; lineIndex < numberOfLines; lineIndex++) {
         uint32_t leftOffset = ux::mid - (graphics::getTextwidth(roboto36bold, bigText[lineIndex]) + roboto36bold.properties.spaceBetweenCharactersInPixels);
         graphics::drawText(leftOffset, ux::marginBottomLarge + (lineIndex * 50), roboto36bold, bigText[lineIndex]);
         graphics::drawText(ux::mid + tahoma24bold.properties.spaceBetweenCharactersInPixels, ux::marginBottomSmall + (lineIndex * 50), tahoma24bold, smallText[lineIndex]);
     }
+
+    uint32_t batteryLevel = static_cast<uint32_t>(sensorDeviceCollection::valueAsFloat(1, 1) * 100.0F);
+    graphics::drawBatteryIcon(display::widthInPixels - (1 + ux::marginLeft + ux::batteryIconWidth), 2, batteryLevel);
+    graphics::drawNetworkSignalStrengthIcon(display::widthInPixels - (1 + ux::marginLeft + ux::marginLeft + ux::batteryIconWidth + ux::netwerkSignalStrengthWidth), 2, 50);
 
     display::update();
     display::goSleep();

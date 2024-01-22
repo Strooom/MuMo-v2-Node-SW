@@ -134,8 +134,11 @@ int main(void)
   MX_LPTIM1_Init();
   MX_SUBGHZ_Init();
   /* USER CODE BEGIN 2 */
-    HAL_Delay(5000);
+  gpio::enableGpio(gpio::group::uart1);
+  //HAL_GPIO_WritePin(GPIOB, 0x0001 << 6, GPIO_PIN_SET);
+    HAL_Delay(3000);
     mainController::initialize();
+    //HAL_GPIO_WritePin(GPIOB, 0x0001 << 6, GPIO_PIN_RESET);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -347,7 +350,7 @@ static void MX_LPTIM1_Init(void)
   /* USER CODE END LPTIM1_Init 1 */
   hlptim1.Instance = LPTIM1;
   hlptim1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
-  hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV16;
+  hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV1;
   hlptim1.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
   hlptim1.Init.OutputPolarity = LPTIM_OUTPUTPOLARITY_HIGH;
   hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
@@ -426,7 +429,7 @@ static void MX_RTC_Init(void)
 
   /** Enable the WakeUp
   */
-  if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 20479, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK)
+  if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK)
   {
     Error_Handler();
   }

@@ -30,6 +30,9 @@ class graphics {
     static void drawText(uint32_t xStart, uint32_t yStart, const font& theFont, const char* theText);
     static uint32_t getTextwidth(const font& theFont, const char* theText);
 
+    static void drawBatteryIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level);                      // level goes from 0 to 100
+    static void drawNetworkSignalStrengthIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level);        // level goes from 0 to 100
+    
     // TODO : make all parameters const
 
 #ifndef unitTesting
