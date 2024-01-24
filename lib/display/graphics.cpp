@@ -161,7 +161,7 @@ void graphics::drawText(const uint32_t xStart, const uint32_t y, const font &the
 }
 
 void graphics::drawBatteryIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level) {
-    for (int i = 0; i < ux::batteryIconThickness; i++) {
+    for (uint32_t i = 0; i < ux::batteryIconThickness; i++) {
         drawRectangle(xStart + i, yStart + i, xStart + ux::batteryIconWidth - i, yStart + ux::batteryIconHeight - i, color::black);
     }
     drawFilledRectangle(xStart + ux::batteryIconTipLeft, yStart + ux::batteryIconHeight, xStart + ux::batteryIconTipLeft + ux::batteryIconTipWidth, yStart + ux::batteryIconHeight + ux::batteryIconTipHeight, color::black);
@@ -170,7 +170,7 @@ void graphics::drawBatteryIcon(const uint32_t xStart, const uint32_t yStart, con
 }
 
 void graphics::drawNetworkSignalStrengthIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level) {
-    for (int i = 0; i < 4; i++) {
+    for (uint32_t i = 0; i < 4; i++) {
         if (level >= (i + 1) * 25) {
             drawFilledRectangle(xStart + (i * ux::netwerkSignalStrengthBarWidth), yStart, xStart + (i * ux::netwerkSignalStrengthBarWidth) + ux::netwerkSignalStrengthBarWidth, yStart + ux::netwerkSignalStrengthBaseHeight + (i * ux::netwerkSignalStrengthStepHeight), color::black);
         } else {

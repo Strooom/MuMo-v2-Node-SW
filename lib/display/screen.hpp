@@ -29,10 +29,10 @@ class screen {
     static void getContents();
     static void drawContents();
 
-    static int integerPart(float value, uint32_t decimals);
-    static int fractionalPart(float value, uint32_t decimals);
+    static int32_t integerPart(float value, uint32_t decimals);
+    static uint32_t fractionalPart(float value, uint32_t decimals);
     static float factorFloat(uint32_t decimals);
-    static int factorInt(uint32_t decimals);
-    static void buildBigTextString(uint32_t value, uint32_t lineIndex);
+    static uint32_t factorInt(uint32_t decimals);
+    static void buildBigTextString(int32_t value, uint32_t lineIndex);
     static void buildSmallTextString(uint32_t value, uint32_t decimals, const char* suffix, uint32_t lineIndex);
 };

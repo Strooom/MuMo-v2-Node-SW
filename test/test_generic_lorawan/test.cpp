@@ -43,10 +43,28 @@ void test_setOffsetsAndLengthsTx() {
     // static uint32_t micOffset;                 //
 }
 
+void test_prepareBlockAi() {}
+void test_encryptPayload() {}
+void test_decryptPayload() {}
+void test_insertHeaders() {}
+void test_insertBlockB0() {}
+void test_insertMic() {}
+void test_isValidMic() {}
+void test_decodeMessage() {}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
     RUN_TEST(test_setOffsetsAndLengthsRx);
     RUN_TEST(test_setOffsetsAndLengthsTx);
+    RUN_TEST(test_prepareBlockAi);
+    RUN_TEST(test_insertHeaders);
+    RUN_TEST(test_encryptPayload);
+    RUN_TEST(test_decryptPayload);
+    RUN_TEST(test_insertBlockB0);
+    RUN_TEST(test_insertMic);
+    RUN_TEST(test_isValidMic);
+    RUN_TEST(test_decodeMessage);
+
     UNITY_END();
 }

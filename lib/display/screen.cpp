@@ -63,11 +63,11 @@ void screen::drawContents() {
     display::goSleep();
 }
 
-int screen::integerPart(float value, uint32_t decimals) {
+int32_t screen::integerPart(float value, uint32_t decimals) {
     return (static_cast<int>(round(value * factorFloat(decimals))) / factorInt(decimals));
 }
 
-int screen::fractionalPart(float value, uint32_t decimals) {
+uint32_t screen::fractionalPart(float value, uint32_t decimals) {
     return static_cast<int>(round(value * factorFloat(decimals))) - (integerPart(value, decimals) * factorInt(decimals));
 }
 
@@ -79,7 +79,7 @@ float screen::factorFloat(uint32_t decimals) {
     return result;
 }
 
-int screen::factorInt(uint32_t decimals) {
+uint32_t screen::factorInt(uint32_t decimals) {
     uint32_t result{1U};
     for (uint32_t n = 0; n < decimals; n++) {
         result *= 10;
@@ -87,7 +87,7 @@ int screen::factorInt(uint32_t decimals) {
     return result;
 }
 
-void screen::buildBigTextString(uint32_t value, uint32_t lineIndex) {
+void screen::buildBigTextString(int32_t value, uint32_t lineIndex) {
     char base[8];
     snprintf(base, 8, "%d", value);
     if (strncmp(base, bigText[lineIndex], maxTextLength) != 0) {
@@ -99,7 +99,7 @@ void screen::buildBigTextString(uint32_t value, uint32_t lineIndex) {
 void screen::buildSmallTextString(uint32_t value, uint32_t decimals, const char* suffix, uint32_t lineIndex) {
     char suffixString[8];
     if (decimals > 0) {
-        snprintf(suffixString, 8, "%d %s", value, suffix);
+        snprintf(suffixString, 8, "%u %s", value, suffix);
         if (strncmp(suffixString, smallText[lineIndex], maxTextLength) != 0) {
             strncpy(smallText[lineIndex], suffixString, maxTextLength);
             isModified = true;
