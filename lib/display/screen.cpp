@@ -9,6 +9,7 @@
 #include <gpio.hpp>
 #include <logging.hpp>
 #include <cmath>
+#include <inttypes.h>
 
 bool screen::isModified{false};
 char screen::bigText[numberOfLines][maxTextLength + 1]{};
@@ -89,7 +90,7 @@ uint32_t screen::factorInt(uint32_t decimals) {
 
 void screen::buildBigTextString(int32_t value, uint32_t lineIndex) {
     char base[8];
-    snprintf(base, 8, "%d", value);
+    snprintf(base, 8, "%" PRId32, value);
     if (strncmp(base, bigText[lineIndex], maxTextLength) != 0) {
         strncpy(bigText[lineIndex], base, maxTextLength);
         isModified = true;
@@ -99,7 +100,7 @@ void screen::buildBigTextString(int32_t value, uint32_t lineIndex) {
 void screen::buildSmallTextString(uint32_t value, uint32_t decimals, const char* suffix, uint32_t lineIndex) {
     char suffixString[8];
     if (decimals > 0) {
-        snprintf(suffixString, 8, "%u %s", value, suffix);
+        snprintf(suffixString, 8, "%" PRIu32 " %s", value, suffix);
         if (strncmp(suffixString, smallText[lineIndex], maxTextLength) != 0) {
             strncpy(smallText[lineIndex], suffixString, maxTextLength);
             isModified = true;

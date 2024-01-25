@@ -1,5 +1,4 @@
 #include <unity.h>
-#include <power.hpp>
 #include <channelcollection.hpp>
 
 void setUp(void) {}           // before test
@@ -42,8 +41,6 @@ uint32_t nmbrOfTimesSelected[loRaChannelCollection::maxNmbrChannels]{}; // initi
         TEST_ASSERT(nmbrOfTimesSelected[5] == 0);
         TEST_ASSERT(nmbrOfTimesSelected[6] == 0);
         TEST_ASSERT(nmbrOfTimesSelected[7] == 0);
-
-
 }
 
 

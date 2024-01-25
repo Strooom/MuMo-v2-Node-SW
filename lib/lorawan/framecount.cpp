@@ -1,6 +1,6 @@
 #include <framecount.hpp>
 
-frameCount::frameCount(){};
+frameCount::frameCount() : asUint32(0){};
 
 frameCount::frameCount(uint32_t initialValue) : asUint32(initialValue){};
 

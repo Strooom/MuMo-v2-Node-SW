@@ -282,8 +282,8 @@ void LoRaWAN::goTo(txRxCycleState newState) {
             break;
 
         case txRxCycleState::waitForRandomTimeBeforeTransmit: {
-            uint32_t randomDelayAsTicks = getRandomNumber() % maxRandomDelayBeforeTx;              // this results in a random delay of 0.. 8 seconds
-            float randomDelayAsFloat    = static_cast<float>(randomDelayAsTicks) / 2048.0f;        // convert to seconds
+            uint32_t randomDelayAsTicks = getRandomNumber() % maxRandomDelayBeforeTx;        // this results in a random delay of 0.. 8 seconds
+            // float randomDelayAsFloat    = static_cast<float>(randomDelayAsTicks) / 2048.0f;        // convert to seconds
             // logging::snprintf(logging::source::lorawanTiming, "LoRaWAN random delay before transmit : %u ticks, %f seconds\n", randomDelayAsTicks, randomDelayAsFloat);        //
             startTimer(randomDelayAsTicks);        //
         } break;

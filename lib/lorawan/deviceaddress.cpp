@@ -1,6 +1,6 @@
 #include <deviceaddress.hpp>
 
-deviceAddress::deviceAddress() {}
+deviceAddress::deviceAddress() : asUint32(0) {}
 
 deviceAddress::deviceAddress(uint32_t theDeviceAddress) : asUint32(theDeviceAddress) {}
 
