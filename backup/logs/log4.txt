@@ -1,0 +1,35 @@
+LoRaWAN random delay before transmit = 2.955566 seconds
+timerStart = 30103
+timerExpired = 33073
+
+LoRaWAN event [5 / timeOut] in state [2 / waitForRandomTimeBeforeTransmit] 
+LoRaWAN stateChange from [2 / waitForRandomTimeBeforeTransmit] to [3 / waitForTxComplete]
+LoRaWAN event [2 / sx126x Tx Complete] in state [3 / waitForTxComplete] 
+
+timerStart = 33138
+LoRaWAN stateChange from [3 / waitForTxComplete] to [4 / waitForRx1Start]
+timerExpired = 34116
+
+LoRaWAN event [5 / timeOut] in state [4 / waitForRx1Start] 
+
+timerStart = 34117
+LoRaWAN stateChange from [4 / waitForRx1Start] to [5 / waitForRx1CompleteOrTimeout]
+LoRaWAN event [3 / sx126x Rx Complete] in state [5 / waitForRx1CompleteOrTimeout] 
+Received Downlink : framePayloadLength = 33, frameOptionsLength = 0
+- LoRa msg = 60 51 AE 0B 26 00 01 00 00 01 2C C8 58 94 E8 B1 6C 1B 11 13 A9 D7 A3 03 F8 3F A0 50 A5 40 30 87 D3 E3 B4 97 AE 60 9B AF B0 01 68 26 39 E9 
+Error : invalid MIC, loraPayload = 60 51 AE 0B 26 00 01 00 00 01 2C C8 58 94 E8 B1 6C 1B 11 13 A9 D7 A3 03 F8 3F A0 50 A5 40 30 87 D3 E3 B4 97 AE 60 9B AF B0 01 68 26 39 E9 
+Received LoRaWAN  invalid / unknown msg in Rx1
+LoRaWAN stateChange from [5 / waitForRx1CompleteOrTimeout] to [6 / waitForRx2Start]
+timerExpired = 35126
+LoRaWAN event [5 / timeOut] in state [6 / waitForRx2Start] 
+LoRaWAN stateChange from [6 / waitForRx2Start] to [7 / waitForRx2CompleteOrTimeout]
+LoRaWAN event [4 / sx126x Timeout] in state [7 / waitForRx2CompleteOrTimeout] 
+LoRaWAN stateChange from [7 / waitForRx2CompleteOrTimeout] to [0 / idle]
+Scheduled Uplink : channel = 0, frequency = 868100000, dataRate = 5, framePayloadLength = 10, frameOptionsLength = 0
+- LoRa msg = 40 51 AE 0B 26 00 41 00 10 BC 5D B9 2C B3 31 BD C1 5E 61 D4 89 78 4D 
+LoRaWAN stateChange from [0 / idle] to [2 / waitForRandomTimeBeforeTransmit]
+LoRaWAN random delay before transmit = 1.742188 seconds
+timerStart = 90273
+timerExpired = 92028
+LoRaWAN event [5 / timeOut] in state [2 / waitForRandomTimeBeforeTransmit] 
+LoRaWAN stateChange from [2 / waitForRandomTimeBeforeTransmit] to [3 / waitForTxComplete]

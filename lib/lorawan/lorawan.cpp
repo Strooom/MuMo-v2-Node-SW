@@ -323,26 +323,7 @@ void LoRaWAN::insertPayload(const uint8_t data[], const uint32_t length) {
     memcpy(rawMessage + framePayloadOffset, data, length);
 }
 
-void LoRaWAN::prepareBlockAi(uint8_t* theBlock, linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t blockIndex) {
-    theBlock[0]  = 0x01;                                      //
-    theBlock[1]  = 0x00;                                      //
-    theBlock[2]  = 0x00;                                      //
-    theBlock[3]  = 0x00;                                      //
-    theBlock[4]  = 0x00;                                      //
-    theBlock[5]  = static_cast<uint8_t>(theDirection);        //
-    theBlock[6]  = anAddress.asUint8[0];                      // LSByte
-    theBlock[7]  = anAddress.asUint8[1];                      //
-    theBlock[8]  = anAddress.asUint8[2];                      //
-    theBlock[9]  = anAddress.asUint8[3];                      // MSByte
-    theBlock[10] = aFrameCounter.asUint8[0];                  // LSByte
-    theBlock[11] = aFrameCounter.asUint8[1];                  //
-    theBlock[12] = aFrameCounter.asUint8[2];                  //
-    theBlock[13] = aFrameCounter.asUint8[3];                  // MSByte
-    theBlock[14] = 0x00;                                      //
-    theBlock[15] = blockIndex;                                // Blocks Ai are indexed from 1..k, where k is the number of blocks
-}
-
-void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t blockIndex) {
+void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uint32_t blockIndex) {
     theBlock[0] = 0x01;
     theBlock[1] = 0x00;
     theBlock[2] = 0x00;
@@ -378,24 +359,22 @@ void LoRaWAN::encryptPayload(aesKey& theKey) {
         incompleteBlockSize = framePayloadLength % 16;        // how long is the last block
     }
 
-    uint8_t theBlock[16];        // 16 bytes, which will be filled with certain values from LoRaWAN context, and then encrypted
-    // TODO : use an aesBlock instead
+    aesBlock theBlock;
 
-    // TODO : adjust for aesBlock io uint8_t[16]
-    // for (uint32_t blockIndex = 0x00; blockIndex < nmbrOfBlocks; blockIndex++) {
-    //     prepareBlockAi(theBlock, linkDirection::uplink, DevAddr, uplinkFrameCount, (blockIndex + 1));
-    //     theBlock.encrypt(applicationKey);
+    for (uint32_t blockIndex = 0x00; blockIndex < nmbrOfBlocks; blockIndex++) {
+        prepareBlockAi(theBlock, linkDirection::uplink, (blockIndex + 1));
+        theBlock.encrypt(theKey);
 
-    //     if (hasIncompleteBlock && (blockIndex == (nmbrOfBlocks - 1))) {
-    //         for (uint32_t byteIndex = 0; byteIndex < incompleteBlockSize; byteIndex++) {
-    //             rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
-    //         }
-    //     } else {
-    //         for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
-    //             rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
-    //         }
-    //     }
-    // }
+        if (hasIncompleteBlock && (blockIndex == (nmbrOfBlocks - 1))) {
+            for (uint32_t byteIndex = 0; byteIndex < incompleteBlockSize; byteIndex++) {
+                rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
+            }
+        } else {
+            for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
+            }
+        }
+    }
 }
 
 void LoRaWAN::decryptPayload(aesKey& theKey) {
@@ -408,11 +387,11 @@ void LoRaWAN::decryptPayload(aesKey& theKey) {
         incompleteBlockSize = framePayloadLength % 16;        // how long is the last block
     }
 
-    uint8_t theBlock[16];        // 16 bytes, which will be filled with certain values from LoRaWAN context, and then encrypted
+    aesBlock theBlock;
 
     for (uint32_t blockIndex = 0x00; blockIndex < nmbrOfBlocks; blockIndex++) {
-        prepareBlockAi(theBlock, linkDirection::downlink, DevAddr, downlinkFrameCount, (blockIndex + 1));
-        // AES_Encrypt(theBlock, theKey.asBytes()); // TODO
+        prepareBlockAi(theBlock, linkDirection::downlink, (blockIndex + 1));
+        theBlock.encrypt(theKey);
 
         if (hasIncompleteBlock && (blockIndex == (nmbrOfBlocks - 1))) {
             for (uint32_t byteIndex = 0; byteIndex < incompleteBlockSize; byteIndex++) {
@@ -457,17 +436,17 @@ void LoRaWAN::insertHeaders(const uint8_t theFrameOptions[], const uint32_t theF
     }
 }
 
-void LoRaWAN::insertBlockB0(linkDirection theDirection, deviceAddress& aDeviceAddress, frameCount& aFrameCounter, uint32_t micPayloadLength) {
+void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCounter, uint32_t micPayloadLength) {
     rawMessage[0]  = 0x49;                                      // see LoRaWAN® L2 1.0.4 Specification - line 808
     rawMessage[1]  = 0;                                         //
     rawMessage[2]  = 0;                                         //
     rawMessage[3]  = 0;                                         //
     rawMessage[4]  = 0;                                         //
     rawMessage[5]  = static_cast<uint8_t>(theDirection);        // 0x00 for uplink, 0x01 for downlink
-    rawMessage[6]  = aDeviceAddress.asUint8[0];                 // LSByte
-    rawMessage[7]  = aDeviceAddress.asUint8[1];                 //
-    rawMessage[8]  = aDeviceAddress.asUint8[2];                 //
-    rawMessage[9]  = aDeviceAddress.asUint8[3];                 // MSByte
+    rawMessage[6]  = DevAddr.asUint8[0];                        // LSByte
+    rawMessage[7]  = DevAddr.asUint8[1];                        //
+    rawMessage[8]  = DevAddr.asUint8[2];                        //
+    rawMessage[9]  = DevAddr.asUint8[3];                        // MSByte
     rawMessage[10] = aFrameCounter.asUint8[0];                  // LSByte
     rawMessage[11] = aFrameCounter.asUint8[1];                  //
     rawMessage[12] = aFrameCounter.asUint8[2];                  //
@@ -534,7 +513,7 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
         insertPayload(applicationData, applicationDataLength);                                             //
         encryptPayload(applicationKey);                                                                    //
     }
-    insertBlockB0(linkDirection::uplink, DevAddr, uplinkFrameCount, (macHeaderLength + macPayloadLength));
+    insertBlockB0(linkDirection::uplink, uplinkFrameCount, (macHeaderLength + macPayloadLength));
     insertMic();
 
     // 2. Configure the radio, and start stateMachine for transmitting the payload
@@ -590,7 +569,7 @@ messageType LoRaWAN::decodeMessage() {
     logging::snprintf(logging::source::lorawanMac, "receivedFramecount = %u, lastFramecount = %u, guessedFramecount = %u\n", receivedDownlinkFramecount, lastDownlinkFramecount, guessedDownlinkFramecount);
 
     // 3. Check the MIC
-    insertBlockB0(linkDirection::downlink, DevAddr, tmpDownLinkFrameCount, loRaPayloadLength - micLength);
+    insertBlockB0(linkDirection::downlink, tmpDownLinkFrameCount, loRaPayloadLength - micLength);
     if (!isValidMic()) {
         if (logging::isActive(logging::source::error)) {
             logging::snprintf("Error : invalid MIC, loraPayload = ");
@@ -999,3 +978,95 @@ void LoRaWAN::stopTimer() {
     HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
 #endif
 }
+
+
+
+// void Calculate_MIC2(sBuffer *Buffer, unsigned char *Key, unsigned char *New_Data) {
+//     unsigned char i, j;
+//     unsigned char Key_K1[16] = {
+//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+//     unsigned char Key_K2[16] = {
+//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+//     unsigned char Old_Data[16] = {
+//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+//     unsigned char Number_of_Blocks      = 0x00;
+//     unsigned char Incomplete_Block_Size = 0x00;
+
+//     // Calculate number of Blocks and blocksize of last block
+//     Number_of_Blocks      = Buffer->Counter / 16;
+//     Incomplete_Block_Size = Buffer->Counter % 16;
+
+//     // if there is an incomplete block at the end add 1 to the number of blocks
+//     if (Incomplete_Block_Size != 0) {
+//         Number_of_Blocks++;
+//     }
+
+//     Generate_Keys(Key, Key_K1, Key_K2);
+
+
+//     // Perform full calculating until n-1 message blocks
+//     for (j = 0x0; j < (Number_of_Blocks - 1); j++) {
+//         // Copy data into array
+//         for (i = 0; i < 16; i++) {
+//             New_Data[i] = Buffer->Data[(j * 16) + i];
+//         }
+
+//         // Perform XOR with old data
+//         XOR(New_Data, Old_Data);
+
+//         // Perform AES encryption
+//         AES_Encrypt(New_Data, Key);
+
+//         // Copy New_Data to Old_Data
+//         for (i = 0; i < 16; i++) {
+//             Old_Data[i] = New_Data[i];
+//         }
+//     }
+
+//     // Perform calculation on last block
+//     // Check if Datalength is a multiple of 16
+//     if (Incomplete_Block_Size == 0) {
+//         // Copy last data into array
+//         for (i = 0; i < 16; i++) {
+//             New_Data[i] = Buffer->Data[((Number_of_Blocks - 1) * 16) + i];
+//         }
+
+//         // Perform XOR with Key 1
+//         XOR(New_Data, Key_K1);
+
+//         // Perform XOR with old data
+//         XOR(New_Data, Old_Data);
+
+//         // Perform last AES routine
+//         AES_Encrypt(New_Data, Key);
+//     } else {
+//         // Copy the remaining data and fill the rest
+//         for (i = 0; i < 16; i++) {
+//             if (i < Incomplete_Block_Size) {
+//                 New_Data[i] = Buffer->Data[((Number_of_Blocks - 1) * 16) + i];
+//             }
+//             if (i == Incomplete_Block_Size) {
+//                 New_Data[i] = 0x80;
+//             }
+//             if (i > Incomplete_Block_Size) {
+//                 New_Data[i] = 0x00;
+//             }
+//         }
+
+//         // Perform XOR with Key 2
+//         XOR(New_Data, Key_K2);
+
+//         // Perform XOR with Old data
+//         XOR(New_Data, Old_Data);
+
+//         // Perform last AES routine
+//         AES_Encrypt(New_Data, Key);
+//     }
+
+// }
+

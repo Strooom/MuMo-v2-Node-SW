@@ -26,14 +26,14 @@
 
 class LoRaWAN {
   public:
-    static void initialize();                                                                                     // initialize the LoRaWAN layer
-    static void run();                                                                                            // run the LoRaWAN MAC layer
-    static bool isReady();                                                                                        // true when networking layer has completed all tasks and so MCU could go to sleep
-    static void handleEvents();                                                                                   // handles events (timeouts and tx/rxComplete events)
-    static bool isReadyToTransmit();                                                                              // is the LoRaWAN layer in a state, ready to transmit a message?
-    static uint32_t getMaxApplicationPayloadLength();                                                             // how many [bytes] can the application send in one message? Depends on active dataRate and amount of MAC stuff waiting to be transmitted
+    static void initialize();                                                                                   // initialize the LoRaWAN layer
+    static void run();                                                                                          // run the LoRaWAN MAC layer
+    static bool isReady();                                                                                      // true when networking layer has completed all tasks and so MCU could go to sleep
+    static void handleEvents();                                                                                 // handles events (timeouts and tx/rxComplete events)
+    static bool isReadyToTransmit();                                                                            // is the LoRaWAN layer in a state, ready to transmit a message?
+    static uint32_t getMaxApplicationPayloadLength();                                                           // how many [bytes] can the application send in one message? Depends on active dataRate and amount of MAC stuff waiting to be transmitted
     static void sendUplink(uint8_t aFramePort = 0, const uint8_t data[] = nullptr, uint32_t length = 0);        // send an uplink message,
-    static void getDownlinkMessage();                                                                             //
+    static void getDownlinkMessage();                                                                           //
     static void checkNetwork();
 
     static void logSettings();        // log the current settings of the LoRaWAN layer
@@ -105,13 +105,13 @@ class LoRaWAN {
     // ### Helper functions for constructing an uplink message - Tx ###
     // ################################################################
 
-    static void setOffsetsAndLengthsTx(uint32_t framePayloadLength, uint32_t frameOptionsLength = 0);                                                                      // calculate all offsets and lengths in rawMessage starting from the to be transmitted application payload length
-    static void insertPayload(const uint8_t data[], const uint32_t length);                                                                                                // copy application payload to correct position in the rawMessage buffer
-    static void encryptPayload(aesKey& theKey);                                                                                                                            // encrypt the payload in the rawMessage buffer
-    static void decryptPayload(aesKey& theKey);                                                                                                                            // decrypt the payload in the rawMessage buffer
+    static void setOffsetsAndLengthsTx(uint32_t framePayloadLength, uint32_t frameOptionsLength = 0);                                                                    // calculate all offsets and lengths in rawMessage starting from the to be transmitted application payload length
+    static void insertPayload(const uint8_t data[], const uint32_t length);                                                                                              // copy application payload to correct position in the rawMessage buffer
+    static void encryptPayload(aesKey& theKey);                                                                                                                          // encrypt the payload in the rawMessage buffer
+    static void decryptPayload(aesKey& theKey);                                                                                                                          // decrypt the payload in the rawMessage buffer
     static void insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort);        // prepend the header to the rawMessage buffer
-    static void insertBlockB0(linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t micPayloadLength);                                 //
-    static void insertMic();                                                                                                                                               //
+    static void insertBlockB0(linkDirection theDirection, frameCount& aFrameCounter, uint32_t micPayloadLength);                                                         //
+    static void insertMic();                                                                                                                                             //
 
     // #############################################################
     // ### Helper functions for decoding a downlink message - Rx ###
@@ -128,8 +128,8 @@ class LoRaWAN {
     static void startTimer(uint32_t timeOut);        // timeOut in [ticks] from the 2048 Hz clock driving LPTIM1
     static void stopTimer();                         //
 
-    static void prepareBlockAi(uint8_t* aBlock, linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t blockIndex);
-    static void prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t blockIndex);
+    // static void prepareBlockAi(uint8_t* aBlock, linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t blockIndex);
+    static void prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uint32_t blockIndex);
     static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);        //
 
     static void processMacContents();                                                                                                           // process the contents of the macIn buffer, output goes to macOut buffer
