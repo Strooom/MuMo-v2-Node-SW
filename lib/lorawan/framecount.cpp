@@ -13,12 +13,12 @@ frameCount& frameCount::operator=(uint32_t theFrameCount) {
     return *this;
 }
 
-void frameCount::set(uint8_t theFrameCount[4]) {
-    asUint8[0] = theFrameCount[0];
-    asUint8[1] = theFrameCount[1];
-    asUint8[2] = theFrameCount[2];
-    asUint8[3] = theFrameCount[3];
-}
+// void frameCount::set(uint8_t theFrameCount[4]) {
+//     asUint8[0] = theFrameCount[0];
+//     asUint8[1] = theFrameCount[1];
+//     asUint8[2] = theFrameCount[2];
+//     asUint8[3] = theFrameCount[3];
+// }
 
 void frameCount::increment() {
     asUint32++;
