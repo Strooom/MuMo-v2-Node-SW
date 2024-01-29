@@ -1415,7 +1415,7 @@ uint32_t LoRaWAN::Calculate_MIC3(uint8_t *payload, uint32_t payloadLength, aesKe
 
         // Perform last AES routine
         // outputBlock.set(outputAsBytes);
-        outputBlock.encrypt(keyIn);        // AES_Encrypt(outputAsBytes, Key);
+        outputBlock.encrypt(networkKey);        // AES_Encrypt(outputAsBytes, Key);
         // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
     }
     uint32_t mic = ((outputBlock.asBytes()[0] << 24) + (outputBlock.asBytes()[1] << 16) + (outputBlock.asBytes()[2] << 8) + (outputBlock.asBytes()[3]));
