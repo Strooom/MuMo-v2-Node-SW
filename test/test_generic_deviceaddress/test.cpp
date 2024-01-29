@@ -27,10 +27,10 @@ void test_set() {
     TEST_ASSERT_EQUAL_UINT32(0, address1.asUint32);                           // default constructor initializes to 0
     TEST_ASSERT_EQUAL_UINT8_ARRAY(address1Bytes, address1.asUint8, 4);        //
 
-    uint8_t address2Bytes[4] = {0x78, 0x56, 0x34, 0x12};
-    address1.set(address2Bytes);
-    TEST_ASSERT_EQUAL_UINT32(0x12345678, address1.asUint32);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(address2Bytes, address1.asUint8, 4);
+    // uint8_t address2Bytes[4] = {0x78, 0x56, 0x34, 0x12};
+    // address1.set(address2Bytes);
+    // TEST_ASSERT_EQUAL_UINT32(0x12345678, address1.asUint32);
+    // TEST_ASSERT_EQUAL_UINT8_ARRAY(address2Bytes, address1.asUint8, 4);
 
     address1.set(0x87654321);
     TEST_ASSERT_EQUAL_UINT32(0x87654321, address1.asUint32);

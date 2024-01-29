@@ -13,8 +13,9 @@ class aesKey {
     static constexpr uint32_t lengthAsBytes{16};        //
     static constexpr uint32_t lengthAsWords{4};         //
 
-    void set(const uint8_t bytes[lengthAsBytes]);        // load the key with an array of bytes and expands it
-
+    void setFromByteArray(const uint8_t bytes[lengthAsBytes]);
+    void setFromHexString(const char* string);
+    
     const uint8_t* asBytes();         // return the key as bytes
     const uint32_t* asWords();        // return the key as words
 

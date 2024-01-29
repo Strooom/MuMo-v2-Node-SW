@@ -60,8 +60,6 @@ void test_setAsArray() {
 
     uint8_t expectedBytes[aesKey::lengthAsBytes]{0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), 16);
-
-
 }
 
 void test_encrypt() {
@@ -206,8 +204,37 @@ void test_mixColumns() {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedOutput, aBlock.asBytes(), 16);
 }
 
+void test_nmbrOfBlocks() {
+    TEST_ASSERT_EQUAL(0, aesBlock::nmbrOfBlocks(0));
+    TEST_ASSERT_EQUAL(1, aesBlock::nmbrOfBlocks(1));
+    TEST_ASSERT_EQUAL(1, aesBlock::nmbrOfBlocks(16));
+    TEST_ASSERT_EQUAL(2, aesBlock::nmbrOfBlocks(17));
+    TEST_ASSERT_EQUAL(2, aesBlock::nmbrOfBlocks(32));
+}
+
+void test_incompleteLastBlockSize() {
+    TEST_ASSERT_EQUAL(0, aesBlock::incompleteLastBlockSize(0));
+    TEST_ASSERT_EQUAL(1, aesBlock::incompleteLastBlockSize(1));
+    TEST_ASSERT_EQUAL(15, aesBlock::incompleteLastBlockSize(15));
+    TEST_ASSERT_EQUAL(0, aesBlock::incompleteLastBlockSize(16));
+    TEST_ASSERT_EQUAL(1, aesBlock::incompleteLastBlockSize(17));
+}
+
+void test_shiftLeft() {
+    unsigned char input[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
+    aesBlock testBlock;
+    testBlock.set(input);
+    testBlock.shiftLeft();
+    unsigned char output[16] = {0x0, 0x02, 0x04, 0x06, 0x08, 0x0A, 0xC, 0x0E, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E};
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(output, testBlock.asBytes(), 16);
+}
+
+
 int main(int argc, char** argv) {
     UNITY_BEGIN();
+    RUN_TEST(test_nmbrOfBlocks);
+    RUN_TEST(test_incompleteLastBlockSize);
+
     RUN_TEST(test_initialize);
     RUN_TEST(test_setFromBytes);
     RUN_TEST(test_setAsArray);
@@ -218,8 +245,10 @@ int main(int argc, char** argv) {
     RUN_TEST(test_substituteBytes);
     RUN_TEST(test_shiftRows);
     RUN_TEST(test_mixColumns);
+    RUN_TEST(test_shiftLeft);
 
     RUN_TEST(test_encrypt_step_by_step);
     RUN_TEST(test_encrypt);
+
     UNITY_END();
 }

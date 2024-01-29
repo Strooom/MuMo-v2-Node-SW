@@ -64,6 +64,7 @@ void aesBlock::encrypt(aesKey &key) {
     uint32_t plainTextAsWords[4];
     uint32_t cypherTextAsWords[4];
     bytesToWords(state.asByte, plainTextAsWords);        // convert the 16 bytes to 4 words the way the hardware expects it
+    // TODO : with the byte swapping in the AES hardware, it's maybe possible to use the state.asWord directly
     if (HAL_CRYP_Encrypt(&hcryp, plainTextAsWords, 4, cypherTextAsWords, 50) != HAL_OK) {
         // Error_Handler();
     }
@@ -154,4 +155,42 @@ void aesBlock::mixColumns() {
         tempState[3][column] = a[0] ^ b[0] ^ a[1] ^ a[2] ^ b[3];
     }
     matrixToVector(tempState, state.asByte);
+}
+
+uint32_t aesBlock::nmbrOfBlocks(uint32_t nmbrOfBytes) {
+    if (incompleteLastBlockSize(nmbrOfBytes) == 0) {
+        return nmbrOfBytes / 16;
+    } else {
+        return (nmbrOfBytes / 16) + 1;
+    }
+}
+uint32_t aesBlock::incompleteLastBlockSize(uint32_t nmbrOfBytes) {
+    return nmbrOfBytes % 16;
+}
+
+void aesBlock::shiftLeft() {
+    // TODO : check if we can make this more efficient in 32bit operations
+    unsigned char i;
+    unsigned char Overflow = 0;
+
+    uint8_t Data[16];
+    memcpy(Data, state.asByte, 16);
+
+    for (i = 0; i < 16; i++) {
+        // Check for overflow on next byte except for the last byte
+        if (i < 15) {
+            // Check if upper bit is one
+            if ((Data[i + 1] & 0x80) == 0x80) {
+                Overflow = 1;
+            } else {
+                Overflow = 0;
+            }
+        } else {
+            Overflow = 0;
+        }
+
+        // Shift one left
+        Data[i] = (Data[i] << 1) + Overflow;
+    }
+    memcpy(state.asByte, Data, 16);
 }

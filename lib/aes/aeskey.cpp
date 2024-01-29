@@ -2,6 +2,8 @@
 #include <cstring>        // needed for memcpy()
 #include <sbox.hpp>
 #include <rcon.hpp>
+#include <aesblock.hpp>
+#include <hexascii.hpp>
 
 const uint8_t* aesKey::asBytes() {
     return key.asByte;
@@ -11,8 +13,15 @@ const uint32_t* aesKey::asWords() {
     return key.asWord;
 }
 
-void aesKey::set(const uint8_t bytes[lengthAsBytes]) {
+void aesKey::setFromByteArray(const uint8_t bytes[lengthAsBytes]) {
     memcpy(key.asByte, bytes, lengthAsBytes);
+    expandKey();
+}
+
+void aesKey::setFromHexString(const char* string) {
+    uint8_t tmpBytes[lengthAsBytes];
+    hexAscii::hexStringToByteArray(string, tmpBytes);
+    memcpy(key.asByte, tmpBytes, lengthAsBytes);
     expandKey();
 }
 

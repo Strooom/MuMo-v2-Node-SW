@@ -15,7 +15,7 @@ class aesBlock {
     static constexpr uint32_t lengthAsBytes{16};         //
     static constexpr uint32_t lengthAsWords{4};          //
     void set(const uint8_t bytes[lengthAsBytes]);        // load the block with data
-    uint8_t &operator[](std::size_t index); // accessing the individual bytes through the [] operator
+    uint8_t &operator[](std::size_t index);              // accessing the individual bytes through the [] operator
 
     void encrypt(aesKey &key);        // encrypt the block
     const uint8_t *asBytes();         // return the encrypted block as bytes
@@ -25,6 +25,9 @@ class aesBlock {
     static void bytesToWords(uint8_t bytesIn[16], uint32_t wordsOut[4]);
     static void wordsToBytes(uint32_t wordsIn[4], uint8_t bytesOut[16]);
 
+    static uint32_t nmbrOfBlocks(uint32_t nmbrOfBytes);
+    static uint32_t incompleteLastBlockSize(uint32_t nmbrOfBytes);
+
 #ifndef unitTesting
 
   private:
@@ -32,7 +35,9 @@ class aesBlock {
     void substituteBytes();
     void shiftRows();
     void XOR(const uint8_t *data);
+    // TODO : need a XOR of 2 blocks as well - can be done in 32 bit
     void mixColumns();
+    void shiftLeft();
 
     union {
         uint8_t asByte[lengthAsBytes]{};        // interprete the data as 16 bytes

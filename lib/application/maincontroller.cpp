@@ -160,19 +160,6 @@ void mainController::run() {
         case mainState::storing:
             measurementCollection::run();
             if (measurementCollection::isReady()) {
-                if (display::isPresent()) {
-                    goTo(mainState::displaying);
-                    screen::show();
-                } else {
-                    goTo(mainState::networking);
-                }
-            }
-            break;
-
-        case mainState::displaying:
-            display::run();
-            if (display::isReady()) {
-                // TODO : check if we need a transmission
                 goTo(mainState::networking);
             }
             break;
@@ -180,6 +167,18 @@ void mainController::run() {
         case mainState::networking:
             LoRaWAN::run();
             if (LoRaWAN::isReady()) {
+                if (display::isPresent()) {
+                    goTo(mainState::displaying);
+                    screen::show();
+                } else {
+                    goTo(mainState::idle);
+                }
+            }
+            break;
+
+        case mainState::displaying:
+            display::run();
+            if (display::isReady()) {
                 goTo(mainState::idle);
             }
             break;

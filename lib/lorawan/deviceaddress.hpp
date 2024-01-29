@@ -16,7 +16,7 @@ class deviceAddress {
     explicit deviceAddress(uint8_t theDeviceAddress[lengthInBytes]);        //
     void set(uint32_t theDeviceAddress);                                    // decode the deviceAddress from a uint32_t
     deviceAddress& operator=(uint32_t theDeviceAddress);                    //
-    void set(uint8_t theDeviceAddress[lengthInBytes]);                      // set the deviceAddress from an array of 4 bytes
+    //void set(uint8_t theDeviceAddress[lengthInBytes]);                      // set the deviceAddress from an array of 4 bytes
 
     union {
         uint32_t asUint32{0};

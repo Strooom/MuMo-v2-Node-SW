@@ -41,6 +41,13 @@ class LoRaWAN {
 
     static txRxCycleState theTxRxCycleState;        // state variable tracking the TxRxCycle state machine : TODO : provide a getter()
 
+
+    static void generateKeysK1K2(); // generates two keys needed for calculating the MIC - we generate them once at startup and keep them in memory
+    static aesKey keyK1;
+    static aesKey keyK2;
+    static uint32_t Calculate_MIC3(uint8_t *payload, uint32_t payloadLength, aesKey &keyIn);
+
+
 #ifndef unitTesting
   private:
 #endif
@@ -105,13 +112,32 @@ class LoRaWAN {
     // ### Helper functions for constructing an uplink message - Tx ###
     // ################################################################
 
-    static void setOffsetsAndLengthsTx(uint32_t framePayloadLength, uint32_t frameOptionsLength = 0);                                                                    // calculate all offsets and lengths in rawMessage starting from the to be transmitted application payload length
-    static void insertPayload(const uint8_t data[], const uint32_t length);                                                                                              // copy application payload to correct position in the rawMessage buffer
-    static void encryptPayload(aesKey& theKey);                                                                                                                          // encrypt the payload in the rawMessage buffer
-    static void decryptPayload(aesKey& theKey);                                                                                                                          // decrypt the payload in the rawMessage buffer
-    static void insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort);        // prepend the header to the rawMessage buffer
-    static void insertBlockB0(linkDirection theDirection, frameCount& aFrameCounter, uint32_t micPayloadLength);                                                         //
-    static void insertMic();                                                                                                                                             //
+    static void setOffsetsAndLengthsTx(uint32_t framePayloadLength, uint32_t frameOptionsLength = 0);
+    static void insertPayload(const uint8_t data[], const uint32_t length);
+    static void encryptPayload(aesKey &theKey);
+    static void decryptPayload(aesKey &theKey);
+    static void insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort);
+    static void insertBlockB0(linkDirection theDirection, frameCount &aFrameCounter, uint32_t micPayloadLength);
+    static uint32_t calculateMic(uint8_t *payload, uint32_t payloadLength);
+    static void insertMic();
+
+    typedef struct {
+        unsigned char *Data;
+        unsigned char Counter;
+    } sBuffer;
+
+    typedef struct {
+        unsigned char MAC_Header;
+        unsigned char DevAddr[4];
+        unsigned char Frame_Control;
+        unsigned int Frame_Counter;
+        unsigned char Frame_Port;
+        unsigned char Frame_Options[15];
+        unsigned char MIC[4];
+        unsigned char Direction;
+    } sLoRa_Message;
+
+    static void calculateMic(sBuffer *Buffer, unsigned char *Key, sLoRa_Message *Message);
 
     // #############################################################
     // ### Helper functions for decoding a downlink message - Rx ###
@@ -129,7 +155,7 @@ class LoRaWAN {
     static void stopTimer();                         //
 
     // static void prepareBlockAi(uint8_t* aBlock, linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t blockIndex);
-    static void prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uint32_t blockIndex);
+    static void prepareBlockAi(aesBlock &theBlock, linkDirection theDirection, uint32_t blockIndex);
     static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);        //
 
     static void processMacContents();                                                                                                           // process the contents of the macIn buffer, output goes to macOut buffer
