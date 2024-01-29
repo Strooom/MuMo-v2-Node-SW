@@ -1355,7 +1355,7 @@ uint32_t LoRaWAN::Calculate_MIC3(uint8_t *payload, uint32_t payloadLength, aesKe
 
         // Perform AES encryption
         outputBlock.set(outputAsBytes);
-        outputBlock.encrypt(keyIn);        // AES_Encrypt(outputAsBytes, Key);
+        outputBlock.encrypt(networkKey);        // AES_Encrypt(outputAsBytes, Key);
         memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
         // Copy New_Data to Old_Data
@@ -1386,7 +1386,7 @@ uint32_t LoRaWAN::Calculate_MIC3(uint8_t *payload, uint32_t payloadLength, aesKe
 
         // Perform last AES routine
         // outputBlock.set(outputAsBytes);
-        outputBlock.encrypt(keyIn);        // AES_Encrypt(outputAsBytes, Key);
+        outputBlock.encrypt(networkKey);        // AES_Encrypt(outputAsBytes, Key);
         // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
     } else {
