@@ -1333,10 +1333,10 @@ uint32_t LoRaWAN::Calculate_MIC3(uint8_t *payload, uint32_t payloadLength) {
 
     //aesKey keyK1;
     //aesKey keyK2;
-    keyK1.setFromByteArray(allZeroes);
-    keyK2.setFromByteArray(allZeroes);
+    //keyK1.setFromByteArray(allZeroes);
+    //keyK2.setFromByteArray(allZeroes);
     //Generate_Keys(keyIn, keyK1, keyK2);
-    generateKeysK1K2();
+    //generateKeysK1K2();
     // memcpy(Key_K1, keyK1.asBytes(), 16);
     // memcpy(Key_K2, keyK2.asBytes(), 16);
 
