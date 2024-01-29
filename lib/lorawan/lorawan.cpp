@@ -1358,7 +1358,6 @@ uint32_t LoRaWAN::Calculate_MIC3(uint8_t* payload, uint32_t payloadLength) {
             }
         }
 
-        // Perform XOR with Key 2
         outputBlock.set(outputAsBytes);
         outputBlock.XOR(keyK2.asBytes());
         outputBlock.XOR(Old_Data);
