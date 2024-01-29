@@ -1254,10 +1254,10 @@ void LoRaWAN::generateKeysK1K2() {
     unsigned char MSB_Key;
 
     unsigned char K1[16]{};
-    memcpy(K1, keyK1.asBytes(), 16);
+    //memcpy(K1, keyK1.asBytes(), 16);
 
     unsigned char K2[16]{};
-    memcpy(K2, keyK2.asBytes(), 16);
+    //memcpy(K2, keyK2.asBytes(), 16);
 
     // Encrypt the zeros in K1 with the NwkSkey
     aesBlock tempBlock;
