@@ -218,7 +218,7 @@ void test_calculateMic01() {
     uint8_t clearText[clearTextLength];
     hexAscii::hexStringToByteArray("6bc1bee22e409f96e93d7e117393172a", clearText);        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
     
-     TEST_ASSERT_EQUAL(0x070A16B4, LoRaWAN::Calculate_MIC3(clearText, clearTextLength, LoRaWAN::networkKey));
+     TEST_ASSERT_EQUAL(0x070A16B4, LoRaWAN::Calculate_MIC3(clearText, clearTextLength));
 }
 
 void test_calculateMic02() {
@@ -230,7 +230,7 @@ void test_calculateMic02() {
     hexAscii::hexStringToByteArray("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411", clearText);        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
 
     aesBlock output;
-    TEST_ASSERT_EQUAL(0xDFA66747, LoRaWAN::Calculate_MIC3(clearText, clearTextLength, LoRaWAN::networkKey));
+    TEST_ASSERT_EQUAL(0xDFA66747, LoRaWAN::Calculate_MIC3(clearText, clearTextLength));
 }
 
 void test_calculateMic4() {
