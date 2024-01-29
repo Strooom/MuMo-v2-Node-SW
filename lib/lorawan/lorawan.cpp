@@ -1162,7 +1162,7 @@ uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
     uint8_t outputAsBytes[16];
 
     unsigned char byteIndex, blockIndex;
-    unsigned char Old_Data[16]  = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    unsigned char Old_Data[16]       = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocks(payloadLength);
     uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSize(payloadLength);
 
@@ -1254,10 +1254,10 @@ void LoRaWAN::generateKeysK1K2() {
     unsigned char MSB_Key;
 
     unsigned char K1[16]{};
-    //memcpy(K1, keyK1.asBytes(), 16);
+    // memcpy(K1, keyK1.asBytes(), 16);
 
     unsigned char K2[16]{};
-    //memcpy(K2, keyK2.asBytes(), 16);
+    // memcpy(K2, keyK2.asBytes(), 16);
 
     // Encrypt the zeros in K1 with the NwkSkey
     aesBlock tempBlock;
@@ -1312,50 +1312,21 @@ void LoRaWAN::generateKeysK1K2() {
 
 #include "Encrypt.h"
 
-uint32_t LoRaWAN::Calculate_MIC3(uint8_t *payload, uint32_t payloadLength) {
-    // 4 first bytes of output are the MIC
+uint32_t LoRaWAN::Calculate_MIC3(uint8_t* payload, uint32_t payloadLength) {
     aesBlock outputBlock;
     uint8_t outputAsBytes[16];
-    // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
     uint32_t byteIndex, blockIndex;
-    //unsigned char allZeroes[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    unsigned char Old_Data[16]  = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    unsigned char Old_Data[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-    // Calculate number of Blocks and blocksize of last block
     uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocks(payloadLength);
     uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSize(payloadLength);
-    // nmbrOfBlocks  = Buffer->Counter / 16;
-    // lastBlockSize = Buffer->Counter % 16;
-    // if (lastBlockSize != 0) {
-    //     nmbrOfBlocks++;
-    // }
-
-    //aesKey keyK1;
-    //aesKey keyK2;
-    //keyK1.setFromByteArray(allZeroes);
-    //keyK2.setFromByteArray(allZeroes);
-    //Generate_Keys(keyIn, keyK1, keyK2);
-    //generateKeysK1K2();
-    // memcpy(Key_K1, keyK1.asBytes(), 16);
-    // memcpy(Key_K2, keyK2.asBytes(), 16);
 
     // Perform full calculating until n-1 message blocks
     for (blockIndex = 0x0; blockIndex < (nmbrOfBlocks - 1); blockIndex++) {
         outputBlock.set(payload + (blockIndex * 16));        //  Copy data into block
 
-        // for (i = 0; i < 16; i++) {
-        //     outputAsBytes[i] = Buffer->Data[(j * 16) + i];
-        // }
-
-        // Perform XOR with old data
-        // outputBlock.set(outputAsBytes);
-        outputBlock.XOR(Old_Data);        // XOR(outputAsBytes, Old_Data);
-        memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
-        // Perform AES encryption
-        outputBlock.set(outputAsBytes);
-        outputBlock.encrypt(networkKey);        // AES_Encrypt(outputAsBytes, Key);
+        outputBlock.XOR(Old_Data);
+        outputBlock.encrypt(networkKey);
         memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
         // Copy New_Data to Old_Data
@@ -1369,25 +1340,9 @@ uint32_t LoRaWAN::Calculate_MIC3(uint8_t *payload, uint32_t payloadLength) {
     if (incompleteLastBlockSize == 0) {
         outputBlock.set(payload + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
 
-        // Copy last data into array
-        // for (i = 0; i < 16; i++) {
-        //     outputAsBytes[i] = Buffer->Data[((nmbrOfBlocks - 1) * 16) + i];
-        // }
-
-        // Perform XOR with Key 1
-        // outputBlock.set(outputAsBytes);
-        outputBlock.XOR(keyK1.asBytes());        //  XOR(outputAsBytes, Key_K1);
-        // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
-        // Perform XOR with old data
-        // outputBlock.set(outputAsBytes);
-        outputBlock.XOR(Old_Data);        // XOR(outputAsBytes, Old_Data);
-        // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
-        // Perform last AES routine
-        // outputBlock.set(outputAsBytes);
-        outputBlock.encrypt(networkKey);        // AES_Encrypt(outputAsBytes, Key);
-        // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
+        outputBlock.XOR(keyK1.asBytes());
+        outputBlock.XOR(Old_Data);
+        outputBlock.encrypt(networkKey);
 
     } else {
         // Copy the remaining data and fill the rest
@@ -1405,18 +1360,9 @@ uint32_t LoRaWAN::Calculate_MIC3(uint8_t *payload, uint32_t payloadLength) {
 
         // Perform XOR with Key 2
         outputBlock.set(outputAsBytes);
-        outputBlock.XOR(keyK2.asBytes());        //  XOR(outputAsBytes, Key_K2);
-        // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
-        // Perform XOR with old data
-        // outputBlock.set(outputAsBytes);
-        outputBlock.XOR(Old_Data);        // XOR(outputAsBytes, Old_Data);
-        // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
-        // Perform last AES routine
-        // outputBlock.set(outputAsBytes);
-        outputBlock.encrypt(networkKey);        // AES_Encrypt(outputAsBytes, Key);
-        // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
+        outputBlock.XOR(keyK2.asBytes());
+        outputBlock.XOR(Old_Data);
+        outputBlock.encrypt(networkKey);
     }
     uint32_t mic = ((outputBlock.asBytes()[0] << 24) + (outputBlock.asBytes()[1] << 16) + (outputBlock.asBytes()[2] << 8) + (outputBlock.asBytes()[3]));
     return mic;
