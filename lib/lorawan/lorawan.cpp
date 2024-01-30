@@ -1312,7 +1312,7 @@ void LoRaWAN::generateKeysK1K2() {
 
 #include "Encrypt.h"
 
-uint32_t LoRaWAN::Calculate_MIC3(uint8_t* payload, uint32_t payloadLength) {
+uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
     aesBlock outputBlock;
     uint8_t outputAsBytes[16];
     uint32_t byteIndex, blockIndex;

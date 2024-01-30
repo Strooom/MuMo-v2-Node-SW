@@ -45,7 +45,7 @@ class LoRaWAN {
     static void generateKeysK1K2(); // generates two keys needed for calculating the MIC - we generate them once at startup and keep them in memory
     static aesKey keyK1;
     static aesKey keyK2;
-    static uint32_t Calculate_MIC3(uint8_t *payload, uint32_t payloadLength);
+    static uint32_t mic(uint8_t *payload, uint32_t payloadLength);
 
 
 #ifndef unitTesting
