@@ -273,7 +273,7 @@ void test_insertPayload() {
 void test_encryptPayload() {
     aesKey aKey;
     uint8_t keyAsBytes[16]{0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C};
-    aKey.set(keyAsBytes);
+    aKey.setFromByteArray(keyAsBytes);
     static constexpr uint32_t clearTextPayloadLength{16};
     LoRaWAN::DevAddr.asUint32          = 0x12345678;
     LoRaWAN::uplinkFrameCount.asUint32 = 0xFFEEDDCC;
@@ -309,7 +309,7 @@ void test_encryptPayload() {
 void test_decryptPayload() {
     aesKey aKey;
     uint8_t keyAsBytes[16]{0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C};
-    aKey.set(keyAsBytes);
+    aKey.setFromByteArray(keyAsBytes);
     static constexpr uint32_t clearTextPayloadLength{16};
     LoRaWAN::DevAddr.asUint32            = 0x12345678;
     LoRaWAN::downlinkFrameCount.asUint32 = 0xFFEEDDCC;

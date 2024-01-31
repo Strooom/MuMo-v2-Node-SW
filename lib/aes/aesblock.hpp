@@ -14,8 +14,9 @@ class aesBlock {
   public:
     static constexpr uint32_t lengthAsBytes{16};         //
     static constexpr uint32_t lengthAsWords{4};          //
-    void set(const uint8_t bytes[lengthAsBytes]);        // load the block with data
+    void setFromByteArray(const uint8_t bytes[lengthAsBytes]);        // load the block with data
     uint8_t &operator[](std::size_t index);              // accessing the individual bytes through the [] operator
+    void setFromHexString(const char *string);
 
     void encrypt(aesKey &key);        // encrypt the block
     const uint8_t *asBytes();         // return the encrypted block as bytes

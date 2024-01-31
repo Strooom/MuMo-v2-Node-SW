@@ -61,7 +61,7 @@ void Shift_Left(aesBlock &blockInOut) {
         Data[i] = (Data[i] << 1) + Overflow;
     }
 
-    blockInOut.set(Data);
+    blockInOut.setFromByteArray(Data);
 }
 
 /*
@@ -364,7 +364,7 @@ void Generate_Keys(aesKey &keyIn, aesKey &keyK1, aesKey &keyK2) {
 
     // Encrypt the zeros in K1 with the NwkSkey
     aesBlock tempBlock;
-    tempBlock.set(K1);
+    tempBlock.setFromByteArray(K1);
     tempBlock.encrypt(keyIn);        //     AES_Encrypt(K1, keyIn.asBytes());
     memcpy(K1, tempBlock.asBytes(), 16);
 
@@ -376,7 +376,7 @@ void Generate_Keys(aesKey &keyIn, aesKey &keyK1, aesKey &keyK2) {
         MSB_Key = 0;
     }
 
-    tempBlock.set(K1);
+    tempBlock.setFromByteArray(K1);
     tempBlock.shiftLeft();        // Shift K1 one bit left Shift_Left(K1);
     memcpy(K1, tempBlock.asBytes(), 16);
 
@@ -398,7 +398,7 @@ void Generate_Keys(aesKey &keyIn, aesKey &keyK1, aesKey &keyK2) {
     }
 
 
-    tempBlock.set(K2);
+    tempBlock.setFromByteArray(K2);
     tempBlock.shiftLeft();        // Shift K2 one bit left Shift_Left(K2);
     memcpy(K2, tempBlock.asBytes(), 16);
 
@@ -554,7 +554,7 @@ uint32_t Calculate_MIC3(uint8_t *payload, uint32_t payloadLength, aesKey &keyIn)
 
     // Perform full calculating until n-1 message blocks
     for (blockIndex = 0x0; blockIndex < (nmbrOfBlocks - 1); blockIndex++) {
-        outputBlock.set(payload + (blockIndex * 16));        //  Copy data into block
+        outputBlock.setFromByteArray(payload + (blockIndex * 16));        //  Copy data into block
 
         // for (i = 0; i < 16; i++) {
         //     outputAsBytes[i] = Buffer->Data[(j * 16) + i];
@@ -566,7 +566,7 @@ uint32_t Calculate_MIC3(uint8_t *payload, uint32_t payloadLength, aesKey &keyIn)
         memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
         // Perform AES encryption
-        outputBlock.set(outputAsBytes);
+        outputBlock.setFromByteArray(outputAsBytes);
         outputBlock.encrypt(keyIn);        // AES_Encrypt(outputAsBytes, Key);
         memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
@@ -579,7 +579,7 @@ uint32_t Calculate_MIC3(uint8_t *payload, uint32_t payloadLength, aesKey &keyIn)
     // Perform calculation on last block
     // Check if Datalength is a multiple of 16
     if (incompleteLastBlockSize == 0) {
-        outputBlock.set(payload + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
+        outputBlock.setFromByteArray(payload + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
 
         // Copy last data into array
         // for (i = 0; i < 16; i++) {
@@ -616,7 +616,7 @@ uint32_t Calculate_MIC3(uint8_t *payload, uint32_t payloadLength, aesKey &keyIn)
         }
 
         // Perform XOR with Key 2
-        outputBlock.set(outputAsBytes);
+        outputBlock.setFromByteArray(outputAsBytes);
         outputBlock.XOR(keyK2.asBytes());        //  XOR(outputAsBytes, Key_K2);
         // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 

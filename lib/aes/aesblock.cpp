@@ -3,6 +3,7 @@
 #include <cstddef>        // std::size_t
 #include <aeskey.hpp>
 #include <sbox.hpp>
+#include <hexascii.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -10,9 +11,16 @@ extern CRYP_HandleTypeDef hcryp;
 #else
 #endif
 
-void aesBlock::set(const uint8_t bytes[lengthAsBytes]) {
+void aesBlock::setFromByteArray(const uint8_t bytes[lengthAsBytes]) {
     memcpy(state.asByte, bytes, lengthAsBytes);
 }
+
+void aesBlock::setFromHexString(const char* string) {
+    uint8_t tmpBytes[lengthAsBytes];
+    hexAscii::hexStringToByteArray(string, tmpBytes);
+    memcpy(state.asByte, tmpBytes, lengthAsBytes);
+}
+
 
 uint8_t &aesBlock::operator[](std::size_t index) {
     return state.asByte[index];

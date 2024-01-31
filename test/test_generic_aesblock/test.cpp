@@ -17,7 +17,7 @@ void test_setFromBytes() {
     aesBlock aBlock;
     uint8_t expectedBytes[aesKey::lengthAsBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     uint32_t expectedWords[aesKey::lengthAsWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
-    aBlock.set(expectedBytes);
+    aBlock.setFromByteArray(expectedBytes);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), aesKey::lengthAsBytes);
     TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aBlock.asWords(), aesKey::lengthAsWords);
 }
@@ -64,27 +64,21 @@ void test_setAsArray() {
 
 void test_encrypt() {
     aesKey aKey;
-    uint8_t keyAsBytes[16]{0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C};
-    aKey.set(keyAsBytes);
-
+    aKey.setFromHexString("2b7e151628aed2a6abf7158809cf4f3c");        // common NIST test vector key
     aesBlock aBlock;
-    uint8_t clearText[16]{0x6B, 0xC1, 0xBE, 0xE2, 0x2E, 0x40, 0x9F, 0x96, 0xE9, 0x3D, 0x7E, 0x11, 0x73, 0x93, 0x17, 0x2A};        // common NIST test vector plaintext 6bc1bee22e409f96e93d7e117393172a
-    aBlock.set(clearText);
-
+    aBlock.setFromHexString("6bc1bee22e409f96e93d7e117393172a");        // common NIST test vector plaintext 6bc1bee22e409f96e93d7e117393172a
     aBlock.encrypt(aKey);
-
     uint8_t expectedCypherText[16]{0x3A, 0xD7, 0x7B, 0xB4, 0x0D, 0x7A, 0x36, 0x60, 0xA8, 0x9E, 0xCA, 0xF3, 0x24, 0x66, 0xEF, 0x97};        // common NIST test vector ciphertext 3ad77bb40d7a3660a89ecaf32466ef97
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedCypherText, aBlock.asBytes(), 16);
 }
 
 void test_encrypt_step_by_step() {
     aesKey aKey;
-    uint8_t keyAsBytes[16]{0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C};        // common NIST test vector key
-    aKey.set(keyAsBytes);
+    aKey.setFromHexString("2b7e151628aed2a6abf7158809cf4f3c");        // common NIST test vector key
 
     aesBlock aBlock;
     uint8_t clearText[16]{0x6B, 0xC1, 0xBE, 0xE2, 0x2E, 0x40, 0x9F, 0x96, 0xE9, 0x3D, 0x7E, 0x11, 0x73, 0x93, 0x17, 0x2A};        // common NIST test vector plaintext
-    aBlock.set(clearText);
+    aBlock.setFromByteArray(clearText);
 
     // Step 1 XOR plaintext with key
     aBlock.XOR(aKey.asBytes());
@@ -159,11 +153,10 @@ void testBytesToWordsToBytes() {
 void test_XOR() {
     aesBlock aBlock;
     uint8_t inputBytesBlock[16]{0x6B, 0xC1, 0xBE, 0xE2, 0x2E, 0x40, 0x9F, 0x96, 0xE9, 0x3D, 0x7E, 0x11, 0x73, 0x93, 0x17, 0x2A};        // Using testvectors from https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/block-ciphers#AES
-    aBlock.set(inputBytesBlock);
+    aBlock.setFromByteArray(inputBytesBlock);
 
     aesKey theKey;
-    uint8_t inputBytesKey[16]{0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C};        // Using testvectors from https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/block-ciphers#AES
-    theKey.set(inputBytesKey);
+    theKey.setFromHexString("2b7e151628aed2a6abf7158809cf4f3c");        // common NIST test vector key
 
     aBlock.XOR(theKey.asBytes());
 
@@ -176,7 +169,7 @@ void test_substituteBytes() {
     // verified from https://www.cryptool.org/en/cto/aes-step-by-step
     aesBlock aBlock;
     uint8_t inputBytes[16]{0x40, 0xbf, 0xab, 0xf4, 0x06, 0xee, 0x4d, 0x30, 0x42, 0xca, 0x6b, 0x99, 0x7a, 0x5c, 0x58, 0x16};
-    aBlock.set(inputBytes);
+    aBlock.setFromByteArray(inputBytes);
     aBlock.substituteBytes();
     uint8_t bytesOut[16]{0x09, 0x08, 0x62, 0xbf, 0x6f, 0x28, 0xe3, 0x04, 0x2c, 0x74, 0x7f, 0xee, 0xda, 0x4a, 0x6a, 0x47};
 
@@ -188,7 +181,7 @@ void test_shiftRows() {
     // verified from https://www.cryptool.org/en/cto/aes-step-by-step, where it is called permutation
     aesBlock aBlock;
     uint8_t inputBytes[16]{0x09, 0x08, 0x62, 0xbf, 0x6f, 0x28, 0xe3, 0x04, 0x2c, 0x74, 0x7f, 0xee, 0xda, 0x4a, 0x6a, 0x47};
-    aBlock.set(inputBytes);
+    aBlock.setFromByteArray(inputBytes);
     aBlock.shiftRows();
     uint8_t bytesOut[16]{0x09, 0x28, 0x7f, 0x47, 0x6f, 0x74, 0x6a, 0xbf, 0x2c, 0x4a, 0x62, 0x04, 0xda, 0x08, 0xe3, 0xee};
 
@@ -198,7 +191,7 @@ void test_shiftRows() {
 void test_mixColumns() {
     aesBlock aBlock;
     uint8_t inputBytes[16]{0x09, 0x28, 0x7f, 0x47, 0x6f, 0x74, 0x6a, 0xbf, 0x2c, 0x4a, 0x62, 0x04, 0xda, 0x08, 0xe3, 0xee};
-    aBlock.set(inputBytes);
+    aBlock.setFromByteArray(inputBytes);
     aBlock.mixColumns();
     uint8_t expectedOutput[16]{0x52, 0x9f, 0x16, 0xc2, 0x97, 0x86, 0x15, 0xca, 0xe0, 0x1a, 0xae, 0x54, 0xba, 0x1a, 0x26, 0x59};
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedOutput, aBlock.asBytes(), 16);
@@ -223,12 +216,11 @@ void test_incompleteLastBlockSize() {
 void test_shiftLeft() {
     unsigned char input[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     aesBlock testBlock;
-    testBlock.set(input);
+    testBlock.setFromByteArray(input);
     testBlock.shiftLeft();
     unsigned char output[16] = {0x0, 0x02, 0x04, 0x06, 0x08, 0x0A, 0xC, 0x0E, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E};
     TEST_ASSERT_EQUAL_UINT8_ARRAY(output, testBlock.asBytes(), 16);
 }
-
 
 int main(int argc, char** argv) {
     UNITY_BEGIN();
