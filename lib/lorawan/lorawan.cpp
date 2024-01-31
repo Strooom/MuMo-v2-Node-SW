@@ -1321,41 +1321,52 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
     uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocks(payloadLength);
     uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSize(payloadLength);
 
-    // Perform full calculating until n-1 message blocks
-    for (blockIndex = 0x0; blockIndex < (nmbrOfBlocks - 1); blockIndex++) {
-        outputBlock.set(payload + (blockIndex * 16));        //  Copy data into block
+    if (nmbrOfBlocks > 0) {
+        // Perform full calculating until n-1 message blocks
+        for (blockIndex = 0x0; blockIndex < (nmbrOfBlocks - 1); blockIndex++) {
+            outputBlock.set(payload + (blockIndex * 16));        //  Copy data into block
 
-        outputBlock.XOR(Old_Data);
-        outputBlock.encrypt(networkKey);
-        memcpy(outputAsBytes, outputBlock.asBytes(), 16);
+            outputBlock.XOR(Old_Data);
+            outputBlock.encrypt(networkKey);
+            memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
-        // Copy New_Data to Old_Data
-        for (byteIndex = 0; byteIndex < 16; byteIndex++) {
-            Old_Data[byteIndex] = outputAsBytes[byteIndex];
+            // Copy New_Data to Old_Data
+            for (byteIndex = 0; byteIndex < 16; byteIndex++) {
+                Old_Data[byteIndex] = outputAsBytes[byteIndex];
+            }
         }
-    }
+        // Perform calculation on last block
+        // Check if Datalength is a multiple of 16
+        if (incompleteLastBlockSize == 0) {
+            outputBlock.set(payload + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
 
-    // Perform calculation on last block
-    // Check if Datalength is a multiple of 16
-    if (incompleteLastBlockSize == 0) {
-        outputBlock.set(payload + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
+            outputBlock.XOR(keyK1.asBytes());
+            outputBlock.XOR(Old_Data);
+            outputBlock.encrypt(networkKey);
 
-        outputBlock.XOR(keyK1.asBytes());
-        outputBlock.XOR(Old_Data);
-        outputBlock.encrypt(networkKey);
+        } else {
+            // Copy the remaining data and fill the rest
+            for (byteIndex = 0; byteIndex < 16; byteIndex++) {
+                if (byteIndex < incompleteLastBlockSize) {
+                    outputAsBytes[byteIndex] = payload[((nmbrOfBlocks - 1) * 16) + byteIndex];
+                }
+                if (byteIndex == incompleteLastBlockSize) {
+                    outputAsBytes[byteIndex] = 0x80;
+                }
+                if (byteIndex > incompleteLastBlockSize) {
+                    outputAsBytes[byteIndex] = 0x00;
+                }
+            }
+            outputBlock.set(outputAsBytes);
+            outputBlock.XOR(keyK2.asBytes());
+            outputBlock.XOR(Old_Data);
+            outputBlock.encrypt(networkKey);
+        }
 
     } else {
-        // Copy the remaining data and fill the rest
-        for (byteIndex = 0; byteIndex < 16; byteIndex++) {
-            if (byteIndex < incompleteLastBlockSize) {
-                outputAsBytes[byteIndex] = payload[((nmbrOfBlocks - 1) * 16) + byteIndex];
-            }
-            if (byteIndex == incompleteLastBlockSize) {
-                outputAsBytes[byteIndex] = 0x80;
-            }
-            if (byteIndex > incompleteLastBlockSize) {
-                outputAsBytes[byteIndex] = 0x00;
-            }
+        outputAsBytes[0] = 0x80;
+        for (byteIndex = 1; byteIndex < 16; byteIndex++) {
+            outputAsBytes[byteIndex] = 0x00;
         }
 
         outputBlock.set(outputAsBytes);
@@ -1363,6 +1374,7 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
         outputBlock.XOR(Old_Data);
         outputBlock.encrypt(networkKey);
     }
+
     uint32_t mic = ((outputBlock.asBytes()[0] << 24) + (outputBlock.asBytes()[1] << 16) + (outputBlock.asBytes()[2] << 8) + (outputBlock.asBytes()[3]));
     return mic;
 }

@@ -158,11 +158,7 @@ void aesBlock::mixColumns() {
 }
 
 uint32_t aesBlock::nmbrOfBlocks(uint32_t nmbrOfBytes) {
-    if (incompleteLastBlockSize(nmbrOfBytes) == 0) {
-        return nmbrOfBytes / 16;
-    } else {
-        return (nmbrOfBytes / 16) + 1;
-    }
+    return (nmbrOfBytes + 15) / 16;
 }
 uint32_t aesBlock::incompleteLastBlockSize(uint32_t nmbrOfBytes) {
     return nmbrOfBytes % 16;

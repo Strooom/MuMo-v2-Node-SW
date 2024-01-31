@@ -80,8 +80,6 @@ void test_keyGeneration() {
 //    --------------------------------------------------
 
 void test_calculateMic01() {
-    // TODO : this test fails, as the zero payload case is causing a loop index problem.
-    // It's not really that important, as for LoRaWAN, the payload will never be zero length because there is always the B0 block 
     LoRaWAN::networkKey.setFromHexString("2b7e151628aed2a6abf7158809cf4f3c");
     LoRaWAN::generateKeysK1K2();
     static constexpr uint32_t clearTextLength{0};
