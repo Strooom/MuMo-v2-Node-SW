@@ -1,12 +1,5 @@
 #include <unity.h>
-
 #include <aeskey.hpp>
-
-#include "Struct.h"
-#include "Encrypt.h"
-// #include "bytebuffer.h"
-// #include "hextools.h"
-
 #include <lorawan.hpp>
 #include <circularbuffer.hpp>
 #include <lorawanevent.hpp>
