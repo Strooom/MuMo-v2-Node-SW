@@ -26,6 +26,9 @@ class aesBlock {
     static void bytesToWords(uint8_t bytesIn[16], uint32_t wordsOut[4]);
     static void wordsToBytes(uint32_t wordsIn[4], uint8_t bytesOut[16]);
 
+    void XOR(const uint8_t *data);
+    void shiftLeft();
+
     static uint32_t nmbrOfBlocks(uint32_t nmbrOfBytes);
     static uint32_t incompleteLastBlockSize(uint32_t nmbrOfBytes);
 
@@ -35,10 +38,7 @@ class aesBlock {
 #endif
     void substituteBytes();
     void shiftRows();
-    void XOR(const uint8_t *data);
-    // TODO : need a XOR of 2 blocks as well - can be done in 32 bit
     void mixColumns();
-    void shiftLeft();
 
     union {
         uint8_t asByte[lengthAsBytes]{};        // interprete the data as 16 bytes
