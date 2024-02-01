@@ -4,6 +4,7 @@
 #include <aeskey.hpp>
 #include <sbox.hpp>
 #include <hexascii.hpp>
+#include <stm32wle5_aes.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -11,26 +12,29 @@ extern CRYP_HandleTypeDef hcryp;
 #else
 #endif
 
-void aesBlock::setFromByteArray(const uint8_t bytes[lengthAsBytes]) {
-    memcpy(state.asByte, bytes, lengthAsBytes);
+void aesBlock::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
+    memcpy(state.asByte, bytes, lengthInBytes);
 }
 
-void aesBlock::setFromHexString(const char* string) {
-    uint8_t tmpBytes[lengthAsBytes];
+void aesBlock::setFromHexString(const char *string) {
+    uint8_t tmpBytes[lengthInBytes];
     hexAscii::hexStringToByteArray(string, tmpBytes);
-    memcpy(state.asByte, tmpBytes, lengthAsBytes);
+    memcpy(state.asByte, tmpBytes, lengthInBytes);
 }
-
 
 uint8_t &aesBlock::operator[](std::size_t index) {
     return state.asByte[index];
 }
 
-const uint8_t *aesBlock::asBytes() {
+bool aesBlock::operator==(const aesBlock &block) {
+    return (memcmp(state.asByte, block.state.asByte, lengthInBytes) == 0);
+}
+
+uint8_t *aesBlock::asBytes() {
     return state.asByte;
 }
 
-const uint32_t *aesBlock::asWords() {
+uint32_t *aesBlock::asWords() {
     return state.asWord;
 }
 
@@ -67,32 +71,24 @@ void aesBlock::wordsToBytes(uint32_t wordsIn[4], uint8_t bytesOut[16]) {
     }
 }
 
+uint32_t aesBlock::swapLittleBigEndian(uint32_t wordIn) {
+    // ARM Cortex-M4 stores uin32_t in little endian format, but STM32WLE5 AES peripheral expects big endian format. This function swaps the bytes in a word.
+    uint32_t wordOut;
+    wordOut = (wordIn & 0xFF000000) >> 24 | (wordIn & 0x00FF0000) >> 8 | (wordIn & 0x0000FF00) << 8 | (wordIn & 0x000000FF) << 24;
+    return wordOut;
+}
+
 void aesBlock::encrypt(aesKey &key) {
 #ifndef generic
-    uint32_t plainTextAsWords[4];
-    uint32_t cypherTextAsWords[4];
-    bytesToWords(state.asByte, plainTextAsWords);        // convert the 16 bytes to 4 words the way the hardware expects it
-    // TODO : with the byte swapping in the AES hardware, it's maybe possible to use the state.asWord directly
-    if (HAL_CRYP_Encrypt(&hcryp, plainTextAsWords, 4, cypherTextAsWords, 50) != HAL_OK) {
-        // Error_Handler();
+    stm32wle5_aes::initialize(aesMode::EBC);
+    stm32wle5_aes::setKey(key);
+    stm32wle5_aes::enable();
+    stm32wle5_aes::write(*this);
+    while (!stm32wle5_aes::isComputationComplete()) {
     }
-    wordsToBytes(cypherTextAsWords, state.asByte);        // convert the 4 words back to 16 bytes
+    stm32wle5_aes::clearComputationComplete();
+    stm32wle5_aes::read(*this);
 
-// TODO : provide a hardware implementation
-// Initialize AES :
-// * clear EN bit in AES_CR
-// * configure EAS mode : encryption - mode = 0b00
-// * chaning mode : ECB - mode = 0b00
-// * datatype : 32 bit - datatype = 0b00
-// * key size : 128 bit - keysize = 0b00
-// * write key in AES_KEYRx registers
-
-// Encryption - polling mode
-// * write 4 words into AES_DINR register -
-// * wait until CCF in AES_SR is set
-// * read 4 words from AES_DOUTR register
-
-// Disable AES peripheral by clearing EN bit in AES_CR
 #else
     // software implementation
     XOR(key.expandedKey);
@@ -108,13 +104,13 @@ void aesBlock::encrypt(aesKey &key) {
 }
 
 void aesBlock::substituteBytes() {
-    for (uint32_t index = 0; index < lengthAsBytes; index++) {
+    for (uint32_t index = 0; index < lengthInBytes; index++) {
         state.asByte[index] = sbox::data[state.asByte[index]];
     }
 }
 
 void aesBlock::XOR(const uint8_t *data) {
-    for (uint32_t index = 0; index < lengthAsBytes; index++) {
+    for (uint32_t index = 0; index < lengthInBytes; index++) {
         state.asByte[index] ^= data[index];
     }
 }

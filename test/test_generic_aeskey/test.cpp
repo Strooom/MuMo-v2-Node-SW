@@ -10,19 +10,19 @@ void tearDown(void) {}
 
 void test_initialize() {
     aesKey aKey;
-    uint8_t expectedBytes[aesKey::lengthAsBytes]{};
-    uint32_t expectedWords[aesKey::lengthAsWords]{};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aKey.asBytes(), aesKey::lengthAsBytes);
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aKey.asWords(), aesKey::lengthAsWords);
+    uint8_t expectedBytes[aesKey::lengthInBytes]{};
+    uint32_t expectedWords[aesKey::lengthInWords]{};
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aKey.asBytes(), aesKey::lengthInBytes);
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aKey.asWords(), aesKey::lengthInWords);
 }
 
 void test_setFromBytes() {
     aesKey aKey;
-    uint8_t expectedBytes[aesKey::lengthAsBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
-    uint32_t expectedWords[aesKey::lengthAsWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
+    uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
+    uint32_t expectedWords[aesKey::lengthInWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
     aKey.setFromByteArray(expectedBytes);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aKey.asBytes(), aesKey::lengthAsBytes);
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aKey.asWords(), aesKey::lengthAsWords);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aKey.asBytes(), aesKey::lengthInBytes);
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aKey.asWords(), aesKey::lengthInWords);
 }
 
 void test_expandKey() {

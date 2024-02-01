@@ -10,12 +10,13 @@
 
 class aesKey {
   public:
-    static constexpr uint32_t lengthAsBytes{16};        //
-    static constexpr uint32_t lengthAsWords{4};         //
+    static constexpr uint32_t lengthInBytes{16};        //
+    static constexpr uint32_t lengthInWords{4};         //
 
-    void setFromByteArray(const uint8_t bytes[lengthAsBytes]);
+    void setFromByteArray(const uint8_t bytes[lengthInBytes]);
     void setFromHexString(const char* string);
-    
+    static uint32_t swapLittleBigEndian(uint32_t wordIn);
+
     const uint8_t* asBytes();         // return the key as bytes
     const uint32_t* asWords();        // return the key as words
 
@@ -26,8 +27,8 @@ class aesKey {
     uint8_t expandedKey[176];
 
     union {
-        uint8_t asByte[lengthAsBytes]{};        // interprete the data as 16 bytes
-        uint32_t asWord[lengthAsWords];         // interprete the data as 4 32bit words
+        uint8_t asByte[lengthInBytes]{};        // interprete the data as 16 bytes
+        uint32_t asWord[lengthInWords];         // interprete the data as 4 32bit words
     } key;
 
     void expandKey();
@@ -35,5 +36,3 @@ class aesKey {
 
     friend class aesBlock;
 };
-
-

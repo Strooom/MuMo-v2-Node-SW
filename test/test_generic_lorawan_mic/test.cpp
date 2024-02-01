@@ -32,11 +32,11 @@ void tearDown(void) {}        // after test
 void test_keyGeneration() {
     LoRaWAN::networkKey.setFromHexString("2b7e151628aed2a6abf7158809cf4f3c");
     LoRaWAN::generateKeysK1K2();
-    uint8_t result[aesKey::lengthAsBytes];
+    uint8_t result[aesKey::lengthInBytes];
     hexAscii::hexStringToByteArray("FBEED618357133667C85E08F7236A8DE", result);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(result, LoRaWAN::keyK1.asBytes(), aesKey::lengthAsBytes);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(result, LoRaWAN::keyK1.asBytes(), aesKey::lengthInBytes);
     hexAscii::hexStringToByteArray("F7DDAC306AE266CCF90BC11EE46D513B", result);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(result, LoRaWAN::keyK2.asBytes(), aesKey::lengthAsBytes);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(result, LoRaWAN::keyK2.asBytes(), aesKey::lengthInBytes);
 }
 
 // https://www.rfc-editor.org/rfc/rfc4493#page-14

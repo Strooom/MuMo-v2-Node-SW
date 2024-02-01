@@ -8,18 +8,20 @@
 #pragma once
 #include <stdint.h>
 
-class hexAscii
-{
-public:
-    static void hexStringToByteArray(const char *aHexString, uint8_t *aBinaryArray);                              // convert HEX-ASCII string to binary array
-    static void byteArrayToHexString(const uint8_t *aBinaryArray, uint32_t aBinaryArrayLength, char *aHexString); // convert binary array to HEX-ASCII string
+class hexAscii {
+  public:
+    static void hexStringToByteArray(const char *aHexString, uint8_t *aBinaryArray);                                     // convert HEX-ASCII string to binary array
+    static void byteArrayToHexString(const uint8_t *aBinaryArray, uint32_t aBinaryArrayLength, char *aHexString);        // convert binary array to HEX-ASCII string
+
+    static void hexStringToByteArray2(uint8_t *byteArrayOut, const char *hexStringIn);
+    static void byteArrayToHexString2(char *hexStringOut, const uint8_t *byteArrayIn, const uint32_t binaryArrayInLength);
 
 #ifndef unitTesting
 
-private:
+  private:
 #endif
-    static uint8_t toUpperCase(uint8_t aCharacter);
-    static bool isHexCharacter(uint8_t aCharacter);
-    static uint8_t valueFromHexCharacter(uint8_t aCharacter);
-    static uint8_t hexCharacterFromValue(uint8_t aValue);
+    static uint8_t toUpperCase(const uint8_t characterToConvert);
+    static bool isHexCharacter(const uint8_t characterToTest);
+    static uint8_t valueFromHexCharacter(const uint8_t characterToConvert);
+    static uint8_t hexCharacterFromValue(const uint8_t valueToConvert);
 };

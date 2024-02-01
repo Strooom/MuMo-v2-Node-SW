@@ -12,21 +12,24 @@
 
 class aesBlock {
   public:
-    static constexpr uint32_t lengthAsBytes{16};         //
-    static constexpr uint32_t lengthAsWords{4};          //
-    void setFromByteArray(const uint8_t bytes[lengthAsBytes]);        // load the block with data
-    uint8_t &operator[](std::size_t index);              // accessing the individual bytes through the [] operator
+    static constexpr uint32_t lengthInBytes{16};
+    static constexpr uint32_t lengthInWords{4};
+    void setFromByteArray(const uint8_t bytes[lengthInBytes]);
+    uint8_t &operator[](std::size_t index);        // accessing the individual bytes through the [] operator
+    bool operator == (const aesBlock &block);
     void setFromHexString(const char *string);
 
-    void encrypt(aesKey &key);        // encrypt the block
-    const uint8_t *asBytes();         // return the encrypted block as bytes
-    const uint32_t *asWords();        // return the encrypted block as words
+    void encrypt(aesKey &withKey);
+    uint8_t *asBytes();         // return the encrypted block as pointer to/array bytes
+    uint32_t *asWords();        // return the encrypted block as pointer to/array words
+
     static void matrixToVector(uint8_t matrixIn[4][4], uint8_t vectorOut[16]);
     static void vectorToMatrix(uint8_t vectorIn[16], uint8_t matrixOut[4][4]);
     static void bytesToWords(uint8_t bytesIn[16], uint32_t wordsOut[4]);
     static void wordsToBytes(uint32_t wordsIn[4], uint8_t bytesOut[16]);
+    static uint32_t swapLittleBigEndian(uint32_t wordIn);
 
-    void XOR(const uint8_t *data);
+    void XOR(const uint8_t *withData);
     void shiftLeft();
 
     static uint32_t nmbrOfBlocks(uint32_t nmbrOfBytes);
@@ -41,8 +44,8 @@ class aesBlock {
     void mixColumns();
 
     union {
-        uint8_t asByte[lengthAsBytes]{};        // interprete the data as 16 bytes
-        uint32_t asWord[lengthAsWords];         // interprete the data as 4 32bit words
+        uint8_t asByte[lengthInBytes]{};        // interprete the data as 16 bytes
+        uint32_t asWord[lengthInWords];         // interprete the data as 4 32bit words
     } state;                                    // fancy name for data in the block
 
     friend class aesKey;

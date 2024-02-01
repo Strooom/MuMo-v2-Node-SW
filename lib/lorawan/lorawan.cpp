@@ -8,6 +8,7 @@
 #include <applicationevent.hpp>
 #include <maccommand.hpp>
 #include <aesblock.hpp>
+#include <stm32wle5_aes.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -63,7 +64,7 @@ void LoRaWAN::initialize() {
 
     DevAddr = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::DevAddr);
 
-    uint8_t tmpKeyArray[aesKey::lengthAsBytes];
+    uint8_t tmpKeyArray[aesKey::lengthInBytes];
     settingsCollection::read(settingsCollection::settingIndex::applicationSessionKey, tmpKeyArray);
     applicationKey.setFromByteArray(tmpKeyArray);
     settingsCollection::read(settingsCollection::settingIndex::networkSessionKey, tmpKeyArray);
@@ -354,6 +355,28 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
 void LoRaWAN::encryptPayload(aesKey& theKey) {
     uint32_t nmbrOfBlocks{framePayloadLength / 16};        // Split payload in blocks of 16 bytes, last part could be less than 16 bytes - integer division
 
+#ifndef generic
+    stm32wle5_aes::initialize(aesMode::CTR);
+    aesBlock A1;
+    prepareBlockAi(A1, linkDirection::uplink, 1);
+    stm32wle5_aes::setKey(theKey);
+    stm32wle5_aes::setInitializationVector(A1);
+    stm32wle5_aes::enable();
+
+    aesBlock tmpBlock;
+    for (uint32_t blockIndex = 0x00; blockIndex < nmbrOfBlocks; blockIndex++) {
+        //tmpBlock.setFromByteArray(rawMessage[(blockIndex * 16) + framePayloadOffset]);
+        stm32wle5_aes::write(tmpBlock);
+        while (!stm32wle5_aes::isComputationComplete()) {
+        }
+        stm32wle5_aes::read(tmpBlock);
+        // copy encrypted payload back into rawMessage
+        memcpy(rawMessage, tmpBlock.asBytes(), aesBlock::lengthInBytes);
+    }
+// TODO : also consider last block which may be incomplete
+#else
+
+    // TODO : check this nmbr calculation.. for edge cases
     bool hasIncompleteBlock{(framePayloadLength % 16) != 0};        // Check if last block is incomplete
     uint32_t incompleteBlockSize{0};
     if (hasIncompleteBlock) {
@@ -377,6 +400,7 @@ void LoRaWAN::encryptPayload(aesKey& theKey) {
             }
         }
     }
+#endif
 }
 
 void LoRaWAN::decryptPayload(aesKey& theKey) {
@@ -981,272 +1005,98 @@ void LoRaWAN::stopTimer() {
 #endif
 }
 
-// void LoRaWAN::calculateMic(sBuffer *Buffer, unsigned char *Key, unsigned char *New_Data) {
-//     unsigned char index, jndex;
-//     unsigned char Key_K1[16] = {
-//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-//     unsigned char Key_K2[16] = {
-//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-//     unsigned char Old_Data[16] = {
-//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-//     unsigned char Number_of_Blocks      = 0x00;
-//     unsigned char Incomplete_Block_Size = 0x00;
+// uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
+//     aesBlock outputBlock;
+//     uint8_t outputAsBytes[16];
 
-//     // Calculate number of Blocks and blocksize of last block
-//     Number_of_Blocks      = Buffer->Counter / 16;
-//     Incomplete_Block_Size = Buffer->Counter % 16;
-
-//     // if there is an incomplete block at the end add 1 to the number of blocks
-//     if (Incomplete_Block_Size != 0) {
-//         Number_of_Blocks++;
-//     }
-
-//     Generate_Keys(Key, Key_K1, Key_K2);
+//     unsigned char byteIndex, blockIndex;
+//     unsigned char Old_Data[16]       = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+//     uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocks(payloadLength);
+//     uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSize(payloadLength);
 
 //     // Perform full calculating until n-1 message blocks
-//     for (jndex = 0x0; jndex < (Number_of_Blocks - 1); jndex++) {
-//         // Copy data into array
-//         for (index = 0; index < 16; index++) {
-//             New_Data[index] = Buffer->Data[(jndex * 16) + index];
-//         }
+//     for (blockIndex = 0x0; blockIndex < (nmbrOfBlocks - 1); blockIndex++) {
+//         outputBlock.setFromByteArray(payload + (blockIndex * 16));        //  Copy data into block
+
+//         // for (i = 0; i < 16; i++) {
+//         //     outputAsBytes[i] = Buffer->Data[(j * 16) + i];
+//         // }
 
 //         // Perform XOR with old data
-//         XOR(New_Data, Old_Data);
+//         // outputBlock.set(outputAsBytes);
+//         outputBlock.XOR(Old_Data);        // XOR(outputAsBytes, Old_Data);
+//         memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
 //         // Perform AES encryption
-//         AES_Encrypt(New_Data, Key);
+//         outputBlock.setFromByteArray(outputAsBytes);
+//         outputBlock.encrypt(networkKey);        // AES_Encrypt(outputAsBytes, Key);
+//         memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
 //         // Copy New_Data to Old_Data
-//         for (index = 0; index < 16; index++) {
-//             Old_Data[index] = New_Data[index];
+//         for (byteIndex = 0; byteIndex < 16; byteIndex++) {
+//             Old_Data[byteIndex] = outputAsBytes[byteIndex];
 //         }
 //     }
 
 //     // Perform calculation on last block
 //     // Check if Datalength is a multiple of 16
-//     if (Incomplete_Block_Size == 0) {
+//     if (incompleteLastBlockSize == 0) {
+//         outputBlock.setFromByteArray(payload + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
+
 //         // Copy last data into array
-//         for (index = 0; index < 16; index++) {
-//             New_Data[index] = Buffer->Data[((Number_of_Blocks - 1) * 16) + index];
-//         }
+//         // for (i = 0; i < 16; i++) {
+//         //     outputAsBytes[i] = Buffer->Data[((nmbrOfBlocks - 1) * 16) + i];
+//         // }
 
 //         // Perform XOR with Key 1
-//         XOR(New_Data, Key_K1);
+//         // outputBlock.set(outputAsBytes);
+//         outputBlock.XOR(keyK1.asBytes());        //  XOR(outputAsBytes, Key_K1);
+//         // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
 //         // Perform XOR with old data
-//         XOR(New_Data, Old_Data);
+//         // outputBlock.set(outputAsBytes);
+//         outputBlock.XOR(Old_Data);        // XOR(outputAsBytes, Old_Data);
+//         // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
 //         // Perform last AES routine
-//         AES_Encrypt(New_Data, Key);
+//         // outputBlock.set(outputAsBytes);
+//         outputBlock.encrypt(networkKey);        // AES_Encrypt(outputAsBytes, Key);
+//         // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
+
 //     } else {
 //         // Copy the remaining data and fill the rest
-//         for (index = 0; index < 16; index++) {
-//             if (index < Incomplete_Block_Size) {
-//                 New_Data[index] = Buffer->Data[((Number_of_Blocks - 1) * 16) + index];
+//         for (byteIndex = 0; byteIndex < 16; byteIndex++) {
+//             if (byteIndex < incompleteLastBlockSize) {
+//                 outputAsBytes[byteIndex] = payload[((nmbrOfBlocks - 1) * 16) + byteIndex];
 //             }
-//             if (index == Incomplete_Block_Size) {
-//                 New_Data[index] = 0x80;
+//             if (byteIndex == incompleteLastBlockSize) {
+//                 outputAsBytes[byteIndex] = 0x80;
 //             }
-//             if (index > Incomplete_Block_Size) {
-//                 New_Data[index] = 0x00;
+//             if (byteIndex > incompleteLastBlockSize) {
+//                 outputAsBytes[byteIndex] = 0x00;
 //             }
 //         }
 
 //         // Perform XOR with Key 2
-//         XOR(New_Data, Key_K2);
-
-//         // Perform XOR with Old data
-//         XOR(New_Data, Old_Data);
-
-//         // Perform last AES routine
-//         AES_Encrypt(New_Data, Key);
-//     }
-
-// }
-
-// void Calculate_MIC2(sBuffer *Buffer, unsigned char *Key, unsigned char *New_Data) {
-//     unsigned char i, j;
-//     unsigned char Key_K1[16] = {
-//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-//     unsigned char Key_K2[16] = {
-//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-//     unsigned char Old_Data[16] = {
-//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-//     unsigned char Number_of_Blocks      = 0x00;
-//     unsigned char Incomplete_Block_Size = 0x00;
-
-//     // Calculate number of Blocks and blocksize of last block
-//     Number_of_Blocks      = Buffer->Counter / 16;
-//     Incomplete_Block_Size = Buffer->Counter % 16;
-
-//     // if there is an incomplete block at the end add 1 to the number of blocks
-//     if (Incomplete_Block_Size != 0) {
-//         Number_of_Blocks++;
-//     }
-
-//     Generate_Keys(Key, Key_K1, Key_K2);
-
-//     // Perform full calculating until n-1 message blocks
-//     for (j = 0x0; j < (Number_of_Blocks - 1); j++) {
-//         // Copy data into array
-//         for (i = 0; i < 16; i++) {
-//             New_Data[i] = Buffer->Data[(j * 16) + i];
-//         }
+//         outputBlock.setFromByteArray(outputAsBytes);
+//         outputBlock.XOR(keyK2.asBytes());        //  XOR(outputAsBytes, Key_K2);
+//         // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
 //         // Perform XOR with old data
-//         XOR(New_Data, Old_Data);
-
-//         // Perform AES encryption
-//         AES_Encrypt(New_Data, Key);
-
-//         // Copy New_Data to Old_Data
-//         for (i = 0; i < 16; i++) {
-//             Old_Data[i] = New_Data[i];
-//         }
-//     }
-
-//     // Perform calculation on last block
-//     // Check if Datalength is a multiple of 16
-//     if (Incomplete_Block_Size == 0) {
-//         // Copy last data into array
-//         for (i = 0; i < 16; i++) {
-//             New_Data[i] = Buffer->Data[((Number_of_Blocks - 1) * 16) + i];
-//         }
-
-//         // Perform XOR with Key 1
-//         XOR(New_Data, Key_K1);
-
-//         // Perform XOR with old data
-//         XOR(New_Data, Old_Data);
+//         // outputBlock.set(outputAsBytes);
+//         outputBlock.XOR(Old_Data);        // XOR(outputAsBytes, Old_Data);
+//         // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
 //         // Perform last AES routine
-//         AES_Encrypt(New_Data, Key);
-//     } else {
-//         // Copy the remaining data and fill the rest
-//         for (i = 0; i < 16; i++) {
-//             if (i < Incomplete_Block_Size) {
-//                 New_Data[i] = Buffer->Data[((Number_of_Blocks - 1) * 16) + i];
-//             }
-//             if (i == Incomplete_Block_Size) {
-//                 New_Data[i] = 0x80;
-//             }
-//             if (i > Incomplete_Block_Size) {
-//                 New_Data[i] = 0x00;
-//             }
-//         }
-
-//         // Perform XOR with Key 2
-//         XOR(New_Data, Key_K2);
-
-//         // Perform XOR with Old data
-//         XOR(New_Data, Old_Data);
-
-//         // Perform last AES routine
-//         AES_Encrypt(New_Data, Key);
+//         // outputBlock.set(outputAsBytes);
+//         outputBlock.encrypt(networkKey);        // AES_Encrypt(outputAsBytes, Key);
+//         // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 //     }
-
+//     uint32_t mic = ((outputBlock.asBytes()[0] << 24) + (outputBlock.asBytes()[1] << 16) + (outputBlock.asBytes()[2] << 8) + (outputBlock.asBytes()[3]));
+//     return mic;
 // }
-
-uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
-    aesBlock outputBlock;
-    uint8_t outputAsBytes[16];
-
-    unsigned char byteIndex, blockIndex;
-    unsigned char Old_Data[16]       = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocks(payloadLength);
-    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSize(payloadLength);
-
-    // Perform full calculating until n-1 message blocks
-    for (blockIndex = 0x0; blockIndex < (nmbrOfBlocks - 1); blockIndex++) {
-        outputBlock.setFromByteArray(payload + (blockIndex * 16));        //  Copy data into block
-
-        // for (i = 0; i < 16; i++) {
-        //     outputAsBytes[i] = Buffer->Data[(j * 16) + i];
-        // }
-
-        // Perform XOR with old data
-        // outputBlock.set(outputAsBytes);
-        outputBlock.XOR(Old_Data);        // XOR(outputAsBytes, Old_Data);
-        memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
-        // Perform AES encryption
-        outputBlock.setFromByteArray(outputAsBytes);
-        outputBlock.encrypt(networkKey);        // AES_Encrypt(outputAsBytes, Key);
-        memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
-        // Copy New_Data to Old_Data
-        for (byteIndex = 0; byteIndex < 16; byteIndex++) {
-            Old_Data[byteIndex] = outputAsBytes[byteIndex];
-        }
-    }
-
-    // Perform calculation on last block
-    // Check if Datalength is a multiple of 16
-    if (incompleteLastBlockSize == 0) {
-        outputBlock.setFromByteArray(payload + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
-
-        // Copy last data into array
-        // for (i = 0; i < 16; i++) {
-        //     outputAsBytes[i] = Buffer->Data[((nmbrOfBlocks - 1) * 16) + i];
-        // }
-
-        // Perform XOR with Key 1
-        // outputBlock.set(outputAsBytes);
-        outputBlock.XOR(keyK1.asBytes());        //  XOR(outputAsBytes, Key_K1);
-        // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
-        // Perform XOR with old data
-        // outputBlock.set(outputAsBytes);
-        outputBlock.XOR(Old_Data);        // XOR(outputAsBytes, Old_Data);
-        // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
-        // Perform last AES routine
-        // outputBlock.set(outputAsBytes);
-        outputBlock.encrypt(networkKey);        // AES_Encrypt(outputAsBytes, Key);
-        // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
-    } else {
-        // Copy the remaining data and fill the rest
-        for (byteIndex = 0; byteIndex < 16; byteIndex++) {
-            if (byteIndex < incompleteLastBlockSize) {
-                outputAsBytes[byteIndex] = payload[((nmbrOfBlocks - 1) * 16) + byteIndex];
-            }
-            if (byteIndex == incompleteLastBlockSize) {
-                outputAsBytes[byteIndex] = 0x80;
-            }
-            if (byteIndex > incompleteLastBlockSize) {
-                outputAsBytes[byteIndex] = 0x00;
-            }
-        }
-
-        // Perform XOR with Key 2
-        outputBlock.setFromByteArray(outputAsBytes);
-        outputBlock.XOR(keyK2.asBytes());        //  XOR(outputAsBytes, Key_K2);
-        // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
-        // Perform XOR with old data
-        // outputBlock.set(outputAsBytes);
-        outputBlock.XOR(Old_Data);        // XOR(outputAsBytes, Old_Data);
-        // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-
-        // Perform last AES routine
-        // outputBlock.set(outputAsBytes);
-        outputBlock.encrypt(networkKey);        // AES_Encrypt(outputAsBytes, Key);
-        // memcpy(outputAsBytes, outputBlock.asBytes(), 16);
-    }
-    uint32_t mic = ((outputBlock.asBytes()[0] << 24) + (outputBlock.asBytes()[1] << 16) + (outputBlock.asBytes()[2] << 8) + (outputBlock.asBytes()[3]));
-    return mic;
-}
 
 void LoRaWAN::generateKeysK1K2() {
     // TODO : check that we start with all zeroes
@@ -1311,13 +1161,28 @@ void LoRaWAN::generateKeysK1K2() {
 }
 
 uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
+    // TODO : remove the payload argument, as it's always in rawMessage[]
+    // TODO : remove the payloadLength argument, as it's already calculated in the offsetsAndLengths
+    uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocks(payloadLength);
+    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSize(payloadLength);
     aesBlock outputBlock;
+
+#ifndef generic
+    stm32wle5_aes::initialize(aesMode::CBC);
+    stm32wle5_aes::setKey(networkKey);
+    stm32wle5_aes::enable();
+    aesBlock tmpBlock;
+    for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
+        tmpBlock.setFromByteArray(rawMessage);        // TODO : feed all data to the AES, we only need to read the final output / adjust pointer here
+        stm32wle5_aes::write(tmpBlock);
+        while (!stm32wle5_aes::isComputationComplete()) {
+        }
+    }
+    stm32wle5_aes::read(tmpBlock);
+#else
     uint8_t outputAsBytes[16];
     uint32_t byteIndex, blockIndex;
     unsigned char Old_Data[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-    uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocks(payloadLength);
-    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSize(payloadLength);
 
     if (nmbrOfBlocks > 0) {
         // Perform full calculating until n-1 message blocks
@@ -1372,6 +1237,7 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
         outputBlock.XOR(Old_Data);
         outputBlock.encrypt(networkKey);
     }
+#endif
 
     uint32_t mic = ((outputBlock.asBytes()[0] << 24) + (outputBlock.asBytes()[1] << 16) + (outputBlock.asBytes()[2] << 8) + (outputBlock.asBytes()[3]));
     return mic;

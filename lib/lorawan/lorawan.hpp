@@ -85,6 +85,8 @@ class LoRaWAN {
     static constexpr uint32_t frameCountLSHLength{2};                                   // frameCount Least Significant Halve - truncated to 2 LSbytes only
     static constexpr uint32_t micLength{messageIntegrityCode::length};                  // length of MIC in [bytes]
 
+    
+    //TODO : we may need to make this buffer a bit larger, so we can pad the contents with zeroes, which simplifies the AES calculations
     static uint8_t rawMessage[maxLoRaPayloadLength + b0BlockLength];        // in this buffer, the message is contructed (Tx - Uplink) or decoded (Rx - Downlink)
 
     static uint32_t macPayloadLength;          //
@@ -118,27 +120,26 @@ class LoRaWAN {
     static void decryptPayload(aesKey &theKey);
     static void insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort);
     static void insertBlockB0(linkDirection theDirection, frameCount &aFrameCounter, uint32_t micPayloadLength);
-    static uint32_t calculateMic(uint8_t *payload, uint32_t payloadLength);
+    // static uint32_t calculateMic(uint8_t *payload, uint32_t payloadLength);
     static void insertMic();
 
-    typedef struct {
-        unsigned char *Data;
-        unsigned char Counter;
-    } sBuffer;
+    // typedef struct {
+    //     unsigned char *Data;
+    //     unsigned char Counter;
+    // } sBuffer;
 
-    typedef struct {
-        unsigned char MAC_Header;
-        unsigned char DevAddr[4];
-        unsigned char Frame_Control;
-        unsigned int Frame_Counter;
-        unsigned char Frame_Port;
-        unsigned char Frame_Options[15];
-        unsigned char MIC[4];
-        unsigned char Direction;
-    } sLoRa_Message;
+    // typedef struct {
+    //     unsigned char MAC_Header;
+    //     unsigned char DevAddr[4];
+    //     unsigned char Frame_Control;
+    //     unsigned int Frame_Counter;
+    //     unsigned char Frame_Port;
+    //     unsigned char Frame_Options[15];
+    //     unsigned char MIC[4];
+    //     unsigned char Direction;
+    // } sLoRa_Message;
 
-    static void calculateMic(sBuffer *Buffer, unsigned char *Key, sLoRa_Message *Message);
-
+    
     // #############################################################
     // ### Helper functions for decoding a downlink message - Rx ###
     // #############################################################
