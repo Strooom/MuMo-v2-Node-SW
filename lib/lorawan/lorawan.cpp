@@ -1,4 +1,3 @@
-// #include <iostream> // TODO : don't know why this was included, but it consumes 150Kbytes of flash :-(
 #include <lorawan.hpp>
 #include <sx126x.hpp>
 #include <logging.hpp>

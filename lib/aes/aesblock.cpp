@@ -94,8 +94,6 @@ void aesBlock::wordsToBytes(uint8_t bytesOut[16], uint32_t wordsIn[4]) {
     }
 }
 
-
-
 void aesBlock::encrypt(aesKey &key) {
 #ifndef generic
     stm32wle5_aes::initialize(aesMode::EBC);
@@ -179,30 +177,18 @@ void aesBlock::mixColumns() {
     matrixToVector(state.asByte, tempState);
 }
 
-
 void aesBlock::shiftLeft() {
-    // TODO : check if we can make this more efficient in 32bit operations
-    unsigned char i;
-    unsigned char Overflow = 0;
+    uint32_t byteIndex;
+    for (byteIndex = 0; byteIndex < 16; byteIndex++) {
+        if (byteIndex < 15) {
+            if ((state.asByte[byteIndex + 1] & 0x80) == 0x80) {
+                state.asByte[byteIndex] = (state.asByte[byteIndex] << 1) + 1;
 
-    uint8_t Data[16];
-    memcpy(Data, state.asByte, 16);
-
-    for (i = 0; i < 16; i++) {
-        // Check for overflow on next byte except for the last byte
-        if (i < 15) {
-            // Check if upper bit is one
-            if ((Data[i + 1] & 0x80) == 0x80) {
-                Overflow = 1;
             } else {
-                Overflow = 0;
+                state.asByte[byteIndex] = (state.asByte[byteIndex] << 1);
             }
         } else {
-            Overflow = 0;
+            state.asByte[byteIndex] = (state.asByte[byteIndex] << 1);
         }
-
-        // Shift one left
-        Data[i] = (Data[i] << 1) + Overflow;
     }
-    memcpy(state.asByte, Data, 16);
 }
