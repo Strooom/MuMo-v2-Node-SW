@@ -9,11 +9,7 @@
 
 class fontProperties {
   public:
-    fontProperties(const uint32_t thePixelHeight, const uint32_t theSpaceBetweenCharactersInPixels, const uint8_t theAsciiStart, const uint8_t theAsciiEnd) : heightInPixels(thePixelHeight),
-                                                                                                            spaceBetweenCharactersInPixels(theSpaceBetweenCharactersInPixels),
-                                                                                                            bytesPerRow(((thePixelHeight - 1) / 8) + 1),
-                                                                                                            asciiStart(theAsciiStart),
-                                                                                                            asciiEnd(theAsciiEnd){};
+    fontProperties(const uint32_t thePixelHeight, const uint32_t theSpaceBetweenCharactersInPixels, const uint8_t theAsciiStart, const uint8_t theAsciiEnd) : heightInPixels(thePixelHeight), spaceBetweenCharactersInPixels(theSpaceBetweenCharactersInPixels), bytesPerRow(((thePixelHeight - 1) / 8) + 1), asciiStart(theAsciiStart), asciiEnd(theAsciiEnd){};
 
     const uint32_t heightInPixels;
     const uint32_t spaceBetweenCharactersInPixels;
@@ -30,9 +26,7 @@ class characterProperties {
 
 class font {
   public:
-    font(const fontProperties &theProperties, const characterProperties *theCharacters, const uint8_t *robotoMedium24BoldPixelData) : properties(theProperties),
-                                                                                                                                      characters(theCharacters),
-                                                                                                                                      pixelData(robotoMedium24BoldPixelData){};
+    font(const fontProperties &theProperties, const characterProperties *theCharacters, const uint8_t *robotoMedium24BoldPixelData) : properties(theProperties), characters(theCharacters), pixelData(robotoMedium24BoldPixelData){};
 
     bool charIsInBounds(uint8_t asciiCode) const;
     uint32_t getCharacterWidthInPixels(uint8_t asciiCode) const;
@@ -46,6 +40,6 @@ class font {
 
   private:
 #endif
-    uint32_t getOffsetInBytes(uint32_t x, uint32_t y) const {return (properties.bytesPerRow * x) + (y / 8);};
+    uint32_t getOffsetInBytes(uint32_t x, uint32_t y) const { return (properties.bytesPerRow * x) + (y / 8); };
     static inline uint8_t getBitIndex(uint32_t y) { return 7 - (y % 8); };
 };

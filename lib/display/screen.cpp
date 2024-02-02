@@ -6,8 +6,6 @@
 #include <stdio.h>                           // snprintf
 #include <sensordevicecollection.hpp>        //
 #include <cstring>                           // strncmp, strncpy
-#include <gpio.hpp>
-#include <logging.hpp>
 #include <cmath>
 #include <inttypes.h>
 
