@@ -1,6 +1,5 @@
 #include <unity.h>
 #include <aesblock.hpp>
-#include <aeskey.hpp>
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -9,37 +8,40 @@ void test_initialize() {
     aesBlock aBlock;
     uint8_t expectedBytes[aesKey::lengthInBytes]{};
     uint32_t expectedWords[aesKey::lengthInWords]{};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), aesKey::lengthInBytes);
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aBlock.asWords(), aesKey::lengthInWords);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), aesBlock::lengthInBytes);
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aBlock.asWords(), aesBlock::lengthInWords);
 }
 
-void test_setFromBytes() {
+void test_setFromByteArray() {
     aesBlock aBlock;
     uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     uint32_t expectedWords[aesKey::lengthInWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
     aBlock.setFromByteArray(expectedBytes);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), aesKey::lengthInBytes);
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aBlock.asWords(), aesKey::lengthInWords);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), aesBlock::lengthInBytes);
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aBlock.asWords(), aesBlock::lengthInWords);
 }
 
-void test_setAsArray() {
+void test_setFromWordArray() {
     aesBlock aBlock;
-    aBlock[0]  = 0x00;
-    aBlock[1]  = 0x11;
-    aBlock[2]  = 0x22;
-    aBlock[3]  = 0x33;
-    aBlock[4]  = 0x44;
-    aBlock[5]  = 0x55;
-    aBlock[6]  = 0x66;
-    aBlock[7]  = 0x77;
-    aBlock[8]  = 0x88;
-    aBlock[9]  = 0x99;
-    aBlock[10] = 0xAA;
-    aBlock[11] = 0xBB;
-    aBlock[12] = 0xCC;
-    aBlock[13] = 0xDD;
-    aBlock[14] = 0xEE;
-    aBlock[15] = 0xFF;
+    uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
+    uint32_t expectedWords[aesKey::lengthInWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
+    aBlock.setFromWordArray(expectedWords);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), aesBlock::lengthInBytes);
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aBlock.asWords(), aesBlock::lengthInWords);
+}
+
+void test_setFromHexString() {
+    aesBlock aBlock;
+    uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
+    uint32_t expectedWords[aesKey::lengthInWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
+    aBlock.setFromHexString("000102030405060708090A0B0C0D0E0F");
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), aesBlock::lengthInBytes);
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aBlock.asWords(), aesBlock::lengthInWords);
+}
+
+void test_arrayOperator() {
+    aesBlock aBlock;
+    aBlock.setFromHexString("00112233445566778899AABBCCDDEEFF");
 
     TEST_ASSERT_EQUAL_UINT8(aBlock[0], 0x00);
     TEST_ASSERT_EQUAL_UINT8(aBlock[1], 0x11);
@@ -57,9 +59,25 @@ void test_setAsArray() {
     TEST_ASSERT_EQUAL_UINT8(aBlock[13], 0xDD);
     TEST_ASSERT_EQUAL_UINT8(aBlock[14], 0xEE);
     TEST_ASSERT_EQUAL_UINT8(aBlock[15], 0xFF);
+}
 
-    uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), 16);
+void test_isEqualOperator() {
+    aesBlock blockOne;
+    blockOne.setFromHexString("00112233445566778899AABBCCDDEEFF");
+    aesBlock blockTwo;
+    blockTwo.setFromHexString("00112233445566778899AABBCCDDEEFF");
+    TEST_ASSERT_TRUE(blockOne == blockTwo);
+
+    blockTwo.setFromHexString("000102030405060708090A0B0C0D0E0F");
+    TEST_ASSERT_FALSE(blockOne == blockTwo);
+}
+
+void test_assignOperator() {
+    aesBlock blockOne;
+    blockOne.setFromHexString("00112233445566778899AABBCCDDEEFF");
+    aesBlock blockTwo;
+    blockTwo = blockOne;
+    TEST_ASSERT_TRUE(blockOne == blockTwo);
 }
 
 void test_encrypt() {
@@ -229,15 +247,23 @@ void test_shiftLeft() {
 
 int main(int argc, char** argv) {
     UNITY_BEGIN();
+    RUN_TEST(test_initialize);
+    RUN_TEST(test_setFromByteArray);
+    RUN_TEST(test_setFromWordArray);
+    RUN_TEST(test_setFromHexString);
+    RUN_TEST(test_arrayOperator);
+    RUN_TEST(test_isEqualOperator);
+    RUN_TEST(test_assignOperator);
+
     RUN_TEST(test_nmbrOfBlocks);
     RUN_TEST(test_incompleteLastBlockSize);
 
-    RUN_TEST(test_initialize);
-    RUN_TEST(test_setFromBytes);
-    RUN_TEST(test_setAsArray);
+    RUN_TEST(test_swapLittleBigEndian);
+    RUN_TEST(test_encrypt);
+
+
     RUN_TEST(testMatrixToVectorToMatrix);
     RUN_TEST(testBytesToWordsToBytes);
-    RUN_TEST(test_swapLittleBigEndian);
 
     RUN_TEST(test_XOR);
     RUN_TEST(test_substituteBytes);
@@ -246,7 +272,6 @@ int main(int argc, char** argv) {
     RUN_TEST(test_shiftLeft);
 
     RUN_TEST(test_encrypt_step_by_step);
-    RUN_TEST(test_encrypt);
 
     UNITY_END();
 }

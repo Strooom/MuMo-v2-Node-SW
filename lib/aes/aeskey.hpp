@@ -10,10 +10,11 @@
 
 class aesKey {
   public:
-    static constexpr uint32_t lengthInBytes{16};        //
-    static constexpr uint32_t lengthInWords{4};         //
+    static constexpr uint32_t lengthInBytes{16};
+    static constexpr uint32_t lengthInWords{4};
 
     void setFromByteArray(const uint8_t bytes[lengthInBytes]);
+    void setFromWordArray(const uint32_t wordsIn[lengthInWords]);
     void setFromHexString(const char* string);
     static uint32_t swapLittleBigEndian(uint32_t wordIn);
 
@@ -33,6 +34,4 @@ class aesKey {
 
     void expandKey();
     void calculateRoundKey(uint8_t round);
-
-    friend class aesBlock;
 };

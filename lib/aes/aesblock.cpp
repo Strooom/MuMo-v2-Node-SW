@@ -1,19 +1,23 @@
 #include <aesblock.hpp>
 #include <cstring>        // needed for memcpy()
 #include <cstddef>        // std::size_t
-#include <aeskey.hpp>
 #include <sbox.hpp>
 #include <hexascii.hpp>
 #include <stm32wle5_aes.hpp>
 
 #ifndef generic
 #include "main.h"
-extern CRYP_HandleTypeDef hcryp;
 #else
 #endif
 
-void aesBlock::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
-    memcpy(state.asByte, bytes, lengthInBytes);
+void aesBlock::setFromByteArray(const uint8_t bytesIn[lengthInBytes]) {
+    memcpy(state.asByte, bytesIn, lengthInBytes);
+}
+
+void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
+    for (uint32_t wordIndex = 0; wordIndex < 4; wordIndex++) {
+        state.asWord[wordIndex] = wordsIn[wordIndex];
+    }
 }
 
 void aesBlock::setFromHexString(const char *string) {
@@ -30,6 +34,11 @@ bool aesBlock::operator==(const aesBlock &block) {
     return (memcmp(state.asByte, block.state.asByte, lengthInBytes) == 0);
 }
 
+aesBlock &aesBlock::operator=(const aesBlock &block) {
+    memcpy(state.asByte, block.state.asByte, lengthInBytes);
+    return *this;
+}
+
 uint8_t *aesBlock::asBytes() {
     return state.asByte;
 }
@@ -37,6 +46,21 @@ uint8_t *aesBlock::asBytes() {
 uint32_t *aesBlock::asWords() {
     return state.asWord;
 }
+
+uint32_t aesBlock::nmbrOfBlocks(uint32_t nmbrOfBytes) {
+    return (nmbrOfBytes + 15U) / 16U;
+}
+uint32_t aesBlock::incompleteLastBlockSize(uint32_t nmbrOfBytes) {
+    return nmbrOfBytes % 16U;
+}
+
+uint32_t aesBlock::swapLittleBigEndian(uint32_t wordIn) {
+    // ARM Cortex-M4 stores uin32_t in little endian format, but STM32WLE5 AES peripheral expects big endian format. This function swaps the bytes in a word.
+    uint32_t wordOut;
+    wordOut = (wordIn & 0xFF000000) >> 24 | (wordIn & 0x00FF0000) >> 8 | (wordIn & 0x0000FF00) << 8 | (wordIn & 0x000000FF) << 24;
+    return wordOut;
+}
+
 
 // Maps a 16 byte vector to a 4x4 matrix in the way AES State expects it
 void aesBlock::vectorToMatrix(uint8_t vectorIn[16], uint8_t matrixOut[4][4]) {
@@ -71,12 +95,6 @@ void aesBlock::wordsToBytes(uint32_t wordsIn[4], uint8_t bytesOut[16]) {
     }
 }
 
-uint32_t aesBlock::swapLittleBigEndian(uint32_t wordIn) {
-    // ARM Cortex-M4 stores uin32_t in little endian format, but STM32WLE5 AES peripheral expects big endian format. This function swaps the bytes in a word.
-    uint32_t wordOut;
-    wordOut = (wordIn & 0xFF000000) >> 24 | (wordIn & 0x00FF0000) >> 8 | (wordIn & 0x0000FF00) << 8 | (wordIn & 0x000000FF) << 24;
-    return wordOut;
-}
 
 void aesBlock::encrypt(aesKey &key) {
 #ifndef generic
@@ -161,12 +179,6 @@ void aesBlock::mixColumns() {
     matrixToVector(tempState, state.asByte);
 }
 
-uint32_t aesBlock::nmbrOfBlocks(uint32_t nmbrOfBytes) {
-    return (nmbrOfBytes + 15) / 16;
-}
-uint32_t aesBlock::incompleteLastBlockSize(uint32_t nmbrOfBytes) {
-    return nmbrOfBytes % 16;
-}
 
 void aesBlock::shiftLeft() {
     // TODO : check if we can make this more efficient in 32bit operations

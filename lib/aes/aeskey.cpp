@@ -2,7 +2,6 @@
 #include <cstring>        // needed for memcpy()
 #include <sbox.hpp>
 #include <rcon.hpp>
-#include <aesblock.hpp>
 #include <hexascii.hpp>
 
 const uint8_t* aesKey::asBytes() {
@@ -18,6 +17,12 @@ void aesKey::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
     expandKey();
 }
 
+void aesKey::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
+    for (uint32_t wordIndex = 0; wordIndex < 4; wordIndex++) {
+        key.asWord[wordIndex] = wordsIn[wordIndex];
+    }
+}
+
 void aesKey::setFromHexString(const char* string) {
     uint8_t tmpBytes[lengthInBytes];
     hexAscii::hexStringToByteArray(string, tmpBytes);
@@ -31,7 +36,6 @@ uint32_t aesKey::swapLittleBigEndian(uint32_t wordIn) {
     wordOut = (wordIn & 0xFF000000) >> 24 | (wordIn & 0x00FF0000) >> 8 | (wordIn & 0x0000FF00) << 8 | (wordIn & 0x000000FF) << 24;
     return wordOut;
 }
-
 
 void aesKey::expandKey() {
     memcpy(expandedKey, key.asByte, 16);
