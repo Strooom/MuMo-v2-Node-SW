@@ -21,8 +21,8 @@ extern LPTIM_HandleTypeDef hlptim1;
 deviceAddress LoRaWAN::DevAddr;
 aesKey LoRaWAN::applicationKey;
 aesKey LoRaWAN::networkKey;
-aesKey LoRaWAN::keyK1;
-aesKey LoRaWAN::keyK2;
+aesBlock LoRaWAN::K1;
+aesBlock LoRaWAN::K2;
 frameCount LoRaWAN::uplinkFrameCount;
 frameCount LoRaWAN::downlinkFrameCount;
 
@@ -365,7 +365,7 @@ void LoRaWAN::encryptPayload(aesKey& theKey) {
 
     aesBlock tmpBlock;
     for (uint32_t blockIndex = 0x00; blockIndex < nmbrOfBlocks; blockIndex++) {
-        //tmpBlock.setFromByteArray(rawMessage[(blockIndex * 16) + framePayloadOffset]);
+        // tmpBlock.setFromByteArray(rawMessage[(blockIndex * 16) + framePayloadOffset]);
         stm32wle5_aes::write(tmpBlock);
         while (!stm32wle5_aes::isComputationComplete()) {
         }
@@ -1005,8 +1005,6 @@ void LoRaWAN::stopTimer() {
 #endif
 }
 
-
-
 // uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
 //     aesBlock outputBlock;
 //     uint8_t outputAsBytes[16];
@@ -1099,65 +1097,21 @@ void LoRaWAN::stopTimer() {
 // }
 
 void LoRaWAN::generateKeysK1K2() {
-    // TODO : check that we start with all zeroes
-    unsigned char byteIndex;
-    unsigned char MSB_Key;
-
-    unsigned char K1[16]{};
-    // memcpy(K1, keyK1.asBytes(), 16);
-
-    unsigned char K2[16]{};
-    // memcpy(K2, keyK2.asBytes(), 16);
-
-    // Encrypt the zeros in K1 with the NwkSkey
-    aesBlock tempBlock;
-    tempBlock.setFromByteArray(K1);
-    tempBlock.encrypt(networkKey);        //     AES_Encrypt(K1, keyIn.asBytes());
-    memcpy(K1, tempBlock.asBytes(), 16);
-
-    // Create K1
-    // Check if MSB is 1
-    if ((K1[0] & 0x80) == 0x80) {
-        MSB_Key = 1;
-    } else {
-        MSB_Key = 0;
-    }
-
-    tempBlock.setFromByteArray(K1);
-    tempBlock.shiftLeft();        // Shift K1 one bit left Shift_Left(K1);
-    memcpy(K1, tempBlock.asBytes(), 16);
-
-    // if MSB was 1
-    if (MSB_Key == 1) {
+    bool msbSet;
+    K1.setFromHexString("00000000000000000000000000000000");
+    K2.setFromHexString("00000000000000000000000000000000");
+    K1.encrypt(networkKey);
+    msbSet = ((K1[0] & 0x80) == 0x80);
+    K1.shiftLeft();
+    if (msbSet) {
         K1[15] = K1[15] ^ 0x87;
     }
-
-    // Copy K1 to K2
-    for (byteIndex = 0; byteIndex < 16; byteIndex++) {
-        K2[byteIndex] = K1[byteIndex];
-    }
-
-    // Check if MSB is 1
-    if ((K2[0] & 0x80) == 0x80) {
-        MSB_Key = 1;
-    } else {
-        MSB_Key = 0;
-    }
-
-    tempBlock.setFromByteArray(K2);
-    tempBlock.shiftLeft();        // Shift K2 one bit left Shift_Left(K2);
-    memcpy(K2, tempBlock.asBytes(), 16);
-
-    // // Shift K2 one bit left
-    // Shift_Left(K2);
-
-    // Check if MSB was 1
-    if (MSB_Key == 1) {
+    K2 = K1;
+    msbSet = ((K2[0] & 0x80) == 0x80);
+    K2.shiftLeft();
+    if (msbSet) {
         K2[15] = K2[15] ^ 0x87;
     }
-
-    keyK1.setFromByteArray(K1);
-    keyK2.setFromByteArray(K2);
 }
 
 uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
@@ -1203,7 +1157,7 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
         if (incompleteLastBlockSize == 0) {
             outputBlock.setFromByteArray(payload + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
 
-            outputBlock.XOR(keyK1.asBytes());
+            outputBlock.XOR(K1.asBytes());
             outputBlock.XOR(Old_Data);
             outputBlock.encrypt(networkKey);
 
@@ -1221,7 +1175,7 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
                 }
             }
             outputBlock.setFromByteArray(outputAsBytes);
-            outputBlock.XOR(keyK2.asBytes());
+            outputBlock.XOR(K2.asBytes());
             outputBlock.XOR(Old_Data);
             outputBlock.encrypt(networkKey);
         }
@@ -1233,7 +1187,7 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
         }
 
         outputBlock.setFromByteArray(outputAsBytes);
-        outputBlock.XOR(keyK2.asBytes());
+        outputBlock.XOR(K2.asBytes());
         outputBlock.XOR(Old_Data);
         outputBlock.encrypt(networkKey);
     }

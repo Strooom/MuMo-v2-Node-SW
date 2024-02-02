@@ -8,7 +8,7 @@
 void stm32wle5_aes::initialize(aesMode theMode) {
     uint32_t aesControlRegisterValue{0};
     aesControlRegisterValue |= (0b10 << 1);                                  // set dataTypeSelection to byte, for bigEndian / littleEndian conversion
-    aesControlRegisterValue |= (static_cast<uint32_t>(theMode) << 5);        // set ebc, cbc OR ctr MODE
+    aesControlRegisterValue |= (static_cast<uint32_t>(theMode) << 5);        // set ECB, CBC or CTR MODE
 
 #ifndef generic
     __HAL_RCC_AES_CLK_ENABLE();
@@ -64,7 +64,6 @@ void stm32wle5_aes::read(aesBlock& theBlock) {
     theBlock.asWords()[1] = AES->DOUTR;
     theBlock.asWords()[2] = AES->DOUTR;
     theBlock.asWords()[3] = AES->DOUTR;
-    AES->CR |= CRYP_CCF_CLEAR;
 #endif
 }
 
