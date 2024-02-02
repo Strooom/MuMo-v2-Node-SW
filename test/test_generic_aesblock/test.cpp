@@ -128,7 +128,7 @@ void test_encrypt_step_by_step() {
 void testMatrixToVectorToMatrix() {
     uint8_t vectorIn[16]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     uint8_t matrixOut[4][4];
-    aesBlock::vectorToMatrix(vectorIn, matrixOut);
+    aesBlock::vectorToMatrix(matrixOut, vectorIn);
     TEST_ASSERT_EQUAL_UINT8(0x00, matrixOut[0][0]);
     TEST_ASSERT_EQUAL_UINT8(0x01, matrixOut[1][0]);
     TEST_ASSERT_EQUAL_UINT8(0x02, matrixOut[2][0]);
@@ -150,21 +150,21 @@ void testMatrixToVectorToMatrix() {
     TEST_ASSERT_EQUAL_UINT8(0x0F, matrixOut[3][3]);
 
     uint8_t vectorOut[16];
-    aesBlock::matrixToVector(matrixOut, vectorOut);
+    aesBlock::matrixToVector(vectorOut, matrixOut);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(vectorIn, vectorOut, 16);
 }
 
 void testBytesToWordsToBytes() {
     uint8_t bytesIn[16]{0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00};
     uint32_t wordsOut[4];
-    aesBlock::bytesToWords(bytesIn, wordsOut);
+    aesBlock::bytesToWords(wordsOut, bytesIn);
     TEST_ASSERT_EQUAL_UINT32(0xFFEEDDCC, wordsOut[0]);
     TEST_ASSERT_EQUAL_UINT32(0xBBAA9988, wordsOut[1]);
     TEST_ASSERT_EQUAL_UINT32(0x77665544, wordsOut[2]);
     TEST_ASSERT_EQUAL_UINT32(0x33221100, wordsOut[3]);
 
     uint8_t bytesOut[16];
-    aesBlock::wordsToBytes(wordsOut, bytesOut);
+    aesBlock::wordsToBytes(bytesOut, wordsOut);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(bytesIn, bytesOut, 16);
 }
 

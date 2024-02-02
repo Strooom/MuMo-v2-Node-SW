@@ -35,31 +35,7 @@ uint8_t hexAscii::hexCharacterFromValue(const uint8_t valueToConvert) {
         return '?';
 }
 
-void hexAscii::hexStringToByteArray(const char *aHexString, uint8_t *aBinaryArray) {
-    uint32_t aHexStringLength = strlen(aHexString);
-    uint32_t nmbrBytes        = aHexStringLength / 2;
-
-    for (uint32_t index = 0; index < nmbrBytes; index++) {
-        uint8_t leftCharacter  = aHexString[index * 2];
-        uint8_t rightCharacter = aHexString[(index * 2) + 1];
-        leftCharacter          = toUpperCase(leftCharacter);
-        rightCharacter         = toUpperCase(rightCharacter);
-        if ((isHexCharacter(leftCharacter)) && (isHexCharacter(rightCharacter))) {
-            aBinaryArray[index] = (valueFromHexCharacter(leftCharacter) << 4) + valueFromHexCharacter(rightCharacter);
-        }
-    }
-}
-
-void hexAscii::byteArrayToHexString(const uint8_t *aBinaryArray, uint32_t aBinaryArrayLength, char *aHexString) {
-    for (uint32_t index = 0; index < aBinaryArrayLength; index++) {
-        aHexString[index * 2]       = hexCharacterFromValue((aBinaryArray[index] & 0xF0) >> 4);
-        aHexString[(index * 2) + 1] = hexCharacterFromValue(aBinaryArray[index] & 0x0F);
-    }
-    aHexString[aBinaryArrayLength * 2] = 0x00;        // terminate the string
-}
-
-
-void hexAscii::hexStringToByteArray2(uint8_t *byteArrayOut, const char *hexStringIn) {
+void hexAscii::hexStringToByteArray(uint8_t *byteArrayOut, const char *hexStringIn) {
     uint32_t hexStringInLength = strlen(hexStringIn);
     uint32_t nmbrBytes        = hexStringInLength / 2;
 
@@ -74,7 +50,7 @@ void hexAscii::hexStringToByteArray2(uint8_t *byteArrayOut, const char *hexStrin
     }
 }
 
-void hexAscii::byteArrayToHexString2(char *hexStringOut, const uint8_t *byteArrayIn, const uint32_t binaryArrayInLength) {
+void hexAscii::byteArrayToHexString(char *hexStringOut, const uint8_t *byteArrayIn, const uint32_t binaryArrayInLength) {
     for (uint32_t index = 0; index < binaryArrayInLength; index++) {
         hexStringOut[index * 2]       = hexCharacterFromValue((byteArrayIn[index] & 0xF0) >> 4);
         hexStringOut[(index * 2) + 1] = hexCharacterFromValue(byteArrayIn[index] & 0x0F);

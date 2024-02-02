@@ -33,9 +33,9 @@ void test_keyGeneration() {
     LoRaWAN::networkKey.setFromHexString("2b7e151628aed2a6abf7158809cf4f3c");
     LoRaWAN::generateKeysK1K2();
     uint8_t result[aesKey::lengthInBytes];
-    hexAscii::hexStringToByteArray("FBEED618357133667C85E08F7236A8DE", result);
+    hexAscii::hexStringToByteArray(result, "FBEED618357133667C85E08F7236A8DE");
     TEST_ASSERT_EQUAL_UINT8_ARRAY(result, LoRaWAN::keyK1.asBytes(), aesKey::lengthInBytes);
-    hexAscii::hexStringToByteArray("F7DDAC306AE266CCF90BC11EE46D513B", result);
+    hexAscii::hexStringToByteArray(result, "F7DDAC306AE266CCF90BC11EE46D513B");
     TEST_ASSERT_EQUAL_UINT8_ARRAY(result, LoRaWAN::keyK2.asBytes(), aesKey::lengthInBytes);
 }
 
@@ -85,7 +85,7 @@ void test_calculateMic02() {
     LoRaWAN::generateKeysK1K2();
     static constexpr uint32_t clearTextLength{16};
     uint8_t clearText[clearTextLength];
-    hexAscii::hexStringToByteArray("6bc1bee22e409f96e93d7e117393172a", clearText);        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
+    hexAscii::hexStringToByteArray(clearText, "6bc1bee22e409f96e93d7e117393172a");        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
     TEST_ASSERT_EQUAL(0x070A16B4, LoRaWAN::mic(clearText, clearTextLength));
 }
 
@@ -94,7 +94,7 @@ void test_calculateMic03() {
     LoRaWAN::generateKeysK1K2();
     static constexpr uint32_t clearTextLength{40};
     uint8_t clearText[clearTextLength];
-    hexAscii::hexStringToByteArray("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411", clearText);        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
+    hexAscii::hexStringToByteArray(clearText, "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411");        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
     aesBlock output;
     TEST_ASSERT_EQUAL(0xDFA66747, LoRaWAN::mic(clearText, clearTextLength));
 }
@@ -104,7 +104,7 @@ void test_calculateMic04() {
     LoRaWAN::generateKeysK1K2();
     static constexpr uint32_t clearTextLength{64};
     uint8_t clearText[clearTextLength];
-    hexAscii::hexStringToByteArray("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710", clearText);        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
+    hexAscii::hexStringToByteArray(clearText, "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710");        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
     aesBlock output;
     TEST_ASSERT_EQUAL(0x51f0bebf, LoRaWAN::mic(clearText, clearTextLength));
 }

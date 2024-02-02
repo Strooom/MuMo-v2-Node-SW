@@ -25,7 +25,7 @@ void aesKey::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
 
 void aesKey::setFromHexString(const char* string) {
     uint8_t tmpBytes[lengthInBytes];
-    hexAscii::hexStringToByteArray(string, tmpBytes);
+    hexAscii::hexStringToByteArray(tmpBytes, string);
     memcpy(key.asByte, tmpBytes, lengthInBytes);
     expandKey();
 }

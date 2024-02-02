@@ -22,7 +22,7 @@ void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
 
 void aesBlock::setFromHexString(const char *string) {
     uint8_t tmpBytes[lengthInBytes];
-    hexAscii::hexStringToByteArray(string, tmpBytes);
+    hexAscii::hexStringToByteArray(tmpBytes, string);
     memcpy(state.asByte, tmpBytes, lengthInBytes);
 }
 
@@ -61,9 +61,8 @@ uint32_t aesBlock::swapLittleBigEndian(uint32_t wordIn) {
     return wordOut;
 }
 
-
 // Maps a 16 byte vector to a 4x4 matrix in the way AES State expects it
-void aesBlock::vectorToMatrix(uint8_t vectorIn[16], uint8_t matrixOut[4][4]) {
+void aesBlock::vectorToMatrix(uint8_t matrixOut[4][4], uint8_t vectorIn[16]) {
     for (auto row = 0; row < 4; row++) {
         for (auto col = 0; col < 4; col++) {
             matrixOut[row][col] = vectorIn[(col * 4) + row];
@@ -72,7 +71,7 @@ void aesBlock::vectorToMatrix(uint8_t vectorIn[16], uint8_t matrixOut[4][4]) {
 }
 
 // Maps a 4x4 matrix to a 16 byte vector in the way AES State expects it
-void aesBlock::matrixToVector(uint8_t matrixIn[4][4], uint8_t vectorOut[16]) {
+void aesBlock::matrixToVector(uint8_t vectorOut[16], uint8_t matrixIn[4][4]) {
     for (auto row = 0; row < 4; row++) {
         for (auto col = 0; col < 4; col++) {
             vectorOut[(col * 4) + row] = matrixIn[row][col];
@@ -80,13 +79,13 @@ void aesBlock::matrixToVector(uint8_t matrixIn[4][4], uint8_t vectorOut[16]) {
     }
 }
 
-void aesBlock::bytesToWords(uint8_t bytesIn[16], uint32_t wordsOut[4]) {
+void aesBlock::bytesToWords(uint32_t wordsOut[4], uint8_t bytesIn[16]) {
     for (auto i = 0; i < 4; i++) {
         wordsOut[i] = bytesIn[i * 4] << 24 | bytesIn[i * 4 + 1] << 16 | bytesIn[i * 4 + 2] << 8 | bytesIn[i * 4 + 3];
     }
 }
 
-void aesBlock::wordsToBytes(uint32_t wordsIn[4], uint8_t bytesOut[16]) {
+void aesBlock::wordsToBytes(uint8_t bytesOut[16], uint32_t wordsIn[4]) {
     for (auto i = 0; i < 4; i++) {
         bytesOut[i * 4]     = (wordsIn[i] >> 24) & 0xFF;
         bytesOut[i * 4 + 1] = (wordsIn[i] >> 16) & 0xFF;
@@ -94,6 +93,7 @@ void aesBlock::wordsToBytes(uint32_t wordsIn[4], uint8_t bytesOut[16]) {
         bytesOut[i * 4 + 3] = wordsIn[i] & 0xFF;
     }
 }
+
 
 
 void aesBlock::encrypt(aesKey &key) {
@@ -159,7 +159,7 @@ void aesBlock::shiftRows() {
 
 void aesBlock::mixColumns() {
     uint8_t tempState[4][4];
-    vectorToMatrix(state.asByte, tempState);
+    vectorToMatrix(tempState, state.asByte);
     uint8_t row, column;
     uint8_t a[4], b[4];
     for (column = 0; column < 4; column++) {
@@ -176,7 +176,7 @@ void aesBlock::mixColumns() {
         tempState[2][column] = a[0] ^ a[1] ^ b[2] ^ a[3] ^ b[3];
         tempState[3][column] = a[0] ^ b[0] ^ a[1] ^ a[2] ^ b[3];
     }
-    matrixToVector(tempState, state.asByte);
+    matrixToVector(state.asByte, tempState);
 }
 
 
