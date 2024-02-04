@@ -90,6 +90,21 @@ void test_setOffsetsAndLengthsTx3() {
     TEST_ASSERT_EQUAL(57, LoRaWAN::micOffset);
 }
 
+void test_padForMicCalculation() {
+    LoRaWAN::setOffsetsAndLengthsTx(0, 0);        // minimal LoRaWAN message
+    LoRaWAN::padForMicCalculation();
+    TEST_ASSERT_EQUAL(8, LoRaWAN::nmbrOfBytesToPad);
+
+    LoRaWAN::setOffsetsAndLengthsTx(0, 5);        // 5 bytes option, no payload
+    LoRaWAN::padForMicCalculation();
+    TEST_ASSERT_EQUAL(3, LoRaWAN::nmbrOfBytesToPad);
+
+    LoRaWAN::setOffsetsAndLengthsTx(7, 0);
+    LoRaWAN::padForMicCalculation();
+    TEST_ASSERT_EQUAL(0, LoRaWAN::nmbrOfBytesToPad);
+}
+
+
 void test_isValidDevAddr() {
     LoRaWAN::DevAddr.asUint32 = 0x1234;
     deviceAddress testAddress1{0x1234};
@@ -369,6 +384,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_setOffsetsAndLengthsTx3);
     RUN_TEST(test_setOffsetsAndLengthsRx1);
     RUN_TEST(test_setOffsetsAndLengthsRx2);
+    RUN_TEST(test_padForMicCalculation);
     RUN_TEST(test_isValidDevAddr);
     RUN_TEST(test_prepareBlockAiTx);
     RUN_TEST(test_prepareBlockAiRx);

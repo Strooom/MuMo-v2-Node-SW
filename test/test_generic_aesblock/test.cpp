@@ -236,6 +236,16 @@ void test_incompleteLastBlockSize() {
     TEST_ASSERT_EQUAL(1, aesBlock::incompleteLastBlockSize(17));
 }
 
+void test_nmbrOfBytesToPad() {
+    TEST_ASSERT_EQUAL(0, aesBlock::calculateNmbrOfBytesToPad(0));
+    TEST_ASSERT_EQUAL(15, aesBlock::calculateNmbrOfBytesToPad(1));
+    TEST_ASSERT_EQUAL(1, aesBlock::calculateNmbrOfBytesToPad(15));
+    TEST_ASSERT_EQUAL(0, aesBlock::calculateNmbrOfBytesToPad(16));
+    TEST_ASSERT_EQUAL(15, aesBlock::calculateNmbrOfBytesToPad(1 + 64));
+    TEST_ASSERT_EQUAL(1, aesBlock::calculateNmbrOfBytesToPad(15 + 64));
+    TEST_ASSERT_EQUAL(0, aesBlock::calculateNmbrOfBytesToPad(16 + 64));
+}
+
 void test_shiftLeft() {
     unsigned char input[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     aesBlock testBlock;
@@ -257,10 +267,10 @@ int main(int argc, char** argv) {
 
     RUN_TEST(test_nmbrOfBlocks);
     RUN_TEST(test_incompleteLastBlockSize);
+    RUN_TEST(test_nmbrOfBytesToPad);
 
     RUN_TEST(test_swapLittleBigEndian);
     RUN_TEST(test_encrypt);
-
 
     RUN_TEST(testMatrixToVectorToMatrix);
     RUN_TEST(testBytesToWordsToBytes);

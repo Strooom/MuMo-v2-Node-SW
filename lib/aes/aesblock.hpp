@@ -14,17 +14,18 @@ class aesBlock {
   public:
     static constexpr uint32_t lengthInBytes{16};
     static constexpr uint32_t lengthInWords{4};
-    
+
     void setFromByteArray(const uint8_t bytesIn[lengthInBytes]);
     void setFromWordArray(const uint32_t wordsIn[lengthInWords]);
     void setFromHexString(const char *string);
-    aesBlock& operator= (const aesBlock& block);
-    
+    aesBlock &operator=(const aesBlock &block);
+
     uint8_t &operator[](std::size_t index);        // accessing the individual bytes through the [] operator
-    bool operator == (const aesBlock &block);
+    bool operator==(const aesBlock &block);
 
     static uint32_t nmbrOfBlocks(uint32_t nmbrOfBytes);
     static uint32_t incompleteLastBlockSize(uint32_t nmbrOfBytes);
+    static uint32_t calculateNmbrOfBytesToPad(uint32_t nmbrOfBytes);
 
     void encrypt(aesKey &withKey);
 
