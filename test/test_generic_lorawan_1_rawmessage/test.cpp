@@ -235,6 +235,14 @@ void test_prepareBlockAiRx() {
     TEST_ASSERT_EQUAL_UINT8(0x03, testBlock[15]);
 }
 
+
+// TODO : there is no test for inserting a header with payload and no frameoptions
+// We should in all these tests consider at least 4 scenarios :
+// 1. payload, no frameoptions
+// 2. payload, frameoptions
+// 3. no payload, frameoptions
+// 4. no payload, no frameoptions
+
 void test_insertHeaders1() {
     LoRaWAN::DevAddr.asUint32          = 0x12345678;
     LoRaWAN::uplinkFrameCount.asUint32 = 0xFFEEDDCC;
