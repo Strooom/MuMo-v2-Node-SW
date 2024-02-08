@@ -115,20 +115,14 @@ void aesBlock::encrypt(aesKey &key) {
 
 #else
     // software implementation
-    hexAscii::byteArrayToHexString(blockAsHex, state.asByte, 16);        // TEST
     XOR(key.expandedKey);
-    hexAscii::byteArrayToHexString(blockAsHex, state.asByte, 16);        // TEST
     for (auto round = 1; round <= 10; round++) {
         substituteBytes();
-        hexAscii::byteArrayToHexString(blockAsHex, state.asByte, 16);        // TEST
         shiftRows();
-        hexAscii::byteArrayToHexString(blockAsHex, state.asByte, 16);        // TEST
         if (round < 10) {
             mixColumns();
-            hexAscii::byteArrayToHexString(blockAsHex, state.asByte, 16);        // TEST
         }
         XOR(key.expandedKey + (round * 16));
-        hexAscii::byteArrayToHexString(blockAsHex, state.asByte, 16);        // TEST
     }
 #endif
 }
