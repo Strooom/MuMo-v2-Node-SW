@@ -4,31 +4,39 @@ frameCount::frameCount() : asUint32(0){};
 
 frameCount::frameCount(uint32_t initialValue) : asUint32(initialValue){};
 
-void frameCount::set(uint32_t theFrameCount) {
-    asUint32 = theFrameCount;
-}
-
-frameCount& frameCount::operator=(uint32_t theFrameCount) {
+frameCount& frameCount::operator=(const uint32_t theFrameCount) {
     asUint32 = theFrameCount;
     return *this;
 }
 
-// void frameCount::set(uint8_t theFrameCount[4]) {
-//     asUint8[0] = theFrameCount[0];
-//     asUint8[1] = theFrameCount[1];
-//     asUint8[2] = theFrameCount[2];
-//     asUint8[3] = theFrameCount[3];
-// }
-
-void frameCount::increment() {
-    asUint32++;
+frameCount& frameCount::operator=(const frameCount& theFrameCount) {
+    asUint32 = theFrameCount.asUint32;
+    return *this;
 }
 
-uint32_t frameCount::guessFromUint16(uint32_t frameCount32, uint16_t frameCount16Lsb) {
+bool frameCount::operator==(const frameCount& theFrameCount) {
+    return (asUint32 == theFrameCount.asUint32);
+}
+
+bool frameCount::operator!=(const frameCount& theFrameCount) {
+    return (asUint32 != theFrameCount.asUint32);
+}
+
+frameCount& frameCount::operator++(int) {
+    asUint32++;
+    return *this;
+}
+
+uint8_t& frameCount::operator[](int index) {
+    return asUint8[index];
+}
+
+void frameCount::guessFromUint16(uint16_t frameCount16Lsb) {
     for (uint32_t index = 0; index < maximumGap; index++) {
-        if (((frameCount32 + index) & 0x0000FFFF) == frameCount16Lsb) {
-            return (frameCount32 + index);
+        if (((asUint32 + index) & 0x0000FFFF) == frameCount16Lsb) {
+            asUint32 += index;
+            return;
         }
     }
-    return frameCount32;        // no match found, return the current value
 }
+

@@ -75,20 +75,20 @@ class LoRaWAN {
     // ### Encoding and Decoding of LoRaWAN messages ###
     // #################################################
 
-    static constexpr uint32_t maxLoRaPayloadLength{256};                                // limited to length of databuffer in SX126x
-    static constexpr uint32_t b0BlockLength{16};                                        // length of the so-called B0 block, in front of the LoRa payload, needed to calculate MIC
-    static constexpr uint32_t macHeaderLength{1};                                       // length of MHDR in [bytes]
-    static constexpr uint32_t deviceAddressLength{deviceAddress::lengthInBytes};        // length of DevAddr in [bytes]
-    static constexpr uint32_t frameControlLength{1};                                    // length of FCtrl in [bytes]
-    static constexpr uint32_t frameCountLSHLength{2};                                   // frameCount Least Significant Halve - truncated to 2 LSbytes only
-    static constexpr uint32_t micLength{4};                                             // length of MIC in [bytes]
+    static constexpr uint32_t maxLoRaPayloadLength{256};
+    static constexpr uint32_t b0BlockLength{16};
+    static constexpr uint32_t macHeaderLength{1};
+    static constexpr uint32_t deviceAddressLength{deviceAddress::lengthInBytes};
+    static constexpr uint32_t frameControlLength{1};
+    static constexpr uint32_t frameCountLSHLength{2};
+    static constexpr uint32_t micLength{4};
 
-    static uint32_t macPayloadLength;          //
-    static uint32_t framePortLength;           // total length of FPort in [bytes] 1 if present, 0 if not present
-    static uint32_t frameOptionsLength;        // this is not static, it can vary between 0 and 15
-    static uint32_t frameHeaderLength;         // this is not static, it can vary between 7 and 22
-    static uint32_t framePayloadLength;        // length of the application (or MAC layer) payload. excludes header, port and mic
-    static uint32_t loRaPayloadLength;         // length of the data in the radio Tx/Rx buffer
+    static uint32_t macPayloadLength;
+    static uint32_t framePortLength;
+    static uint32_t frameOptionsLength;        // this can vary between 0 and 15
+    static uint32_t frameHeaderLength;         // this can vary between 7 and 22
+    static uint32_t framePayloadLength;
+    static uint32_t loRaPayloadLength;
 
     static constexpr uint32_t loRaPayloadOffset{b0BlockLength};
     static constexpr uint32_t macHeaderOffset{b0BlockLength};
@@ -97,14 +97,15 @@ class LoRaWAN {
     static constexpr uint32_t frameCountOffset{b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength};
     static constexpr uint32_t frameOptionsOffset{b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength};
 
-    static uint32_t framePortOffset;           //
-    static uint32_t framePayloadOffset;        //
-    static uint32_t micOffset;                 //
+    static uint32_t framePortOffset;
+    static uint32_t framePayloadOffset;
+    static uint32_t micOffset;
 
     static uint32_t nmbrOfBytesToPad;
 
-    static uint8_t rawMessage[b0BlockLength + maxLoRaPayloadLength + 15];        // in this buffer, the message is contructed (Tx - Uplink) or decoded (Rx - Downlink)
-
+    static constexpr uint32_t rawMessageLength{b0BlockLength + maxLoRaPayloadLength + 15};
+    static uint8_t rawMessage[rawMessageLength];        // in this buffer, the message is contructed (Tx - Uplink) or decoded (Rx - Downlink)
+    static void clearRawMessage();
     static constexpr uint32_t macInOutLength{64};
     static linearBuffer<macInOutLength> macIn;         // buffer holding the received MAC requests and/or answers
     static linearBuffer<macInOutLength> macOut;        // buffer holding the MAC requests and/or answers to be sent
@@ -118,7 +119,7 @@ class LoRaWAN {
     static void encryptPayload(aesKey &theKey);
     static void decryptPayload(aesKey &theKey);
     static void insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort);
-    static void insertBlockB0(linkDirection theDirection, frameCount &aFrameCounter, uint32_t micPayloadLength);
+    static void insertBlockB0(linkDirection theDirection, frameCount &aFrameCount);        // in downlink, the framecount is the received framecount, not necessarily the downlink framecount so I need to pass it as a parameter
     // static void padForEncryptDecrypt(); // not sure that I need this
     static void padForMicCalculation();
 
@@ -130,19 +131,19 @@ class LoRaWAN {
     // ### Helper functions for decoding a downlink message - Rx ###
     // #############################################################
 
-    static void setOffsetsAndLengthsRx(uint32_t loRaPayloadLength);                                                                                                                   // calculate all offsets and lengths in rawMessage by decoding the received LoRa payload
-    static uint16_t getReceivedFramecount() { return (static_cast<uint16_t>(rawMessage[frameCountOffset]) + (static_cast<uint16_t>(rawMessage[frameCountOffset + 1]) << 8)); }        //
-    static bool isValidMic();                                                                                                                                                         //
-    static bool isValidDevAddr(deviceAddress testAddress);                                                                                                                            //
-    static bool isValidDownlinkFrameCount(frameCount testFrameCount);                                                                                                                 //
-    static messageType decodeMessage();                                                                                                                                               //
+    static void setOffsetsAndLengthsRx(uint32_t loRaPayloadLength);
+    static uint16_t getReceivedFramecount() { return (static_cast<uint16_t>(rawMessage[frameCountOffset]) + (static_cast<uint16_t>(rawMessage[frameCountOffset + 1]) << 8)); }
+    static uint16_t getReceivedDeviceAddress() { return (static_cast<uint32_t>(rawMessage[deviceAddressOffset]) + (static_cast<uint32_t>(rawMessage[deviceAddressOffset + 1]) << 16) + (static_cast<uint32_t>(rawMessage[deviceAddressOffset + 2]) << 8) + (static_cast<uint32_t>(rawMessage[deviceAddressOffset + 3]) << 24)); }
+    static bool isValidMic();
+    static bool isValidDownlinkFrameCount(frameCount testFrameCount);
+    static messageType decodeMessage();
 
-    static uint32_t getRandomNumber();               //
+    static uint32_t getRandomNumber();
     static void startTimer(uint32_t timeOut);        // timeOut in [ticks] from the 2048 Hz clock driving LPTIM1
-    static void stopTimer();                         //
+    static void stopTimer();
 
     static void prepareBlockAi(aesBlock &theBlock, linkDirection theDirection, uint32_t blockIndex);
-    static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);        //
+    static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);
 
     static void processMacContents();                                                                                                           // process the contents of the macIn buffer, output goes to macOut buffer
     static void processNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate);        //

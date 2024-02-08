@@ -12,15 +12,15 @@ void test_initialize() {
     TEST_ASSERT_EQUAL_UINT8(0, ctrl2.asByte());
 }
 
-void test_fromByte() {
+void test_setFromByte() {
     frameControl ctrl1;
-    ctrl1.fromByte(0x80);
+    ctrl1.set(0x80);
     TEST_ASSERT_TRUE(ctrl1.ADR);
 }
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
-    RUN_TEST(test_fromByte);
+    RUN_TEST(test_setFromByte);
     UNITY_END();
 }

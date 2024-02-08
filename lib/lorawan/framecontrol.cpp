@@ -34,7 +34,7 @@ uint8_t frameControl::asByte() const {
     return result;
 }
 
-void frameControl::fromByte(uint8_t theByte) {
+void frameControl::set(uint8_t theByte) {
     theLinkDirection = linkDirection::downlink;
     ADR              = ((theByte & 0x80) == 0x80);
     ADRACKReq        = ((theByte & 0x40) == 0x40);

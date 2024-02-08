@@ -38,27 +38,24 @@ void test_initialize() {
     TEST_ASSERT_EQUAL(0x5, LoRaWAN::rx1Delay);
     TEST_ASSERT_EQUAL(0xABCD, LoRaWAN::DevAddr.asUint32);
     // TODO : complete for all context
-}
 
-void test_isValidDevAddr() {
-    LoRaWAN::DevAddr.asUint32 = 0x1234;
-    deviceAddress testAddress1{0x1234};
-    deviceAddress testAddress2{0x5678};
-    TEST_ASSERT_TRUE(LoRaWAN::isValidDevAddr(testAddress1));
-    TEST_ASSERT_FALSE(LoRaWAN::isValidDevAddr(testAddress2));
+    uint8_t allZeroes[LoRaWAN::rawMessageLength];
+    memset(allZeroes, 0, LoRaWAN::rawMessageLength);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::rawMessageLength);
 }
 
 void test_isValidDownlinkFrameCount() {
-    LoRaWAN::downlinkFrameCount.asUint32 = 0;
+    LoRaWAN::downlinkFrameCount = 0;
     frameCount testFrameCount(10);
     TEST_ASSERT_TRUE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
-    LoRaWAN::downlinkFrameCount.asUint32 = 9;
+    LoRaWAN::downlinkFrameCount = 9;
     TEST_ASSERT_TRUE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
-    LoRaWAN::downlinkFrameCount.asUint32 = 10;
+    LoRaWAN::downlinkFrameCount = 10;
     TEST_ASSERT_FALSE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
-    LoRaWAN::downlinkFrameCount.asUint32 = 11;
+    LoRaWAN::downlinkFrameCount = 11;
     TEST_ASSERT_FALSE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
 }
+
 
 int main(int argc, char **argv) {
 #ifndef generic
@@ -67,7 +64,6 @@ int main(int argc, char **argv) {
     UNITY_BEGIN();
 
     RUN_TEST(test_initialize);
-    RUN_TEST(test_isValidDevAddr);
     RUN_TEST(test_isValidDownlinkFrameCount);
 
     UNITY_END();

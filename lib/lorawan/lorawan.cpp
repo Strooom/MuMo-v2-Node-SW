@@ -8,6 +8,7 @@
 #include <maccommand.hpp>
 #include <aesblock.hpp>
 #include <stm32wle5_aes.hpp>
+#include <hexascii.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -24,9 +25,6 @@ aesBlock LoRaWAN::K1;
 aesBlock LoRaWAN::K2;
 frameCount LoRaWAN::uplinkFrameCount;
 frameCount LoRaWAN::downlinkFrameCount;
-
-// dutyCycle theDutyCycle;
-//  messageIntegrityCode mic;
 
 dataRates LoRaWAN::theDataRates;
 uint32_t LoRaWAN::currentDataRateIndex{0};
@@ -63,6 +61,7 @@ extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 #pragma region 0 : General
 
 void LoRaWAN::initialize() {
+    clearRawMessage();
     currentDataRateIndex = 5;
 
     // Read the LoRaWAN settings from non-volatile storage
@@ -97,16 +96,19 @@ void LoRaWAN::logSettings() {
 void LoRaWAN::logState() {
     if (logging::isActive(logging::source::lorawanData)) {
         logging::snprintf("LoRaWAN State :\n");
-        logging::snprintf("- uplinkFrameCount = %u\n", uplinkFrameCount.asUint32);
-        logging::snprintf("- downlinkFrameCount = %u\n", downlinkFrameCount.asUint32);
+        logging::snprintf("- uplinkFrameCount = %u\n", uplinkFrameCount.toUint32());
+        logging::snprintf("- downlinkFrameCount = %u\n", downlinkFrameCount.toUint32());
         logging::snprintf("- dataRateIndex = %u\n", currentDataRateIndex);
         logging::snprintf("- rx1Delay = %u [s]\n", rx1Delay);
     }
 }
 
-
 #pragma endregion
 #pragma region 1 : managing the rawMessage Buffer
+
+void LoRaWAN::clearRawMessage() {
+    memset(rawMessage, 0, rawMessageLength);
+}
 
 void LoRaWAN::setOffsetsAndLengthsTx(uint32_t theFramePayloadLength, uint32_t theFrameOptionsLength) {
     // This function is used in the uplink direction, where we know the length of the application payload, and we construct a LoRa payload from it
@@ -144,37 +146,9 @@ void LoRaWAN::setOffsetsAndLengthsRx(uint32_t theLoRaPayloadLength) {
     micOffset          = b0BlockLength + loRaPayloadLength - micLength;
 }
 
-
 void LoRaWAN::insertPayload(const uint8_t data[], const uint32_t length) {
     memcpy(rawMessage + framePayloadOffset, data, length);
 }
-
-void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uint32_t blockIndex) {
-    theBlock[0] = 0x01;
-    theBlock[1] = 0x00;
-    theBlock[2] = 0x00;
-    theBlock[3] = 0x00;
-    theBlock[4] = 0x00;
-    theBlock[5] = static_cast<uint8_t>(theDirection);
-    theBlock[6] = DevAddr.asUint8[0];        // LSByte
-    theBlock[7] = DevAddr.asUint8[1];        //
-    theBlock[8] = DevAddr.asUint8[2];        //
-    theBlock[9] = DevAddr.asUint8[3];        // MSByte
-    if (theDirection == linkDirection::uplink) {
-        theBlock[10] = uplinkFrameCount.asUint8[0];        // LSByte
-        theBlock[11] = uplinkFrameCount.asUint8[1];        //
-        theBlock[12] = uplinkFrameCount.asUint8[2];        //
-        theBlock[13] = uplinkFrameCount.asUint8[3];        // MSByte
-    } else {
-        theBlock[10] = downlinkFrameCount.asUint8[0];        // LSByte
-        theBlock[11] = downlinkFrameCount.asUint8[1];        //
-        theBlock[12] = downlinkFrameCount.asUint8[2];        //
-        theBlock[13] = downlinkFrameCount.asUint8[3];        // MSByte
-    }
-    theBlock[14] = 0x00;
-    theBlock[15] = blockIndex;        // Blocks Ai are indexed from 1..k, where k is the number of blocks
-}
-
 
 void LoRaWAN::insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort) {
     rawMessage[macHeaderOffset]         = macHeader(frameType::unconfirmedDataUp).asUint8();        //
@@ -195,8 +169,8 @@ void LoRaWAN::insertHeaders(const uint8_t theFrameOptions[], const uint32_t theF
         }
     }
 
-    rawMessage[frameCountOffset]     = uplinkFrameCount.asUint8[0];        // only the 2 LSBytes from framecounter are sent in the header
-    rawMessage[frameCountOffset + 1] = uplinkFrameCount.asUint8[1];        //
+    rawMessage[frameCountOffset]     = uplinkFrameCount[0];        // only the 2 LSBytes from framecounter are sent in the header
+    rawMessage[frameCountOffset + 1] = uplinkFrameCount[1];        //
 
     if ((frameOptionsLength > 0) && (framePayloadLength > 0) && theFramePort == 0) {
         logging::snprintf(logging::source::error, "Error : illegal combination of frameOptions and framePort == 0\n");
@@ -207,7 +181,7 @@ void LoRaWAN::insertHeaders(const uint8_t theFrameOptions[], const uint32_t theF
     }
 }
 
-void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCounter, uint32_t micPayloadLength) {
+void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCount) {
     rawMessage[0]  = 0x49;                                      // see LoRaWAN® L2 1.0.4 Specification - line 808
     rawMessage[1]  = 0;                                         //
     rawMessage[2]  = 0;                                         //
@@ -218,20 +192,13 @@ void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCounte
     rawMessage[7]  = DevAddr.asUint8[1];                        //
     rawMessage[8]  = DevAddr.asUint8[2];                        //
     rawMessage[9]  = DevAddr.asUint8[3];                        // MSByte
-    rawMessage[10] = aFrameCounter.asUint8[0];                  // LSByte
-    rawMessage[11] = aFrameCounter.asUint8[1];                  //
-    rawMessage[12] = aFrameCounter.asUint8[2];                  //
-    rawMessage[13] = aFrameCounter.asUint8[3];                  // MSByte
+    rawMessage[10] = aFrameCount[0];                    // LSByte
+    rawMessage[11] = aFrameCount[1];                    //
+    rawMessage[12] = aFrameCount[2];                    //
+    rawMessage[13] = aFrameCount[3];                    // MSByte
     rawMessage[14] = 0;                                         //
-    rawMessage[15] = micPayloadLength;                          // number of bytes over which the MIC is applied, is frameHeader + application payload
+    rawMessage[15] = micOffset;                                 // number of bytes over which the MIC is applied
 }
-
-// void LoRaWAN::padForEncryptDecrypt() {
-//     nmbrOfBytesToPad = aesBlock::calculateNmbrOfBytesToPad(framePayloadLength);
-//     for (uint32_t index = framePayloadOffset; index < (framePayloadOffset + nmbrOfBytesToPad); index++) {
-//         rawMessage[index] = 0x00;
-//     }
-// }
 
 void LoRaWAN::padForMicCalculation() {
     nmbrOfBytesToPad = aesBlock::calculateNmbrOfBytesToPad(loRaPayloadLength - 4);
@@ -243,9 +210,34 @@ void LoRaWAN::padForMicCalculation() {
     }
 }
 
-
 #pragma endregion
 #pragma region 2 : Encrypting / Decrypting application payload - Calculating MIC
+
+void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uint32_t blockIndex) {
+    theBlock[0] = 0x01;
+    theBlock[1] = 0x00;
+    theBlock[2] = 0x00;
+    theBlock[3] = 0x00;
+    theBlock[4] = 0x00;
+    theBlock[5] = static_cast<uint8_t>(theDirection);
+    theBlock[6] = DevAddr.asUint8[0];        // LSByte
+    theBlock[7] = DevAddr.asUint8[1];        //
+    theBlock[8] = DevAddr.asUint8[2];        //
+    theBlock[9] = DevAddr.asUint8[3];        // MSByte
+    if (theDirection == linkDirection::uplink) {
+        theBlock[10] = uplinkFrameCount[0];        // LSByte
+        theBlock[11] = uplinkFrameCount[1];        //
+        theBlock[12] = uplinkFrameCount[2];        //
+        theBlock[13] = uplinkFrameCount[3];        // MSByte
+    } else {
+        theBlock[10] = downlinkFrameCount[0];        // LSByte
+        theBlock[11] = downlinkFrameCount[1];        //
+        theBlock[12] = downlinkFrameCount[2];        //
+        theBlock[13] = downlinkFrameCount[3];        // MSByte
+    }
+    theBlock[14] = 0x00;
+    theBlock[15] = blockIndex;        // Blocks Ai are indexed from 1..k, where k is the number of blocks
+}
 
 void LoRaWAN::encryptPayload(aesKey& theKey) {
     uint32_t nmbrOfBlocks{framePayloadLength / 16};        // Split payload in blocks of 16 bytes, last part could be less than 16 bytes - integer division
@@ -344,12 +336,16 @@ void LoRaWAN::generateKeysK1K2() {
     }
 }
 
+// LoRaWAN::calculateMic(); // This is what we should have
+
 uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
     // TODO : remove the payload argument, as it's always in rawMessage[]
     // TODO : remove the payloadLength argument, as it's already calculated in the offsetsAndLengths
     uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocks(payloadLength);
     uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSize(payloadLength);
     aesBlock outputBlock;
+
+    char blockAsHex[33];        // For testing
 
 #ifndef generic
     stm32wle5_aes::initialize(aesMode::CBC);
@@ -372,9 +368,11 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
         // Perform full calculating until n-1 message blocks
         for (blockIndex = 0x0; blockIndex < (nmbrOfBlocks - 1); blockIndex++) {
             outputBlock.setFromByteArray(payload + (blockIndex * 16));        //  Copy data into block
-
+            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             outputBlock.XOR(Old_Data);
+            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             outputBlock.encrypt(networkKey);
+            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
             // Copy New_Data to Old_Data
@@ -386,10 +384,13 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
         // Check if Datalength is a multiple of 16
         if (incompleteLastBlockSize == 0) {
             outputBlock.setFromByteArray(payload + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
-
-            outputBlock.XOR(K1.asBytes());
+            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             outputBlock.XOR(Old_Data);
+            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
+            outputBlock.XOR(K1.asBytes());
+            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             outputBlock.encrypt(networkKey);
+            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
 
         } else {
             // Copy the remaining data and fill the rest
@@ -405,9 +406,13 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
                 }
             }
             outputBlock.setFromByteArray(outputAsBytes);
-            outputBlock.XOR(K2.asBytes());
+            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             outputBlock.XOR(Old_Data);
+            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
+            outputBlock.XOR(K2.asBytes());
+            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             outputBlock.encrypt(networkKey);
+            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
         }
 
     } else {
@@ -461,6 +466,13 @@ bool LoRaWAN::isValidMic() {
     }
     return true;
 }
+
+// void LoRaWAN::padForEncryptDecrypt() {
+//     nmbrOfBytesToPad = aesBlock::calculateNmbrOfBytesToPad(framePayloadLength);
+//     for (uint32_t index = framePayloadOffset; index < (framePayloadOffset + nmbrOfBytesToPad); index++) {
+//         rawMessage[index] = 0x00;
+//     }
+// }
 
 #pragma endregion
 #pragma region 3 : TxRxCycle State Machine
@@ -699,7 +711,6 @@ void LoRaWAN::goTo(txRxCycleState newState) {
     }
 }
 
-
 void LoRaWAN::startTimer(uint32_t timeOut) {
 #ifndef generic
     HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, timeOut);
@@ -713,7 +724,6 @@ void LoRaWAN::stopTimer() {
     HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
 #endif
 }
-
 
 #pragma endregion
 #pragma region 4 : MAC layer functions
@@ -960,13 +970,7 @@ void LoRaWAN::processReceiveTimingSetupRequest(uint32_t receivedRx1Delay) {
     settingsCollection::save(settingsCollection::settingIndex::rx1Delay, rx1Delay);
 }
 
-
 #pragma endregion
-
-
-
-
-
 
 bool LoRaWAN::isReadyToTransmit() {
     return (theTxRxCycleState == txRxCycleState::idle);
@@ -999,7 +1003,7 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
         insertPayload(applicationData, applicationDataLength);                                             //
         encryptPayload(applicationKey);                                                                    //
     }
-    insertBlockB0(linkDirection::uplink, uplinkFrameCount, (macHeaderLength + macPayloadLength));
+    insertBlockB0(linkDirection::uplink, uplinkFrameCount);
     insertMic();
 
     // 2. Configure the radio, and start stateMachine for transmitting the payload
@@ -1020,9 +1024,9 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
     goTo(txRxCycleState::waitForRandomTimeBeforeTransmit);
 
     // 3. txRxCycle is started..
-    uplinkFrameCount.increment();        //
-                                         //    nonVolatileStorage::write(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), uplinkFrameCount.asUint32);        // TODO : update the setting/context and let the NVS do things under the hood
-    removeNonStickyMacStuff();           //
+    uplinkFrameCount++;               //
+                                      //    nonVolatileStorage::write(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), uplinkFrameCount.asUint32);        // TODO : update the setting/context and let the NVS do things under the hood
+    removeNonStickyMacStuff();        //
 }
 
 void LoRaWAN::getDownlinkMessage() {
@@ -1049,13 +1053,13 @@ messageType LoRaWAN::decodeMessage() {
 
     // 2. Extract & guess the downLinkFrameCount, as we need this to check the MIC
     uint16_t receivedDownlinkFramecount = getReceivedFramecount();
-    uint32_t lastDownlinkFramecount     = downlinkFrameCount.asUint32;
-    uint32_t guessedDownlinkFramecount  = frameCount::guessFromUint16(lastDownlinkFramecount, receivedDownlinkFramecount);
-    frameCount tmpDownLinkFrameCount(guessedDownlinkFramecount);
-    logging::snprintf(logging::source::lorawanMac, "receivedFramecount = %u, lastFramecount = %u, guessedFramecount = %u\n", receivedDownlinkFramecount, lastDownlinkFramecount, guessedDownlinkFramecount);
+    frameCount guessedDownlinkFramecount;
+    guessedDownlinkFramecount = downlinkFrameCount;
+    guessedDownlinkFramecount.guessFromUint16(receivedDownlinkFramecount);
+    logging::snprintf(logging::source::lorawanMac, "receivedFramecount = %u, lastFramecount = %u, guessedFramecount = %u\n", receivedDownlinkFramecount, downlinkFrameCount.toUint32(), guessedDownlinkFramecount.toUint32());
 
     // 3. Check the MIC
-    insertBlockB0(linkDirection::downlink, tmpDownLinkFrameCount, loRaPayloadLength - micLength);
+    insertBlockB0(linkDirection::downlink, guessedDownlinkFramecount);
     if (!isValidMic()) {
         if (logging::isActive(logging::source::error)) {
             logging::snprintf("Error : invalid MIC, loraPayload = ");
@@ -1068,20 +1072,20 @@ messageType LoRaWAN::decodeMessage() {
     }
 
     // 4. Extract the deviceAddress, to check if packet is addressed to this node
-    deviceAddress receivedDeviceAddress(rawMessage + deviceAddressOffset);
-    if (!isValidDevAddr(receivedDeviceAddress)) {
+    deviceAddress receivedDeviceAddress(getReceivedDeviceAddress());
+    if (receivedDeviceAddress != DevAddr) {
         logging::snprintf(logging::source::lorawanMac, "Msg for other device : %08X\n", receivedDeviceAddress.asUint32);        // TODO : also log received deviceAddress
         return messageType::invalid;
     }
 
     // 5. check if the frameCount is valid
-    if (!isValidDownlinkFrameCount(tmpDownLinkFrameCount)) {
-        logging::snprintf(logging::source::error, "Error : invalid downlinkFrameCount : received %u, current %u\n", tmpDownLinkFrameCount.asUint32, downlinkFrameCount.asUint32);
+    if (!isValidDownlinkFrameCount(guessedDownlinkFramecount)) {
+        logging::snprintf(logging::source::error, "Error : invalid downlinkFrameCount : received %u, current %u\n", guessedDownlinkFramecount.toUint32(), downlinkFrameCount.toUint32());
         return messageType::invalid;
     }
 
     // 6. Seems a valid message, so update the downlinkFrameCount to what we've received (not just incrementing it, as there could be gaps in the sequence due to lost packets)
-    downlinkFrameCount.set(tmpDownLinkFrameCount.asUint32);
+    downlinkFrameCount = guessedDownlinkFramecount;
     // nonVolatileStorage::write(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), downlinkFrameCount.asUint32); TODO : reactivate
 
     // 6.5 If we had sticky macOut stuff, we can clear that now, as we did receive a valid downlink
@@ -1127,15 +1131,11 @@ uint32_t LoRaWAN::getReceiveTimeout(spreadingFactor aSpreadingFactor) {
     }
 }
 
-bool LoRaWAN::isValidDevAddr(deviceAddress testAddress) {
-    return (testAddress.asUint32 == DevAddr.asUint32);
-}
-
 bool LoRaWAN::isValidDownlinkFrameCount(frameCount testFrameCount) {
-    if (downlinkFrameCount.asUint32 == 0) {
+    if (downlinkFrameCount.toUint32() == 0) {
         return true;        // no downlink received yet, so any frameCount is valid
     } else {
-        return (testFrameCount.asUint32 > downlinkFrameCount.asUint32);
+        return (testFrameCount.toUint32() > downlinkFrameCount.toUint32()); // TODO : overload > operator
     }
 }
 
@@ -1153,5 +1153,3 @@ uint32_t LoRaWAN::getRandomNumber() {
     return 0;
 #endif
 }
-
-
