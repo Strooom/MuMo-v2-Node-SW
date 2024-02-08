@@ -44,6 +44,7 @@ void test_setKey() {
     stm32wle5_aes::setKey(testKey);
     TEST_IGNORE_MESSAGE("For code tracing only as key-registers cannot be read back...");
 }
+
 void test_setInitVector() {
     aesBlock testData;
     testData.setFromHexString("2b7e151628aed2a6abf7158809cf4f3c");

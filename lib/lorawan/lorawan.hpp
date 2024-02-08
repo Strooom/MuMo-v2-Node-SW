@@ -122,9 +122,7 @@ class LoRaWAN {
     static void insertBlockB0(linkDirection theDirection, frameCount &aFrameCount);        // in downlink, the framecount is the received framecount, not necessarily the downlink framecount so I need to pass it as a parameter
     // static void padForEncryptDecrypt(); // not sure that I need this
     static void padForMicCalculation();
-
-    // static uint32_t calculateMic(uint8_t *payload, uint32_t payloadLength);
-
+    static uint32_t mic();
     static void insertMic();
 
     // #############################################################

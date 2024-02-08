@@ -103,7 +103,6 @@ void aesBlock::wordsToBytes(uint8_t bytesOut[16], uint32_t wordsIn[4]) {
 }
 
 void aesBlock::encrypt(aesKey &key) {
-    char blockAsHex[33];
 #ifndef generic
     stm32wle5_aes::initialize(aesMode::EBC);
     stm32wle5_aes::setKey(key);

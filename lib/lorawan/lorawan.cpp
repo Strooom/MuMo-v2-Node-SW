@@ -192,10 +192,10 @@ void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCount)
     rawMessage[7]  = DevAddr.asUint8[1];                        //
     rawMessage[8]  = DevAddr.asUint8[2];                        //
     rawMessage[9]  = DevAddr.asUint8[3];                        // MSByte
-    rawMessage[10] = aFrameCount[0];                    // LSByte
-    rawMessage[11] = aFrameCount[1];                    //
-    rawMessage[12] = aFrameCount[2];                    //
-    rawMessage[13] = aFrameCount[3];                    // MSByte
+    rawMessage[10] = aFrameCount[0];                            // LSByte
+    rawMessage[11] = aFrameCount[1];                            //
+    rawMessage[12] = aFrameCount[2];                            //
+    rawMessage[13] = aFrameCount[3];                            // MSByte
     rawMessage[14] = 0;                                         //
     rawMessage[15] = micOffset;                                 // number of bytes over which the MIC is applied
 }
@@ -220,23 +220,23 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
     theBlock[3] = 0x00;
     theBlock[4] = 0x00;
     theBlock[5] = static_cast<uint8_t>(theDirection);
-    theBlock[6] = DevAddr.asUint8[0];        // LSByte
-    theBlock[7] = DevAddr.asUint8[1];        //
-    theBlock[8] = DevAddr.asUint8[2];        //
-    theBlock[9] = DevAddr.asUint8[3];        // MSByte
-    if (theDirection == linkDirection::uplink) {
-        theBlock[10] = uplinkFrameCount[0];        // LSByte
-        theBlock[11] = uplinkFrameCount[1];        //
-        theBlock[12] = uplinkFrameCount[2];        //
-        theBlock[13] = uplinkFrameCount[3];        // MSByte
-    } else {
-        theBlock[10] = downlinkFrameCount[0];        // LSByte
-        theBlock[11] = downlinkFrameCount[1];        //
-        theBlock[12] = downlinkFrameCount[2];        //
-        theBlock[13] = downlinkFrameCount[3];        // MSByte
-    }
-    theBlock[14] = 0x00;
-    theBlock[15] = blockIndex;        // Blocks Ai are indexed from 1..k, where k is the number of blocks
+    theBlock[6] = DevAddr.asUint8[0];                   // LSByte
+    theBlock[7] = DevAddr.asUint8[1];                   //
+    theBlock[8] = DevAddr.asUint8[2];                   //
+    theBlock[9] = DevAddr.asUint8[3];                   // MSByte
+    if (theDirection == linkDirection::uplink) {        //
+        theBlock[10] = uplinkFrameCount[0];             // LSByte
+        theBlock[11] = uplinkFrameCount[1];             //
+        theBlock[12] = uplinkFrameCount[2];             //
+        theBlock[13] = uplinkFrameCount[3];             // MSByte
+    } else {                                            //
+        theBlock[10] = downlinkFrameCount[0];           // LSByte
+        theBlock[11] = downlinkFrameCount[1];           //
+        theBlock[12] = downlinkFrameCount[2];           //
+        theBlock[13] = downlinkFrameCount[3];           // MSByte
+    }                                                   //
+    theBlock[14] = 0x00;                                //
+    theBlock[15] = blockIndex;                          // Blocks Ai are indexed from 1..k, where k is the number of blocks
 }
 
 void LoRaWAN::encryptPayload(aesKey& theKey) {
@@ -336,7 +336,9 @@ void LoRaWAN::generateKeysK1K2() {
     }
 }
 
-// LoRaWAN::calculateMic(); // This is what we should have
+uint32_t LoRaWAN::mic() {
+    return mic(rawMessage, micOffset);
+}
 
 uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
     // TODO : remove the payload argument, as it's always in rawMessage[]
@@ -345,7 +347,6 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
     uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSize(payloadLength);
     aesBlock outputBlock;
 
-    char blockAsHex[33];        // For testing
 
 #ifndef generic
     stm32wle5_aes::initialize(aesMode::CBC);
@@ -367,15 +368,11 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
     if (nmbrOfBlocks > 0) {
         // Perform full calculating until n-1 message blocks
         for (blockIndex = 0x0; blockIndex < (nmbrOfBlocks - 1); blockIndex++) {
-            outputBlock.setFromByteArray(payload + (blockIndex * 16));        //  Copy data into block
-            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
+            outputBlock.setFromByteArray(payload + (blockIndex * 16));                       //  Copy data into block
             outputBlock.XOR(Old_Data);
-            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             outputBlock.encrypt(networkKey);
-            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
-            // Copy New_Data to Old_Data
             for (byteIndex = 0; byteIndex < 16; byteIndex++) {
                 Old_Data[byteIndex] = outputAsBytes[byteIndex];
             }
@@ -383,17 +380,12 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
         // Perform calculation on last block
         // Check if Datalength is a multiple of 16
         if (incompleteLastBlockSize == 0) {
-            outputBlock.setFromByteArray(payload + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
-            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
+            outputBlock.setFromByteArray(payload + ((nmbrOfBlocks - 1) * 16));               //  Copy data into block
             outputBlock.XOR(Old_Data);
-            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             outputBlock.XOR(K1.asBytes());
-            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             outputBlock.encrypt(networkKey);
-            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
 
         } else {
-            // Copy the remaining data and fill the rest
             for (byteIndex = 0; byteIndex < 16; byteIndex++) {
                 if (byteIndex < incompleteLastBlockSize) {
                     outputAsBytes[byteIndex] = payload[((nmbrOfBlocks - 1) * 16) + byteIndex];
@@ -406,13 +398,9 @@ uint32_t LoRaWAN::mic(uint8_t* payload, uint32_t payloadLength) {
                 }
             }
             outputBlock.setFromByteArray(outputAsBytes);
-            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             outputBlock.XOR(Old_Data);
-            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             outputBlock.XOR(K2.asBytes());
-            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
             outputBlock.encrypt(networkKey);
-            hexAscii::byteArrayToHexString(blockAsHex, outputBlock.state.asByte, 16);        // TEST
         }
 
     } else {
@@ -1135,7 +1123,7 @@ bool LoRaWAN::isValidDownlinkFrameCount(frameCount testFrameCount) {
     if (downlinkFrameCount.toUint32() == 0) {
         return true;        // no downlink received yet, so any frameCount is valid
     } else {
-        return (testFrameCount.toUint32() > downlinkFrameCount.toUint32()); // TODO : overload > operator
+        return (testFrameCount.toUint32() > downlinkFrameCount.toUint32());        // TODO : overload > operator
     }
 }
 
