@@ -25,10 +25,10 @@ void test_initialize() {
     // TODO : complete for all context
 
     // Populate non-volatile memory with some test data
-    settingsCollection::save(settingsCollection::settingIndex::uplinkFrameCounter, 0x1234);
-    settingsCollection::save(settingsCollection::settingIndex::downlinkFrameCounter, 0x5678);
-    settingsCollection::save(settingsCollection::settingIndex::rx1Delay, 0x05);
-    settingsCollection::save(settingsCollection::settingIndex::DevAddr, 0xABCD);
+    settingsCollection::save(0x1234, settingsCollection::settingIndex::uplinkFrameCounter);
+    settingsCollection::save(0x5678, settingsCollection::settingIndex::downlinkFrameCounter);
+    settingsCollection::save(0x05, settingsCollection::settingIndex::rx1Delay);
+    settingsCollection::save(0xABCD, settingsCollection::settingIndex::DevAddr);
 
     LoRaWAN::initialize();
 
