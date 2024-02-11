@@ -21,13 +21,10 @@ void test_blockOverlap() {
 void test_allBlocksWithinOnePage() {
     for (uint32_t index = 0; index < (static_cast<uint32_t>(settingsCollection::settingIndex::numberOfSettings) - 1); index++) {
         uint32_t startPage = (settingsCollection::settings[index].startAddress) / 128;
-        uint32_t endPage = (settingsCollection::settings[index].startAddress + settingsCollection::settings[index].length - 1) / 128;
-        char text[128];
-        snprintf(text, 128, "index %d", index);
-        TEST_ASSERT_EQUAL_UINT32_MESSAGE(startPage, endPage, text );
+        uint32_t endPage   = (settingsCollection::settings[index].startAddress + settingsCollection::settings[index].length - 1) / 128;
+        TEST_ASSERT_EQUAL_UINT32(startPage, endPage);
     }
 }
-
 
 void test_write_read_setting() {
     uint8_t testByte{123};

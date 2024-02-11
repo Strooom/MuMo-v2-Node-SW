@@ -62,7 +62,7 @@ uint32_t aesBlock::calculateNmbrOfBytesToPad(uint32_t nmbrOfBytes) {
     }
 }
 
-uint32_t aesBlock::swapLittleBigEndian(uint32_t wordIn) {
+uint32_t aesBlock::swapLittleBigEndian( uint32_t wordIn) {
     // ARM Cortex-M4 stores uin32_t in little endian format, but STM32WLE5 AES peripheral expects big endian format. This function swaps the bytes in a word.
     uint32_t wordOut;
     wordOut = (wordIn & 0xFF000000) >> 24 | (wordIn & 0x00FF0000) >> 8 | (wordIn & 0x0000FF00) << 8 | (wordIn & 0x000000FF) << 24;
@@ -70,7 +70,7 @@ uint32_t aesBlock::swapLittleBigEndian(uint32_t wordIn) {
 }
 
 // Maps a 16 byte vector to a 4x4 matrix in the way AES State expects it
-void aesBlock::vectorToMatrix(uint8_t matrixOut[4][4], uint8_t vectorIn[16]) {
+void aesBlock::vectorToMatrix(uint8_t matrixOut[4][4], const uint8_t vectorIn[16]) {
     for (auto row = 0; row < 4; row++) {
         for (auto col = 0; col < 4; col++) {
             matrixOut[row][col] = vectorIn[(col * 4) + row];
@@ -79,7 +79,7 @@ void aesBlock::vectorToMatrix(uint8_t matrixOut[4][4], uint8_t vectorIn[16]) {
 }
 
 // Maps a 4x4 matrix to a 16 byte vector in the way AES State expects it
-void aesBlock::matrixToVector(uint8_t vectorOut[16], uint8_t matrixIn[4][4]) {
+void aesBlock::matrixToVector(uint8_t vectorOut[16], const uint8_t matrixIn[4][4]) {
     for (auto row = 0; row < 4; row++) {
         for (auto col = 0; col < 4; col++) {
             vectorOut[(col * 4) + row] = matrixIn[row][col];
@@ -87,13 +87,13 @@ void aesBlock::matrixToVector(uint8_t vectorOut[16], uint8_t matrixIn[4][4]) {
     }
 }
 
-void aesBlock::bytesToWords(uint32_t wordsOut[4], uint8_t bytesIn[16]) {
+void aesBlock::bytesToWords(uint32_t wordsOut[4], const uint8_t bytesIn[16]) {
     for (auto i = 0; i < 4; i++) {
         wordsOut[i] = bytesIn[i * 4] << 24 | bytesIn[i * 4 + 1] << 16 | bytesIn[i * 4 + 2] << 8 | bytesIn[i * 4 + 3];
     }
 }
 
-void aesBlock::wordsToBytes(uint8_t bytesOut[16], uint32_t wordsIn[4]) {
+void aesBlock::wordsToBytes(uint8_t bytesOut[16], const uint32_t wordsIn[4]) {
     for (auto i = 0; i < 4; i++) {
         bytesOut[i * 4]     = (wordsIn[i] >> 24) & 0xFF;
         bytesOut[i * 4 + 1] = (wordsIn[i] >> 16) & 0xFF;

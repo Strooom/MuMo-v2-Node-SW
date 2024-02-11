@@ -18,8 +18,8 @@ class aesKey {
     void setFromHexString(const char* string);
     static uint32_t swapLittleBigEndian(uint32_t wordIn);
 
-    const uint8_t* asBytes();         // return the key as bytes
-    const uint32_t* asWords();        // return the key as words
+    uint8_t* asBytes();         // return the key as bytes
+    uint32_t* asWords();        // return the key as words
 
 #ifndef unitTesting
 

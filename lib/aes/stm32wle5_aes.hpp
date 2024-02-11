@@ -21,8 +21,8 @@ class stm32wle5_aes {
     static void initialize(aesMode theMode = aesMode::EBC);
     static void enable();
     static void disable();
-    static void setKey(aesKey& theKey);
-    static void setInitializationVector(aesBlock& theBlock);
+    static void setKey( aesKey& theKey);
+    static void setInitializationVector( aesBlock& theBlock);
     static void write(aesBlock& theBlock);
     static void read(aesBlock& theBlock);
     static void write(uint32_t *wordsIn);

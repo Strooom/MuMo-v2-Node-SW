@@ -382,18 +382,17 @@ uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
     stm32wle5_aes::read(tmpBlock);
 #else
     uint8_t outputAsBytes[16];
-    uint32_t byteIndex, blockIndex;
     unsigned char Old_Data[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
     if (nmbrOfBlocks > 0) {
         // Perform full calculating until n-1 message blocks
-        for (blockIndex = 0x0; blockIndex < (nmbrOfBlocks - 1); blockIndex++) {
+        for (uint32_t blockIndex = 0x0; blockIndex < (nmbrOfBlocks - 1); blockIndex++) {
             outputBlock.setFromByteArray(payload + (blockIndex * 16));        //  Copy data into block
             outputBlock.XOR(Old_Data);
             outputBlock.encrypt(networkKey);
             memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
-            for (byteIndex = 0; byteIndex < 16; byteIndex++) {
+            for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
                 Old_Data[byteIndex] = outputAsBytes[byteIndex];
             }
         }
@@ -406,7 +405,7 @@ uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
             outputBlock.encrypt(networkKey);
 
         } else {
-            for (byteIndex = 0; byteIndex < 16; byteIndex++) {
+            for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
                 if (byteIndex < incompleteLastBlockSize) {
                     outputAsBytes[byteIndex] = payload[((nmbrOfBlocks - 1) * 16) + byteIndex];
                 }
@@ -425,7 +424,7 @@ uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
 
     } else {
         outputAsBytes[0] = 0x80;
-        for (byteIndex = 1; byteIndex < 16; byteIndex++) {
+        for (uint32_t byteIndex = 1; byteIndex < 16; byteIndex++) {
             outputAsBytes[byteIndex] = 0x00;
         }
 

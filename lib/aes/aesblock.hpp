@@ -32,10 +32,10 @@ class aesBlock {
     uint8_t *asBytes();
     uint32_t *asWords();
 
-    static void matrixToVector(uint8_t vectorOut[16], uint8_t matrixIn[4][4]);
-    static void vectorToMatrix(uint8_t matrixOut[4][4], uint8_t vectorIn[16]);
-    static void bytesToWords(uint32_t wordsOut[4], uint8_t bytesIn[16]);
-    static void wordsToBytes(uint8_t bytesOut[16], uint32_t wordsIn[4]);
+    static void matrixToVector(uint8_t vectorOut[16], const uint8_t matrixIn[4][4]);
+    static void vectorToMatrix(uint8_t matrixOut[4][4], const uint8_t vectorIn[16]);
+    static void bytesToWords(uint32_t wordsOut[4], const uint8_t bytesIn[16]);
+    static void wordsToBytes(uint8_t bytesOut[16], const uint32_t wordsIn[4]);
 
     static uint32_t swapLittleBigEndian(uint32_t wordIn);
     void XOR(const uint8_t *withData);

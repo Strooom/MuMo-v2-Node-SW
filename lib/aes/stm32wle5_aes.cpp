@@ -40,7 +40,7 @@ void stm32wle5_aes::setKey(aesKey& theKey) {
 #endif
 }
 
-void stm32wle5_aes::setInitializationVector(aesBlock& theBlock) {
+void stm32wle5_aes::setInitializationVector( aesBlock& theBlock) {
 #ifndef generic
     AES->IVR0 = aesBlock::swapLittleBigEndian(theBlock.asWords()[3]);
     AES->IVR1 = aesBlock::swapLittleBigEndian(theBlock.asWords()[2]);
