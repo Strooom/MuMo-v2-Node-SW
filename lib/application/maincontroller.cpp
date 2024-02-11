@@ -114,7 +114,7 @@ void mainController::handleEvents() {
 
             case applicationEvent::downlinkApplicationPayloadReceived: {
                 // byteBuffer receivedData;
-                // LoRaWAN::getDownlinkMessage(receivedData);
+                // LoRaWAN::getReceivedDownlinkMessage(receivedData);
             } break;
 
             case applicationEvent::realTimeClockTick: {
@@ -166,7 +166,7 @@ void mainController::run() {
 
         case mainState::networking:
             LoRaWAN::run();
-            if (LoRaWAN::isReady()) {
+            if (LoRaWAN::isIdle()) {
                 if (display::isPresent()) {
                     goTo(mainState::displaying);
                     screen::show();

@@ -30,7 +30,7 @@ uint32_t loRaChannelCollection::currentChannelIndex{0};
 
 void loRaChannelCollection::selectNextActiveChannelIndex() {
     currentChannelIndex = (currentChannelIndex + 1) % maxNmbrChannels;
-    while (txRxChannels[currentChannelIndex].frequency == 0) {
+    while (txRxChannels[currentChannelIndex].frequencyInHz == 0) {
         currentChannelIndex = (currentChannelIndex + 1) % maxNmbrChannels;
     }
 }

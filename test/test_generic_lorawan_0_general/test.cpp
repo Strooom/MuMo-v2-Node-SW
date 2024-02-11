@@ -20,7 +20,7 @@ void test_initialize() {
     // Before reading from NVS
     TEST_ASSERT_EQUAL(0, LoRaWAN::uplinkFrameCount.asUint32);
     TEST_ASSERT_EQUAL(0, LoRaWAN::downlinkFrameCount.asUint32);
-    TEST_ASSERT_EQUAL(1, LoRaWAN::rx1Delay);
+    TEST_ASSERT_EQUAL(1, LoRaWAN::rx1DelayInSeconds);
     TEST_ASSERT_EQUAL(0, LoRaWAN::DevAddr.asUint32);
     // TODO : complete for all context
 
@@ -35,7 +35,7 @@ void test_initialize() {
     // Check if all context is properly restored
     TEST_ASSERT_EQUAL(0x1234, LoRaWAN::uplinkFrameCount.asUint32);
     TEST_ASSERT_EQUAL(0x5678, LoRaWAN::downlinkFrameCount.asUint32);
-    TEST_ASSERT_EQUAL(0x5, LoRaWAN::rx1Delay);
+    TEST_ASSERT_EQUAL(0x5, LoRaWAN::rx1DelayInSeconds);
     TEST_ASSERT_EQUAL(0xABCD, LoRaWAN::DevAddr.asUint32);
     // TODO : complete for all context
 
@@ -56,6 +56,10 @@ void test_isValidDownlinkFrameCount() {
     TEST_ASSERT_FALSE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
 }
 
+void test_dump() {
+    LoRaWAN::dump();
+    TEST_MESSAGE("For Coverage only");
+}
 
 int main(int argc, char **argv) {
 #ifndef generic
@@ -65,6 +69,7 @@ int main(int argc, char **argv) {
 
     RUN_TEST(test_initialize);
     RUN_TEST(test_isValidDownlinkFrameCount);
+    RUN_TEST(test_dump);
 
     UNITY_END();
 }

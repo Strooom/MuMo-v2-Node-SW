@@ -5,14 +5,14 @@ void setUp(void) {}           // before test
 void tearDown(void) {}        // after test
 
 void test_initalize() {
-    TEST_ASSERT_EQUAL_UINT32(868'100'000U, loRaChannelCollection::txRxChannels[0].frequency);
-    TEST_ASSERT_EQUAL_UINT32(868'300'000U, loRaChannelCollection::txRxChannels[1].frequency);
-    TEST_ASSERT_EQUAL_UINT32(868'500'000U, loRaChannelCollection::txRxChannels[2].frequency);
+    TEST_ASSERT_EQUAL_UINT32(868'100'000U, loRaChannelCollection::txRxChannels[0].frequencyInHz);
+    TEST_ASSERT_EQUAL_UINT32(868'300'000U, loRaChannelCollection::txRxChannels[1].frequencyInHz);
+    TEST_ASSERT_EQUAL_UINT32(868'500'000U, loRaChannelCollection::txRxChannels[2].frequencyInHz);
 
     for (auto index = 3U; index < static_cast<uint32_t>(loRaChannelCollection::maxNmbrChannels); index++) {
-        TEST_ASSERT_EQUAL_UINT32(0U, loRaChannelCollection::txRxChannels[index].frequency);
+        TEST_ASSERT_EQUAL_UINT32(0U, loRaChannelCollection::txRxChannels[index].frequencyInHz);
     }
-    TEST_ASSERT_EQUAL_UINT32(869'525'000U, loRaChannelCollection::rx2Channel.frequency);
+    TEST_ASSERT_EQUAL_UINT32(869'525'000U, loRaChannelCollection::rx2Channel.frequencyInHz);
 
     TEST_ASSERT_EQUAL_UINT32(0U, loRaChannelCollection::getCurrentChannelIndex());
 }

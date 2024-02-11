@@ -8,7 +8,7 @@ void tearDown(void) {}        // after test
 
 void test_isValidBlockIndex() {
     TEST_ASSERT_TRUE(settingsCollection::isValidIndex(settingsCollection::settingIndex::nvsMapVersion));
-    TEST_ASSERT_TRUE(settingsCollection::isValidIndex(settingsCollection::settingIndex::unusedLoRaWAN));
+    TEST_ASSERT_TRUE(settingsCollection::isValidIndex(settingsCollection::settingIndex::unusedLoRaWAN2));
     TEST_ASSERT_FALSE(settingsCollection::isValidIndex(settingsCollection::settingIndex::numberOfSettings));
 }
 

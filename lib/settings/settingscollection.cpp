@@ -2,12 +2,12 @@
 #include "nvs.hpp"
 
 const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::numberOfSettings)] = {
-    // Important note : make sure that none of the settings are mapped into two pages of 128 Bytes, as the page-write of the EEPROM is limited to 128 Byte pages and the address will wrap around to the beginning of the page if addressing more than 128 Bytes
+    // Important note : make sure that none of the settings are mapped into two pages of 128 Bytes, as the page-write of the EEPROM is limited to 128 Byte pages and the address will wrap around to the beginning of the page if addressing more than 128 Bytes. A unit test will check this
     {0, 1},          // nvsMapVersion : 1 byte
     {1, 1},          // displayVersion : 1 byte
     {2, 1},          // batteryVersion : 1 byte
     {3, 4},          // activelogging::sources : 4 bytes
-    {7, 121},        // unusedGeneral : extra settings can be inserted hereafter 
+    {7, 121},        // unusedGeneral : extra settings can be inserted hereafter
 
     {128, 4},        // measurementWriteIndex : 32 bits
     {132, 4},        // oldestUnsentMeasurementIndex : 32 bits
@@ -15,14 +15,17 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     // TODO add a setting to enable resending unconfirmed measurements
     {140, 116},        // unusedMeasurementDataManagement : extra settings can be inserted hereafter for a maximum of 116 bytes
 
-    {256, 8},          // DevEUI : 64 bits
-    {264, 4},          // DevAddr : 32 bits
-    {268, 4},          // uplinkFrameCounter : 32 bits
-    {272, 4},          // downlinkFrameCounter : 32 bits
-    {276, 16},         // applicationSessionKey : 128 bits
-    {292, 16},         // networkSessionKey : 128 bits
-    {308, 1},          // rx1Delay : 1 byte
-    {309, 203},        // unusedLoRaWAN : extra settings can be inserted hereafter
+    {256, 8},         // DevEUI : 64 bits
+    {264, 4},         // DevAddr : 32 bits
+    {268, 4},         // uplinkFrameCounter : 32 bits
+    {272, 4},         // downlinkFrameCounter : 32 bits
+    {276, 16},        // applicationSessionKey : 128 bits
+    {292, 16},        // networkSessionKey : 128 bits
+    {308, 1},         // rx1Delay : 1 byte
+    {309, 1},         // dataRate : 1 byte
+    {310, 74},        // unusedLoRaWAN : extra settings can be inserted herea
+    {384, 17 * 6},        // 16 Tx channels, 1 Rx channel, 6 bytes / channel [frequency, minDR, maxDR]
+    {486, 26},        // unusedLoRaWAN : extra settings can be inserted hereafter
 };
 
 bool settingsCollection::isInitialized() {
@@ -57,6 +60,21 @@ void settingsCollection::save(settingIndex theIndex, const uint8_t* dataIn) {
     }
 }
 void settingsCollection::read(settingIndex theIndex, uint8_t* dataOut) {
+    if (settingsCollection::isValidIndex(theIndex)) {
+        uint32_t startAddress = settingsCollection::settings[static_cast<uint32_t>(theIndex)].startAddress;
+        uint32_t length       = settingsCollection::settings[static_cast<uint32_t>(theIndex)].length;
+        nonVolatileStorage::read(startAddress, dataOut, length);
+    }
+}
+
+void settingsCollection::save2(const uint8_t* dataIn, settingIndex theIndex) {
+    if (settingsCollection::isValidIndex(theIndex)) {
+        uint32_t startAddress = settingsCollection::settings[static_cast<uint32_t>(theIndex)].startAddress;
+        uint32_t length       = settingsCollection::settings[static_cast<uint32_t>(theIndex)].length;
+        nonVolatileStorage::write(startAddress, dataIn, length);
+    }
+}
+void settingsCollection::read2(uint8_t* dataOut, settingIndex theIndex) {
     if (settingsCollection::isValidIndex(theIndex)) {
         uint32_t startAddress = settingsCollection::settings[static_cast<uint32_t>(theIndex)].startAddress;
         uint32_t length       = settingsCollection::settings[static_cast<uint32_t>(theIndex)].length;

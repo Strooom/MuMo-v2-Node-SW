@@ -25,7 +25,10 @@ class settingsCollection {
         applicationSessionKey,
         networkSessionKey,
         rx1Delay,
-        unusedLoRaWAN,
+        dataRate,
+        unusedLoRaWAN1,
+        channels,
+        unusedLoRaWAN2,
 
         numberOfSettings
     };
@@ -34,9 +37,13 @@ class settingsCollection {
     template <typename dataType>
     static void save(settingIndex theIndex, const dataType& data);
     template <typename dataType>
+    static void save2(const dataType& data, settingIndex theIndex);
+    template <typename dataType>
     static dataType read(settingIndex theIndex);
     static void save(settingIndex theIndex, const uint8_t* dataIn);
     static void read(settingIndex theIndex, uint8_t* dataOut);
+    static void save2(const uint8_t* dataIn, settingIndex theIndex);
+    static void read2(uint8_t* dataOut, settingIndex theIndex);
 
 #ifndef unitTesting
 
@@ -48,6 +55,16 @@ class settingsCollection {
 
 template <typename dataType>
 void settingsCollection::save(settingIndex theIndex, const dataType& sourceData) {
+    if (settingsCollection::isValidIndex(theIndex)) {
+        const uint8_t* bytePtr = reinterpret_cast<const uint8_t*>(&sourceData);
+        uint32_t startAddress  = settingsCollection::settings[static_cast<uint32_t>(theIndex)].startAddress;
+        uint32_t length        = settingsCollection::settings[static_cast<uint32_t>(theIndex)].length;
+        nonVolatileStorage::write(startAddress, bytePtr, length);
+    }
+}
+
+template <typename dataType>
+void settingsCollection::save2(const dataType& sourceData, settingIndex theIndex) {
     if (settingsCollection::isValidIndex(theIndex)) {
         const uint8_t* bytePtr = reinterpret_cast<const uint8_t*>(&sourceData);
         uint32_t startAddress  = settingsCollection::settings[static_cast<uint32_t>(theIndex)].startAddress;

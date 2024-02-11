@@ -167,13 +167,13 @@ void test_insertHeaders() {
     uint32_t testPayloadLength{0};
     uint32_t testFrameOptionsLength{0};
     uint32_t testFramePort{8};
-    uint8_t testFrameOptions[15] {0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E};
+    uint8_t testFrameOptions[15]{0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E};
 
     // We should in all these tests consider at least 4 scenarios :
     // 1. some payload, no frameoptions
 
-    testPayloadLength = 24;
-    testFrameOptionsLength  = 0;
+    testPayloadLength      = 24;
+    testFrameOptionsLength = 0;
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testPayloadLength, testFrameOptionsLength);
     LoRaWAN::insertHeaders(testFrameOptions, testFrameOptionsLength, testPayloadLength, testFramePort);
@@ -185,8 +185,8 @@ void test_insertHeaders() {
 
     // 2. some ayload + some frameoptions
 
-    testPayloadLength = 24;
-    testFrameOptionsLength  = 8;
+    testPayloadLength      = 24;
+    testFrameOptionsLength = 8;
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testPayloadLength, testFrameOptionsLength);
     LoRaWAN::insertHeaders(testFrameOptions, testFrameOptionsLength, testPayloadLength, testFramePort);
@@ -196,11 +196,10 @@ void test_insertHeaders() {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::b0BlockLength);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage + LoRaWAN::framePayloadOffset, (LoRaWAN::rawMessageLength - (LoRaWAN::b0BlockLength + LoRaWAN::macHeaderLength + LoRaWAN::frameHeaderLength + LoRaWAN::framePortLength)));
 
-
     // 3. no payload, some frameoptions
 
-    testPayloadLength = 0;
-    testFrameOptionsLength  = 8;
+    testPayloadLength      = 0;
+    testFrameOptionsLength = 8;
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testPayloadLength, testFrameOptionsLength);
     LoRaWAN::insertHeaders(testFrameOptions, testFrameOptionsLength, testPayloadLength, testFramePort);
@@ -211,8 +210,8 @@ void test_insertHeaders() {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage + LoRaWAN::framePayloadOffset, (LoRaWAN::rawMessageLength - (LoRaWAN::b0BlockLength + LoRaWAN::macHeaderLength + LoRaWAN::frameHeaderLength + LoRaWAN::framePortLength)));
 
     // 4. no payload, no frameoptions
-    testPayloadLength = 0;
-    testFrameOptionsLength  = 0;
+    testPayloadLength      = 0;
+    testFrameOptionsLength = 0;
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testPayloadLength, testFrameOptionsLength);
     LoRaWAN::insertHeaders(testFrameOptions, testFrameOptionsLength, testPayloadLength, testFramePort);
@@ -272,6 +271,39 @@ void test_padForMicCalculation() {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allOnes, LoRaWAN::rawMessage + LoRaWAN::micOffset + LoRaWAN::nmbrOfBytesToPad, 16 - LoRaWAN::nmbrOfBytesToPad);
 }
 
+void test_insertMic() {
+    uint32_t testFramePayloadLength{0};
+    uint32_t testFrameOptionsLength{0};
+    LoRaWAN::setOffsetsAndLengthsTx(testFramePayloadLength, testFrameOptionsLength);
+    LoRaWAN::clearRawMessage();
+    LoRaWAN::insertMic(0x12345678);
+    TEST_ASSERT_EQUAL_UINT8(0x78, LoRaWAN::rawMessage[24]);
+    TEST_ASSERT_EQUAL_UINT8(0x56, LoRaWAN::rawMessage[25]);
+    TEST_ASSERT_EQUAL_UINT8(0x34, LoRaWAN::rawMessage[26]);
+    TEST_ASSERT_EQUAL_UINT8(0x12, LoRaWAN::rawMessage[27]);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, 24);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage + 28, LoRaWAN::rawMessageLength - 28);
+}
+
+void test_receivedMic() {
+    static constexpr uint32_t testLoRaPayloadLength{16};
+    uint8_t testLoRaPayload[testLoRaPayloadLength]{0x60, 0x78, 0x56, 0x34, 0x12, 0x00, 0xCC, 0xDD, 0x01, 0x00, 0x01, 0x02, 0x13, 0xF1, 0x4E, 0x5E};
+    LoRaWAN::clearRawMessage();
+    memcpy(LoRaWAN::rawMessage + LoRaWAN::loRaPayloadOffset, testLoRaPayload, testLoRaPayloadLength);
+    LoRaWAN::setOffsetsAndLengthsRx(testLoRaPayloadLength);
+    TEST_ASSERT_EQUAL_UINT32(0x5E4EF113, LoRaWAN::getReceivedMic());
+}
+
+void test_receivedDeviceAddress() {
+    static constexpr uint32_t testLoRaPayloadLength{16};
+    uint8_t testLoRaPayload[testLoRaPayloadLength]{0x60, 0x78, 0x56, 0x34, 0x12, 0x00, 0xCC, 0xDD, 0x01, 0x00, 0x01, 0x02, 0x13, 0xF1, 0x4E, 0x5E};
+    LoRaWAN::clearRawMessage();
+    memcpy(LoRaWAN::rawMessage + LoRaWAN::loRaPayloadOffset, testLoRaPayload, testLoRaPayloadLength);
+    LoRaWAN::setOffsetsAndLengthsRx(testLoRaPayloadLength);
+    TEST_ASSERT_EQUAL_UINT32(0x12345678, LoRaWAN::getReceivedDeviceAddress());
+}
+
+
 int main(int argc, char **argv) {
 #ifndef generic
 // Here we could setup the STM32 for target unit testing
@@ -286,6 +318,9 @@ int main(int argc, char **argv) {
     RUN_TEST(test_insertHeaders);
     RUN_TEST(test_insertPayload);
     RUN_TEST(test_padForMicCalculation);
+    RUN_TEST(test_insertMic);
+    RUN_TEST(test_receivedMic);
+    RUN_TEST(test_receivedDeviceAddress);
 
     UNITY_END();
 }

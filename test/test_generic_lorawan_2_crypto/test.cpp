@@ -180,7 +180,7 @@ void test_calculateMic() {
     LoRaWAN::networkKey.setFromHexString("2b7e151628aed2a6abf7158809cf4f3c");
     LoRaWAN::generateKeysK1K2();
     LoRaWAN::micOffset = 0;
-    TEST_ASSERT_EQUAL(0xbb1d6929, LoRaWAN::mic());
+    TEST_ASSERT_EQUAL(0xbb1d6929, LoRaWAN::calculateMic());
 
     static constexpr uint32_t clearText1Length{16};
     uint8_t clearText1[clearText1Length];
@@ -188,7 +188,7 @@ void test_calculateMic() {
     LoRaWAN::clearRawMessage();
     memcpy(LoRaWAN::rawMessage, clearText1, clearText1Length);
     LoRaWAN::micOffset = clearText1Length;
-    TEST_ASSERT_EQUAL(0x070A16B4, LoRaWAN::mic());
+    TEST_ASSERT_EQUAL(0x070A16B4, LoRaWAN::calculateMic());
 
     static constexpr uint32_t clearText2Length{40};
     uint8_t clearText2[clearText2Length];
@@ -196,7 +196,7 @@ void test_calculateMic() {
     LoRaWAN::clearRawMessage();
     memcpy(LoRaWAN::rawMessage, clearText2, clearText2Length);
     LoRaWAN::micOffset = clearText2Length;
-    TEST_ASSERT_EQUAL(0xDFA66747, LoRaWAN::mic());
+    TEST_ASSERT_EQUAL(0xDFA66747, LoRaWAN::calculateMic());
 
     static constexpr uint32_t clearText3Length{64};
     uint8_t clearText3[clearText3Length];
@@ -204,7 +204,7 @@ void test_calculateMic() {
     LoRaWAN::clearRawMessage();
     memcpy(LoRaWAN::rawMessage, clearText3, clearText3Length);
     LoRaWAN::micOffset = clearText3Length;
-    TEST_ASSERT_EQUAL(0x51f0bebf, LoRaWAN::mic());
+    TEST_ASSERT_EQUAL(0x51f0bebf, LoRaWAN::calculateMic());
 }
 
 void test_calculateMicTx() {
@@ -224,7 +224,7 @@ void test_calculateMicTx() {
     LoRaWAN::insertBlockB0(linkDirection::uplink, LoRaWAN::uplinkFrameCount);
     LoRaWAN::insertPayload(testFramePayload1, testFramePayload1Length);
     LoRaWAN::padForMicCalculation();
-    TEST_ASSERT_EQUAL_UINT32(0x13f14e5e, LoRaWAN::mic());
+    TEST_ASSERT_EQUAL_UINT32(0x13f14e5e, LoRaWAN::calculateMic());
 
     // B0 = 49000000000078563412ccddeeff0020
     // B0 encrypted = 21d081424901ece9d6db3d3c2e3a2a51
@@ -246,7 +246,7 @@ void test_calculateMicTx() {
     LoRaWAN::insertBlockB0(linkDirection::uplink, LoRaWAN::uplinkFrameCount);
     LoRaWAN::insertPayload(testFramePayload2, testFramePayload2Length);
     LoRaWAN::padForMicCalculation();
-    TEST_ASSERT_EQUAL_UINT32(0x390449df, LoRaWAN::mic());
+    TEST_ASSERT_EQUAL_UINT32(0x390449df, LoRaWAN::calculateMic());
 
     // B0 = 49000000000078563412ccddeeff001C
     // B0 encrypted = 197a1d1f5f39fe5d71b81d338a837aea
@@ -274,7 +274,7 @@ void test_calculateMicRx() {
     memcpy(LoRaWAN::rawMessage + LoRaWAN::macHeaderOffset, testLoRaPayload1, testLoRaPayload1Length);
     LoRaWAN::insertBlockB0(linkDirection::downlink, LoRaWAN::downlinkFrameCount);
     LoRaWAN::padForMicCalculation();
-    TEST_ASSERT_EQUAL_UINT32(0x62b3e738, LoRaWAN::mic());
+    TEST_ASSERT_EQUAL_UINT32(0x62b3e738, LoRaWAN::calculateMic());
 
     // B0 = 49000000000178563412CCDDEEFF0020
     // B0 encrypted = 7ecfdf416401b063796d61b32a7e9b6c
@@ -297,7 +297,7 @@ void test_calculateMicRx() {
     memcpy(LoRaWAN::rawMessage + LoRaWAN::macHeaderOffset, testLoRaPayload2, testLoRaPayload2Length);
     LoRaWAN::insertBlockB0(linkDirection::downlink, LoRaWAN::downlinkFrameCount);
     LoRaWAN::padForMicCalculation();
-    TEST_ASSERT_EQUAL_UINT32(0x4fbbd7f7, LoRaWAN::mic());
+    TEST_ASSERT_EQUAL_UINT32(0x4fbbd7f7, LoRaWAN::calculateMic());
 
     // B0 = 49000000000178563412CCDDEEFF001C
     // B0 encrypted = ceba936414cc4abfe4bea4adb775a00c
