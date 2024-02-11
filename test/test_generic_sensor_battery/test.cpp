@@ -12,7 +12,7 @@ void test_initilization() {
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::state);
 
     batteryType testType = batteryType::saft;
-    settingsCollection::save<batteryType>(settingsCollection::settingIndex::batteryVersion, testType);
+    settingsCollection::save<batteryType>(testType, settingsCollection::settingIndex::batteryVersion);
     battery::initalize();
     TEST_ASSERT_EQUAL(batteryType::saft, battery::type);
 }
