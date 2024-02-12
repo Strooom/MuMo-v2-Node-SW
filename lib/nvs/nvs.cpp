@@ -11,7 +11,7 @@
 extern I2C_HandleTypeDef hi2c2;
 #else
 #include <cstring>        // required for memcpy
-static uint8_t memory[nonVolatileStorage::size];        // array emulating the EEPROM for unitTesting
+uint8_t mockEepromMemory[nonVolatileStorage::size];        // array emulating the EEPROM for unitTesting
 #endif
 
 void nonVolatileStorage::erase() {
@@ -48,7 +48,7 @@ void nonVolatileStorage::read(const uint32_t startAddress, uint8_t* data, const 
 #ifndef generic
     HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_16BIT, data, dataLength, halTimeout);        //
 #else
-    memcpy(data, memory + startAddress, dataLength);
+    memcpy(data, mockEepromMemory + startAddress, dataLength);
 #endif
 }
 
@@ -59,6 +59,6 @@ void nonVolatileStorage::write(const uint32_t startAddress, const uint8_t* data,
     HAL_Delay(writeCycleTime);                                                                                                                  // the EEPROM needs 3.5 ms to internally write the data, if WriteProtect goes HIGH too early, the data is not written
     HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_SET);                                                                                   // disable write
 #else
-    memcpy(memory + startAddress, data, dataLength);
+    memcpy(mockEepromMemory + startAddress, data, dataLength);
 #endif
 }

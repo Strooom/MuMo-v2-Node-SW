@@ -73,9 +73,9 @@ void LoRaWAN::initialize() {
 void LoRaWAN::restoreContext() {
     DevAddr = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::DevAddr);
     uint8_t tmpKeyArray[aesKey::lengthInBytes];
-    settingsCollection::read(tmpKeyArray, settingsCollection::settingIndex::applicationSessionKey);
+    settingsCollection::readByteArray(tmpKeyArray, settingsCollection::settingIndex::applicationSessionKey);
     applicationKey.setFromByteArray(tmpKeyArray);
-    settingsCollection::read(tmpKeyArray, settingsCollection::settingIndex::networkSessionKey);
+    settingsCollection::readByteArray(tmpKeyArray, settingsCollection::settingIndex::networkSessionKey);
     networkKey.setFromByteArray(tmpKeyArray);
     uplinkFrameCount     = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::uplinkFrameCounter);
     downlinkFrameCount   = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::downlinkFrameCounter);
@@ -83,7 +83,7 @@ void LoRaWAN::restoreContext() {
     currentDataRateIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::dataRate);
 
     uint8_t tmpChannelData[102];
-    settingsCollection::read(tmpChannelData, settingsCollection::settingIndex::channels);
+    settingsCollection::readByteArray(tmpChannelData, settingsCollection::settingIndex::channels);
     for (uint32_t channelIndex = 0; channelIndex < loRaChannelCollection::maxNmbrChannels; channelIndex++) {
         theChannels.txRxChannels[channelIndex].frequencyInHz        = (tmpChannelData[(channelIndex * 6) + 0] + (tmpChannelData[(channelIndex * 6) + 1] << 8) + (tmpChannelData[(channelIndex * 6) + 2] << 16)); // TODO : these address calculations are not correct
         theChannels.txRxChannels[channelIndex].maximumDataRateIndex = tmpChannelData[(channelIndex * 6) + 3];
@@ -94,12 +94,12 @@ void LoRaWAN::restoreContext() {
 
 void LoRaWAN::saveContext() {
     settingsCollection::save(DevAddr.asUint32, settingsCollection::settingIndex::DevAddr);
-    settingsCollection::save(applicationKey.asBytes(), settingsCollection::settingIndex::applicationSessionKey);
-    settingsCollection::save(networkKey.asBytes(), settingsCollection::settingIndex::networkSessionKey );
     settingsCollection::save(uplinkFrameCount.toUint32(), settingsCollection::settingIndex::uplinkFrameCounter);
     settingsCollection::save(downlinkFrameCount.toUint32(), settingsCollection::settingIndex::downlinkFrameCounter);
     settingsCollection::save(static_cast<uint8_t>(rx1DelayInSeconds), settingsCollection::settingIndex::rx1Delay);
     settingsCollection::save(static_cast<uint8_t>(currentDataRateIndex), settingsCollection::settingIndex::dataRate );
+    settingsCollection::saveByteArray(applicationKey.asBytes(), settingsCollection::settingIndex::applicationSessionKey);
+    settingsCollection::saveByteArray(networkKey.asBytes(), settingsCollection::settingIndex::networkSessionKey );
 
 
     // TODO : save channel data to NVS

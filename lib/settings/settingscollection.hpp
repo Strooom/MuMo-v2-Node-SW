@@ -38,15 +38,15 @@ class settingsCollection {
     static void save(const dataType& data, settingIndex theIndex);
     template <typename dataType>
     static dataType read(settingIndex theIndex);
-    static void save(const uint8_t* dataIn, settingIndex theIndex);
-    static void read(uint8_t* dataOut, settingIndex theIndex);
+    static void saveByteArray(const uint8_t* dataIn, settingIndex theIndex);
+    static void readByteArray(uint8_t* dataOut, settingIndex theIndex);
 
 #ifndef unitTesting
 
   private:
 #endif
     static bool isValidIndex(settingIndex aSettingIndex) { return (static_cast<uint32_t>(aSettingIndex) < static_cast<uint32_t>(settingsCollection::settingIndex::numberOfSettings)); }
-    static const setting settings[static_cast<uint32_t>(settingIndex::numberOfSettings)];        // static member is initialized in settingscollection.cpp
+    static const setting settings[static_cast<uint32_t>(settingIndex::numberOfSettings)];
 };
 
 template <typename dataType>

@@ -53,14 +53,14 @@ void settingsCollection::initializeOnce() {
 }
 
 
-void settingsCollection::save(const uint8_t* dataIn, settingIndex theIndex) {
+void settingsCollection::saveByteArray(const uint8_t* dataIn, settingIndex theIndex) {
     if (settingsCollection::isValidIndex(theIndex)) {
         uint32_t startAddress = settingsCollection::settings[static_cast<uint32_t>(theIndex)].startAddress;
         uint32_t length       = settingsCollection::settings[static_cast<uint32_t>(theIndex)].length;
         nonVolatileStorage::write(startAddress, dataIn, length);
     }
 }
-void settingsCollection::read(uint8_t* dataOut, settingIndex theIndex) {
+void settingsCollection::readByteArray(uint8_t* dataOut, settingIndex theIndex) {
     if (settingsCollection::isValidIndex(theIndex)) {
         uint32_t startAddress = settingsCollection::settings[static_cast<uint32_t>(theIndex)].startAddress;
         uint32_t length       = settingsCollection::settings[static_cast<uint32_t>(theIndex)].length;

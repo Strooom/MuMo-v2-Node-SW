@@ -42,9 +42,9 @@ void test_write_read_setting() {
     TEST_ASSERT_EQUAL_UINT32(testDoubleWord, settingsCollection::read<uint32_t>(settingsCollection::settingIndex::uplinkFrameCounter));
 
     uint8_t testArrayIn[16]{0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
-    settingsCollection::save(testArrayIn, settingsCollection::settingIndex::networkSessionKey);
+    settingsCollection::saveByteArray(testArrayIn, settingsCollection::settingIndex::networkSessionKey);
     uint8_t testArrayOut[16]{};
-    settingsCollection::read(testArrayOut, settingsCollection::settingIndex::networkSessionKey);
+    settingsCollection::readByteArray(testArrayOut, settingsCollection::settingIndex::networkSessionKey);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(testArrayIn, testArrayOut, 16);
 }
 
@@ -63,7 +63,7 @@ void test_initialize_once() {
 
     uint8_t testArrayExpected[16]{};
     uint8_t testArrayOut[16]{};
-    settingsCollection::read(testArrayOut, settingsCollection::settingIndex::networkSessionKey);
+    settingsCollection::readByteArray(testArrayOut, settingsCollection::settingIndex::networkSessionKey);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(testArrayExpected, testArrayOut, 16);
 }
 
