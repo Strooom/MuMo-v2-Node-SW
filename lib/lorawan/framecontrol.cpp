@@ -25,7 +25,8 @@ frameControl::frameControl(linkDirection newLinkDirection) {
 }
 
 uint8_t frameControl::asByte() const {
-    uint8_t result{ADR << 7U};
+    uint8_t result{0};
+    result = result | (ADR << 7U);
     result = result | (ADRACKReq << 6U);
     result = result | (ACK << 5U);
     result = result | (ClassB << 4U);

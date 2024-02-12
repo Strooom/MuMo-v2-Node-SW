@@ -106,16 +106,16 @@ class LoRaWAN {
     static void processReceiveTimingSetupRequest(uint32_t rx1Delay);
     static void removeNonStickyMacStuff();
 
-    static void processReceivelinkCheckAnswer();
-    static void processReceiveLinkAdaptiveDataRateRequest();
-    static void processReceiveDutyCycleRequest();
-    static void processReceiveDeviceStatusRequest();
-    static void processReceiveNewChannelRequest(); 
+    static void processLinkCheckAnswer();
+    static void processLinkAdaptiveDataRateRequest();
+    static void processDutyCycleRequest();
+    static void processDeviceStatusRequest();
+    static void processNewChannelRequest(); 
     static void processReceiveParameterSetupRequest();
     static void processReceiveTimingSetupRequest();
-    static void processReceiveTransmitParameterSetupRequest();
-    static void processReceiveDownlinkChannelRequest();
-    static void processReceiveDeviceTimeRequest();
+    static void processTransmitParameterSetupRequest();
+    static void processDownlinkChannelRequest();
+    static void processDeviceTimeAnswer();
     static void dumpMacIn();
     static void dumpMacOut();
 
@@ -143,6 +143,7 @@ class LoRaWAN {
     static uint32_t calculateMic();
     static void insertMic();
     static void insertMic(uint32_t aMic);
+    static uint32_t extractReceivedMic();
 
     // #############################################################
     // ### Helper functions for decoding a downlink message - Rx ###
@@ -152,12 +153,11 @@ class LoRaWAN {
     static uint16_t getReceivedFramecount();
     static uint32_t getReceivedDeviceAddress();
     static uint32_t getReceivedMic();
-    static bool isValidMic();
     static bool isValidDownlinkFrameCount(frameCount testFrameCount);
     static messageType decodeMessage();
 
     static uint32_t getRandomNumber();
-    static void startTimer(uint32_t timeOut);        // timeOut in [ticks] from the 2048 Hz clock driving LPTIM1
+    static void startTimer(uint32_t timeOutIn2048HzTicks);
     static void stopTimer();
 
     static void prepareBlockAi(aesBlock &theBlock, linkDirection theDirection, uint32_t blockIndex);

@@ -8,3 +8,5 @@
     * set config commands
 4. store measurements into eeprom
 5. get LoRaWAN working
+
+ 
