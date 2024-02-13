@@ -54,6 +54,7 @@ void test_toString() {
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
+    RUN_TEST(test_handleEvents);
     RUN_TEST(test_toString);
     UNITY_END();
 }
