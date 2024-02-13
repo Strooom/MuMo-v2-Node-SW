@@ -20,6 +20,22 @@ uint8_t allZeroes[LoRaWAN::rawMessageLength];
 void setUp(void) {}           // before test
 void tearDown(void) {}        // after test
 
+void test_messageTypeToString() {
+    TEST_ASSERT_EQUAL_STRING("application", toString(messageType ::application));
+    TEST_ASSERT_EQUAL_STRING("lorawanMac", toString(messageType ::lorawanMac));
+    TEST_ASSERT_EQUAL_STRING("invalid / unknown", toString(static_cast<messageType>(0xFF)));
+}
+
+void test_lorawanEventToString() {
+    TEST_ASSERT_EQUAL_STRING("none", toString(loRaWanEvent ::none));
+    TEST_ASSERT_EQUAL_STRING("sx126x Cad End", toString(loRaWanEvent ::sx126xCadEnd));
+    TEST_ASSERT_EQUAL_STRING("sx126x Tx Complete", toString(loRaWanEvent ::sx126xTxComplete));
+    TEST_ASSERT_EQUAL_STRING("sx126x Rx Complete", toString(loRaWanEvent ::sx126xRxComplete));
+    TEST_ASSERT_EQUAL_STRING("sx126x Timeout", toString(loRaWanEvent ::sx126xTimeout));
+    TEST_ASSERT_EQUAL_STRING("timeOut", toString(loRaWanEvent ::timeOut));
+    TEST_ASSERT_EQUAL_STRING("unknown event", toString(static_cast<loRaWanEvent>(0xFF)));
+}
+
 void test_txRxCycleStateToString() {
     TEST_ASSERT_EQUAL_STRING("idle", toString(txRxCycleState::idle));
     TEST_ASSERT_EQUAL_STRING("waitForCadEnd", toString(txRxCycleState::waitForCadEnd));
@@ -99,8 +115,10 @@ void test_goTo_handleEvents() {
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
+    RUN_TEST(test_messageTypeToString);
+    RUN_TEST(test_lorawanEventToString);
     RUN_TEST(test_txRxCycleStateToString);
     RUN_TEST(test_goTo_handleEvents);
-
+    RUN_TEST(test_initialize);
     UNITY_END();
 }
