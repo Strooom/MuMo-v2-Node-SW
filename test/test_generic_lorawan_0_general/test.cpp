@@ -6,6 +6,7 @@
 #include <settingscollection.hpp>
 #include <maccommand.hpp>
 #include <hexascii.hpp>
+#include <channelcollection.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 circularBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
@@ -20,14 +21,22 @@ void setUp(void) {}
 void tearDown(void) {}
 
 void test_initialize() {
-    // Before reading from NVS
     TEST_ASSERT_EQUAL(0, LoRaWAN::uplinkFrameCount.asUint32);
     TEST_ASSERT_EQUAL(0, LoRaWAN::downlinkFrameCount.asUint32);
     TEST_ASSERT_EQUAL(1, LoRaWAN::rx1DelayInSeconds);
     TEST_ASSERT_EQUAL(0, LoRaWAN::DevAddr.asUint32);
+
+    LoRaWAN::theChannels.txRxChannels[0].frequencyInHz = 868'100'000U;
+
+    TEST_ASSERT_EQUAL(868'100'000U, LoRaWAN::theChannels.txRxChannels[0].frequencyInHz);
+    TEST_ASSERT_EQUAL(868'300'000U, LoRaWAN::theChannels.txRxChannels[1].frequencyInHz);
+    TEST_ASSERT_EQUAL(868'500'000U, LoRaWAN::theChannels.txRxChannels[2].frequencyInHz);
+    TEST_ASSERT_EQUAL(0U, LoRaWAN::theChannels.txRxChannels[3].frequencyInHz);
+    TEST_ASSERT_EQUAL(0U, LoRaWAN::theChannels.txRxChannels[4].frequencyInHz);
+    TEST_ASSERT_EQUAL(869'525'000U, LoRaWAN::theChannels.rx2Channel.frequencyInHz);
+
     // TODO : complete for all context
 
-    // Populate non-volatile memory with some test data
     settingsCollection::save(0x1234, settingsCollection::settingIndex::uplinkFrameCounter);
     settingsCollection::save(0x5678, settingsCollection::settingIndex::downlinkFrameCounter);
     settingsCollection::save(0x05, settingsCollection::settingIndex::rx1Delay);
@@ -35,12 +44,10 @@ void test_initialize() {
 
     LoRaWAN::initialize();
 
-    // Check if all context is properly restored
     TEST_ASSERT_EQUAL(0x1234, LoRaWAN::uplinkFrameCount.asUint32);
     TEST_ASSERT_EQUAL(0x5678, LoRaWAN::downlinkFrameCount.asUint32);
     TEST_ASSERT_EQUAL(0x5, LoRaWAN::rx1DelayInSeconds);
     TEST_ASSERT_EQUAL(0xABCD, LoRaWAN::DevAddr.asUint32);
-    // TODO : complete for all context
 
     uint8_t allZeroes[LoRaWAN::rawMessageLength];
     memset(allZeroes, 0, LoRaWAN::rawMessageLength);
@@ -65,7 +72,7 @@ void test_dump() {
 }
 
 void test_saveContext() {
-memset(mockEepromMemory, 0x00, 512);
+    memset(mockEepromMemory, 0x00, 512);
 
     LoRaWAN::DevAddr              = 0x44657641;        // reads as DevA in memory
     LoRaWAN::uplinkFrameCount     = 0x554C4643;        // reads as ULFC in memory

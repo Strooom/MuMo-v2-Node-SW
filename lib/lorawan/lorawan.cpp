@@ -83,14 +83,30 @@ void LoRaWAN::restoreContext() {
     rx1DelayInSeconds    = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1Delay);
     currentDataRateIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::dataRate);
 
+    restoreChannelContext();
+}
+
+void LoRaWAN::restoreChannelContext() {
     uint8_t tmpChannelData[102];
+    uint32_t tmpChannelDataIndex{0};
     settingsCollection::readByteArray(tmpChannelData, settingsCollection::settingIndex::channels);
     for (uint32_t channelIndex = 0; channelIndex < loRaChannelCollection::maxNmbrChannels; channelIndex++) {
-        theChannels.txRxChannels[channelIndex].frequencyInHz        = (tmpChannelData[(channelIndex * 6) + 0] + (tmpChannelData[(channelIndex * 6) + 1] << 8) + (tmpChannelData[(channelIndex * 6) + 2] << 16));        // TODO : these address calculations are not correct
-        theChannels.txRxChannels[channelIndex].maximumDataRateIndex = tmpChannelData[(channelIndex * 6) + 3];
-        theChannels.txRxChannels[channelIndex].minimumDataRateIndex = tmpChannelData[(channelIndex * 6) + 4];
+        theChannels.txRxChannels[channelIndex].frequencyInHz =
+            (tmpChannelData[tmpChannelDataIndex] +
+             (tmpChannelData[tmpChannelDataIndex + 1] << 8) +
+             (tmpChannelData[tmpChannelDataIndex + 2] << 16) +
+             (tmpChannelData[tmpChannelDataIndex + 3] << 24));
+        theChannels.txRxChannels[channelIndex].maximumDataRateIndex = tmpChannelData[tmpChannelDataIndex + 4];
+        theChannels.txRxChannels[channelIndex].minimumDataRateIndex = tmpChannelData[tmpChannelDataIndex + 5];
+        tmpChannelDataIndex += 6;
     }
-    theChannels.rx2Channel.frequencyInHz = 0;        // TODO : get from NVS
+    theChannels.rx2Channel.frequencyInHz =
+        (tmpChannelData[tmpChannelDataIndex] +
+         (tmpChannelData[tmpChannelDataIndex + 1] << 8) +
+         (tmpChannelData[tmpChannelDataIndex + 2] << 16) +
+         (tmpChannelData[tmpChannelDataIndex + 3] << 24));
+    theChannels.rx2Channel.maximumDataRateIndex = tmpChannelData[tmpChannelDataIndex + 4];
+    theChannels.rx2Channel.minimumDataRateIndex = tmpChannelData[tmpChannelDataIndex + 5];
 }
 
 void LoRaWAN::saveContext() {
@@ -102,7 +118,28 @@ void LoRaWAN::saveContext() {
     settingsCollection::saveByteArray(applicationKey.asBytes(), settingsCollection::settingIndex::applicationSessionKey);
     settingsCollection::saveByteArray(networkKey.asBytes(), settingsCollection::settingIndex::networkSessionKey);
 
-    // TODO : save channel data to NVS
+    saveChannelContext();
+}
+
+void LoRaWAN::saveChannelContext() {
+    uint8_t tmpChannelData[102];
+    uint32_t tmpChannelDataIndex{0};
+    for (uint32_t channelIndex = 0; channelIndex < loRaChannelCollection::maxNmbrChannels; channelIndex++) {
+        tmpChannelData[tmpChannelDataIndex]     = theChannels.txRxChannels[channelIndex].frequencyInHz & 0xFF;
+        tmpChannelData[tmpChannelDataIndex + 1] = (theChannels.txRxChannels[channelIndex].frequencyInHz & 0x0000FF00) >> 8;
+        tmpChannelData[tmpChannelDataIndex + 2] = (theChannels.txRxChannels[channelIndex].frequencyInHz & 0x00FF0000) >> 16;
+        tmpChannelData[tmpChannelDataIndex + 3] = (theChannels.txRxChannels[channelIndex].frequencyInHz & 0xFF000000) >> 24;
+        tmpChannelData[tmpChannelDataIndex + 4] = theChannels.txRxChannels[channelIndex].maximumDataRateIndex;
+        tmpChannelData[tmpChannelDataIndex + 5] = theChannels.txRxChannels[channelIndex].minimumDataRateIndex;
+        tmpChannelDataIndex += 6;
+    }
+    tmpChannelData[tmpChannelDataIndex]     = theChannels.rx2Channel.frequencyInHz & 0xFF;
+    tmpChannelData[tmpChannelDataIndex + 1] = (theChannels.rx2Channel.frequencyInHz & 0x0000FF00) >> 8;
+    tmpChannelData[tmpChannelDataIndex + 2] = (theChannels.rx2Channel.frequencyInHz & 0x00FF0000) >> 16;
+    tmpChannelData[tmpChannelDataIndex + 3] = (theChannels.rx2Channel.frequencyInHz & 0xFF000000) >> 24;
+    tmpChannelData[tmpChannelDataIndex + 4] = theChannels.rx2Channel.maximumDataRateIndex;
+    tmpChannelData[tmpChannelDataIndex + 5] = theChannels.rx2Channel.minimumDataRateIndex;
+    settingsCollection::saveByteArray(tmpChannelData, settingsCollection::settingIndex::channels);
 }
 
 #pragma endregion

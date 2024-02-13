@@ -28,7 +28,9 @@ class LoRaWAN {
   public:
     static void initialize();
     static void restoreContext();
+    static void restoreChannelContext();
     static void saveContext();
+    static void saveChannelContext();
     static void run();
     static void handleEvents();
     static uint32_t getMaxApplicationPayloadLength();
