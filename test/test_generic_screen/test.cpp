@@ -70,6 +70,7 @@ void test_buildSmallTextString() {
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
+    RUN_TEST(test_initialize);
     RUN_TEST(test_integerPart);
     RUN_TEST(test_fractionalPart);
     RUN_TEST(test_factorFloat);
