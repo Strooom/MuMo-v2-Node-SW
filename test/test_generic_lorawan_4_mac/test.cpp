@@ -7,6 +7,7 @@
 #include <settingscollection.hpp>
 #include <maccommand.hpp>
 #include <hexascii.hpp>
+#include <logging.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 circularBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
@@ -112,11 +113,24 @@ void test_process_deviceTimeAnswer() {
     LoRaWAN::macIn.append(0xF5);
     LoRaWAN::macIn.append(0x52);
     LoRaWAN::macIn.append(0x00);
-    LoRaWAN::processDeviceTimeAnswer();
+    LoRaWAN::processMacContents();
     // TEST_ASSERT_EQUAL(1391805806, LoRaWAN::gpsTime);
     // TEST_ASSERT_EQUAL(1707770588, LoRaWAN::unixTime);
 }
 void test_process_unknown_MAC_command() {}
+
+void test_dump() {
+    TEST_MESSAGE("For Coverage only");
+    logging::enable(logging::source::lorawanMac);
+    LoRaWAN::dump();
+    LoRaWAN::macIn.initialize();
+    LoRaWAN::macIn.append(0x01);
+    LoRaWAN::macOut.initialize();
+    LoRaWAN::macOut.append(0x01);
+    LoRaWAN::dumpMacIn();
+    LoRaWAN::dumpMacOut();
+    logging::disable(logging::source::lorawanMac);
+}
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
@@ -134,5 +148,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_process_downlinkChannelRequest);
     RUN_TEST(test_process_deviceTimeAnswer);
     RUN_TEST(test_process_unknown_MAC_command);
+    RUN_TEST(test_dump);
+    
     UNITY_END();
 }
