@@ -285,6 +285,16 @@ void test_insertMic() {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage + 28, LoRaWAN::rawMessageLength - 28);
 }
 
+void test_getReceivedFramecount() {
+    static constexpr uint32_t testLoRaPayloadLength{16};
+    uint8_t testLoRaPayload[testLoRaPayloadLength]{0x60, 0x78, 0x56, 0x34, 0x12, 0x00, 0xCC, 0xDD, 0x01, 0x00, 0x01, 0x02, 0x13, 0xF1, 0x4E, 0x5E};
+    LoRaWAN::clearRawMessage();
+    memcpy(LoRaWAN::rawMessage + LoRaWAN::loRaPayloadOffset, testLoRaPayload, testLoRaPayloadLength);
+    LoRaWAN::setOffsetsAndLengthsRx(testLoRaPayloadLength);
+    TEST_ASSERT_EQUAL_UINT16(0xDDCC, LoRaWAN::getReceivedFramecount());
+
+}
+
 void test_receivedMic() {
     static constexpr uint32_t testLoRaPayloadLength{16};
     uint8_t testLoRaPayload[testLoRaPayloadLength]{0x60, 0x78, 0x56, 0x34, 0x12, 0x00, 0xCC, 0xDD, 0x01, 0x00, 0x01, 0x02, 0x13, 0xF1, 0x4E, 0x5E};
@@ -321,6 +331,8 @@ int main(int argc, char **argv) {
     RUN_TEST(test_insertMic);
     RUN_TEST(test_receivedMic);
     RUN_TEST(test_receivedDeviceAddress);
+    RUN_TEST(test_getReceivedFramecount);
+
 
     UNITY_END();
 }

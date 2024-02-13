@@ -143,7 +143,6 @@ class LoRaWAN {
     static uint32_t calculateMic();
     static void insertMic();
     static void insertMic(uint32_t aMic);
-    static uint32_t extractReceivedMic();
 
     // #############################################################
     // ### Helper functions for decoding a downlink message - Rx ###

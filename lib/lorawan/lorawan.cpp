@@ -212,13 +212,6 @@ void LoRaWAN::padForMicCalculation() {
     }
 }
 
-void LoRaWAN::insertMic(uint32_t aMic) {
-    rawMessage[micOffset]     = aMic & 0x000000FF;                // LSByte
-    rawMessage[micOffset + 1] = (aMic & 0x0000FF00) >> 8;         //
-    rawMessage[micOffset + 2] = (aMic & 0x00FF0000) >> 16;        //
-    rawMessage[micOffset + 3] = (aMic & 0xFF000000) >> 24;        // MSByte
-}
-
 uint16_t LoRaWAN::getReceivedFramecount() {
     return (static_cast<uint16_t>(rawMessage[frameCountOffset]) + (static_cast<uint16_t>(rawMessage[frameCountOffset + 1]) << 8));
 }
@@ -440,17 +433,16 @@ uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
 }
 
 void LoRaWAN::insertMic() {
-    uint32_t mic              = calculateMic();
-    rawMessage[micOffset]     = mic & 0x000000FF;                // LSByte
-    rawMessage[micOffset + 1] = (mic & 0x0000FF00) >> 8;         //
-    rawMessage[micOffset + 2] = (mic & 0x00FF0000) >> 16;        //
-    rawMessage[micOffset + 3] = (mic & 0xFF000000) >> 24;        // MSByte
+    uint32_t mic = calculateMic();
+    insertMic(mic);
 }
 
-uint32_t LoRaWAN::extractReceivedMic() {
-    return static_cast<uint32_t>(rawMessage[micOffset]) + (static_cast<uint32_t>(rawMessage[micOffset + 1]) << 8) + (static_cast<uint32_t>(rawMessage[micOffset + 2]) << 16) + (static_cast<uint32_t>(rawMessage[micOffset + 3]) << 24);
+void LoRaWAN::insertMic(uint32_t aMic) {
+    rawMessage[micOffset]     = aMic & 0x000000FF;                // LSByte
+    rawMessage[micOffset + 1] = (aMic & 0x0000FF00) >> 8;         //
+    rawMessage[micOffset + 2] = (aMic & 0x00FF0000) >> 16;        //
+    rawMessage[micOffset + 3] = (aMic & 0xFF000000) >> 24;        // MSByte
 }
-
 
 // void LoRaWAN::padForEncryptDecrypt() {
 //     nmbrOfBytesToPad = aesBlock::calculateNmbrOfBytesToPad(framePayloadLength);
@@ -1084,7 +1076,7 @@ messageType LoRaWAN::decodeMessage() {
     logging::snprintf(logging::source::lorawanMac, "receivedFramecount = %u, lastFramecount = %u, guessedFramecount = %u\n", receivedDownlinkFramecount, downlinkFrameCount.toUint32(), guessedDownlinkFramecount.toUint32());
 
     // 3. Check the MIC
-    uint32_t receivedMic = extractReceivedMic();
+    uint32_t receivedMic = getReceivedMic();
     insertBlockB0(linkDirection::downlink, guessedDownlinkFramecount);
     uint32_t calculatedMic = calculateMic();
     if (receivedMic != calculatedMic) {

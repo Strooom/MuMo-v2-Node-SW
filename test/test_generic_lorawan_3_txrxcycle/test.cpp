@@ -115,10 +115,10 @@ void test_goTo_handleEvents() {
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
+    RUN_TEST(test_initialize);
     RUN_TEST(test_messageTypeToString);
     RUN_TEST(test_lorawanEventToString);
     RUN_TEST(test_txRxCycleStateToString);
     RUN_TEST(test_goTo_handleEvents);
-    RUN_TEST(test_initialize);
     UNITY_END();
 }
