@@ -32,7 +32,7 @@ uint32_t LoRaWAN::currentDataRateIndex{0};
 loRaTxChannelCollection LoRaWAN::txChannels;
 uint32_t LoRaWAN::rx1DelayInSeconds{1};
 uint32_t LoRaWAN::rx2DataRateIndex{0};
-uint32_t LoRaWAN::rx2Frequency{869525000};
+uint32_t LoRaWAN::rx2FrequencyInHz{869525000};
 uint32_t LoRaWAN::rx1DataRateOffset{0};
 
 uint8_t LoRaWAN::rawMessage[b0BlockLength + maxLoRaPayloadLength + 15]{};
@@ -610,8 +610,8 @@ void LoRaWAN::handleEvents() {
                 switch (theEvent) {
                     case loRaWanEvent::timeOut: {
                         stopTimer();
-                        uint32_t rxTimeout   = getReceiveTimeout(spreadingFactor::SF9);
-                        sx126x::configForReceive(spreadingFactor::SF9, rx2Frequency);
+                        uint32_t rxTimeout = getReceiveTimeout(spreadingFactor::SF9);
+                        sx126x::configForReceive(spreadingFactor::SF9, rx2FrequencyInHz);
                         sx126x::startReceive(rxTimeout);
                         goTo(txRxCycleState::waitForRx2CompleteOrTimeout);
                     } break;
@@ -742,15 +742,7 @@ void LoRaWAN::stopTimer() {
 #pragma region 4 : MAC layer functions
 
 void LoRaWAN::processMacContents() {
-    if (logging::isActive(logging::source::lorawanMac)) {
-        uint32_t tmpMacInLevel = macIn.getLevel();
-        logging::snprintf("MAC input [%d] = ", tmpMacInLevel);
-        for (uint32_t i = 0; i < tmpMacInLevel; i++) {
-            logging::snprintf("%02X ", macIn[i]);
-        }
-        logging::snprintf("\n");
-    }
-
+    dumpMacIn();
     while (macIn.getLevel() > 0) {
         macCommand theMacCommand = static_cast<macCommand>(macIn[0]);
 
@@ -802,6 +794,7 @@ void LoRaWAN::processMacContents() {
                 break;
         }
     }
+    dumpMacOut();
 }
 
 void LoRaWAN::removeNonStickyMacStuff() {
@@ -1254,6 +1247,6 @@ void LoRaWAN::dumpChannels() {
         for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
             logging::snprintf("- Tx channel[%u] : frequency = %u [Hz], minDR = %u, maxDR = %u\n", channelIndex, txChannels.channel[channelIndex].frequencyInHz, txChannels.channel[channelIndex].minimumDataRateIndex, txChannels.channel[channelIndex].maximumDataRateIndex);
         }
-        logging::snprintf("- Rx2 channel : frequency = %u [Hz], rx1DROffset = %u, rx2DR = %u\n", rx2Frequency, rx1DataRateOffset, rx2DataRateIndex );
+        logging::snprintf("- Rx2 channel : frequency = %u [Hz], rx1DROffset = %u, rx2DR = %u\n", rx2FrequencyInHz, rx1DataRateOffset, rx2DataRateIndex);
     }
 }

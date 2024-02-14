@@ -15,7 +15,6 @@ class loRaTxChannelCollection {
     static constexpr uint32_t maxNmbrChannels{16};        // Regional Parameters 1.0.3 line 320
 
     static loRaChannel channel[maxNmbrChannels];
-//    static loRaChannel rx2Channel;
 
 #ifndef unitTesting
   private:

@@ -61,7 +61,7 @@ class LoRaWAN {
     static uint32_t currentDataRateIndex;
     static uint32_t rx1DataRateOffset;
     static uint32_t rx2DataRateIndex;
-    static uint32_t rx2Frequency;
+    static uint32_t rx2FrequencyInHz;
     static loRaTxChannelCollection txChannels;
     static uint32_t rx1DelayInSeconds;
     static constexpr uint32_t maxRandomDelayBeforeTx{1024U};
