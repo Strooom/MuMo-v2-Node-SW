@@ -24,7 +24,8 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     {308, 1},             // rx1Delay : 1 byte
     {309, 1},             // dataRate : 1 byte
     {310, 74},            // unusedLoRaWAN : extra settings can be inserted herea
-    {384, 17 * 6},        // 16 Tx channels, 1 Rx channel, 6 bytes / channel [frequency, minDR, maxDR]
+    {384, 16 * 6},        // 16 Tx channels : 6 bytes / channel [frequency, minDR, maxDR]
+    {480, 6},             // Rx channel : [frequency, rx1DataRateOffset, rx2DataRateIndex]
     {486, 26},            // unusedLoRaWAN : extra settings can be inserted hereafter
 };
 

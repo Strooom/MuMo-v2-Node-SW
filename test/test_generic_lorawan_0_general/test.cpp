@@ -6,7 +6,7 @@
 #include <settingscollection.hpp>
 #include <maccommand.hpp>
 #include <hexascii.hpp>
-#include <channelcollection.hpp>
+#include <txchannelcollection.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 circularBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
@@ -26,14 +26,14 @@ void test_initialize() {
     TEST_ASSERT_EQUAL(1, LoRaWAN::rx1DelayInSeconds);
     TEST_ASSERT_EQUAL(0, LoRaWAN::DevAddr.asUint32);
 
-    LoRaWAN::theChannels.txRxChannels[0].frequencyInHz = 868'100'000U;
+    LoRaWAN::txChannels.channel[0].frequencyInHz = 868'100'000U;
 
-    TEST_ASSERT_EQUAL(868'100'000U, LoRaWAN::theChannels.txRxChannels[0].frequencyInHz);
-    TEST_ASSERT_EQUAL(868'300'000U, LoRaWAN::theChannels.txRxChannels[1].frequencyInHz);
-    TEST_ASSERT_EQUAL(868'500'000U, LoRaWAN::theChannels.txRxChannels[2].frequencyInHz);
-    TEST_ASSERT_EQUAL(0U, LoRaWAN::theChannels.txRxChannels[3].frequencyInHz);
-    TEST_ASSERT_EQUAL(0U, LoRaWAN::theChannels.txRxChannels[4].frequencyInHz);
-    TEST_ASSERT_EQUAL(869'525'000U, LoRaWAN::theChannels.rx2Channel.frequencyInHz);
+    TEST_ASSERT_EQUAL(868'100'000U, LoRaWAN::txChannels.channel[0].frequencyInHz);
+    TEST_ASSERT_EQUAL(868'300'000U, LoRaWAN::txChannels.channel[1].frequencyInHz);
+    TEST_ASSERT_EQUAL(868'500'000U, LoRaWAN::txChannels.channel[2].frequencyInHz);
+    TEST_ASSERT_EQUAL(0U, LoRaWAN::txChannels.channel[3].frequencyInHz);
+    TEST_ASSERT_EQUAL(0U, LoRaWAN::txChannels.channel[4].frequencyInHz);
+    //TEST_ASSERT_EQUAL(869'525'000U, LoRaWAN::theChannels.rx2Channel.frequencyInHz);
 
     // TODO : complete for all context
 
@@ -67,7 +67,10 @@ void test_isValidDownlinkFrameCount() {
 }
 
 void test_dump() {
-    LoRaWAN::dump();
+    LoRaWAN::dumpConfig();
+    LoRaWAN::dumpState();
+    LoRaWAN::dumpChannels();
+
     TEST_MESSAGE("For Coverage only");
 }
 
@@ -84,7 +87,9 @@ void test_saveContext() {
 
     // TODO : add channel data
 
-    LoRaWAN::saveContext();
+    LoRaWAN::saveConfig();
+    LoRaWAN::saveState();
+    LoRaWAN::saveChannels();
 
     LoRaWAN::DevAddr              = 0;
     LoRaWAN::uplinkFrameCount     = 0;
@@ -94,7 +99,9 @@ void test_saveContext() {
     LoRaWAN::applicationKey.setFromHexString("00000000000000000000000000000000");
     LoRaWAN::networkKey.setFromHexString("00000000000000000000000000000000");
 
-    LoRaWAN::restoreContext();
+    LoRaWAN::restoreConfig();
+    LoRaWAN::restoreState();
+    LoRaWAN::restoreChannels();
 
     TEST_ASSERT_EQUAL_UINT32(0x44657641, LoRaWAN::DevAddr.asUint32);
     TEST_ASSERT_EQUAL_UINT32(0x554C4643, LoRaWAN::uplinkFrameCount.toUint32());

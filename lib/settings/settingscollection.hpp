@@ -27,7 +27,8 @@ class settingsCollection {
         rx1Delay,
         dataRate,
         unusedLoRaWAN1,
-        channels,
+        txChannels,
+        rxChannel,
         unusedLoRaWAN2,
 
         numberOfSettings

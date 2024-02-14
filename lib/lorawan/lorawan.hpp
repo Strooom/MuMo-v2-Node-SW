@@ -17,7 +17,7 @@
 #include <framecount.hpp>
 #include <mic.hpp>
 #include <datarate.hpp>
-#include <channelcollection.hpp>
+#include <txchannelcollection.hpp>
 #include <transmitpower.hpp>
 #include <linkdirection.hpp>
 #include <spreadingfactor.hpp>
@@ -27,19 +27,22 @@
 class LoRaWAN {
   public:
     static void initialize();
-    static void restoreContext();
-    static void restoreChannelContext();
-    static void saveContext();
-    static void saveChannelContext();
+
+    static void restoreConfig();
+    static void restoreState();
+    static void restoreChannels();
+
+    static void saveConfig();
+    static void saveState();
+    static void saveChannels();
+
     static void run();
     static void handleEvents();
     static uint32_t getMaxApplicationPayloadLength();
     static void sendUplink(uint8_t aFramePort = 0, const uint8_t data[] = nullptr, uint32_t length = 0);        // TODO : why the default arguments?
     static void getReceivedDownlinkMessage();
-
     static txRxCycleState getState();
     static bool isIdle();
-
     static void checkNetwork();
 
 #ifndef unitTesting
@@ -47,7 +50,7 @@ class LoRaWAN {
 #endif
 
     static txRxCycleState theTxRxCycleState;
-    static void goTo(txRxCycleState newState);        // move the state of the TxRxCycle state machine - handles exit old state actions and entry new state actions
+    static void goTo(txRxCycleState newState);
 
     static deviceAddress DevAddr;
     static aesKey applicationKey;
@@ -56,7 +59,10 @@ class LoRaWAN {
     static frameCount downlinkFrameCount;
     static dataRates theDataRates;
     static uint32_t currentDataRateIndex;
-    static loRaChannelCollection theChannels;
+    static uint32_t rx1DataRateOffset;
+    static uint32_t rx2DataRateIndex;
+    static uint32_t rx2Frequency;
+    static loRaTxChannelCollection txChannels;
     static uint32_t rx1DelayInSeconds;
     static constexpr uint32_t maxRandomDelayBeforeTx{1024U};
 
@@ -112,7 +118,7 @@ class LoRaWAN {
     static void processLinkAdaptiveDataRateRequest();
     static void processDutyCycleRequest();
     static void processDeviceStatusRequest();
-    static void processNewChannelRequest(); 
+    static void processNewChannelRequest();
     static void processReceiveParameterSetupRequest();
     static void processReceiveTimingSetupRequest();
     static void processTransmitParameterSetupRequest();
@@ -166,5 +172,7 @@ class LoRaWAN {
 
     static uint32_t calculateMaxTransmitTimeout(uint32_t currentDataRateIndex, uint32_t loRaPayloadLength);        // TODO : provide an upper limit for the timeout
 
-    static void dump();
+    static void dumpConfig();
+    static void dumpState();
+    static void dumpChannels();
 };

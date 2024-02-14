@@ -29,8 +29,11 @@ frameCount LoRaWAN::downlinkFrameCount;
 
 dataRates LoRaWAN::theDataRates;
 uint32_t LoRaWAN::currentDataRateIndex{0};
-loRaChannelCollection LoRaWAN::theChannels;
+loRaTxChannelCollection LoRaWAN::txChannels;
 uint32_t LoRaWAN::rx1DelayInSeconds{1};
+uint32_t LoRaWAN::rx2DataRateIndex{0};
+uint32_t LoRaWAN::rx2Frequency{869525000};
+uint32_t LoRaWAN::rx1DataRateOffset{0};
 
 uint8_t LoRaWAN::rawMessage[b0BlockLength + maxLoRaPayloadLength + 15]{};
 
@@ -66,80 +69,72 @@ void LoRaWAN::initialize() {
     macIn.initialize();
     macOut.initialize();
     clearRawMessage();
-    restoreContext();
-    dump();
+    restoreConfig();
+    restoreState();
+    restoreChannels();
+
+    dumpConfig();
+    dumpState();
+    dumpChannels();
+
     sx126x::initialize();
 }
 
-void LoRaWAN::restoreContext() {
+void LoRaWAN::saveConfig() {
+    settingsCollection::save(DevAddr.asUint32, settingsCollection::settingIndex::DevAddr);
+    settingsCollection::saveByteArray(applicationKey.asBytes(), settingsCollection::settingIndex::applicationSessionKey);
+    settingsCollection::saveByteArray(networkKey.asBytes(), settingsCollection::settingIndex::networkSessionKey);
+}
+
+void LoRaWAN::saveState() {
+    settingsCollection::save(uplinkFrameCount.toUint32(), settingsCollection::settingIndex::uplinkFrameCounter);
+    settingsCollection::save(downlinkFrameCount.toUint32(), settingsCollection::settingIndex::downlinkFrameCounter);
+    settingsCollection::save(static_cast<uint8_t>(rx1DelayInSeconds), settingsCollection::settingIndex::rx1Delay);
+    settingsCollection::save(static_cast<uint8_t>(currentDataRateIndex), settingsCollection::settingIndex::dataRate);
+}
+
+void LoRaWAN::saveChannels() {
+    // txChannels
+    uint8_t tmpChannelData[loRaTxChannelCollection::maxNmbrChannels * loRaChannel::sizeInBytes];
+    for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
+        txChannels.channel[channelIndex].toBytes(tmpChannelData + (channelIndex * loRaChannel::sizeInBytes));
+    }
+    settingsCollection::saveByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
+
+    // rxChannel
+    // TODO : implement this
+    settingsCollection::saveByteArray(tmpChannelData, settingsCollection::settingIndex::rxChannel);
+}
+
+void LoRaWAN::restoreConfig() {
     DevAddr = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::DevAddr);
     uint8_t tmpKeyArray[aesKey::lengthInBytes];
     settingsCollection::readByteArray(tmpKeyArray, settingsCollection::settingIndex::applicationSessionKey);
     applicationKey.setFromByteArray(tmpKeyArray);
     settingsCollection::readByteArray(tmpKeyArray, settingsCollection::settingIndex::networkSessionKey);
     networkKey.setFromByteArray(tmpKeyArray);
+}
+
+void LoRaWAN::restoreState() {
     uplinkFrameCount     = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::uplinkFrameCounter);
     downlinkFrameCount   = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::downlinkFrameCounter);
     rx1DelayInSeconds    = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1Delay);
     currentDataRateIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::dataRate);
-
-    restoreChannelContext();
 }
 
-void LoRaWAN::restoreChannelContext() {
-    uint8_t tmpChannelData[102];
-    uint32_t tmpChannelDataIndex{0};
-    settingsCollection::readByteArray(tmpChannelData, settingsCollection::settingIndex::channels);
-    for (uint32_t channelIndex = 0; channelIndex < loRaChannelCollection::maxNmbrChannels; channelIndex++) {
-        theChannels.txRxChannels[channelIndex].frequencyInHz =
-            (tmpChannelData[tmpChannelDataIndex] +
-             (tmpChannelData[tmpChannelDataIndex + 1] << 8) +
-             (tmpChannelData[tmpChannelDataIndex + 2] << 16) +
-             (tmpChannelData[tmpChannelDataIndex + 3] << 24));
-        theChannels.txRxChannels[channelIndex].maximumDataRateIndex = tmpChannelData[tmpChannelDataIndex + 4];
-        theChannels.txRxChannels[channelIndex].minimumDataRateIndex = tmpChannelData[tmpChannelDataIndex + 5];
-        tmpChannelDataIndex += 6;
+void LoRaWAN::restoreChannels() {
+    // txChannels
+    uint8_t tmpChannelData[loRaTxChannelCollection::maxNmbrChannels * loRaChannel::sizeInBytes];
+    settingsCollection::readByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
+
+    for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
+        txChannels.channel[channelIndex].fromBytes(tmpChannelData + (channelIndex * loRaChannel::sizeInBytes));
     }
-    theChannels.rx2Channel.frequencyInHz =
-        (tmpChannelData[tmpChannelDataIndex] +
-         (tmpChannelData[tmpChannelDataIndex + 1] << 8) +
-         (tmpChannelData[tmpChannelDataIndex + 2] << 16) +
-         (tmpChannelData[tmpChannelDataIndex + 3] << 24));
-    theChannels.rx2Channel.maximumDataRateIndex = tmpChannelData[tmpChannelDataIndex + 4];
-    theChannels.rx2Channel.minimumDataRateIndex = tmpChannelData[tmpChannelDataIndex + 5];
-}
 
-void LoRaWAN::saveContext() {
-    settingsCollection::save(DevAddr.asUint32, settingsCollection::settingIndex::DevAddr);
-    settingsCollection::save(uplinkFrameCount.toUint32(), settingsCollection::settingIndex::uplinkFrameCounter);
-    settingsCollection::save(downlinkFrameCount.toUint32(), settingsCollection::settingIndex::downlinkFrameCounter);
-    settingsCollection::save(static_cast<uint8_t>(rx1DelayInSeconds), settingsCollection::settingIndex::rx1Delay);
-    settingsCollection::save(static_cast<uint8_t>(currentDataRateIndex), settingsCollection::settingIndex::dataRate);
-    settingsCollection::saveByteArray(applicationKey.asBytes(), settingsCollection::settingIndex::applicationSessionKey);
-    settingsCollection::saveByteArray(networkKey.asBytes(), settingsCollection::settingIndex::networkSessionKey);
+    // rxChannel
+    settingsCollection::readByteArray(tmpChannelData, settingsCollection::settingIndex::rxChannel);
 
-    saveChannelContext();
-}
-
-void LoRaWAN::saveChannelContext() {
-    uint8_t tmpChannelData[102];
-    uint32_t tmpChannelDataIndex{0};
-    for (uint32_t channelIndex = 0; channelIndex < loRaChannelCollection::maxNmbrChannels; channelIndex++) {
-        tmpChannelData[tmpChannelDataIndex]     = theChannels.txRxChannels[channelIndex].frequencyInHz & 0xFF;
-        tmpChannelData[tmpChannelDataIndex + 1] = (theChannels.txRxChannels[channelIndex].frequencyInHz & 0x0000FF00) >> 8;
-        tmpChannelData[tmpChannelDataIndex + 2] = (theChannels.txRxChannels[channelIndex].frequencyInHz & 0x00FF0000) >> 16;
-        tmpChannelData[tmpChannelDataIndex + 3] = (theChannels.txRxChannels[channelIndex].frequencyInHz & 0xFF000000) >> 24;
-        tmpChannelData[tmpChannelDataIndex + 4] = theChannels.txRxChannels[channelIndex].maximumDataRateIndex;
-        tmpChannelData[tmpChannelDataIndex + 5] = theChannels.txRxChannels[channelIndex].minimumDataRateIndex;
-        tmpChannelDataIndex += 6;
-    }
-    tmpChannelData[tmpChannelDataIndex]     = theChannels.rx2Channel.frequencyInHz & 0xFF;
-    tmpChannelData[tmpChannelDataIndex + 1] = (theChannels.rx2Channel.frequencyInHz & 0x0000FF00) >> 8;
-    tmpChannelData[tmpChannelDataIndex + 2] = (theChannels.rx2Channel.frequencyInHz & 0x00FF0000) >> 16;
-    tmpChannelData[tmpChannelDataIndex + 3] = (theChannels.rx2Channel.frequencyInHz & 0xFF000000) >> 24;
-    tmpChannelData[tmpChannelDataIndex + 4] = theChannels.rx2Channel.maximumDataRateIndex;
-    tmpChannelData[tmpChannelDataIndex + 5] = theChannels.rx2Channel.minimumDataRateIndex;
-    settingsCollection::saveByteArray(tmpChannelData, settingsCollection::settingIndex::channels);
+    // TODO : restore rxChannel settings
 }
 
 #pragma endregion
@@ -566,7 +561,7 @@ void LoRaWAN::handleEvents() {
                     case loRaWanEvent::timeOut: {
                         stopTimer();
                         startTimer(2048U);        // 1 second from now until Rx2Start
-                        uint32_t rxFrequency = theChannels.txRxChannels[theChannels.getCurrentChannelIndex()].frequencyInHz;
+                        uint32_t rxFrequency = txChannels.channel[txChannels.getCurrentChannelIndex()].frequencyInHz;
                         uint32_t rxTimeout   = getReceiveTimeout(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor);
                         sx126x::configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
                         sx126x::startReceive(rxTimeout);
@@ -615,9 +610,8 @@ void LoRaWAN::handleEvents() {
                 switch (theEvent) {
                     case loRaWanEvent::timeOut: {
                         stopTimer();
-                        uint32_t rxFrequency = theChannels.rx2Channel.frequencyInHz;
                         uint32_t rxTimeout   = getReceiveTimeout(spreadingFactor::SF9);
-                        sx126x::configForReceive(spreadingFactor::SF9, rxFrequency);
+                        sx126x::configForReceive(spreadingFactor::SF9, rx2Frequency);
                         sx126x::startReceive(rxTimeout);
                         goTo(txRxCycleState::waitForRx2CompleteOrTimeout);
                     } break;
@@ -967,9 +961,9 @@ void LoRaWAN::processNewChannelRequest(uint32_t channelIndex, uint32_t frequency
         return;
     }
     logging::snprintf(logging::source::lorawanMac, "NewChannelRequest for channel %u, frequency = %u, minimumDataRate = %u, maximumDataRate = %u \n", channelIndex, frequency, minimumDataRate, maximumDataRate);
-    theChannels.txRxChannels[channelIndex].frequencyInHz        = frequency;        // NOTE : frequency of 0 deactivates channel..
-    theChannels.txRxChannels[channelIndex].minimumDataRateIndex = minimumDataRate;
-    theChannels.txRxChannels[channelIndex].maximumDataRateIndex = maximumDataRate;
+    txChannels.channel[channelIndex].frequencyInHz        = frequency;        // NOTE : frequency of 0 deactivates channel..
+    txChannels.channel[channelIndex].minimumDataRateIndex = minimumDataRate;
+    txChannels.channel[channelIndex].maximumDataRateIndex = maximumDataRate;
     // TODO : save the new channel info in the NVS
 }
 
@@ -1061,13 +1055,13 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
     insertMic();
 
     // 2. Configure the radio, and start stateMachine for transmitting the payload
-    theChannels.selectRandomChannelIndex();        // randomize the channel index
-    uint32_t txFrequency = theChannels.txRxChannels[theChannels.getCurrentChannelIndex()].frequencyInHz;
+    txChannels.selectRandomChannelIndex();        // randomize the channel index
+    uint32_t txFrequency = txChannels.channel[txChannels.getCurrentChannelIndex()].frequencyInHz;
     spreadingFactor csf  = theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor;
     sx126x::configForTransmit(csf, txFrequency, rawMessage + macHeaderOffset, loRaPayloadLength);
 
     if (logging::isActive(logging::source::lorawanMac)) {
-        logging::snprintf("Scheduled Uplink : channel = %u, frequency = %u, dataRate = %u, framePayloadLength = %u, frameOptionsLength = %u\n", theChannels.getCurrentChannelIndex(), txFrequency, currentDataRateIndex, framePayloadLength, frameOptionsLength);
+        logging::snprintf("Scheduled Uplink : channel = %u, frequency = %u, dataRate = %u, framePayloadLength = %u, frameOptionsLength = %u\n", txChannels.getCurrentChannelIndex(), txFrequency, currentDataRateIndex, framePayloadLength, frameOptionsLength);
         logging::snprintf("- LoRa msg = ");
         for (uint8_t i = 0; i < loRaPayloadLength; i++) {
             logging::snprintf("%02X ", rawMessage[i + b0BlockLength]);
@@ -1232,23 +1226,34 @@ void LoRaWAN::dumpMacIn() {
     }
 }
 
-void LoRaWAN::dump() {
+void LoRaWAN::dumpConfig() {
     if (logging::isActive(logging::source::lorawanMac)) {
-        logging::snprintf("LoRaWAN Settings :\n");
+        logging::snprintf("LoRaWAN Config :\n");
         logging::snprintf("- devAddr = %04X\n", DevAddr.asUint32);
         char tmpKeyAsHexAscii[33];
         hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, applicationKey.asBytes(), 16);
         logging::snprintf("- applicationKey = %s\n", tmpKeyAsHexAscii);
         hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, networkKey.asBytes(), 16);
         logging::snprintf("- networkKey = %s\n", tmpKeyAsHexAscii);
+    }
+}
+
+void LoRaWAN::dumpState() {
+    if (logging::isActive(logging::source::lorawanMac)) {
         logging::snprintf("LoRaWAN State :\n");
         logging::snprintf("- uplinkFrameCount = %u\n", uplinkFrameCount.toUint32());
         logging::snprintf("- downlinkFrameCount = %u\n", downlinkFrameCount.toUint32());
         logging::snprintf("- dataRateIndex = %u\n", currentDataRateIndex);
         logging::snprintf("- rx1Delay = %u [s]\n", rx1DelayInSeconds);
-        for (uint32_t channelIndex = 0; channelIndex < loRaChannelCollection::maxNmbrChannels; channelIndex++) {
-            logging::snprintf("- channel[%u] : frequency = %u [Hz], minDR = %u, maxDR = %u\n", channelIndex, theChannels.txRxChannels[channelIndex].frequencyInHz, theChannels.txRxChannels[channelIndex].minimumDataRateIndex, theChannels.txRxChannels[channelIndex].maximumDataRateIndex);
+    }
+}
+
+void LoRaWAN::dumpChannels() {
+    if (logging::isActive(logging::source::lorawanMac)) {
+        logging::snprintf("LoRaWAN Channels :\n");
+        for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
+            logging::snprintf("- Tx channel[%u] : frequency = %u [Hz], minDR = %u, maxDR = %u\n", channelIndex, txChannels.channel[channelIndex].frequencyInHz, txChannels.channel[channelIndex].minimumDataRateIndex, txChannels.channel[channelIndex].maximumDataRateIndex);
         }
-        logging::snprintf("- Rx2 channel : frequency = %u [Hz], minDR = %u, maxDR = %u\n", theChannels.rx2Channel.frequencyInHz, theChannels.rx2Channel.minimumDataRateIndex, theChannels.rx2Channel.maximumDataRateIndex);
+        logging::snprintf("- Rx2 channel : frequency = %u [Hz], rx1DROffset = %u, rx2DR = %u\n", rx2Frequency, rx1DataRateOffset, rx2DataRateIndex );
     }
 }

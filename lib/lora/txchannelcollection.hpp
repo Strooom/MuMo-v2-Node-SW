@@ -8,14 +8,14 @@
 #include <stdint.h>
 #include <lorachannel.hpp>
 
-class loRaChannelCollection {
+class loRaTxChannelCollection {
   public:
     static void selectRandomChannelIndex();
     static uint32_t getCurrentChannelIndex();
     static constexpr uint32_t maxNmbrChannels{16};        // Regional Parameters 1.0.3 line 320
 
-    static loRaChannel txRxChannels[maxNmbrChannels];
-    static loRaChannel rx2Channel;
+    static loRaChannel channel[maxNmbrChannels];
+//    static loRaChannel rx2Channel;
 
 #ifndef unitTesting
   private:

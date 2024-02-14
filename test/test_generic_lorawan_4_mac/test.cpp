@@ -220,7 +220,10 @@ void test_process_unknown_MAC_command() {
 void test_dump() {
     TEST_MESSAGE("For Coverage only");
     logging::enable(logging::source::lorawanMac);
-    LoRaWAN::dump();
+    LoRaWAN::dumpConfig();
+    LoRaWAN::dumpState();
+    LoRaWAN::dumpChannels();
+
     LoRaWAN::macIn.initialize();
     LoRaWAN::macIn.append(0x01);
     LoRaWAN::macOut.initialize();
