@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include <applicationevent.hpp>
 #include <circularbuffer.hpp>
+// Some commment
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -226,6 +227,7 @@ void LPTIM1_IRQHandler(void)
   /* USER CODE END LPTIM1_IRQn 0 */
   HAL_LPTIM_IRQHandler(&hlptim1);
   /* USER CODE BEGIN LPTIM1_IRQn 1 */
+  applicationEventBuffer.push(applicationEvent::lowPowerTimerExpired);
 
   /* USER CODE END LPTIM1_IRQn 1 */
 }
