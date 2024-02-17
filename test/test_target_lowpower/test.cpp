@@ -1,37 +1,96 @@
 #include <unity.h>
 #include "main.h"
-#include <clock.cpp>
-#include <errorhandler.cpp>
-#include <uart2.cpp>
-#include <gpio.hpp>
+#include <cube.hpp>
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
 
-LPTIM_HandleTypeDef hlptim1;
-RTC_HandleTypeDef hrtc;
-SUBGHZ_HandleTypeDef hsubghz;
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void setUp(void) {}
 void tearDown(void) {}
 
-void test_sleepAndWakeUp() {
-    // 
-    TEST_IGNORE_MESSAGE("Monitor the logging in the SWO. Check current consumption on Power Profiler");
+static constexpr uint32_t nmbrTestLoops{3};        // I do a few test runs to make sure the MCU can go to sleep and wake up consistently and not just once
+
+void goStop2() {
+    uint32_t currentPriMaskState = __get_PRIMASK();
+    __disable_irq();
+    HAL_SuspendTick();
+    HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
+    HAL_ResumeTick();
+    __set_PRIMASK(currentPriMaskState);
+    MX_USART2_UART_Init();
 }
 
+void test_sleepAndWakeUpSx126x() {
+    HAL_NVIC_EnableIRQ(SUBGHZ_Radio_IRQn);
+    applicationEventBuffer.initialize();
+
+    for (uint32_t testRun = 1; testRun <= nmbrTestLoops; testRun++) {
+        TEST_ASSERT_TRUE_MESSAGE(applicationEventBuffer.isEmpty(), toString(applicationEventBuffer.pop()));
+        goStop2();
+        TEST_ASSERT_EQUAL(applicationEvent::sx126xTimeout, applicationEventBuffer.pop());
+    }
+    HAL_NVIC_DisableIRQ(RTC_WKUP_IRQn);
+}
+
+void test_sleepAndWakeUpRtc() {
+    HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
+    applicationEventBuffer.initialize();
+
+    for (uint32_t testRun = 1; testRun <= nmbrTestLoops; testRun++) {
+        TEST_ASSERT_TRUE_MESSAGE(applicationEventBuffer.isEmpty(), toString(applicationEventBuffer.pop()));
+        goStop2();
+        TEST_ASSERT_EQUAL(applicationEvent::realTimeClockTick, applicationEventBuffer.pop());
+    }
+    HAL_NVIC_DisableIRQ(RTC_WKUP_IRQn);
+}
+
+void test_sleepAndWakeUpLptim1() {
+    HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
+#define EXTI_IMR1_LPTIM1 (1UL << 29)        // TODO : investigate why this is needed to get the MCU out of STOP2 on LPTIM1 interrupt : https://gist.github.com/jefftenney/02b313fe649a14b4c75237f925872d72#file-lptimtick-c-L291
+    EXTI->IMR1 |= EXTI_IMR1_LPTIM1;
+    applicationEventBuffer.initialize();
+
+    for (uint32_t testRun = 1; testRun <= nmbrTestLoops; testRun++) {
+        HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, 128);
+        TEST_ASSERT_TRUE_MESSAGE(applicationEventBuffer.isEmpty(), toString(applicationEventBuffer.pop()));
+        goStop2();
+        TEST_ASSERT_EQUAL(applicationEvent::lowPowerTimerExpired, applicationEventBuffer.pop());
+        HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
+    }
+    __HAL_RCC_LPTIM1_CLK_SLEEP_DISABLE();
+    HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
+}
+
+void test_waitForLptim1Interrupt() {
+    HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
+    applicationEventBuffer.initialize();
+    HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, 2048);        // Start lptim1 timer : 2048 = 1 second @ 2048 Hz
+    HAL_Delay(990);
+    TEST_ASSERT_TRUE_MESSAGE(applicationEventBuffer.isEmpty(), toString(applicationEventBuffer.pop()));
+    HAL_Delay(20);
+    TEST_ASSERT_EQUAL(applicationEvent::lowPowerTimerExpired, applicationEventBuffer.pop());
+    HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
+    HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
+}
 
 int main(int argc, char **argv) {
     HAL_Init();
-    HAL_Delay(2000);        // required for testing framework to connect
+    HAL_Delay(2000);
     SystemClock_Config();
+    LL_DBGMCU_EnableDBGStopMode();
+
+    MX_LPTIM1_Init();
+    MX_RTC_Init();
+
+    HAL_NVIC_DisableIRQ(RTC_WKUP_IRQn);
+    HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
 
     UNITY_BEGIN();
-    RUN_TEST(test_sleepAndWakeUp);
+    RUN_TEST(test_waitForLptim1Interrupt);
+    RUN_TEST(test_sleepAndWakeUpLptim1);
+    RUN_TEST(test_sleepAndWakeUpSx126x);
+    RUN_TEST(test_sleepAndWakeUpRtc);
+
     UNITY_END();
 }
-
-void SysTick_Handler(void) {
-    HAL_IncTick();
-}
-

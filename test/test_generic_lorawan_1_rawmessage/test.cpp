@@ -1,11 +1,9 @@
 #include <unity.h>
 #include <lorawan.hpp>
 #include <circularbuffer.hpp>
-#include <lorawanevent.hpp>
 #include <applicationevent.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
-circularBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
 
 uint8_t mockSX126xDataBuffer[256];
 uint8_t mockSX126xRegisters[0x1000];

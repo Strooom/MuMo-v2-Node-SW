@@ -8,7 +8,7 @@
 #pragma once
 #include <stdint.h>
 #include <cstring>
-
+#include <applicationevent.hpp>
 #include <aeskey.hpp>
 #include <messagetype.hpp>
 #include <txrxcycle.hpp>
@@ -37,7 +37,7 @@ class LoRaWAN {
     static void saveChannels();
 
     static void run();
-    static void handleEvents();
+    static void handleEvents(applicationEvent theEvent);
     static uint32_t getMaxApplicationPayloadLength();
     static void sendUplink(uint8_t aFramePort = 0, const uint8_t data[] = nullptr, uint32_t length = 0);        // TODO : why the default arguments?
     static void getReceivedDownlinkMessage();

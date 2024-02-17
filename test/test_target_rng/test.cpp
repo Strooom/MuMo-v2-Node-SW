@@ -1,18 +1,10 @@
 #include <unity.h>
 #include "main.h"
-#include <clock.cpp>
-#include <errorhandler.cpp>
-#include <uart2.cpp>
-#include <gpio.hpp>
-#include <lptim1.cpp>
-#include <rng.cpp>
-#include <systick.cpp>
+#include <cube.hpp>
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
-RTC_HandleTypeDef hrtc;
-SUBGHZ_HandleTypeDef hsubghz;
 
 void setUp(void) {}
 void tearDown(void) {}

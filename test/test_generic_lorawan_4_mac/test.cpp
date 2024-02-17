@@ -2,7 +2,6 @@
 #include <aeskey.hpp>
 #include <lorawan.hpp>
 #include <circularbuffer.hpp>
-#include <lorawanevent.hpp>
 #include <applicationevent.hpp>
 #include <settingscollection.hpp>
 #include <maccommand.hpp>
@@ -10,7 +9,6 @@
 #include <logging.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
-circularBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
 
 uint8_t mockSX126xDataBuffer[256];            // unitTesting mock for the LoRa Rx/Tx buffer, inside the SX126x
 uint8_t mockSX126xRegisters[0x1000];          // unitTesting mock for the config registers, inside the SX126x

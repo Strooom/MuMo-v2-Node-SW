@@ -2,14 +2,12 @@
 #include <aeskey.hpp>
 #include <lorawan.hpp>
 #include <circularbuffer.hpp>
-#include <lorawanevent.hpp>
 #include <applicationevent.hpp>
 #include <settingscollection.hpp>
 #include <maccommand.hpp>
 #include <hexascii.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
-circularBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
 
 uint8_t mockSX126xDataBuffer[256];            // unitTesting mock for the LoRa Rx/Tx buffer, inside the SX126x
 uint8_t mockSX126xRegisters[0x1000];          // unitTesting mock for the config registers, inside the SX126x
@@ -27,13 +25,13 @@ void test_messageTypeToString() {
 }
 
 void test_lorawanEventToString() {
-    TEST_ASSERT_EQUAL_STRING("none", toString(loRaWanEvent ::none));
-    TEST_ASSERT_EQUAL_STRING("sx126x Cad End", toString(loRaWanEvent ::sx126xCadEnd));
-    TEST_ASSERT_EQUAL_STRING("sx126x Tx Complete", toString(loRaWanEvent ::sx126xTxComplete));
-    TEST_ASSERT_EQUAL_STRING("sx126x Rx Complete", toString(loRaWanEvent ::sx126xRxComplete));
-    TEST_ASSERT_EQUAL_STRING("sx126x Timeout", toString(loRaWanEvent ::sx126xTimeout));
-    TEST_ASSERT_EQUAL_STRING("timeOut", toString(loRaWanEvent ::timeOut));
-    TEST_ASSERT_EQUAL_STRING("unknown event", toString(static_cast<loRaWanEvent>(0xFF)));
+    TEST_ASSERT_EQUAL_STRING("none", toString(applicationEvent ::none));
+    TEST_ASSERT_EQUAL_STRING("sx126x Cad End", toString(applicationEvent ::sx126xCadEnd));
+    TEST_ASSERT_EQUAL_STRING("sx126x Tx Complete", toString(applicationEvent ::sx126xTxComplete));
+    TEST_ASSERT_EQUAL_STRING("sx126x Rx Complete", toString(applicationEvent ::sx126xRxComplete));
+    TEST_ASSERT_EQUAL_STRING("sx126x Timeout", toString(applicationEvent ::sx126xTimeout));
+    TEST_ASSERT_EQUAL_STRING("lowPower Timer Expired", toString(applicationEvent ::lowPowerTimerExpired));
+    TEST_ASSERT_EQUAL_STRING("unknown application event", toString(static_cast<applicationEvent>(0xFF)));
 }
 
 void test_txRxCycleStateToString() {
@@ -91,25 +89,19 @@ void test_goTo_handleEvents() {
     LoRaWAN::initialize();
     LoRaWAN::goTo(txRxCycleState::waitForRandomTimeBeforeTransmit);
     TEST_MESSAGE("Check that timer is started");
-    loraWanEventBuffer.push(loRaWanEvent::timeOut);
-    LoRaWAN::handleEvents();
+    LoRaWAN::handleEvents(applicationEvent::lowPowerTimerExpired);
     TEST_MESSAGE("Check that timer is stopped");
     TEST_MESSAGE("Check that SX126x transmission is started");
     TEST_ASSERT_EQUAL(txRxCycleState::waitForTxComplete, LoRaWAN::getState());
-    loraWanEventBuffer.push(loRaWanEvent::sx126xTxComplete);
-    LoRaWAN::handleEvents();
+    LoRaWAN::handleEvents(applicationEvent::sx126xTxComplete);
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRx1Start, LoRaWAN::getState());
-    loraWanEventBuffer.push(loRaWanEvent::timeOut);
-    LoRaWAN::handleEvents();
+    LoRaWAN::handleEvents(applicationEvent::lowPowerTimerExpired);
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRx1CompleteOrTimeout, LoRaWAN::getState());
-    loraWanEventBuffer.push(loRaWanEvent::sx126xTimeout);
-    LoRaWAN::handleEvents();
+    LoRaWAN::handleEvents(applicationEvent::sx126xTimeout);
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRx2Start, LoRaWAN::getState());
-    loraWanEventBuffer.push(loRaWanEvent::timeOut);
-    LoRaWAN::handleEvents();
+    LoRaWAN::handleEvents(applicationEvent::lowPowerTimerExpired);
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRx2CompleteOrTimeout, LoRaWAN::getState());
-    loraWanEventBuffer.push(loRaWanEvent::sx126xTimeout);
-    LoRaWAN::handleEvents();
+    LoRaWAN::handleEvents(applicationEvent::sx126xTimeout);
     TEST_ASSERT_EQUAL(txRxCycleState::idle, LoRaWAN::getState());
 }
 

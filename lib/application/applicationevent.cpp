@@ -30,6 +30,22 @@ const char* toString(applicationEvent anEvent) {
             return "downlink MAC command Received";
             break;
 
+        case applicationEvent::sx126xCadEnd:
+            return "sx126x Cad End";
+            break;
+
+        case applicationEvent::sx126xTxComplete:
+            return "sx126x Tx Complete";
+            break;
+
+        case applicationEvent::sx126xRxComplete:
+            return "sx126x Rx Complete";
+            break;
+
+        case applicationEvent::sx126xTimeout:
+            return "sx126x Timeout";
+            break;
+
         default:
             return "unknown application event";
             break;

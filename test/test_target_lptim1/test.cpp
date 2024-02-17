@@ -1,18 +1,9 @@
 #include <unity.h>
 #include "main.h"
-#include <clock.cpp>
-#include <errorhandler.cpp>
-#include <uart2.cpp>
-#include <gpio.hpp>
-#include <lptim1.cpp>
-#include <systick.cpp>
+#include <cube.hpp>
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
 
-#include <cstdio>
-
-RTC_HandleTypeDef hrtc;
-SUBGHZ_HandleTypeDef hsubghz;
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void setUp(void) {}
@@ -26,6 +17,10 @@ void test_waitForLptim1Interrupt() {
     HAL_Delay(20);
     TEST_ASSERT_EQUAL(applicationEvent::lowPowerTimerExpired, applicationEventBuffer.pop());
     HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
+
+    // HAL_NVIC_SetPriority(LPTIM1_IRQn, 8, 0);
+    // HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
+    // HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
 }
 
 int main(int argc, char **argv) {
