@@ -25,6 +25,10 @@ void test_sleepAndWakeUpSx126x() {
     HAL_NVIC_EnableIRQ(SUBGHZ_Radio_IRQn);
     applicationEventBuffer.initialize();
 
+    // HAL_SUBGHZ_Init(SUBGHZ_HandleTypeDef *hsubghz) will call the 2 lines below
+    // LL_EXTI_EnableIT_32_63(LL_EXTI_LINE_44);
+    // LL_PWR_SetRadioBusyTrigger(LL_PWR_RADIO_BUSY_TRIGGER_WU_IT); ???
+
     for (uint32_t testRun = 1; testRun <= nmbrTestLoops; testRun++) {
         TEST_ASSERT_TRUE_MESSAGE(applicationEventBuffer.isEmpty(), toString(applicationEventBuffer.pop()));
         goStop2();
@@ -47,8 +51,11 @@ void test_sleepAndWakeUpRtc() {
 
 void test_sleepAndWakeUpLptim1() {
     HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
-#define EXTI_IMR1_LPTIM1 (1UL << 29)        // TODO : investigate why this is needed to get the MCU out of STOP2 on LPTIM1 interrupt : https://gist.github.com/jefftenney/02b313fe649a14b4c75237f925872d72#file-lptimtick-c-L291
-    EXTI->IMR1 |= EXTI_IMR1_LPTIM1;
+
+    // #define EXTI_IMR1_LPTIM1 (1UL << 29)        // TODO : investigate why this is needed to get the MCU out of STOP2 on LPTIM1 interrupt : https://gist.github.com/jefftenney/02b313fe649a14b4c75237f925872d72#file-lptimtick-c-L291
+    //     EXTI->IMR1 |= EXTI_IMR1_LPTIM1;
+    __HAL_LPTIM_LPTIM1_EXTI_ENABLE_IT();        // this is needed to get the MCU out of STOP2 on LPTIM1 interrupt
+
     applicationEventBuffer.initialize();
 
     for (uint32_t testRun = 1; testRun <= nmbrTestLoops; testRun++) {
@@ -58,7 +65,7 @@ void test_sleepAndWakeUpLptim1() {
         TEST_ASSERT_EQUAL(applicationEvent::lowPowerTimerExpired, applicationEventBuffer.pop());
         HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
     }
-    __HAL_RCC_LPTIM1_CLK_SLEEP_DISABLE();
+    __HAL_RCC_LPTIM1_CLK_SLEEP_DISABLE();        // TODO : Why ???
     HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
 }
 

@@ -26,12 +26,27 @@ void cli::handleRxEvent() {
 #endif
 }
 
+void cli::handleTxEvent() {
+#ifndef generic
+    uint8_t received_char;
+    if (HAL_UART_Receive(&huart2, &received_char, 1, 0) == HAL_OK) {
+        commandBuffer.push(received_char);
+        if (received_char == '\r') {
+            handleEvents();
+        }
+        if (received_char == bootLoaderMagicValue) {
+            jumpToBootLoader();
+        }
+    }
+#endif
+}
+
 void cli::handleEvents() {
 }
 
 void cli::jumpToBootLoader() {
 #ifndef generic
-    HAL_UART_DeInit(&huart2); // TODO : maybr need to reset some other stuff as well, to bring the MCU back to a clean state as after reset
+    HAL_UART_DeInit(&huart2);        // TODO : maybr need to reset some other stuff as well, to bring the MCU back to a clean state as after reset
 
     uint32_t i = 0;
     void (*SysMemBootJump)(void);
@@ -54,4 +69,34 @@ void cli::jumpToBootLoader() {
 #endif
     while (1) {
     }
+}
+
+void cli::txEmptyInterrupt() {
+#ifndef generic
+    if (responseBuffer.isEmpty()) {
+        ATOMIC_CLEAR_BIT(huart->Instance->CR1, USART_CR1_TXEIE_TXFNFIE); /* Disable the UART Transmit Data Register Empty Interrupt */
+    } else {
+        USART2->TDR = responseBuffer.pop();
+    }
+#endif
+}
+
+void cli::txCompleteInterrupt() {
+#ifndef generic
+    ATOMIC_CLEAR_BIT(huart->Instance->CR1, USART_CR1_TCIE); /* Disable the UART Transmit Complete Interrupt */
+#endif
+}
+
+void cli::rxNotEmptyInterrupt() {
+#ifndef generic
+    uint8_t received_char = USART2->RDR;
+    if (received_char == bootLoaderMagicValue) {
+        jumpToBootLoader();
+    } else {
+        commandBuffer.push(received_char);
+    }
+    // if (received_char == '\r') {
+    //     handleEvents();
+    // }
+#endif
 }

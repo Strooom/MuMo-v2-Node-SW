@@ -12,6 +12,12 @@
 class cli {
   public:
     static void handleRxEvent();
+    static void handleTxEvent();
+
+    static void txEmptyInterrupt();
+    static void txCompleteInterrupt();
+    static void rxNotEmptyInterrupt();
+
 
   private:
     static void handleEvents();
@@ -24,5 +30,4 @@ class cli {
     static circularBuffer<uint8_t, responseBufferLength> responseBuffer;
 
     static constexpr uint8_t bootLoaderMagicValue{0x7F};
-
 };

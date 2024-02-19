@@ -6,8 +6,9 @@ from datetime import datetime
 
 Import("env")
 
-latest_release_tag = subprocess.run(["git", "describe", "--tags"], stdout=subprocess.PIPE, text=True)
-latest_release_tag = latest_release_tag.stdout.strip()
+
+tag_hash = subprocess.run(["git", "rev-list", "--tags", "--max-count=1"],stdout=subprocess.PIPE, text=True, check=True).stdout.rstrip()
+latest_release_tag = subprocess.run(["git", "describe", "--tags", tag_hash], stdout=subprocess.PIPE, text=True, check=True).stdout.rstrip()
 print ("\033[93;1;4mLatest Release Tag     : " + latest_release_tag + "\033[0m")
 
 # determine last release version
