@@ -1,14 +1,7 @@
 #include <unity.h>
 #include "main.h"
-#include <clock.cpp>
-#include <errorhandler.cpp>
-#include <uart1.cpp>
-#include <uart2.cpp>
-#include <gpio.hpp>
-#include <lptim1.cpp>
-#include <circularbuffer.hpp>
-#include <applicationevent.hpp>
 
+#include <cube.hpp>
 #include <stm32wlxx_hal_msp.c>
 #include <stm32wlxx_it.cpp>
 

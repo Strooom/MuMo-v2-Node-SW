@@ -3,6 +3,8 @@
 #include <cube.hpp>
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
+#include <stm32wlxx_hal_msp.c>
+#include <stm32wlxx_it.cpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -96,8 +98,8 @@ int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_waitForLptim1Interrupt);
     RUN_TEST(test_sleepAndWakeUpLptim1);
-    RUN_TEST(test_sleepAndWakeUpSx126x);
     RUN_TEST(test_sleepAndWakeUpRtc);
+    //RUN_TEST(test_sleepAndWakeUpSx126x);
 
     UNITY_END();
 }

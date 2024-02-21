@@ -9,5 +9,4 @@
 #include <uart1.cpp>
 #include <uart2.cpp>
 #include <gpio.cpp>
-#include <systick.cpp>
 #include <rng.cpp>
