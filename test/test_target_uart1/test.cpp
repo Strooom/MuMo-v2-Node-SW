@@ -34,10 +34,9 @@ void test_loopbackInterruptMode() {
     static constexpr uint32_t testDataLength{16};
     uint8_t txData[testDataLength] = "Hello, World!";
     uint8_t rxData[testDataLength];
-    for (uint32_t byteIndex = 0; byteIndex < testDataLength; byteIndex++) {
-        HAL_UART_Transmit_IT(&huart1, &txData[byteIndex], 1, 0);
-        HAL_UART_Receive(&huart1, &rxData[byteIndex], 1, 100);
-    }
+    HAL_UART_Transmit_IT(&huart1, txData, testDataLength);
+    HAL_UART_Receive_IT(&huart1, rxData, testDataLength);
+    HAL_Delay(10);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(txData, rxData, testDataLength);
 }
 
