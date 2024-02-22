@@ -12,13 +12,14 @@ class power {
     static bool isUsbConnected();        // detect insertion of USB cable event
     static bool isUsbRemoved();          // detect removal of USB cable event
     static bool hasUsbPower();
+    static void goSleep();
 
 #ifndef unitTesting
 
   private:
 #endif
-    static bool usbPower;        // remembers previous usbPresent state
+    static bool usbPower;
 #ifdef generic
-    static bool mockUsbPower;        // this is only there during unit testing on desktop
+    static bool mockUsbPower;
 #endif
 };

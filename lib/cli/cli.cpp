@@ -11,6 +11,22 @@ extern UART_HandleTypeDef huart2;
 circularBuffer<uint8_t, cli::commandBufferLength> cli::commandBuffer;
 circularBuffer<uint8_t, cli::responseBufferLength> cli::responseBuffer;
 
+
+void cli::startTx() {
+    if (!commandBuffer.isEmpty()) {
+    #ifndef generic
+        bool interrupts_enabled = (__get_PRIMASK() == 0);
+        __disable_irq();
+        USART2->CR1 = USART2->CR1 | USART_CR1_TXEIE_TXFNFIE;
+        if (interrupts_enabled) {
+            __enable_irq();
+        }
+
+
+    #endif
+}
+}
+
 void cli::handleRxEvent() {
 #ifndef generic
     uint8_t received_char;
@@ -46,7 +62,7 @@ void cli::handleEvents() {
 
 void cli::jumpToBootLoader() {
 #ifndef generic
-    HAL_UART_DeInit(&huart2);        // TODO : maybr need to reset some other stuff as well, to bring the MCU back to a clean state as after reset
+    HAL_UART_DeInit(&huart2);        // TODO : maybe need to reset some other stuff as well, to bring the MCU back to a clean state as after reset
 
     uint32_t i = 0;
     void (*SysMemBootJump)(void);
@@ -71,10 +87,12 @@ void cli::jumpToBootLoader() {
     }
 }
 
+
+
 void cli::txEmptyInterrupt() {
 #ifndef generic
     if (responseBuffer.isEmpty()) {
-        ATOMIC_CLEAR_BIT(huart->Instance->CR1, USART_CR1_TXEIE_TXFNFIE); /* Disable the UART Transmit Data Register Empty Interrupt */
+        USART2->CR1 = USART2->CR1 & ~USART_CR1_TXEIE_TXFNFIE;
     } else {
         USART2->TDR = responseBuffer.pop();
     }
@@ -83,7 +101,7 @@ void cli::txEmptyInterrupt() {
 
 void cli::txCompleteInterrupt() {
 #ifndef generic
-    ATOMIC_CLEAR_BIT(huart->Instance->CR1, USART_CR1_TCIE); /* Disable the UART Transmit Complete Interrupt */
+    USART2->CR1 = USART2->CR1 & ~USART_CR1_TCIE;
 #endif
 }
 

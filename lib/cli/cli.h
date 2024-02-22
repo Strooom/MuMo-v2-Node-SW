@@ -11,6 +11,7 @@
 
 class cli {
   public:
+  static void startTx();
     static void handleRxEvent();
     static void handleTxEvent();
 

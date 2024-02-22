@@ -1,6 +1,7 @@
 #include <unity.h>
 #include "main.h"
 #include <cube.hpp>
+#include <power.hpp>
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
 #include <stm32wlxx_hal_msp.c>
@@ -13,15 +14,7 @@ void tearDown(void) {}
 
 static constexpr uint32_t nmbrTestLoops{3};        // I do a few test runs to make sure the MCU can go to sleep and wake up consistently and not just once
 
-void goStop2() {
-    uint32_t currentPriMaskState = __get_PRIMASK();
-    __disable_irq();
-    HAL_SuspendTick();
-    HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
-    HAL_ResumeTick();
-    __set_PRIMASK(currentPriMaskState);
-    MX_USART2_UART_Init();
-}
+//    MX_USART2_UART_Init();
 
 void test_sleepAndWakeUpSx126x() {
     HAL_NVIC_EnableIRQ(SUBGHZ_Radio_IRQn);
@@ -33,25 +26,25 @@ void test_sleepAndWakeUpSx126x() {
 
     for (uint32_t testRun = 1; testRun <= nmbrTestLoops; testRun++) {
         TEST_ASSERT_TRUE_MESSAGE(applicationEventBuffer.isEmpty(), toString(applicationEventBuffer.pop()));
-        goStop2();
+        power::goSleep();
         TEST_ASSERT_EQUAL(applicationEvent::sx126xTimeout, applicationEventBuffer.pop());
     }
     HAL_NVIC_DisableIRQ(RTC_WKUP_IRQn);
 }
 
-void test_sleepAndWakeUpRtc() {
+void test_rtcInterrupt___mayTakeUpTo30Seconds() {
     HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
     applicationEventBuffer.initialize();
 
     for (uint32_t testRun = 1; testRun <= nmbrTestLoops; testRun++) {
         TEST_ASSERT_TRUE_MESSAGE(applicationEventBuffer.isEmpty(), toString(applicationEventBuffer.pop()));
-        goStop2();
+        power::goSleep();
         TEST_ASSERT_EQUAL(applicationEvent::realTimeClockTick, applicationEventBuffer.pop());
     }
     HAL_NVIC_DisableIRQ(RTC_WKUP_IRQn);
 }
 
-void test_sleepAndWakeUpLptim1() {
+void test_uartInterrupts() {
     HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
 
     // #define EXTI_IMR1_LPTIM1 (1UL << 29)        // TODO : investigate why this is needed to get the MCU out of STOP2 on LPTIM1 interrupt : https://gist.github.com/jefftenney/02b313fe649a14b4c75237f925872d72#file-lptimtick-c-L291
@@ -63,7 +56,7 @@ void test_sleepAndWakeUpLptim1() {
     for (uint32_t testRun = 1; testRun <= nmbrTestLoops; testRun++) {
         HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, 128);
         TEST_ASSERT_TRUE_MESSAGE(applicationEventBuffer.isEmpty(), toString(applicationEventBuffer.pop()));
-        goStop2();
+        power::goSleep();
         TEST_ASSERT_EQUAL(applicationEvent::lowPowerTimerExpired, applicationEventBuffer.pop());
         HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
     }
@@ -71,7 +64,7 @@ void test_sleepAndWakeUpLptim1() {
     HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
 }
 
-void test_waitForLptim1Interrupt() {
+void test_lptim1Interrupt() {
     HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
     applicationEventBuffer.initialize();
     HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, 2048);        // Start lptim1 timer : 2048 = 1 second @ 2048 Hz
@@ -96,10 +89,12 @@ int main(int argc, char **argv) {
     HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
 
     UNITY_BEGIN();
-    RUN_TEST(test_waitForLptim1Interrupt);
-    RUN_TEST(test_sleepAndWakeUpLptim1);
-    RUN_TEST(test_sleepAndWakeUpRtc);
-    //RUN_TEST(test_sleepAndWakeUpSx126x);
+        TEST_MESSAGE("Note : monitor the power consumption with the Power Profiler Kit");
+
+    RUN_TEST(test_lptim1Interrupt);
+    RUN_TEST(test_uartInterrupts);
+    RUN_TEST(test_rtcInterrupt___mayTakeUpTo30Seconds);
+    // RUN_TEST(test_sleepAndWakeUpSx126x);
 
     UNITY_END();
 }
