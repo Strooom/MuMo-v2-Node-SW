@@ -5,7 +5,7 @@
 
 ADC_HandleTypeDef hadc;
 
-static void MX_ADC_Init(void) {
+ void MX_ADC_Init(void) {
     hadc.Instance                   = ADC;
     hadc.Init.ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV1;
     hadc.Init.Resolution            = ADC_RESOLUTION_12B;

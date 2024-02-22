@@ -5,7 +5,7 @@
 
 RTC_HandleTypeDef hrtc;
 
-static void MX_RTC_Init(void) {
+ void MX_RTC_Init(void) {
     hrtc.Instance            = RTC;
     hrtc.Init.HourFormat     = RTC_HOURFORMAT_24;
     hrtc.Init.AsynchPrediv   = 127;

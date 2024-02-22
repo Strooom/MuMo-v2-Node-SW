@@ -3,6 +3,8 @@
 #include <cube.hpp>
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
+#include <stm32wlxx_hal_msp.c>
+#include <stm32wlxx_it.cpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 

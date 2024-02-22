@@ -79,8 +79,8 @@ void NMI_Handler(void)
 
   /* USER CODE END NonMaskableInt_IRQn 0 */
   /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
-	while (1) {
-	}
+    while (1) {
+    }
   /* USER CODE END NonMaskableInt_IRQn 1 */
 }
 
@@ -214,7 +214,7 @@ void RTC_WKUP_IRQHandler(void)
   /* USER CODE END RTC_WKUP_IRQn 0 */
   HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
   /* USER CODE BEGIN RTC_WKUP_IRQn 1 */
-applicationEventBuffer.push(applicationEvent::realTimeClockTick);
+    applicationEventBuffer.push(applicationEvent::realTimeClockTick);
   /* USER CODE END RTC_WKUP_IRQn 1 */
 }
 
@@ -256,7 +256,7 @@ void LPTIM1_IRQHandler(void)
   /* USER CODE END LPTIM1_IRQn 0 */
   HAL_LPTIM_IRQHandler(&hlptim1);
   /* USER CODE BEGIN LPTIM1_IRQn 1 */
-
+    applicationEventBuffer.push(applicationEvent::lowPowerTimerExpired);
   /* USER CODE END LPTIM1_IRQn 1 */
 }
 

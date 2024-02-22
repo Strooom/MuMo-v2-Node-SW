@@ -5,7 +5,7 @@
 
 RNG_HandleTypeDef hrng;
 
-static void MX_RNG_Init(void) {
+ void MX_RNG_Init(void) {
     /* USER CODE BEGIN RNG_Init 0 */
 
     /* USER CODE END RNG_Init 0 */

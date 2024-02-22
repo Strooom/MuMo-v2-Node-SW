@@ -5,6 +5,7 @@
 #include <applicationevent.hpp>
 #include <stm32wlxx_hal_msp.c>
 #include <stm32wlxx_it.cpp>
+#include <sx126x.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -19,20 +20,20 @@ void test_lptim1Interrupt() {
     applicationEventBuffer.initialize();
     HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, 4096);        // Start lptim1 timer : 4096 = 1 second @ 4096 Hz
 
-    uint32_t now = HAL_GetTick();
-    while (HAL_GetTick() - now < 2000) {
-        if (!applicationEventBuffer.isEmpty()) {
-            break;
-        }
-    }
+    HAL_Delay(990);
+    TEST_ASSERT_TRUE_MESSAGE(applicationEventBuffer.isEmpty(), toString(applicationEventBuffer.pop()));
+    HAL_Delay(20);
     TEST_ASSERT_EQUAL(applicationEvent::lowPowerTimerExpired, applicationEventBuffer.pop());
+
     HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
     HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
 }
 
+void nextTestMayTake30Seconds() {
+    TEST_IGNORE();
+}
 
-
-void test_rtcInterrupt___mayTakeUpTo30Seconds() {
+void test_rtcInterrupt() {
     TEST_MESSAGE("Warning : this test can take up to 30 seconds");
     MX_RTC_Init();
     HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
@@ -47,26 +48,38 @@ void test_rtcInterrupt___mayTakeUpTo30Seconds() {
     HAL_NVIC_DisableIRQ(RTC_WKUP_IRQn);
 }
 
-// void test_uartInterrupts() {
-//     TEST_MESSAGE("This test requires a loopback on the UART1 RX - TX");
-//     HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
+void nextTestRequiresUart1Loopback() {
+    TEST_IGNORE();
+}
 
-//     // #define EXTI_IMR1_LPTIM1 (1UL << 29)        // TODO : investigate why this is needed to get the MCU out of STOP2 on LPTIM1 interrupt : https://gist.github.com/jefftenney/02b313fe649a14b4c75237f925872d72#file-lptimtick-c-L291
-//     //     EXTI->IMR1 |= EXTI_IMR1_LPTIM1;
-//     __HAL_LPTIM_LPTIM1_EXTI_ENABLE_IT();        // this is needed to get the MCU out of STOP2 on LPTIM1 interrupt
+void test_uartInterrupts() {
+    MX_USART1_UART_Init();
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
+    static constexpr uint32_t testDataLength{16};
+    uint8_t txData[testDataLength] = "Hello, World!";
+    uint8_t rxData[testDataLength];
+    HAL_UART_Transmit_IT(&huart1, txData, testDataLength);
+    HAL_UART_Receive_IT(&huart1, rxData, testDataLength);
+    HAL_Delay(10);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(txData, rxData, testDataLength);
+    HAL_NVIC_DisableIRQ(USART1_IRQn);
+}
 
-//     applicationEventBuffer.initialize();
+void test_sx126xInterrupts() {
+    MX_SUBGHZ_Init();
+    applicationEventBuffer.initialize();
 
-//     for (uint32_t testRun = 1; testRun <= nmbrTestLoops; testRun++) {
-//         HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, 128);
-//         TEST_ASSERT_TRUE_MESSAGE(applicationEventBuffer.isEmpty(), toString(applicationEventBuffer.pop()));
-//         goStop2();
-//         TEST_ASSERT_EQUAL(applicationEvent::lowPowerTimerExpired, applicationEventBuffer.pop());
-//         HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
-//     }
-//     __HAL_RCC_LPTIM1_CLK_SLEEP_DISABLE();        // TODO : Why ???
-//     HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
-// }
+    //     // LL_EXTI_EnableIT_32_63(LL_EXTI_LINE_44);
+    //     // LL_PWR_SetRadioBusyTrigger(LL_PWR_RADIO_BUSY_TRIGGER_WU_IT); ???
+    //     HAL_NVIC_EnableIRQ(SUBGHZ_Radio_IRQn);
+    //     applicationEventBuffer.initialize();
+
+    sx126x::initializeRadio();
+    sx126x::configForReceive(spreadingFactor::SF7, 868100000U);
+    sx126x::startReceive(10U);
+    HAL_Delay(500);
+    TEST_ASSERT_EQUAL(applicationEvent::sx126xTimeout, applicationEventBuffer.pop());
+}
 
 int main(int argc, char **argv) {
     HAL_Init();
@@ -75,8 +88,10 @@ int main(int argc, char **argv) {
 
     UNITY_BEGIN();
     RUN_TEST(test_lptim1Interrupt);
-    //RUN_TEST(test_rtcInterrupt___mayTakeUpTo30Seconds);
-    // RUN_TEST(test_uartInterrupts);
-
+    RUN_TEST(nextTestRequiresUart1Loopback);
+    RUN_TEST(test_uartInterrupts);
+    RUN_TEST(test_sx126xInterrupts);
+    RUN_TEST(nextTestMayTake30Seconds);
+    RUN_TEST(test_rtcInterrupt);
     UNITY_END();
 }

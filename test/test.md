@@ -26,3 +26,8 @@
         - I2C Loopback with eg MCP23008
     * testing that the epaper display is really in sleep mode 
     * testing the presence of sensors by having them on a separate PCB (one without an MCU would be ok)
+
+
+
+# Coverage on Target
+see article https://mcuoneclipse.com/2014/12/26/code-coverage-for-embedded-target-with-eclipse-gcc-and-gcov/

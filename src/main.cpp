@@ -83,7 +83,7 @@ static void MX_RTC_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_ADC_Init(void);
-static void MX_I2C2_Init(void);
+ void MX_I2C2_Init(void);
 static void MX_AES_Init(void);
 static void MX_RNG_Init(void);
 static void MX_LPTIM1_Init(void);
@@ -275,7 +275,7 @@ static void MX_AES_Init(void)
 
   /* USER CODE END AES_Init 1 */
   hcryp.Instance = AES;
-  hcryp.Init.DataType = CRYP_DATATYPE_32B;
+  hcryp.Init.DataType = CRYP_DATATYPE_8B;
   hcryp.Init.KeySize = CRYP_KEYSIZE_128B;
   hcryp.Init.pKey = (uint32_t *)pKeyAES;
   hcryp.Init.Algorithm = CRYP_AES_ECB;
@@ -297,7 +297,7 @@ static void MX_AES_Init(void)
   * @param None
   * @retval None
   */
-static void MX_I2C2_Init(void)
+ void MX_I2C2_Init(void)
 {
 
   /* USER CODE BEGIN I2C2_Init 0 */

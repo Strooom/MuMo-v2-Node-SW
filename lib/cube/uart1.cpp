@@ -2,10 +2,11 @@
 
 // Copy of STM32CubeMX generated code, so I can use it in every target unittest
 // Original will be generated in the main.c file
+// Note : remove the 'static' or the function can not be found by the linker
 
 UART_HandleTypeDef huart1;
 
-static void MX_USART1_UART_Init(void) {
+void MX_USART1_UART_Init(void) {
     huart1.Instance                    = USART1;
     huart1.Init.BaudRate               = 115200;
     huart1.Init.WordLength             = UART_WORDLENGTH_8B;
