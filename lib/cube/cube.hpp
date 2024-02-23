@@ -11,3 +11,4 @@
 #include <gpio.cpp>
 #include <rng.cpp>
 #include <spi2.cpp>
+#include <i2c.cpp>
