@@ -10,3 +10,4 @@
 #include <uart2.cpp>
 #include <gpio.cpp>
 #include <rng.cpp>
+#include <spi2.cpp>

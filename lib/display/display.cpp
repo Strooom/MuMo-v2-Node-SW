@@ -11,11 +11,6 @@
 extern SPI_HandleTypeDef hspi2;
 #endif
 
-// extern peripheralRegister PORTA_BSRR;
-// extern peripheralRegister PORTB_BSRR;
-// extern peripheralRegister PORTC_BSRR;
-// extern peripheralRegister PORTB_IDR;
-
 displayPresence display::displayPresent{displayPresence::unknown};
 displayRotation display::rotation{displayRotation::rotation270};
 displayMirroring display::mirroring{displayMirroring::none};

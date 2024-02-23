@@ -77,7 +77,7 @@ void test_sx126xInterrupts() {
     sx126x::initializeRadio();
     sx126x::configForReceive(spreadingFactor::SF7, 868100000U);
     sx126x::startReceive(10U);
-    HAL_Delay(500);
+    HAL_Delay(500);        // TODO : why does this need 500 ms ? There is some startup time for the radio needed, and then 10 clocks @ 64 KHz
     TEST_ASSERT_EQUAL(applicationEvent::sx126xTimeout, applicationEventBuffer.pop());
 }
 

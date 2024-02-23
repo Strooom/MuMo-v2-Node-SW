@@ -6,8 +6,8 @@
 
 #pragma once
 #include <stdint.h>
-#include "font.hpp"
-#include "bitmap.hpp"
+#include <font.hpp>
+#include <bitmap.hpp>
 
 class graphics {
   public:
