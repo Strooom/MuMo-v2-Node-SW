@@ -31,3 +31,10 @@
 
 # Coverage on Target
 see article https://mcuoneclipse.com/2014/12/26/code-coverage-for-embedded-target-with-eclipse-gcc-and-gcov/
+
+
+gcovr --html-details -o  ./test/coverage/main.html
+
+https://gcovr.com/en/5.0/guide.html
+
+https://pyocd.io/docs/semihosting.html

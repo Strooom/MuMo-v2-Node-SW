@@ -286,7 +286,7 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
 void LoRaWAN::encryptPayload(aesKey& theKey) {
     uint32_t nmbrOfBlocks{framePayloadLength / 16};        // Split payload in blocks of 16 bytes, last part could be less than 16 bytes - integer division
 
-#ifndef generic
+#ifdef HARDWARE_AES
     stm32wle5_aes::initialize(aesMode::CTR);
     aesBlock A1;
     prepareBlockAi(A1, linkDirection::uplink, 1);
@@ -388,10 +388,9 @@ uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
     // TODO : remove the payload argument, as it's always in rawMessage[]
     // TODO : remove the payloadLength argument, as it's already calculated in the offsetsAndLengths
     uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocks(payloadLength);
-    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSize(payloadLength);
     aesBlock outputBlock;
 
-#ifndef generic
+#ifdef HARDWARE_AES
     stm32wle5_aes::initialize(aesMode::CBC);
     stm32wle5_aes::setKey(networkKey);
     stm32wle5_aes::enable();
@@ -404,6 +403,7 @@ uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
     }
     stm32wle5_aes::read(tmpBlock);
 #else
+    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSize(payloadLength);
     uint8_t outputAsBytes[16];
     unsigned char Old_Data[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 

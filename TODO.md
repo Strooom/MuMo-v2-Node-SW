@@ -10,3 +10,8 @@
 5. get LoRaWAN working
 
  
+
+ # Small Next Steps
+
+ 1. write a target unit test which verifies the hardware AES for LoRaWAN encryptions
+ 2. try a transmit cycle

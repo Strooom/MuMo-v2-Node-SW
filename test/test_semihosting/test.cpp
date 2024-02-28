@@ -6,11 +6,12 @@
 #include <stm32wlxx_hal_msp.c>
 #include <stm32wlxx_it.cpp>
 
+#include <stdio.h>
+
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 void initialise_monitor_handles(void);
 #ifdef __cplusplus
@@ -20,18 +21,23 @@ void initialise_monitor_handles(void);
 void setUp(void) {}
 void tearDown(void) {}
 
-void test_sleepAndWakeUp() {
-}
-
 int main(int argc, char **argv) {
     initialise_monitor_handles();
     HAL_Init();
     HAL_Delay(2000);
     SystemClock_Config();
 
-    UNITY_BEGIN();
-    RUN_TEST(test_sleepAndWakeUp);
-    UNITY_END();
+    // FILE *file;
+    // file = fopen("demo.txt", "w");
+    // if (file != NULL) {
+    //     fputs("hello world with file I/O\r\n", file);
+    //     (void)fwrite("hello\r\n", sizeof("hello\r\n") - 1, 1, file);
+    //     fclose(file);
+    // }
+    // file = fopen("demo2.txt", "w");
+    // if (file != NULL) {
+    //     fputs("hello world with file I/O\r\n", file);
+    //     (void)fwrite("hello\r\n", sizeof("hello\r\n") - 1, 1, file);
+    //     fclose(file);
+    // }
 }
-
-
