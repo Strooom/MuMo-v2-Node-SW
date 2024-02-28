@@ -284,9 +284,12 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
 }
 
 void LoRaWAN::encryptPayload(aesKey& theKey) {
-    uint32_t nmbrOfBlocks{framePayloadLength / 16};        // Split payload in blocks of 16 bytes, last part could be less than 16 bytes - integer division
+    uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocksFromBytes(framePayloadLength);
+    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSizeFromBytes(framePayloadLength);
+    bool hasIncompleteBlock          = aesBlock::hasIncompleteLastBlockFromBytes(framePayloadLength);
 
 #ifdef HARDWARE_AES
+
     stm32wle5_aes::initialize(aesMode::CTR);
     aesBlock A1;
     prepareBlockAi(A1, linkDirection::uplink, 1);
@@ -295,25 +298,20 @@ void LoRaWAN::encryptPayload(aesKey& theKey) {
     stm32wle5_aes::enable();
 
     aesBlock tmpBlock;
-    for (uint32_t blockIndex = 0x00; blockIndex < nmbrOfBlocks; blockIndex++) {
-        // tmpBlock.setFromByteArray(rawMessage[(blockIndex * 16) + framePayloadOffset]);
+    for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
+        uint8_t* tmpOffset;
+        tmpOffset = rawMessage + (blockIndex * 16) + framePayloadOffset;
+        tmpBlock.setFromByteArray(tmpOffset);
         stm32wle5_aes::write(tmpBlock);
         while (!stm32wle5_aes::isComputationComplete()) {
         }
         stm32wle5_aes::read(tmpBlock);
-        // copy encrypted payload back into rawMessage
-        memcpy(rawMessage, tmpBlock.asBytes(), aesBlock::lengthInBytes);
-    }
-// TODO : also consider last block which may be incomplete
-#else
+        stm32wle5_aes::clearComputationComplete();
 
-    // TODO : check this nmbr calculation.. for edge cases
-    bool hasIncompleteBlock{(framePayloadLength % 16) != 0};        // Check if last block is incomplete
-    uint32_t incompleteBlockSize{0};
-    if (hasIncompleteBlock) {
-        nmbrOfBlocks++;                                       // even if the last block is less than 16 bytes, we include it
-        incompleteBlockSize = framePayloadLength % 16;        // how long is the last block
+        memcpy(tmpOffset, tmpBlock.asBytes(), aesBlock::lengthInBytes);
     }
+    stm32wle5_aes::disable();
+#else
 
     aesBlock theBlock;
 
@@ -322,7 +320,7 @@ void LoRaWAN::encryptPayload(aesKey& theKey) {
         theBlock.encrypt(theKey);
 
         if (hasIncompleteBlock && (blockIndex == (nmbrOfBlocks - 1))) {
-            for (uint32_t byteIndex = 0; byteIndex < incompleteBlockSize; byteIndex++) {
+            for (uint32_t byteIndex = 0; byteIndex < incompleteLastBlockSize; byteIndex++) {
                 rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
             }
         } else {
@@ -335,15 +333,33 @@ void LoRaWAN::encryptPayload(aesKey& theKey) {
 }
 
 void LoRaWAN::decryptPayload(aesKey& theKey) {
-    uint32_t nmbrOfBlocks{framePayloadLength / 16};
+    uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocksFromBytes(framePayloadLength);
+    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSizeFromBytes(framePayloadLength);
+    bool hasIncompleteBlock          = aesBlock::hasIncompleteLastBlockFromBytes(framePayloadLength);
 
-    bool hasIncompleteBlock{(framePayloadLength % 16) != 0};
-    uint32_t incompleteBlockSize{0};
-    if (hasIncompleteBlock) {
-        nmbrOfBlocks++;
-        incompleteBlockSize = framePayloadLength % 16;
+#ifdef HARDWARE_AES
+    stm32wle5_aes::initialize(aesMode::CTR);
+    aesBlock A1;
+    prepareBlockAi(A1, linkDirection::downlink, 1);
+    stm32wle5_aes::setKey(theKey);
+    stm32wle5_aes::setInitializationVector(A1);
+    stm32wle5_aes::enable();
+
+    aesBlock tmpBlock;
+    for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
+        uint8_t* tmpOffset;
+        tmpOffset = rawMessage + (blockIndex * 16) + framePayloadOffset;
+        tmpBlock.setFromByteArray(tmpOffset);
+        stm32wle5_aes::write(tmpBlock);
+        while (!stm32wle5_aes::isComputationComplete()) {
+        }
+        stm32wle5_aes::read(tmpBlock);
+        stm32wle5_aes::clearComputationComplete();
+
+        memcpy(tmpOffset, tmpBlock.asBytes(), aesBlock::lengthInBytes);
     }
-
+    stm32wle5_aes::disable();
+#else
     aesBlock theBlock;
 
     for (uint32_t blockIndex = 0x00; blockIndex < nmbrOfBlocks; blockIndex++) {
@@ -351,7 +367,7 @@ void LoRaWAN::decryptPayload(aesKey& theKey) {
         theBlock.encrypt(theKey);
 
         if (hasIncompleteBlock && (blockIndex == (nmbrOfBlocks - 1))) {
-            for (uint32_t byteIndex = 0; byteIndex < incompleteBlockSize; byteIndex++) {
+            for (uint32_t byteIndex = 0; byteIndex < incompleteLastBlockSize; byteIndex++) {
                 rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
             }
         } else {
@@ -360,6 +376,7 @@ void LoRaWAN::decryptPayload(aesKey& theKey) {
             }
         }
     }
+#endif
 }
 
 void LoRaWAN::generateKeysK1K2() {
@@ -381,36 +398,38 @@ void LoRaWAN::generateKeysK1K2() {
 }
 
 uint32_t LoRaWAN::calculateMic() {
-    return calculateMic(rawMessage, micOffset);
-}
-
-uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
-    // TODO : remove the payload argument, as it's always in rawMessage[]
-    // TODO : remove the payloadLength argument, as it's already calculated in the offsetsAndLengths
-    uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocks(payloadLength);
-    aesBlock outputBlock;
+    uint32_t payloadLength = b0BlockLength + loRaPayloadLength - micLength;
+    uint32_t nmbrOfBlocks  = aesBlock::nmbrOfBlocksFromBytes(payloadLength);
 
 #ifdef HARDWARE_AES
     stm32wle5_aes::initialize(aesMode::CBC);
     stm32wle5_aes::setKey(networkKey);
+    stm32wle5_aes::setInitializationVector(input); // TODO 
     stm32wle5_aes::enable();
     aesBlock tmpBlock;
     for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
-        tmpBlock.setFromByteArray(rawMessage);        // TODO : feed all data to the AES, we only need to read the final output / adjust pointer here
+        uint8_t* tmpOffset;
+        tmpOffset = rawMessage + (blockIndex * 16);
+        tmpBlock.setFromByteArray(tmpOffset);
         stm32wle5_aes::write(tmpBlock);
         while (!stm32wle5_aes::isComputationComplete()) {
         }
+        stm32wle5_aes::read(tmpBlock);
+        stm32wle5_aes::clearComputationComplete();
     }
-    stm32wle5_aes::read(tmpBlock);
+    uint32_t mic = tmpBlock.asWords()[0];
+    stm32wle5_aes::disable();
+
 #else
-    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSize(payloadLength);
+    aesBlock outputBlock;
+    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSizeFromBytes(payloadLength);
     uint8_t outputAsBytes[16];
     unsigned char Old_Data[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
     if (nmbrOfBlocks > 0) {
         // Perform full calculating until n-1 message blocks
         for (uint32_t blockIndex = 0x0; blockIndex < (nmbrOfBlocks - 1); blockIndex++) {
-            outputBlock.setFromByteArray(payload + (blockIndex * 16));        //  Copy data into block
+            outputBlock.setFromByteArray(rawMessage + (blockIndex * 16));        //  Copy data into block
             outputBlock.XOR(Old_Data);
             outputBlock.encrypt(networkKey);
             memcpy(outputAsBytes, outputBlock.asBytes(), 16);
@@ -422,7 +441,7 @@ uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
         // Perform calculation on last block
         // Check if Datalength is a multiple of 16
         if (incompleteLastBlockSize == 0) {
-            outputBlock.setFromByteArray(payload + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
+            outputBlock.setFromByteArray(rawMessage + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
             outputBlock.XOR(Old_Data);
             outputBlock.XOR(K1.asBytes());
             outputBlock.encrypt(networkKey);
@@ -430,7 +449,7 @@ uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
         } else {
             for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
                 if (byteIndex < incompleteLastBlockSize) {
-                    outputAsBytes[byteIndex] = payload[((nmbrOfBlocks - 1) * 16) + byteIndex];
+                    outputAsBytes[byteIndex] = rawMessage[((nmbrOfBlocks - 1) * 16) + byteIndex];
                 }
                 if (byteIndex == incompleteLastBlockSize) {
                     outputAsBytes[byteIndex] = 0x80;
@@ -456,9 +475,8 @@ uint32_t LoRaWAN::calculateMic(uint8_t* payload, uint32_t payloadLength) {
         outputBlock.XOR(Old_Data);
         outputBlock.encrypt(networkKey);
     }
-#endif
-
     uint32_t mic = ((outputBlock.asBytes()[0] << 24) + (outputBlock.asBytes()[1] << 16) + (outputBlock.asBytes()[2] << 8) + (outputBlock.asBytes()[3]));
+#endif
     return mic;
 }
 

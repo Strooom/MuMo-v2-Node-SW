@@ -23,8 +23,9 @@ class aesBlock {
     uint8_t &operator[](std::size_t index);        // accessing the individual bytes through the [] operator
     bool operator==(const aesBlock &block);
 
-    static uint32_t nmbrOfBlocks(uint32_t nmbrOfBytes);
-    static uint32_t incompleteLastBlockSize(uint32_t nmbrOfBytes);
+    static uint32_t nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes);
+    static uint32_t incompleteLastBlockSizeFromBytes(uint32_t nmbrOfBytes);
+    static bool hasIncompleteLastBlockFromBytes(uint32_t nmbrOfBytes);
     static uint32_t calculateNmbrOfBytesToPad(uint32_t nmbrOfBytes);
 
     void encrypt(aesKey &withKey);

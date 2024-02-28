@@ -137,7 +137,7 @@ void test_hwCalculateMic() {
 
     stm32wle5_aes::initialize(aesMode::CBC);
     stm32wle5_aes::setKey(key);
-    stm32wle5_aes::setInitializationVector(input);
+    stm32wle5_aes::setInitializationVector(input);        // TODO : this is not very clear why input is sent to both IV as well as data-in registers -> choose better names !
     stm32wle5_aes::enable();
 
     // first block

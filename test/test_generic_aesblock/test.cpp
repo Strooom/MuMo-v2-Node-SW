@@ -220,20 +220,20 @@ void test_mixColumns() {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedOutput, aBlock.asBytes(), 16);
 }
 
-void test_nmbrOfBlocks() {
-    TEST_ASSERT_EQUAL(0, aesBlock::nmbrOfBlocks(0));
-    TEST_ASSERT_EQUAL(1, aesBlock::nmbrOfBlocks(1));
-    TEST_ASSERT_EQUAL(1, aesBlock::nmbrOfBlocks(16));
-    TEST_ASSERT_EQUAL(2, aesBlock::nmbrOfBlocks(17));
-    TEST_ASSERT_EQUAL(2, aesBlock::nmbrOfBlocks(32));
+void test_nmbrOfBlocksFromBytes() {
+    TEST_ASSERT_EQUAL(0, aesBlock::nmbrOfBlocksFromBytes(0));
+    TEST_ASSERT_EQUAL(1, aesBlock::nmbrOfBlocksFromBytes(1));
+    TEST_ASSERT_EQUAL(1, aesBlock::nmbrOfBlocksFromBytes(16));
+    TEST_ASSERT_EQUAL(2, aesBlock::nmbrOfBlocksFromBytes(17));
+    TEST_ASSERT_EQUAL(2, aesBlock::nmbrOfBlocksFromBytes(32));
 }
 
-void test_incompleteLastBlockSize() {
-    TEST_ASSERT_EQUAL(0, aesBlock::incompleteLastBlockSize(0));
-    TEST_ASSERT_EQUAL(1, aesBlock::incompleteLastBlockSize(1));
-    TEST_ASSERT_EQUAL(15, aesBlock::incompleteLastBlockSize(15));
-    TEST_ASSERT_EQUAL(0, aesBlock::incompleteLastBlockSize(16));
-    TEST_ASSERT_EQUAL(1, aesBlock::incompleteLastBlockSize(17));
+void test_incompleteLastBlockSizeFromBytes() {
+    TEST_ASSERT_EQUAL(0, aesBlock::incompleteLastBlockSizeFromBytes(0));
+    TEST_ASSERT_EQUAL(1, aesBlock::incompleteLastBlockSizeFromBytes(1));
+    TEST_ASSERT_EQUAL(15, aesBlock::incompleteLastBlockSizeFromBytes(15));
+    TEST_ASSERT_EQUAL(0, aesBlock::incompleteLastBlockSizeFromBytes(16));
+    TEST_ASSERT_EQUAL(1, aesBlock::incompleteLastBlockSizeFromBytes(17));
 }
 
 void test_nmbrOfBytesToPad() {
@@ -265,8 +265,8 @@ int main(int argc, char** argv) {
     RUN_TEST(test_isEqualOperator);
     RUN_TEST(test_assignOperator);
 
-    RUN_TEST(test_nmbrOfBlocks);
-    RUN_TEST(test_incompleteLastBlockSize);
+    RUN_TEST(test_nmbrOfBlocksFromBytes);
+    RUN_TEST(test_incompleteLastBlockSizeFromBytes);
     RUN_TEST(test_nmbrOfBytesToPad);
 
     RUN_TEST(test_swapLittleBigEndian);

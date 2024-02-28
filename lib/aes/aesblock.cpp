@@ -47,18 +47,22 @@ uint32_t *aesBlock::asWords() {
     return state.asWord;
 }
 
-uint32_t aesBlock::nmbrOfBlocks(uint32_t nmbrOfBytes) {
+uint32_t aesBlock::nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes) {
     return (nmbrOfBytes + 15U) / 16U;
 }
-uint32_t aesBlock::incompleteLastBlockSize(uint32_t nmbrOfBytes) {
+uint32_t aesBlock::incompleteLastBlockSizeFromBytes(uint32_t nmbrOfBytes) {
     return nmbrOfBytes % 16U;
 }
 
+ bool aesBlock::hasIncompleteLastBlockFromBytes(uint32_t nmbrOfBytes) {
+        return ((nmbrOfBytes % 16U) != 0U);
+    }
+
 uint32_t aesBlock::calculateNmbrOfBytesToPad(uint32_t nmbrOfBytes) {
-    if (incompleteLastBlockSize(nmbrOfBytes) == 0) {
+    if (incompleteLastBlockSizeFromBytes(nmbrOfBytes) == 0) {
         return 0;
     } else {
-        return (16 - incompleteLastBlockSize(nmbrOfBytes));
+        return (16 - incompleteLastBlockSizeFromBytes(nmbrOfBytes));
     }
 }
 
@@ -103,7 +107,7 @@ void aesBlock::wordsToBytes(uint8_t bytesOut[16], const uint32_t wordsIn[4]) {
 }
 
 void aesBlock::encrypt(aesKey &key) {
-#ifndef generic
+#ifdef HARDWARE_AES
     stm32wle5_aes::initialize(aesMode::EBC);
     stm32wle5_aes::setKey(key);
     stm32wle5_aes::enable();
@@ -114,7 +118,6 @@ void aesBlock::encrypt(aesKey &key) {
     stm32wle5_aes::read(*this);
 
 #else
-    // software implementation
     XOR(key.expandedKey);
     for (auto round = 1; round <= 10; round++) {
         substituteBytes();

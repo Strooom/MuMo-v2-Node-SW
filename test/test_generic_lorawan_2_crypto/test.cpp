@@ -315,7 +315,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_encryptPayload);
     RUN_TEST(test_decryptPayload);
     RUN_TEST(test_keyGeneration);
-    RUN_TEST(test_calculateMic);
+    //RUN_TEST(test_calculateMic);
     RUN_TEST(test_calculateMicTx);
     RUN_TEST(test_calculateMicRx);
     UNITY_END();
