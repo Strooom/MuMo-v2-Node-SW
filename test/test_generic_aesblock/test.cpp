@@ -237,7 +237,7 @@ void test_incompleteLastBlockSizeFromBytes() {
 }
 
 void test_nmbrOfBytesToPad() {
-    TEST_ASSERT_EQUAL(0, aesBlock::calculateNmbrOfBytesToPad(0));
+    TEST_ASSERT_EQUAL(16, aesBlock::calculateNmbrOfBytesToPad(0));        // exception in the AES-CMAC algorithm
     TEST_ASSERT_EQUAL(15, aesBlock::calculateNmbrOfBytesToPad(1));
     TEST_ASSERT_EQUAL(1, aesBlock::calculateNmbrOfBytesToPad(15));
     TEST_ASSERT_EQUAL(0, aesBlock::calculateNmbrOfBytesToPad(16));

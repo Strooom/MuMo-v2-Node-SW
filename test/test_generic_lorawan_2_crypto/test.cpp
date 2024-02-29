@@ -221,7 +221,7 @@ void test_calculateMicTx() {
     LoRaWAN::insertHeaders(nullptr, 0, testFramePayload1Length, 8);
     LoRaWAN::insertBlockB0(linkDirection::uplink, LoRaWAN::uplinkFrameCount);
     LoRaWAN::insertPayload(testFramePayload1, testFramePayload1Length);
-    LoRaWAN::padForMicCalculation();
+    LoRaWAN::padForMicCalculation(LoRaWAN::micOffset);
     TEST_ASSERT_EQUAL_UINT32(0x13f14e5e, LoRaWAN::calculateMic());
 
     // B0 = 49000000000078563412ccddeeff0020
@@ -243,7 +243,7 @@ void test_calculateMicTx() {
     LoRaWAN::insertHeaders(nullptr, 0, testFramePayload2Length, 8);
     LoRaWAN::insertBlockB0(linkDirection::uplink, LoRaWAN::uplinkFrameCount);
     LoRaWAN::insertPayload(testFramePayload2, testFramePayload2Length);
-    LoRaWAN::padForMicCalculation();
+    LoRaWAN::padForMicCalculation(LoRaWAN::micOffset);
     TEST_ASSERT_EQUAL_UINT32(0x390449df, LoRaWAN::calculateMic());
 
     // B0 = 49000000000078563412ccddeeff001C
@@ -271,7 +271,7 @@ void test_calculateMicRx() {
     TEST_ASSERT_EQUAL_UINT32(32, LoRaWAN::micOffset);
     memcpy(LoRaWAN::rawMessage + LoRaWAN::macHeaderOffset, testLoRaPayload1, testLoRaPayload1Length);
     LoRaWAN::insertBlockB0(linkDirection::downlink, LoRaWAN::downlinkFrameCount);
-    LoRaWAN::padForMicCalculation();
+    LoRaWAN::padForMicCalculation(LoRaWAN::micOffset);
     TEST_ASSERT_EQUAL_UINT32(0x62b3e738, LoRaWAN::calculateMic());
 
     // B0 = 49000000000178563412CCDDEEFF0020
@@ -294,7 +294,7 @@ void test_calculateMicRx() {
     TEST_ASSERT_EQUAL_UINT32(28, LoRaWAN::micOffset);
     memcpy(LoRaWAN::rawMessage + LoRaWAN::macHeaderOffset, testLoRaPayload2, testLoRaPayload2Length);
     LoRaWAN::insertBlockB0(linkDirection::downlink, LoRaWAN::downlinkFrameCount);
-    LoRaWAN::padForMicCalculation();
+    LoRaWAN::padForMicCalculation(LoRaWAN::micOffset);
     TEST_ASSERT_EQUAL_UINT32(0x4fbbd7f7, LoRaWAN::calculateMic());
 
     // B0 = 49000000000178563412CCDDEEFF001C
@@ -315,7 +315,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_encryptPayload);
     RUN_TEST(test_decryptPayload);
     RUN_TEST(test_keyGeneration);
-    //RUN_TEST(test_calculateMic);
+    RUN_TEST(test_calculateMic);
     RUN_TEST(test_calculateMicTx);
     RUN_TEST(test_calculateMicRx);
     UNITY_END();

@@ -180,6 +180,7 @@ void test_calculateMic() {
     LoRaWAN::networkKey.setFromHexString("2b7e151628aed2a6abf7158809cf4f3c");
     LoRaWAN::generateKeysK1K2();
     LoRaWAN::micOffset = 0;
+    LoRaWAN::padForMicCalculation(0);
     TEST_ASSERT_EQUAL(0xbb1d6929, LoRaWAN::calculateMic());
 
     static constexpr uint32_t clearText1Length{16};
@@ -188,6 +189,8 @@ void test_calculateMic() {
     LoRaWAN::clearRawMessage();
     memcpy(LoRaWAN::rawMessage, clearText1, clearText1Length);
     LoRaWAN::micOffset = clearText1Length;
+    LoRaWAN::loRaPayloadLength = LoRaWAN::micOffset - LoRaWAN::b0BlockLength;
+    LoRaWAN::padForMicCalculation(LoRaWAN::loRaPayloadLength);
     TEST_ASSERT_EQUAL(0x070A16B4, LoRaWAN::calculateMic());
 
     static constexpr uint32_t clearText2Length{40};
@@ -196,6 +199,8 @@ void test_calculateMic() {
     LoRaWAN::clearRawMessage();
     memcpy(LoRaWAN::rawMessage, clearText2, clearText2Length);
     LoRaWAN::micOffset = clearText2Length;
+    LoRaWAN::loRaPayloadLength = LoRaWAN::micOffset - LoRaWAN::b0BlockLength;
+    LoRaWAN::padForMicCalculation(LoRaWAN::loRaPayloadLength);
     TEST_ASSERT_EQUAL(0xDFA66747, LoRaWAN::calculateMic());
 
     static constexpr uint32_t clearText3Length{64};
@@ -204,6 +209,8 @@ void test_calculateMic() {
     LoRaWAN::clearRawMessage();
     memcpy(LoRaWAN::rawMessage, clearText3, clearText3Length);
     LoRaWAN::micOffset = clearText3Length;
+    LoRaWAN::loRaPayloadLength = LoRaWAN::micOffset - LoRaWAN::b0BlockLength;
+    LoRaWAN::padForMicCalculation(LoRaWAN::loRaPayloadLength);
     TEST_ASSERT_EQUAL(0x51f0bebf, LoRaWAN::calculateMic());
 }
 
@@ -223,7 +230,7 @@ void test_calculateMicTx() {
     LoRaWAN::insertHeaders(nullptr, 0, testFramePayload1Length, 8);
     LoRaWAN::insertBlockB0(linkDirection::uplink, LoRaWAN::uplinkFrameCount);
     LoRaWAN::insertPayload(testFramePayload1, testFramePayload1Length);
-    LoRaWAN::padForMicCalculation();
+    LoRaWAN::padForMicCalculation(testFramePayload1Length);
     TEST_ASSERT_EQUAL_UINT32(0x13f14e5e, LoRaWAN::calculateMic());
 
     // B0 = 49000000000078563412ccddeeff0020
@@ -245,7 +252,7 @@ void test_calculateMicTx() {
     LoRaWAN::insertHeaders(nullptr, 0, testFramePayload2Length, 8);
     LoRaWAN::insertBlockB0(linkDirection::uplink, LoRaWAN::uplinkFrameCount);
     LoRaWAN::insertPayload(testFramePayload2, testFramePayload2Length);
-    LoRaWAN::padForMicCalculation();
+    LoRaWAN::padForMicCalculation(testFramePayload2Length);
     TEST_ASSERT_EQUAL_UINT32(0x390449df, LoRaWAN::calculateMic());
 
     // B0 = 49000000000078563412ccddeeff001C
@@ -273,7 +280,7 @@ void test_calculateMicRx() {
     TEST_ASSERT_EQUAL_UINT32(32, LoRaWAN::micOffset);
     memcpy(LoRaWAN::rawMessage + LoRaWAN::macHeaderOffset, testLoRaPayload1, testLoRaPayload1Length);
     LoRaWAN::insertBlockB0(linkDirection::downlink, LoRaWAN::downlinkFrameCount);
-    LoRaWAN::padForMicCalculation();
+    LoRaWAN::padForMicCalculation(testLoRaPayload1Length - LoRaWAN::micLength);
     TEST_ASSERT_EQUAL_UINT32(0x62b3e738, LoRaWAN::calculateMic());
 
     // B0 = 49000000000178563412CCDDEEFF0020
@@ -296,7 +303,7 @@ void test_calculateMicRx() {
     TEST_ASSERT_EQUAL_UINT32(28, LoRaWAN::micOffset);
     memcpy(LoRaWAN::rawMessage + LoRaWAN::macHeaderOffset, testLoRaPayload2, testLoRaPayload2Length);
     LoRaWAN::insertBlockB0(linkDirection::downlink, LoRaWAN::downlinkFrameCount);
-    LoRaWAN::padForMicCalculation();
+    LoRaWAN::padForMicCalculation(testLoRaPayload2Length - LoRaWAN::micLength);
     TEST_ASSERT_EQUAL_UINT32(0x4fbbd7f7, LoRaWAN::calculateMic());
 
     // B0 = 49000000000178563412CCDDEEFF001C
@@ -310,7 +317,7 @@ void test_calculateMicRx() {
     // MIC = 4fbbd7f7
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     HAL_Init();
     HAL_Delay(2000);
     SystemClock_Config();
@@ -322,7 +329,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_encryptPayload);
     RUN_TEST(test_decryptPayload);
     RUN_TEST(test_keyGeneration);
-    // RUN_TEST(test_calculateMic);
+    RUN_TEST(test_calculateMic);
     RUN_TEST(test_calculateMicTx);
     RUN_TEST(test_calculateMicRx);
     UNITY_END();

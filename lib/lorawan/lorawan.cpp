@@ -8,6 +8,7 @@
 #include <aesblock.hpp>
 #include <stm32wle5_aes.hpp>
 #include <hexascii.hpp>
+#include <swaplittleandbigendian.hpp>
 #include <ctime>
 
 #ifndef generic
@@ -232,12 +233,12 @@ void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCount)
     rawMessage[15] = micOffset;                                 // number of bytes over which the MIC is applied
 }
 
-void LoRaWAN::padForMicCalculation() {
-    nmbrOfBytesToPad = aesBlock::calculateNmbrOfBytesToPad(loRaPayloadLength - 4);
+void LoRaWAN::padForMicCalculation(const uint32_t messageLength) {
+    nmbrOfBytesToPad = aesBlock::calculateNmbrOfBytesToPad(messageLength);
     if (nmbrOfBytesToPad > 0) {
         rawMessage[micOffset] = 0x80;
     }
-    for (uint32_t index = micOffset + 1; index < (micOffset + nmbrOfBytesToPad); index++) {
+    for (uint32_t index = micOffset + 1; index < (micOffset + nmbrOfBytesToPad); index++) {        // TODO : make this a memset or memclr if that would exist
         rawMessage[index] = 0x00;
     }
 }
@@ -284,9 +285,7 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
 }
 
 void LoRaWAN::encryptPayload(aesKey& theKey) {
-    uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocksFromBytes(framePayloadLength);
-    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSizeFromBytes(framePayloadLength);
-    bool hasIncompleteBlock          = aesBlock::hasIncompleteLastBlockFromBytes(framePayloadLength);
+    uint32_t nmbrOfBlocks = aesBlock::nmbrOfBlocksFromBytes(framePayloadLength);
 
 #ifdef HARDWARE_AES
 
@@ -314,12 +313,14 @@ void LoRaWAN::encryptPayload(aesKey& theKey) {
 #else
 
     aesBlock theBlock;
+    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSizeFromBytes(framePayloadLength);
+    bool hasIncompleteLastBlock      = aesBlock::hasIncompleteLastBlockFromBytes(framePayloadLength);
 
     for (uint32_t blockIndex = 0x00; blockIndex < nmbrOfBlocks; blockIndex++) {
         prepareBlockAi(theBlock, linkDirection::uplink, (blockIndex + 1));
         theBlock.encrypt(theKey);
 
-        if (hasIncompleteBlock && (blockIndex == (nmbrOfBlocks - 1))) {
+        if (hasIncompleteLastBlock && (blockIndex == (nmbrOfBlocks - 1))) {
             for (uint32_t byteIndex = 0; byteIndex < incompleteLastBlockSize; byteIndex++) {
                 rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
             }
@@ -333,9 +334,7 @@ void LoRaWAN::encryptPayload(aesKey& theKey) {
 }
 
 void LoRaWAN::decryptPayload(aesKey& theKey) {
-    uint32_t nmbrOfBlocks            = aesBlock::nmbrOfBlocksFromBytes(framePayloadLength);
-    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSizeFromBytes(framePayloadLength);
-    bool hasIncompleteBlock          = aesBlock::hasIncompleteLastBlockFromBytes(framePayloadLength);
+    uint32_t nmbrOfBlocks = aesBlock::nmbrOfBlocksFromBytes(framePayloadLength);
 
 #ifdef HARDWARE_AES
     stm32wle5_aes::initialize(aesMode::CTR);
@@ -361,12 +360,14 @@ void LoRaWAN::decryptPayload(aesKey& theKey) {
     stm32wle5_aes::disable();
 #else
     aesBlock theBlock;
+    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSizeFromBytes(framePayloadLength);
+    bool hasIncompleteLastBlock      = aesBlock::hasIncompleteLastBlockFromBytes(framePayloadLength);
 
     for (uint32_t blockIndex = 0x00; blockIndex < nmbrOfBlocks; blockIndex++) {
         prepareBlockAi(theBlock, linkDirection::downlink, (blockIndex + 1));
         theBlock.encrypt(theKey);
 
-        if (hasIncompleteBlock && (blockIndex == (nmbrOfBlocks - 1))) {
+        if (hasIncompleteLastBlock && (blockIndex == (nmbrOfBlocks - 1))) {
             for (uint32_t byteIndex = 0; byteIndex < incompleteLastBlockSize; byteIndex++) {
                 rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
             }
@@ -398,29 +399,51 @@ void LoRaWAN::generateKeysK1K2() {
 }
 
 uint32_t LoRaWAN::calculateMic() {
-    uint32_t payloadLength = b0BlockLength + loRaPayloadLength - micLength;
-    uint32_t nmbrOfBlocks  = aesBlock::nmbrOfBlocksFromBytes(payloadLength);
-
 #ifdef HARDWARE_AES
+    // Implementation according to RFC 4493 AES-CMAC
+
+    uint32_t payloadLength = micOffset;
+    uint32_t nmbrOfBlocks  = aesBlock::nmbrOfBlocksFromBytes(payloadLength);
+    bool hasIncompleteLastBlock;
+    if (nmbrOfBlocks == 0) {
+        nmbrOfBlocks           = 1;
+        hasIncompleteLastBlock = true;
+    } else {
+        hasIncompleteLastBlock = aesBlock::hasIncompleteLastBlockFromBytes(payloadLength);
+    }
+    aesBlock allZeroes;
+
     stm32wle5_aes::initialize(aesMode::CBC);
     stm32wle5_aes::setKey(networkKey);
-    stm32wle5_aes::setInitializationVector(input); // TODO 
+    stm32wle5_aes::setInitializationVector(allZeroes);
     stm32wle5_aes::enable();
     aesBlock tmpBlock;
     for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
         uint8_t* tmpOffset;
         tmpOffset = rawMessage + (blockIndex * 16);
         tmpBlock.setFromByteArray(tmpOffset);
+        if (blockIndex == (nmbrOfBlocks - 1)) {
+            if (hasIncompleteLastBlock) {
+                tmpBlock.XOR(K2.asBytes());
+            } else {
+                tmpBlock.XOR(K1.asBytes());
+            }
+        }
         stm32wle5_aes::write(tmpBlock);
         while (!stm32wle5_aes::isComputationComplete()) {
         }
         stm32wle5_aes::read(tmpBlock);
         stm32wle5_aes::clearComputationComplete();
     }
-    uint32_t mic = tmpBlock.asWords()[0];
     stm32wle5_aes::disable();
+    uint32_t mic = aesBlock::swapLittleBigEndian(tmpBlock.asWords()[0]);
 
 #else
+    uint32_t payloadLength      = micOffset;
+    uint32_t nmbrOfBlocks       = aesBlock::nmbrOfBlocksFromBytes(payloadLength);
+    bool hasIncompleteLastBlock = aesBlock::hasIncompleteLastBlockFromBytes(payloadLength);
+    aesBlock allZeroes;
+
     aesBlock outputBlock;
     uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSizeFromBytes(payloadLength);
     uint8_t outputAsBytes[16];
@@ -472,7 +495,7 @@ uint32_t LoRaWAN::calculateMic() {
 
         outputBlock.setFromByteArray(outputAsBytes);
         outputBlock.XOR(K2.asBytes());
-        outputBlock.XOR(Old_Data);
+        outputBlock.XOR(Old_Data);        // I think this step is useless, as Old_Data is all zeroes
         outputBlock.encrypt(networkKey);
     }
     uint32_t mic = ((outputBlock.asBytes()[0] << 24) + (outputBlock.asBytes()[1] << 16) + (outputBlock.asBytes()[2] << 8) + (outputBlock.asBytes()[3]));

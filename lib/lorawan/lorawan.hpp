@@ -146,7 +146,7 @@ class LoRaWAN {
     static void decryptPayload(aesKey &theKey);
     static void insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort);
     static void insertBlockB0(linkDirection theDirection, frameCount &aFrameCount);        // in downlink, the framecount is the received framecount, not necessarily the downlink framecount so I need to pass it as a parameter
-    static void padForMicCalculation();
+    static void padForMicCalculation(const uint32_t messageLength);
     static void insertMic();
     static void insertMic(uint32_t aMic);
 
