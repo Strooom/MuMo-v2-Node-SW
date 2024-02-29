@@ -21,11 +21,12 @@ class aesKey {
     uint8_t* asBytes();         // return the key as bytes
     uint32_t* asWords();        // return the key as words
 
+    uint8_t expandedKey[176];
+
 #ifndef unitTesting
 
   private:
 #endif
-    uint8_t expandedKey[176];
 
     union {
         uint8_t asByte[lengthInBytes]{};        // interprete the data as 16 bytes

@@ -237,9 +237,7 @@ void LoRaWAN::padForMicCalculation(const uint32_t messageLength) {
     nmbrOfBytesToPad = aesBlock::calculateNmbrOfBytesToPad(messageLength);
     if (nmbrOfBytesToPad > 0) {
         rawMessage[micOffset] = 0x80;
-    }
-    for (uint32_t index = micOffset + 1; index < (micOffset + nmbrOfBytesToPad); index++) {        // TODO : make this a memset or memclr if that would exist
-        rawMessage[index] = 0x00;
+        memset(rawMessage + micOffset + 1, 0, nmbrOfBytesToPad - 1);
     }
 }
 
