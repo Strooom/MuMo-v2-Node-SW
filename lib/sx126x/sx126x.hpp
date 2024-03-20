@@ -25,6 +25,7 @@ class sx126x {
   public:
     sx126x() = delete;
     static void initialize();
+    static uint8_t getStatus();
     static void configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t *payload, uint32_t payloadLength);
     static void configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequency);
 
@@ -32,15 +33,17 @@ class sx126x {
     static void goSleep(sleepMode aSleepMode = sleepMode::warmStart);
     enum class standbyMode;
     static void goStandby(standbyMode aStandbyMode = standbyMode::rc);
-    static void startTransmit(uint32_t timeOut = 0);
+    static constexpr uint32_t transmitTimeout{64000U};
+    static void startTransmit(uint32_t timeOut = transmitTimeout);
     static void startReceive(uint32_t timeOut);
+
 
 #ifndef unitTesting
 
 //  private:
 #endif
     static constexpr uint32_t rxTxBufferLength{256};
-    static constexpr uint32_t TCXOfrequency{32000000U};
+    static constexpr uint32_t TCXOfrequencyInHz{32000000U};
 
     enum class registerAddress : uint16_t {
         LoRaSyncWordMSB          = 0x740,
@@ -50,6 +53,7 @@ class sx126x {
         XTAtrim                  = 0x911,
         DIO3outputVoltageControl = 0x920,
         smpsMaximumDrive         = 0x923,
+        deviceSignature          = 0x320,
     };
 
     enum class command {

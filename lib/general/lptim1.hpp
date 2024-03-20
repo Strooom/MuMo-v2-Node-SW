@@ -6,14 +6,10 @@
 // #############################################################################
 
 #pragma once
-#include "stdint.h"
+#include <stdint.h>
 
-enum class batteryType : uint8_t {
-    liFePO4_700mAh   = 0x00,        // AA LiFePO4 battery
-    liFePO4_1500mAh  = 0x01,        // 18650 LiFePO4 battery
-    alkaline_1200mAh = 0x02,        // 2 AA Alkaline batteries
-    saft_ls_14250    = 0x03,        // 1/2 AA Saft LS14250 battery
-    saft_ls_145000   = 0x04,        // 1 AA Saft LS14500 battery
-};
+static constexpr uint32_t timerOffset{128U};        // offset to get timing of LPTIM1 accurate, compensating for start/stop overhead
 
-constexpr uint32_t nmbrBatteryTypes{5};
+uint32_t ticksFromSeconds(uint32_t seconds) {
+    return (seconds * 4096U) - timerOffset;
+}

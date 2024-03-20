@@ -25,9 +25,10 @@ class scd40 {
     static void run();
     static void log();
 
-    static constexpr uint32_t nmbrChannels{2};
+    static constexpr uint32_t nmbrChannels{3};
     static constexpr uint32_t temperature{0};
     static constexpr uint32_t relativeHumidity{1};
+    static constexpr uint32_t co2{2};
     static sensorChannel channels[nmbrChannels];
     static sensorChannelFormat channelFormats[nmbrChannels];
 
@@ -71,6 +72,7 @@ class scd40 {
 
     static uint32_t rawDataTemperature;
     static uint32_t rawDataRelativeHumidity;
+        static uint32_t rawCo2;
 
     static bool awake;
 

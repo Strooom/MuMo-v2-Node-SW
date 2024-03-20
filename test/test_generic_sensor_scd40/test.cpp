@@ -13,7 +13,7 @@ void test_isPresent() {
 //    TEST_ASSERT_TRUE(scd40::isPresent());
 }
 
-void test_initialize() {
+void test_signature() {
     // TEST_ASSERT_EQUAL(sensorDeviceState::unknown, scd40::state);
     // scd40::initialize();
     // TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, scd40::state);
@@ -37,7 +37,7 @@ void test_initialize() {
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_isPresent);
-    RUN_TEST(test_initialize);
+    RUN_TEST(test_signature);
     // RUN_TEST(test_sample);
     // RUN_TEST(test_measurements);
     UNITY_END();

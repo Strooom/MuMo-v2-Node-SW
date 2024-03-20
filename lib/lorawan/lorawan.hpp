@@ -11,7 +11,7 @@
 #include <applicationevent.hpp>
 #include <aeskey.hpp>
 #include <messagetype.hpp>
-#include <txrxcycle.hpp>
+#include <txrxcyclestate.hpp>
 #include <macheader.hpp>
 #include <deviceaddress.hpp>
 #include <framecount.hpp>
@@ -64,7 +64,7 @@ class LoRaWAN {
     static uint32_t rx2FrequencyInHz;
     static loRaTxChannelCollection txChannels;
     static uint32_t rx1DelayInSeconds;
-    static constexpr uint32_t maxRandomDelayBeforeTx{1024U};
+    static constexpr uint32_t maxRandomDelayBeforeTx{4096U};
 
     // #################################################
     // ### Encoding and Decoding of LoRaWAN messages ###
@@ -162,7 +162,7 @@ class LoRaWAN {
     static messageType decodeMessage();
 
     static uint32_t getRandomNumber();
-    static void startTimer(uint32_t timeOutIn2048HzTicks);
+    static void startTimer(uint32_t timeOutIn4096zTicks);
     static void stopTimer();
 
     static void prepareBlockAi(aesBlock &theBlock, linkDirection theDirection, uint32_t blockIndex);

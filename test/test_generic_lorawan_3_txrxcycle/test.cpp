@@ -47,7 +47,7 @@ void test_txRxCycleStateToString() {
     TEST_ASSERT_EQUAL_STRING("unknown state", toString(static_cast<txRxCycleState>(99)));
 }
 
-void test_initialize() {
+void test_signature() {
     // Putting some dirty data in the context
     LoRaWAN::theTxRxCycleState = txRxCycleState::waitForRxMessageReadout;
     LoRaWAN::macIn.append(0xFF);
@@ -56,6 +56,7 @@ void test_initialize() {
 
     LoRaWAN::initialize();
     TEST_ASSERT_EQUAL(txRxCycleState::idle, LoRaWAN::theTxRxCycleState);
+    TEST_ASSERT_EQUAL(txRxCycleState::idle, LoRaWAN::getState());
     TEST_ASSERT_TRUE(LoRaWAN::isIdle());
     TEST_ASSERT_TRUE(LoRaWAN::macIn.isEmpty());
     TEST_ASSERT_TRUE(LoRaWAN::macOut.isEmpty());
@@ -107,7 +108,7 @@ void test_goTo_handleEvents() {
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
-    RUN_TEST(test_initialize);
+    RUN_TEST(test_signature);
     RUN_TEST(test_messageTypeToString);
     RUN_TEST(test_getState);
     RUN_TEST(test_lorawanEventToString);

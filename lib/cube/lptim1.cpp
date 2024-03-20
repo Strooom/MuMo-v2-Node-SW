@@ -5,7 +5,7 @@
 
 LPTIM_HandleTypeDef hlptim1;
 
- void MX_LPTIM1_Init(void) {
+void MX_LPTIM1_Init(void) {
     hlptim1.Instance             = LPTIM1;
     hlptim1.Init.Clock.Source    = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;        // 32.768 kHz XTAL
     hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV8;                    // 4096 Hz
@@ -19,3 +19,4 @@ LPTIM_HandleTypeDef hlptim1;
         Error_Handler();
     }
 }
+

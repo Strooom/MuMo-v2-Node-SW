@@ -25,6 +25,12 @@ void sx126x::initialize() {
     goSleep();
 }
 
+uint8_t sx126x::getStatus() {
+    uint8_t response[1];
+    sx126x::executeGetCommand(sx126x::command::getStatus, response, 1);
+    return response[0];    
+}
+
 void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t* payload, uint32_t payloadLength) {
     logging::snprintf(logging::source::sx126xControl, "Configuring for Transmit : [%s], [%u] Hz [%u] bytes\n", toString(theSpreadingFactor), frequency, payloadLength);
     goStandby();
@@ -108,7 +114,7 @@ void sx126x::setRfFrequency(uint32_t frequencyInHz) {
     commandParameters[0] = static_cast<uint8_t>((frequencyRegisterValue >> 24) & 0xFF);        //
     commandParameters[1] = static_cast<uint8_t>((frequencyRegisterValue >> 16) & 0xFF);        //
     commandParameters[2] = static_cast<uint8_t>((frequencyRegisterValue >> 8) & 0xFF);         //
-    commandParameters[3] = static_cast<uint8_t>((frequencyRegisterValue)&0xFF);                //
+    commandParameters[3] = static_cast<uint8_t>((frequencyRegisterValue) & 0xFF);              //
     executeSetCommand(command::setRfFRequency, commandParameters, nmbrCommandParameters);
 }
 
@@ -155,7 +161,7 @@ void sx126x::setPacketParametersReceive() {
 uint32_t sx126x::calculateFrequencyRegisterValue(uint32_t rfFrequency) {
     uint64_t tmpResult;
     tmpResult = static_cast<uint64_t>(rfFrequency) << 25;
-    tmpResult = tmpResult / TCXOfrequency;
+    tmpResult = tmpResult / TCXOfrequencyInHz;
     return static_cast<uint32_t>(tmpResult);
 }
 
@@ -238,6 +244,7 @@ void sx126x::initializeRadio() {
 
     // executeGetCommand(command::getStatus, commandParameters, 1);
 }
+
 
 void sx126x::initializeInterface() {
 #ifndef generic

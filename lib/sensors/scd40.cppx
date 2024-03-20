@@ -22,7 +22,7 @@ sensorChannel scd40::channels[nmbrChannels];
 sensorChannelFormat scd40::channelFormats[nmbrChannels] = {
     {"temperature", "~C", 1},
     {"relativeHumidity", "%RH", 0},
-    {"barometricPressure", "hPa", 0},
+    {"CO2", "ppm", 0},
 };
 
 uint32_t scd40::rawDataTemperature;
@@ -52,7 +52,7 @@ void scd40::initialize() {
 }
 
 bool scd40::hasNewMeasurement() {
-    return (channels[temperature].hasNewValue || channels[relativeHumidity].hasNewValue || channels[barometricPressure].hasNewValue);
+    return (channels[temperature].hasNewValue || channels[relativeHumidity].hasNewValue || channels[co2].hasNewValue);
 }
 
 void scd40::clearNewMeasurements() {
@@ -100,11 +100,11 @@ void scd40::run() {
             }
         }
 
-        if (channels[barometricPressure].needsSampling()) {
+        if (channels[co2].needsSampling()) {
             float scd40BarometricPressure = calculateBarometricPressure();
-            channels[barometricPressure].addSample(scd40BarometricPressure);
-            if (channels[barometricPressure].hasOutput()) {
-                channels[barometricPressure].hasNewValue = true;
+            channels[co2].addSample(scd40BarometricPressure);
+            if (channels[co2].hasOutput()) {
+                channels[co2].hasNewValue = true;
             }
         }
 
@@ -126,13 +126,13 @@ void scd40::adjustAllCounters() {
 void scd40::startSampling() {
     state = sensorDeviceState::sampling;
     // run a ADC conversion cycle for Temp Hum and Presure, and when ready, read and store all raw ADC results
-    writeRegister(scd40::registers::ctrl_hum, 0b00000001);
-    writeRegister(scd40::registers::ctrl_meas, 0b00100101);
+    // writeRegister(scd40::registers::ctrl_hum, 0b00000001);
+    // writeRegister(scd40::registers::ctrl_meas, 0b00100101);
     state = sensorDeviceState::sampling;
 }
 
 bool scd40::samplingIsReady() {
-    uint8_t status    = readRegister(scd40::registers::meas_status);
+    // uint8_t status    = readRegister(scd40::registers::meas_status);
     uint8_t statusBit = status & 0x80;
     bool noNewData    = statusBit == 0;
     return !noNewData;
@@ -144,56 +144,56 @@ void scd40::readSample() {
     readRegisters(0x1F, nmbrRegisters, registerData);        // reads 8 registers, from 0x1F up to 0x26, they contain the raw ADC results for temperature, relativeHumidity and pressure
     rawDataTemperature        = ((static_cast<uint32_t>(registerData[3]) << 12) | (static_cast<uint32_t>(registerData[4]) << 4) | (static_cast<uint32_t>(registerData[5]) >> 4));
     rawDataRelativeHumidity   = ((static_cast<uint32_t>(registerData[6]) << 8) | (static_cast<uint32_t>(registerData[7])));
-    rawDataBarometricPressure = ((static_cast<uint32_t>(registerData[0]) << 12) | (static_cast<uint32_t>(registerData[1]) << 4) | (static_cast<uint32_t>(registerData[2]) >> 4));
+    rawCo2 = ((static_cast<uint32_t>(registerData[0]) << 12) | (static_cast<uint32_t>(registerData[1]) << 4) | (static_cast<uint32_t>(registerData[2]) >> 4));
 }
 
 float scd40::calculateTemperature() {
-    float var1                         = ((((float)rawDataTemperature / 16384.0f) - (calibrationCoefficientTemperature1 / 1024.0f)) * (calibrationCoefficientTemperature2));
-    float var2                         = (((((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f)) * (((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f))) * (calibrationCoefficientTemperature3 * 16.0f));
-    calibrationCoefficientTemperature4 = var1 + var2;
-    return (calibrationCoefficientTemperature4 / 5120.0f);
+    // float var1                         = ((((float)rawDataTemperature / 16384.0f) - (calibrationCoefficientTemperature1 / 1024.0f)) * (calibrationCoefficientTemperature2));
+    // float var2                         = (((((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f)) * (((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f))) * (calibrationCoefficientTemperature3 * 16.0f));
+    // calibrationCoefficientTemperature4 = var1 + var2;
+    // return (calibrationCoefficientTemperature4 / 5120.0f);
 }
 
 float scd40::calculateRelativeHumidity() {
-    float calc_hum;
+    // float calc_hum;
 
-    float temp_comp = ((calibrationCoefficientTemperature4) / 5120.0f);
-    float var1      = static_cast<float>(rawDataRelativeHumidity) - (calibrationCoefficientHumidity1 * 16.0f) + ((calibrationCoefficientHumidity3 / 2.0f) * temp_comp);
-    float var2      = var1 * (calibrationCoefficientHumidity2 / 262144.0f) * (1.0f + ((calibrationCoefficientHumidity4 / 16384.0f) * temp_comp) + ((calibrationCoefficientHumidity5 / 1048576.0f) * temp_comp * temp_comp));
-    float var3      = calibrationCoefficientHumidity6 / 16384.0f;
-    float var4      = calibrationCoefficientHumidity7 / 2097152.0f;
-    calc_hum        = var2 + ((var3 + (var4 * temp_comp)) * var2 * var2);
-    if (calc_hum > 100.0f) {
-        calc_hum = 100.0f;
-    } else if (calc_hum < 0.0f) {
-        calc_hum = 0.0f;
-    }
+    // float temp_comp = ((calibrationCoefficientTemperature4) / 5120.0f);
+    // float var1      = static_cast<float>(rawDataRelativeHumidity) - (calibrationCoefficientHumidity1 * 16.0f) + ((calibrationCoefficientHumidity3 / 2.0f) * temp_comp);
+    // float var2      = var1 * (calibrationCoefficientHumidity2 / 262144.0f) * (1.0f + ((calibrationCoefficientHumidity4 / 16384.0f) * temp_comp) + ((calibrationCoefficientHumidity5 / 1048576.0f) * temp_comp * temp_comp));
+    // float var3      = calibrationCoefficientHumidity6 / 16384.0f;
+    // float var4      = calibrationCoefficientHumidity7 / 2097152.0f;
+    // calc_hum        = var2 + ((var3 + (var4 * temp_comp)) * var2 * var2);
+    // if (calc_hum > 100.0f) {
+    //     calc_hum = 100.0f;
+    // } else if (calc_hum < 0.0f) {
+    //     calc_hum = 0.0f;
+    // }
 
-    return calc_hum;
+    // return calc_hum;
 }
 
 float scd40::calculateBarometricPressure() {
-    float var1   = ((calibrationCoefficientTemperature4 / 2.0f) - 64000.0f);
-    float var2   = var1 * var1 * ((calibrationCoefficientPressure6) / (131072.0f));
-    var2         = var2 + (var1 * (calibrationCoefficientPressure5) * 2.0f);
-    var2         = (var2 / 4.0f) + ((calibrationCoefficientPressure4) * 65536.0f);
-    var1         = ((((calibrationCoefficientPressure3 * var1 * var1) / 16384.0f) + (calibrationCoefficientPressure2 * var1)) / 524288.0f);
-    var1         = ((1.0f + (var1 / 32768.0f)) * ((float)calibrationCoefficientPressure1));
-    float result = (1048576.0f - ((float)rawDataBarometricPressure));
+    // float var1   = ((calibrationCoefficientTemperature4 / 2.0f) - 64000.0f);
+    // float var2   = var1 * var1 * ((calibrationCoefficientPressure6) / (131072.0f));
+    // var2         = var2 + (var1 * (calibrationCoefficientPressure5) * 2.0f);
+    // var2         = (var2 / 4.0f) + ((calibrationCoefficientPressure4) * 65536.0f);
+    // var1         = ((((calibrationCoefficientPressure3 * var1 * var1) / 16384.0f) + (calibrationCoefficientPressure2 * var1)) / 524288.0f);
+    // var1         = ((1.0f + (var1 / 32768.0f)) * ((float)calibrationCoefficientPressure1));
+    // float result = (1048576.0f - ((float)rawCo2));
 
-    if ((int)var1 != 0) {
-        result     = (((result - (var2 / 4096.0f)) * 6250.0f) / var1);
-        var1       = ((calibrationCoefficientPressure9)*result * result) / 2147483648.0f;
-        var2       = result * ((calibrationCoefficientPressure8) / 32768.0f);
-        float var3 = ((result / 256.0f) * (result / 256.0f) * (result / 256.0f) * (calibrationCoefficientPressure10 / 131072.0f));
-        result     = (result + (var1 + var2 + var3 + (calibrationCoefficientPressure7 * 128.0f)) / 16.0f);
-    } else {
-        result = 0;
-    }
+    // if ((int)var1 != 0) {
+    //     result     = (((result - (var2 / 4096.0f)) * 6250.0f) / var1);
+    //     var1       = ((calibrationCoefficientPressure9)*result * result) / 2147483648.0f;
+    //     var2       = result * ((calibrationCoefficientPressure8) / 32768.0f);
+    //     float var3 = ((result / 256.0f) * (result / 256.0f) * (result / 256.0f) * (calibrationCoefficientPressure10 / 131072.0f));
+    //     result     = (result + (var1 + var2 + var3 + (calibrationCoefficientPressure7 * 128.0f)) / 16.0f);
+    // } else {
+    //     result = 0;
+    // }
 
-    result = result / 100.0F;        // use hPa as unit
+    // result = result / 100.0F;        // use hPa as unit
 
-    return result;
+    // return result;
 }
 
 bool scd40::testI2cAddress(uint8_t addressToTest) {
@@ -237,7 +237,7 @@ void scd40::log() {
     if (channels[relativeHumidity].hasNewValue) {
         logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[relativeHumidity].name, channels[relativeHumidity].getOutput(), channelFormats[relativeHumidity].unit);
     }
-    if (channels[barometricPressure].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[barometricPressure].name, channels[barometricPressure].getOutput(), channelFormats[barometricPressure].unit);
+    if (channels[co2].hasNewValue) {
+        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[co2].name, channels[co2].getOutput(), channelFormats[co2].unit);
     }
 }

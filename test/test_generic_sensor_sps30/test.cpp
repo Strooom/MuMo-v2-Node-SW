@@ -11,7 +11,7 @@ void test_isPresent() {
 //    TEST_ASSERT_TRUE(sps30::isPresent());
 }
 
-void test_initialize() {
+void test_signature() {
     // TEST_ASSERT_EQUAL(sensorDeviceState::unknown, sht40::state);
     // sht40::initialize();
     // TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, sht40::state);
@@ -35,7 +35,7 @@ void test_initialize() {
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_isPresent);
-    RUN_TEST(test_initialize);
+    RUN_TEST(test_signature);
     // RUN_TEST(test_sample);
     // RUN_TEST(test_measurements);
     UNITY_END();

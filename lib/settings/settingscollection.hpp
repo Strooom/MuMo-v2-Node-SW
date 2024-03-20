@@ -26,6 +26,8 @@ class settingsCollection {
         networkSessionKey,
         rx1Delay,
         dataRate,
+        rx1DataRateOffset,
+        rx2DataRateIndex,
         unusedLoRaWAN1,
         txChannels,
         rxChannel,

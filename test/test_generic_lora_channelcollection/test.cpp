@@ -12,8 +12,6 @@ void test_initalize() {
     for (auto index = 3U; index < static_cast<uint32_t>(loRaTxChannelCollection::maxNmbrChannels); index++) {
         TEST_ASSERT_EQUAL_UINT32(0U, loRaTxChannelCollection::channel[index].frequencyInHz);
     }
-    //TEST_ASSERT_EQUAL_UINT32(869'525'000U, loRaTxChannelCollection::rx2Channel.frequencyInHz);
-
     TEST_ASSERT_EQUAL_UINT32(0U, loRaTxChannelCollection::getCurrentChannelIndex());
 }
 
@@ -28,7 +26,7 @@ void test_channel_selection() {
 }
 
 void test_random_channel_selection() {
-uint32_t nmbrOfTimesSelected[loRaTxChannelCollection::maxNmbrChannels]{}; // initialize all elements to 0
+uint32_t nmbrOfTimesSelected[loRaTxChannelCollection::maxNmbrChannels]{};
     for (auto index = 0U; index < 1000U; index++) {
         loRaTxChannelCollection::selectRandomChannelIndex();
         nmbrOfTimesSelected[loRaTxChannelCollection::getCurrentChannelIndex()]++;
@@ -42,7 +40,6 @@ uint32_t nmbrOfTimesSelected[loRaTxChannelCollection::maxNmbrChannels]{}; // ini
         TEST_ASSERT(nmbrOfTimesSelected[6] == 0);
         TEST_ASSERT(nmbrOfTimesSelected[7] == 0);
 }
-
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();

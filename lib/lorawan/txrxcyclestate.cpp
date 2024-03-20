@@ -1,4 +1,4 @@
-#include <txrxcycle.hpp>
+#include <txrxcyclestate.hpp>
 
 const char* toString(txRxCycleState theState) {
     switch (theState) {

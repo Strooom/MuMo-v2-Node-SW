@@ -16,16 +16,13 @@ void MX_SUBGHZ_Init(void) {
 }
 
 void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
-    HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_RESET);
     applicationEventBuffer.push(applicationEvent::sx126xTxComplete);
 }
 
 void HAL_SUBGHZ_RxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
-    HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_RESET);
     applicationEventBuffer.push(applicationEvent::sx126xRxComplete);
 }
 
 void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
-    HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_RESET);
     applicationEventBuffer.push(applicationEvent::sx126xTimeout);
 }
