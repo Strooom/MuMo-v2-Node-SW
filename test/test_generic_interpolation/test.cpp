@@ -17,8 +17,6 @@ void test_interpolation() {
     TEST_ASSERT_EQUAL(1.0, chargeFromVoltage::calculateChargeLevel(4.0F, batteryType::liFePO4_700mAh));         // voltage above maximum
 
     TEST_ASSERT_EQUAL(0.5, chargeFromVoltage::calculateChargeLevel(3.2F, batteryType::liFePO4_700mAh));         // voltage at 50%
-
-    // TODO : there was an error here in the index boundaries so I need to add more tests
 }
 
 

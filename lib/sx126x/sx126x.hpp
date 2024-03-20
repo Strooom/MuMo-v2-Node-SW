@@ -145,9 +145,8 @@ class sx126x {
         commandTransmitDone     = 0x06,
     };
 
-    static void reset(){};                    // TODO : reset the SX126 from its HW reset pin - in the STMWLE5 this is done from a register in RCC
-    static void initializeInterface();        // configures the SPI between the MCU and the SX126x
-    static void initializeRadio();            //
+    static void initializeInterface();
+    static void initializeRadio();
 
     static void setModulationParameters(spreadingFactor theSpreadingFactor);
     static void setRfFrequency(uint32_t frequency);

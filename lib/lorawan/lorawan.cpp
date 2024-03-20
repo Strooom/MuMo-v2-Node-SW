@@ -93,15 +93,11 @@ void LoRaWAN::saveState() {
 }
 
 void LoRaWAN::saveChannels() {
-    // txChannels
     uint8_t tmpChannelData[loRaTxChannelCollection::maxNmbrChannels * loRaChannel::sizeInBytes];
     for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
         txChannels.channel[channelIndex].toBytes(tmpChannelData + (channelIndex * loRaChannel::sizeInBytes));
     }
     settingsCollection::saveByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
-
-    // rxChannel
-    // TODO : implement this
     settingsCollection::saveByteArray(tmpChannelData, settingsCollection::settingIndex::rxChannel);
 }
 
@@ -122,18 +118,13 @@ void LoRaWAN::restoreState() {
 }
 
 void LoRaWAN::restoreChannels() {
-    // txChannels
     uint8_t tmpChannelData[loRaTxChannelCollection::maxNmbrChannels * loRaChannel::sizeInBytes];
     settingsCollection::readByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
 
     for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
         txChannels.channel[channelIndex].fromBytes(tmpChannelData + (channelIndex * loRaChannel::sizeInBytes));
     }
-
-    // rxChannel
     settingsCollection::readByteArray(tmpChannelData, settingsCollection::settingIndex::rxChannel);
-
-    // TODO : restore rxChannel settings
 }
 
 #pragma endregion
@@ -996,9 +987,9 @@ void LoRaWAN::processNewChannelRequest(uint32_t channelIndex, uint32_t frequency
 
 void LoRaWAN::processReceiveTimingSetupRequest() {
     constexpr uint32_t receiveTimingSetupRequestLength{2};        // 2 bytes : commandId, delay
-    uint32_t receivedRx1Delay = macIn[1] & 0x0F;                  // TODO : a value of 0 means also 1 second
+    uint32_t receivedRx1Delay = macIn[1] & 0x0F;
     processReceiveTimingSetupRequest(receivedRx1Delay);
-    macIn.consume(receiveTimingSetupRequestLength);        //
+    macIn.consume(receiveTimingSetupRequestLength);
 
     constexpr uint32_t receiveTimingSetupAnswerLength{1};        // 1 byte : commandId
     uint8_t answer[receiveTimingSetupAnswerLength];

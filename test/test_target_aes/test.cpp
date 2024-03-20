@@ -130,19 +130,19 @@ void test_hwEncryptLoRaWANPayload() {
 void test_hwCalculateMic() {
     aesKey key;
     key.setFromHexString("2b7e151628aed2a6abf7158809cf4f3c");
-    aesBlock input;
-    input.setFromHexString("00000000000000000000000000000000");
+    aesBlock allZeroes;
+    allZeroes.setFromHexString("00000000000000000000000000000000");
     aesBlock output;
     aesBlock toBe;
 
     stm32wle5_aes::initialize(aesMode::CBC);
     stm32wle5_aes::setKey(key);
-    stm32wle5_aes::setInitializationVector(input);        // TODO : this is not very clear why input is sent to both IV as well as data-in registers -> choose better names !
+    stm32wle5_aes::setInitializationVector(allZeroes);
     stm32wle5_aes::enable();
 
     // first block
 
-    stm32wle5_aes::write(input);
+    stm32wle5_aes::write(allZeroes);
     while (!stm32wle5_aes::isComputationComplete()) {
     }
     stm32wle5_aes::clearComputationComplete();
@@ -152,7 +152,7 @@ void test_hwCalculateMic() {
 
     // second block
 
-    stm32wle5_aes::write(input);
+    stm32wle5_aes::write(allZeroes);
     while (!stm32wle5_aes::isComputationComplete()) {
     }
     stm32wle5_aes::clearComputationComplete();
@@ -162,7 +162,7 @@ void test_hwCalculateMic() {
 
     // third block
 
-    stm32wle5_aes::write(input);
+    stm32wle5_aes::write(allZeroes);
     while (!stm32wle5_aes::isComputationComplete()) {
     }
     stm32wle5_aes::clearComputationComplete();

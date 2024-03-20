@@ -83,8 +83,6 @@ void test_saveContext() {
     LoRaWAN::applicationKey.setFromHexString("000102030405060708090A0B0C0D0E0F");
     LoRaWAN::networkKey.setFromHexString("101112131415161718191A1B1C1D1E1F");
 
-    // TODO : add channel data
-
     LoRaWAN::saveConfig();
     LoRaWAN::saveState();
     LoRaWAN::saveChannels();
