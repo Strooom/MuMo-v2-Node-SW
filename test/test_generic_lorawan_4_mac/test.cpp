@@ -7,6 +7,7 @@
 #include <maccommand.hpp>
 #include <hexascii.hpp>
 #include <logging.hpp>
+#include <sx126x.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -94,8 +95,8 @@ void test_process_linkCheckAnswer() {
     LoRaWAN::macIn.append(0x01);
     LoRaWAN::macIn.append(0x02);
     LoRaWAN::processMacContents();
-    //TEST_ASSERT_EQUAL(0x0102, LoRaWAN::linkCheckMargin);
-    //TEST_ASSERT_EQUAL(0x0102, LoRaWAN::linkCheckGwCnt);
+    // TEST_ASSERT_EQUAL(0x0102, LoRaWAN::linkCheckMargin);
+    // TEST_ASSERT_EQUAL(0x0102, LoRaWAN::linkCheckGwCnt);
     TEST_ASSERT_TRUE(LoRaWAN::macIn.isEmpty());
 }
 
@@ -104,7 +105,7 @@ void test_process_linkAdaptiveDataRateRequest() {
     LoRaWAN::macIn.append(static_cast<uint8_t>(macCommand::linkAdaptiveDataRateRequest));
     LoRaWAN::macIn.append(0x01);
     LoRaWAN::processMacContents();
-    //TEST_ASSERT_EQUAL(0x01, LoRaWAN::linkAdaptiveDataRate);
+    // TEST_ASSERT_EQUAL(0x01, LoRaWAN::linkAdaptiveDataRate);
     TEST_ASSERT_TRUE(LoRaWAN::macIn.isEmpty());
 }
 void test_process_dutyCycleRequest() {
@@ -112,7 +113,7 @@ void test_process_dutyCycleRequest() {
     LoRaWAN::macIn.append(static_cast<uint8_t>(macCommand::dutyCycleRequest));
     LoRaWAN::macIn.append(0x01);
     LoRaWAN::processMacContents();
-    //TEST_ASSERT_EQUAL(0x01, LoRaWAN::dutyCycle);
+    // TEST_ASSERT_EQUAL(0x01, LoRaWAN::dutyCycle);
     TEST_ASSERT_TRUE(LoRaWAN::macIn.isEmpty());
 }
 void test_process_receiveParameterSetupRequest() {
@@ -123,15 +124,15 @@ void test_process_receiveParameterSetupRequest() {
     LoRaWAN::macIn.append(0x03);
     LoRaWAN::macIn.append(0x04);
     LoRaWAN::processMacContents();
-    //TEST_ASSERT_EQUAL(0x01020304, LoRaWAN::receiveDelay1);
+    // TEST_ASSERT_EQUAL(0x01020304, LoRaWAN::receiveDelay1);
     TEST_ASSERT_TRUE(LoRaWAN::macIn.isEmpty());
 }
 void test_process_deviceStatusRequest() {
     LoRaWAN::macIn.initialize();
     LoRaWAN::macIn.append(static_cast<uint8_t>(macCommand::deviceStatusRequest));
     LoRaWAN::processMacContents();
-    //TEST_ASSERT_EQUAL(0x01, LoRaWAN::battery);
-    //TEST_ASSERT_EQUAL(0x02, LoRaWAN::margin);
+    // TEST_ASSERT_EQUAL(0x01, LoRaWAN::battery);
+    // TEST_ASSERT_EQUAL(0x02, LoRaWAN::margin);
     TEST_ASSERT_TRUE(LoRaWAN::macIn.isEmpty());
 }
 void test_process_newChannelRequest() {
@@ -143,8 +144,8 @@ void test_process_newChannelRequest() {
     LoRaWAN::macIn.append(0x04);
     LoRaWAN::macIn.append(0x05);
     LoRaWAN::processMacContents();
-    //TEST_ASSERT_EQUAL(0x01, LoRaWAN::channelIndex);
-    //TEST_ASSERT_EQUAL(0x02030405, LoRaWAN::frequency);
+    // TEST_ASSERT_EQUAL(0x01, LoRaWAN::channelIndex);
+    // TEST_ASSERT_EQUAL(0x02030405, LoRaWAN::frequency);
     TEST_ASSERT_TRUE(LoRaWAN::macIn.isEmpty());
 }
 void test_process_receiveTimingSetupRequest() {
@@ -153,15 +154,15 @@ void test_process_receiveTimingSetupRequest() {
     LoRaWAN::macIn.append(0x01);
     LoRaWAN::macIn.append(0x02);
     LoRaWAN::processMacContents();
-    //TEST_ASSERT_EQUAL(0x0102, LoRaWAN::receiveDelay2);
+    // TEST_ASSERT_EQUAL(0x0102, LoRaWAN::receiveDelay2);
     TEST_ASSERT_TRUE(LoRaWAN::macIn.isEmpty());
 }
-void test_process_linkAdaptiveDataRateAnswer() {   
+void test_process_linkAdaptiveDataRateAnswer() {
     LoRaWAN::macIn.initialize();
     LoRaWAN::macIn.append(static_cast<uint8_t>(macCommand::linkAdaptiveDataRateAnswer));
     LoRaWAN::macIn.append(0x01);
     LoRaWAN::processMacContents();
-    //TEST_ASSERT_EQUAL(0x01, LoRaWAN::linkAdaptiveDataRate);
+    // TEST_ASSERT_EQUAL(0x01, LoRaWAN::linkAdaptiveDataRate);
     TEST_ASSERT_TRUE(LoRaWAN::macIn.isEmpty());
 }
 void test_process_transmitParameterSetupRequest() {
@@ -172,7 +173,7 @@ void test_process_transmitParameterSetupRequest() {
     LoRaWAN::macIn.append(0x03);
     LoRaWAN::macIn.append(0x04);
     LoRaWAN::processMacContents();
-    //TEST_ASSERT_EQUAL(0x01020304, LoRaWAN::transmitPower);
+    // TEST_ASSERT_EQUAL(0x01020304, LoRaWAN::transmitPower);
     TEST_ASSERT_TRUE(LoRaWAN::macIn.isEmpty());
 }
 void test_process_downlinkChannelRequest() {
@@ -184,8 +185,8 @@ void test_process_downlinkChannelRequest() {
     LoRaWAN::macIn.append(0x04);
     LoRaWAN::macIn.append(0x05);
     LoRaWAN::processMacContents();
-    //TEST_ASSERT_EQUAL(0x01, LoRaWAN::channelIndex);
-    //TEST_ASSERT_EQUAL(0x02030405, LoRaWAN::frequency);
+    // TEST_ASSERT_EQUAL(0x01, LoRaWAN::channelIndex);
+    // TEST_ASSERT_EQUAL(0x02030405, LoRaWAN::frequency);
     TEST_ASSERT_TRUE(LoRaWAN::macIn.isEmpty());
 }
 void test_process_deviceTimeAnswer() {
@@ -231,6 +232,21 @@ void test_dump() {
     logging::disable(logging::source::lorawanMac);
 }
 
+void test_parse_1() {
+    char testRawMessage[]                = "6011990b2600b000002261d02e6dc32e0495279335d16b41e109c11cb7d5df80232fd81280de42be47c964b382879a3f";
+    uint32_t testRawMessageLength        = strlen(testRawMessage);
+    uint32_t testRawMessageLengthInBytes = testRawMessageLength / 2;
+    hexAscii::hexStringToByteArray(mockSX126xDataBuffer, testRawMessage);
+    mockSX126xCommandData[static_cast<uint8_t>(sx126x::command::getRxBufferStatus)][0] = testRawMessageLengthInBytes;
+    LoRaWAN::DevAddr                                                                   = 0x260B9911;
+    LoRaWAN::applicationKey.setFromHexString("E54E4411F4FE8955904197C8D824BC2C");
+    LoRaWAN::networkKey.setFromHexString("8DD6FEB76D7754A78538BA5089A834AA");
+    LoRaWAN::generateKeysK1K2();
+    LoRaWAN::macIn.initialize();
+    LoRaWAN::decodeMessage();
+    LoRaWAN::processMacContents();
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_macCommandToString);
@@ -248,6 +264,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_process_deviceTimeAnswer);
     RUN_TEST(test_process_unknown_MAC_command);
     RUN_TEST(test_dump);
-    
+
+    RUN_TEST(test_parse_1);
     UNITY_END();
 }

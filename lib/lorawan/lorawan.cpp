@@ -111,7 +111,7 @@ void LoRaWAN::restoreConfig() {
     applicationKey.setFromByteArray(tmpKeyArray);
     settingsCollection::readByteArray(tmpKeyArray, settingsCollection::settingIndex::networkSessionKey);
     networkKey.setFromByteArray(tmpKeyArray);
-    rx1DelayInSeconds    = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1Delay);
+    rx1DelayInSeconds = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1Delay);
 }
 
 void LoRaWAN::restoreState() {
@@ -211,22 +211,22 @@ void LoRaWAN::insertHeaders(const uint8_t theFrameOptions[], const uint32_t theF
 }
 
 void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCount) {
-    rawMessage[0]  = 0x49;                                      // see LoRaWAN® L2 1.0.4 Specification - line 808
-    rawMessage[1]  = 0;                                         //
-    rawMessage[2]  = 0;                                         //
-    rawMessage[3]  = 0;                                         //
-    rawMessage[4]  = 0;                                         //
-    rawMessage[5]  = static_cast<uint8_t>(theDirection);        // 0x00 for uplink, 0x01 for downlink
-    rawMessage[6]  = DevAddr.asUint8[0];                        // LSByte
-    rawMessage[7]  = DevAddr.asUint8[1];                        //
-    rawMessage[8]  = DevAddr.asUint8[2];                        //
-    rawMessage[9]  = DevAddr.asUint8[3];                        // MSByte
-    rawMessage[10] = aFrameCount[0];                            // LSByte
-    rawMessage[11] = aFrameCount[1];                            //
-    rawMessage[12] = aFrameCount[2];                            //
-    rawMessage[13] = aFrameCount[3];                            // MSByte
-    rawMessage[14] = 0;                                         //
-    rawMessage[15] = micOffset;                                 // number of bytes over which the MIC is applied
+    rawMessage[0]  = 0x49;        // see LoRaWAN® L2 1.0.4 Specification - line 808
+    rawMessage[1]  = 0;
+    rawMessage[2]  = 0;
+    rawMessage[3]  = 0;
+    rawMessage[4]  = 0;
+    rawMessage[5]  = static_cast<uint8_t>(theDirection);
+    rawMessage[6]  = DevAddr.asUint8[0];
+    rawMessage[7]  = DevAddr.asUint8[1];
+    rawMessage[8]  = DevAddr.asUint8[2];
+    rawMessage[9]  = DevAddr.asUint8[3];
+    rawMessage[10] = aFrameCount[0];
+    rawMessage[11] = aFrameCount[1];
+    rawMessage[12] = aFrameCount[2];
+    rawMessage[13] = aFrameCount[3];
+    rawMessage[14] = 0;
+    rawMessage[15] = macHeaderLength + frameHeaderLength + framePortLength + framePayloadLength;
 }
 
 void LoRaWAN::padForMicCalculation(const uint32_t messageLength) {
@@ -430,7 +430,7 @@ uint32_t LoRaWAN::calculateMic() {
         stm32wle5_aes::clearComputationComplete();
     }
     stm32wle5_aes::disable();
-    uint32_t mic = aesBlock::swapLittleBigEndian(tmpBlock.asWords()[0]);
+    uint32_t mic = aesBlock::swapLittleBigEndian(tmpBlock.asWords()[0]); // TODO check this is I needed to swap the bytes on the SW implementation as well
 
 #else
     uint32_t payloadLength      = micOffset;
@@ -492,7 +492,7 @@ uint32_t LoRaWAN::calculateMic() {
         outputBlock.XOR(Old_Data);        // I think this step is useless, as Old_Data is all zeroes
         outputBlock.encrypt(networkKey);
     }
-    uint32_t mic = ((outputBlock.asBytes()[0] << 24) + (outputBlock.asBytes()[1] << 16) + (outputBlock.asBytes()[2] << 8) + (outputBlock.asBytes()[3]));
+    uint32_t mic = ((outputBlock.asBytes()[3] << 24) + (outputBlock.asBytes()[2] << 16) + (outputBlock.asBytes()[1] << 8) + (outputBlock.asBytes()[0]));
 #endif
     return mic;
 }
@@ -1087,9 +1087,9 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
     goTo(txRxCycleState::waitForRandomTimeBeforeTransmit);
 
     // 3. txRxCycle is started..
-    uplinkFrameCount++;                                                                                                         //
+    uplinkFrameCount++;        //
     // TODO nonVolatileStorage::write(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), uplinkFrameCount.asUint32);        // TODO : update the setting/context and let the NVS do things under the hood
-    removeNonStickyMacStuff();                                                                                                  //
+    removeNonStickyMacStuff();        //
 }
 
 void LoRaWAN::getReceivedDownlinkMessage() {
