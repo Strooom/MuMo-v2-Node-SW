@@ -184,3 +184,92 @@ Example 2 :
   },
   "unique_id": "01HSGFBEZJEC0YJ2JD8N9WK3ED"
 }
+
+
+
+// Uplink
+
+
+{
+  "name": "gs.up.receive",
+  "time": "2024-03-22T09:57:24.686837844Z",
+  "identifiers": [
+    {
+      "gateway_ids": {
+        "gateway_id": "eui-ac1f09fffe08d721",
+        "eui": "AC1F09FFFE08D721"
+      }
+    }
+  ],
+  "data": {
+    "@type": "type.googleapis.com/ttn.lorawan.v3.GatewayUplinkMessage",
+    "message": {
+      "raw_payload": "QBGZCyYAizQQobYbt9Ckf1wdQsfykrWjSqMm9pvWrFJcFzuXAQ5J/5KobYji2wGE3ko=",
+      "payload": {
+        "m_hdr": {
+          "m_type": "UNCONFIRMED_UP"
+        },
+        "mic": "AYTeSg==",
+        "mac_payload": {
+          "f_hdr": {
+            "dev_addr": "260B9911",
+            "f_ctrl": {},
+            "f_cnt": 13451
+          },
+          "f_port": 16,
+          "frm_payload": "obYbt9Ckf1wdQsfykrWjSqMm9pvWrFJcFzuXAQ5J/5KobYji2w=="
+        }
+      },
+      "settings": {
+        "data_rate": {
+          "lora": {
+            "bandwidth": 125000,
+            "spreading_factor": 7,
+            "coding_rate": "4/5"
+          }
+        },
+        "frequency": "868100000",
+        "timestamp": 131535476,
+        "time": "2024-03-22T09:57:24.599860906Z"
+      },
+      "rx_metadata": [
+        {
+          "gateway_ids": {
+            "gateway_id": "eui-ac1f09fffe08d721",
+            "eui": "AC1F09FFFE08D721"
+          },
+          "time": "2024-03-22T09:57:24.599860906Z",
+          "timestamp": 131535476,
+          "rssi": -31,
+          "channel_rssi": -31,
+          "snr": 14.25,
+          "location": {
+            "latitude": 51.212771197056746,
+            "longitude": 4.396121228692907,
+            "source": "SOURCE_REGISTRY"
+          },
+          "uplink_token": "CiIKIAoUZXVpLWFjMWYwOWZmZmUwOGQ3MjESCKwfCf/+CNchEPSk3D4aDAiErPWvBhDK3bbHAiCgqoCB6qyZAQ==",
+          "received_at": "2024-03-22T09:57:24.668882669Z"
+        }
+      ],
+      "received_at": "2024-03-22T09:57:24.686665418Z",
+      "correlation_ids": [
+        "gs:uplink:01HSJSG0JEZ7E6BTYZ92770VP5"
+      ]
+    },
+    "band_id": "EU_863_870"
+  },
+  "correlation_ids": [
+    "gs:uplink:01HSJSG0JEZ7E6BTYZ92770VP5"
+  ],
+  "origin": "ip-10-100-7-183.eu-west-1.compute.internal",
+  "context": {
+    "tenant-id": "CgN0dG4="
+  },
+  "visibility": {
+    "rights": [
+      "RIGHT_GATEWAY_TRAFFIC_READ"
+    ]
+  },
+  "unique_id": "01HSJSG0JENAMJHW5VAC2CEMA8"
+}

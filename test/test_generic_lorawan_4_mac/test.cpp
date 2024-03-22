@@ -233,6 +233,7 @@ void test_dump() {
 }
 
 void test_parse_1() {
+    // Parsing a message actually sent by TTN and captured on the gateway
     char testRawMessage[]                = "6011990b2600b000002261d02e6dc32e0495279335d16b41e109c11cb7d5df80232fd81280de42be47c964b382879a3f";
     uint32_t testRawMessageLength        = strlen(testRawMessage);
     uint32_t testRawMessageLengthInBytes = testRawMessageLength / 2;
@@ -245,6 +246,44 @@ void test_parse_1() {
     LoRaWAN::macIn.initialize();
     LoRaWAN::decodeMessage();
     LoRaWAN::processMacContents();
+}
+
+void test_construct_1() {
+    // constructing a message, actually received by TTN and captured on their portal
+    // FcntUp : 13451
+    // Payload ClearText : 02017EC5536412835C40107EC553648D77A241117EC5536450424042127EC553645C897E44
+    // Payload Encrypted : a1b61bb7d0a47f5c1d42c7f292b5a34aa326f69bd6ac525c173b97010e49ff92a86d88e2db
+    // Fport 16
+
+    // Raw Payload : 4011990b26008b3410a1b61bb7d0a47f5c1d42c7f292b5a34aa326f69bd6ac525c173b97010e49ff92a86d88e2db0184de4a
+    // FrmPayload :                    a1b61bb7d0a47f5c1d42c7f292b5a34aa326f69bd6ac525c173b97010e49ff92a86d88e2db
+
+    uint8_t testFramePort{16};
+
+    static constexpr uint32_t testExpectedRawMessageLength{50};
+    uint8_t testExpectedRawMessage[testExpectedRawMessageLength];
+    hexAscii::hexStringToByteArray(testExpectedRawMessage, "4011990b26008b3410a1b61bb7d0a47f5c1d42c7f292b5a34aa326f69bd6ac525c173b97010e49ff92a86d88e2db0184de4a");
+
+    static constexpr uint32_t testClearTextPayloadLength{37};
+    uint8_t testClearTextPayload[testClearTextPayloadLength];
+    hexAscii::hexStringToByteArray(testClearTextPayload, "02017EC5536412835C40107EC553648D77A241117EC5536450424042127EC553645C897E44");
+
+    LoRaWAN::DevAddr = 0x260B9911;
+    LoRaWAN::applicationKey.setFromHexString("E54E4411F4FE8955904197C8D824BC2C");
+    LoRaWAN::networkKey.setFromHexString("8DD6FEB76D7754A78538BA5089A834AA");
+    LoRaWAN::generateKeysK1K2();
+    LoRaWAN::uplinkFrameCount = 13451;
+
+    // LoRaWAN::sendUplink(testFramePort, testClearTextPayload, testClearTextPayloadLengthInBytes);
+
+    LoRaWAN::setOffsetsAndLengthsTx(testClearTextPayloadLength, 0);                       // Check : assuming no Fopts but I'm not sure as I don't know the internals of the sender of this message
+    LoRaWAN::insertHeaders(nullptr, 0, testClearTextPayloadLength, testFramePort);        //
+    LoRaWAN::insertPayload(testClearTextPayload, testClearTextPayloadLength);
+    LoRaWAN::encryptPayload(LoRaWAN::applicationKey);
+    LoRaWAN::insertBlockB0(linkDirection::uplink, LoRaWAN::uplinkFrameCount);
+    LoRaWAN::insertMic();
+
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(testExpectedRawMessage, LoRaWAN::rawMessage + LoRaWAN::macHeaderOffset, testExpectedRawMessageLength);
 }
 
 int main(int argc, char **argv) {
@@ -266,5 +305,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_dump);
 
     RUN_TEST(test_parse_1);
+    RUN_TEST(test_construct_1);
     UNITY_END();
 }
