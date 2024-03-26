@@ -39,7 +39,7 @@ class LoRaWAN {
     static void run();
     static void handleEvents(applicationEvent theEvent);
     static uint32_t getMaxApplicationPayloadLength();
-    static void sendUplink(uint8_t aFramePort = 0, const uint8_t data[] = nullptr, uint32_t length = 0);        // TODO : why the default arguments?
+    static void sendUplink(uint8_t aFramePort = 0, const uint8_t data[] = nullptr, uint32_t length = 0);
     static void getReceivedDownlinkMessage();
     static txRxCycleState getState();
     static bool isIdle();

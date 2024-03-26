@@ -8,27 +8,19 @@
 #include <maincontroller.hpp>
 #include <circularbuffer.hpp>
 #include <linearbuffer.hpp>
-
 #include <applicationevent.hpp>
-
 #include <version.hpp>
 #include <buildinfo.hpp>
 #include <logging.hpp>
-
 #include <sensordevicecollection.hpp>
-
 #include <display.hpp>
 #include <screen.hpp>
-
 #include <gpio.hpp>
-
 #include <power.hpp>
 #include <settingscollection.hpp>
 #include <measurementcollection.hpp>
-
 #include <aeskey.hpp>
 #include <datarate.hpp>
-
 #include <lorawan.hpp>
 
 #ifndef generic
@@ -42,7 +34,7 @@ extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
     version::setIsVersion();
-    initializeLogging();        // further initializes some gpio : usbPresent, i2C, writeProtect, debugPort, ...
+    initializeLogging();
 
     if (nonVolatileStorage::isPresent()) {
         if (!settingsCollection::isInitialized()) {
@@ -59,26 +51,26 @@ void mainController::initialize() {
         logging::snprintf("Display not present\n");
     }
 
-    gpio::enableGpio(gpio::group::uart1);        // TODO : blue and green LED are connected to PB6 and PB7 - for debugging Low Power
+    gpio::enableGpio(gpio::group::uart1);
 
-    // gpio::enableGpio(gpio::group::rfControl);
-    // LoRaWAN::initialize(); // initialize the LoRaWAN network driver
+    gpio::enableGpio(gpio::group::rfControl);
+    LoRaWAN::initialize();
     goTo(mainState::idle);
 }
 
 void mainController::initializeLogging() {
 #ifndef generic
-    if ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001) {        // if there is a SWD debugprobe connected...
-        logging::enable(logging::destination::debugProbe);                     // enable the output to SWO
+    if ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001) {        // is a SWD debugprobe connected ?
+        logging::enable(logging::destination::debugProbe);
         LL_DBGMCU_EnableDBGStopMode();
     } else {
-        LL_DBGMCU_DisableDBGStopMode();        // no debugging in low power -> the MCU will really stop the clock
+        LL_DBGMCU_DisableDBGStopMode();
     }
 #endif
 
     gpio::enableGpio(gpio::group::usbPresent);
-    if (power::hasUsbPower()) {                             // if there is USB power...
-        logging::enable(logging::destination::uart);        // enable the output to UART
+    if (power::hasUsbPower()) {
+        logging::enable(logging::destination::uart);
     }
 
     logging::snprintf("MuMo v2 - %s\n", version::getIsVersionAsString());
@@ -88,7 +80,7 @@ void mainController::initializeLogging() {
     if (logging::isActive(logging::destination::debugProbe)) {
         logging::snprintf("debugProbe connected\n");
     } else {
-        gpio::disableGpio(gpio::group::debugPort);        // these IOs are enabled by default after reset, but as there is no debug probe, we disable them to reduce power consumption
+        gpio::disableGpio(gpio::group::debugPort);
     }
 
     if (logging::isActive(logging::destination::uart)) {
@@ -125,6 +117,13 @@ void mainController::handleEvents() {
                     logging::snprintf(logging::source::error, "RealTimeClockTick event received in state %s[%d] - Ignored\n", toString(state), static_cast<uint32_t>(state));
                 }
             } break;
+
+            case applicationEvent::lowPowerTimerExpired:
+            case applicationEvent::sx126xTxComplete:
+            case applicationEvent::sx126xRxComplete:
+            case applicationEvent::sx126xTimeout:
+                LoRaWAN::handleEvents(theEvent);
+                break;
 
             default:
                 break;
@@ -165,7 +164,7 @@ void mainController::run() {
             break;
 
         case mainState::networking:
-            LoRaWAN::run();
+            // LoRaWAN::run(); TODO : disabled while testing LoRaWAN networking
             if (LoRaWAN::isIdle()) {
                 if (display::isPresent()) {
                     goTo(mainState::displaying);
@@ -185,7 +184,6 @@ void mainController::run() {
 
         case mainState::idle:
             if (!power::hasUsbPower()) {
-                // gpio::disableAllGpio();
                 gpio::disableGpio(gpio::group::spiDisplay);
                 gpio::disableGpio(gpio::group::writeProtect);
                 gpio::disableGpio(gpio::group::uart1);
@@ -198,9 +196,9 @@ void mainController::run() {
 #ifndef generic
                 uint32_t currentPriMaskState = __get_PRIMASK();
                 __disable_irq();
-                HAL_SuspendTick();                                  // stop Systick
-                HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);        // go in STOP2 mode : only the RTC is running
-                HAL_ResumeTick();                                   // re-enable Systick
+                HAL_SuspendTick();
+                HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
+                HAL_ResumeTick();
                 __set_PRIMASK(currentPriMaskState);
 #endif
                 gpio::disableGpio(gpio::group::rfControl);
@@ -211,10 +209,6 @@ void mainController::run() {
                 gpio::enableGpio(gpio::group::uart1);
                 gpio::enableGpio(gpio::group::writeProtect);
                 gpio::enableGpio(gpio::group::spiDisplay);
-
-                // HAL_GPIO_WritePin(GPIOB, 0x0001 << 7, GPIO_PIN_SET);
-                // HAL_Delay(200U);
-                // HAL_GPIO_WritePin(GPIOB, 0x0001 << 7, GPIO_PIN_RESET);
 
                 goTo(mainState::idle);
             }

@@ -22,7 +22,8 @@ class gpio {
         debugPort,
         uart1,
         uart2,
-        usbPresent
+        usbPresent,
+        other
     };
 
     static void enableGpio(group aGroup);

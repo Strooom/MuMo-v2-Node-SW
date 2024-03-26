@@ -71,7 +71,7 @@ void sx126x::configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequ
 }
 
 void sx126x::goSleep(sleepMode theSleepMode) {
-    logging::snprintf(logging::source::sx126xControl, "goSleep [%u]\n", static_cast<uint8_t>(theSleepMode));
+    logging::snprintf(logging::source::sx126xControl, "sx126x::goSleep [%u]\n", static_cast<uint8_t>(theSleepMode));
     setRfSwitch(rfSwitchState::off);
     constexpr uint8_t nmbrCommandParameters{1};
     uint8_t commandParameters[nmbrCommandParameters]{static_cast<uint8_t>(theSleepMode)};
@@ -79,14 +79,14 @@ void sx126x::goSleep(sleepMode theSleepMode) {
 }
 
 void sx126x::goStandby(standbyMode theStandbyMode) {
-    logging::snprintf(logging::source::sx126xControl, "goStandby [%u]\n", static_cast<uint8_t>(theStandbyMode));
+    logging::snprintf(logging::source::sx126xControl, "sx126x::goStandby [%u]\n", static_cast<uint8_t>(theStandbyMode));
     constexpr uint8_t nmbrCommandParameters{1};
     uint8_t commandParameters[nmbrCommandParameters]{static_cast<uint8_t>(theStandbyMode)};
     executeSetCommand(command::setStandby, commandParameters, nmbrCommandParameters);
 }
 
 void sx126x::startTransmit(uint32_t timeOut) {
-    logging::snprintf(logging::source::sx126xControl, "startTx [%u]\n", timeOut);
+    logging::snprintf(logging::source::sx126xControl, "sx126x::startTx [%u]\n", timeOut);
     constexpr uint8_t nmbrCommandParameters{3};
     uint8_t commandParameters[nmbrCommandParameters];
     commandParameters[0] = static_cast<uint8_t>((timeOut >> 16) & 0xFF);
@@ -97,7 +97,7 @@ void sx126x::startTransmit(uint32_t timeOut) {
 
 void sx126x::startReceive(uint32_t timeOut) {
     timeOut = 3840;        // TODO : make this a funtion of the DataRate.. currently it is fixed to 60 ms, which should be ok for DR5
-    logging::snprintf(logging::source::sx126xControl, "startRx [%u]\n", timeOut);
+    logging::snprintf(logging::source::sx126xControl, "sx126x::startRx [%u]\n", timeOut);
     constexpr uint8_t nmbrCommandParameters{3};
     uint8_t commandParameters[nmbrCommandParameters];
     commandParameters[0] = static_cast<uint8_t>((timeOut >> 16) & 0xFF);
@@ -107,7 +107,7 @@ void sx126x::startReceive(uint32_t timeOut) {
 }
 
 void sx126x::setRfFrequency(uint32_t frequencyInHz) {
-    logging::snprintf(logging::source::sx126xControl, "setRfFrequency [%u]\n", frequencyInHz);
+    logging::snprintf(logging::source::sx126xControl, "sx126x::setRfFrequency [%u]\n", frequencyInHz);
     constexpr uint8_t nmbrCommandParameters{4};
     uint32_t frequencyRegisterValue = calculateFrequencyRegisterValue(frequencyInHz);
     uint8_t commandParameters[nmbrCommandParameters];
@@ -119,7 +119,7 @@ void sx126x::setRfFrequency(uint32_t frequencyInHz) {
 }
 
 void sx126x::setModulationParameters(spreadingFactor theSpreadingFactor) {
-    logging::snprintf(logging::source::sx126xControl, "setModulationParameters [%s]\n", toString(theSpreadingFactor));
+    logging::snprintf(logging::source::sx126xControl, "sx126x::setModulationParameters [%s]\n", toString(theSpreadingFactor));
     constexpr uint8_t nmbrCommandParameters{8};
     uint8_t commandParameters[nmbrCommandParameters]{0};
     commandParameters[0] = static_cast<uint8_t>(theSpreadingFactor);        //
@@ -131,7 +131,7 @@ void sx126x::setModulationParameters(spreadingFactor theSpreadingFactor) {
 }
 
 void sx126x::setPacketParametersTransmit(uint8_t payloadLength) {
-    logging::snprintf(logging::source::sx126xControl, "setPacketParametersTransmit [%u]\n", payloadLength);
+    logging::snprintf(logging::source::sx126xControl, "sx126x::setPacketParametersTransmit [%u]\n", payloadLength);
     constexpr uint8_t nmbrCommandParameters{9};
     uint8_t commandParameters[nmbrCommandParameters]{0};
     commandParameters[0] = 0x00;                 // MSB for PreambleLength
@@ -145,7 +145,7 @@ void sx126x::setPacketParametersTransmit(uint8_t payloadLength) {
 }
 
 void sx126x::setPacketParametersReceive() {
-    logging::snprintf(logging::source::sx126xControl, "setPacketParametersReceive\n");
+    logging::snprintf(logging::source::sx126xControl, "sx126x::setPacketParametersReceive\n");
     constexpr uint8_t nmbrCommandParameters{9};
     uint8_t commandParameters[nmbrCommandParameters]{0};
     commandParameters[0] = 0x00;        // MSB for PreambleLength

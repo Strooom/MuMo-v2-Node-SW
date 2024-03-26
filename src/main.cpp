@@ -137,10 +137,8 @@ int main(void) {
     MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
     gpio ::enableGpio(gpio::group::uart1);
-    // HAL_GPIO_WritePin(GPIOB, 0x0001 << 6, GPIO_PIN_SET);
     HAL_Delay(3000);
     mainController ::initialize();
-    // HAL_GPIO_WritePin(GPIOB, 0x0001 << 6, GPIO_PIN_RESET);
     /* USER CODE END 2 */
 
     /* Infinite loop */

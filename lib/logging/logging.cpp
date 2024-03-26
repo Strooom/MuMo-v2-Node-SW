@@ -11,17 +11,17 @@
 #include "logging.hpp"
 
 #ifndef generic
-#include "main.h"                        // required for ITM_Sendchar
-extern UART_HandleTypeDef huart2;        // UART2 on PA2 (TX) and PA3 (RX) is connected to the USB-UART bridge
+#include "main.h"
+extern UART_HandleTypeDef huart2;
 #endif
 
-uint32_t logging::activeSources{0};             // initialisation of static member variable
-uint32_t logging::activeDestinations{0};        // initialisation of static member variable
-char logging::buffer[bufferLength]{};           // initialisation of static member variable
+uint32_t logging::activeSources{0};
+uint32_t logging::activeDestinations{0};
+char logging::buffer[bufferLength]{};
 
 uint32_t logging::snprintf(const char *format, ...) {
     uint32_t length{0};
-    if (activeDestinations != 00) {        // only if any destination is active
+    if (activeDestinations != 00) {
         va_list argList;
         va_start(argList, format);
         length = vsnprintf(buffer, bufferLength, format, argList);
@@ -33,7 +33,7 @@ uint32_t logging::snprintf(const char *format, ...) {
 
 uint32_t logging::snprintf(source aSource, const char *format, ...) {
     uint32_t length{0};
-    if (activeDestinations != 00) {        // only if any destination is active
+    if (activeDestinations != 00) {
         if (isActive(aSource)) {
             va_list argList;
             va_start(argList, format);
