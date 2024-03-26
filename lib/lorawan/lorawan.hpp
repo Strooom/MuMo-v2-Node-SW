@@ -107,20 +107,22 @@ class LoRaWAN {
     static linearBuffer<macInOutLength> macIn;
     static linearBuffer<macInOutLength> macOut;
     static void processMacContents();
-    static void processNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate);
-    static void processReceiveTimingSetupRequest(uint32_t rx1Delay);
-    static void removeNonStickyMacStuff();
 
     static void processLinkCheckAnswer();
     static void processLinkAdaptiveDataRateRequest();
     static void processDutyCycleRequest();
     static void processDeviceStatusRequest();
     static void processNewChannelRequest();
+    static void processNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate);
     static void processReceiveParameterSetupRequest();
     static void processReceiveTimingSetupRequest();
+    static void processReceiveTimingSetupRequest(uint32_t rx1Delay);
     static void processTransmitParameterSetupRequest();
     static void processDownlinkChannelRequest();
     static void processDeviceTimeAnswer();
+
+    static void removeNonStickyMacStuff();
+  
     static void dumpMacIn();
     static void dumpMacOut();
 
@@ -150,9 +152,9 @@ class LoRaWAN {
     // #############################################################
 
     static void setOffsetsAndLengthsRx(uint32_t loRaPayloadLength);
-    static uint16_t getReceivedFramecount();
-    static uint32_t getReceivedDeviceAddress();
-    static uint32_t getReceivedMic();
+    static uint16_t receivedFramecount();
+    static uint32_t receivedDeviceAddress();
+    static uint32_t receivedMic();
     static bool isValidDownlinkFrameCount(frameCount testFrameCount);
     static messageType decodeMessage();
 
@@ -160,7 +162,7 @@ class LoRaWAN {
     // ### Other Helper functions                                ###
     // #############################################################
 
-    static uint32_t getRandomNumber();
+    static uint32_t randomNumber();
     static void startTimer(uint32_t timeOutIn4096zTicks);
     static void stopTimer();
     static void insertBlockB0(linkDirection theDirection, frameCount &aFrameCount);        // in downlink, the framecount is the received framecount, not necessarily the downlink framecount so I need to pass it as a parameter

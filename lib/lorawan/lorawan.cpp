@@ -235,15 +235,15 @@ void LoRaWAN::padForMicCalculation(const uint32_t messageLength) {
     }
 }
 
-uint16_t LoRaWAN::getReceivedFramecount() {
+uint16_t LoRaWAN::receivedFramecount() {
     return (static_cast<uint16_t>(rawMessage[frameCountOffset]) + (static_cast<uint16_t>(rawMessage[frameCountOffset + 1]) << 8));
 }
 
-uint32_t LoRaWAN::getReceivedDeviceAddress() {
+uint32_t LoRaWAN::receivedDeviceAddress() {
     return (static_cast<uint32_t>(rawMessage[deviceAddressOffset]) + (static_cast<uint32_t>(rawMessage[deviceAddressOffset + 1]) << 8) + (static_cast<uint32_t>(rawMessage[deviceAddressOffset + 2]) << 16) + (static_cast<uint32_t>(rawMessage[deviceAddressOffset + 3]) << 24));
 }
 
-uint32_t LoRaWAN::getReceivedMic() {
+uint32_t LoRaWAN::receivedMic() {
     return (static_cast<uint32_t>(rawMessage[micOffset]) + (static_cast<uint32_t>(rawMessage[micOffset + 1]) << 8) + (static_cast<uint32_t>(rawMessage[micOffset + 2]) << 16) + (static_cast<uint32_t>(rawMessage[micOffset + 3]) << 24));
 };
 
@@ -664,7 +664,7 @@ void LoRaWAN::goTo(txRxCycleState newState) {
             break;
 
         case txRxCycleState::waitForRandomTimeBeforeTransmit: {
-            uint32_t randomDelayAsTicks = getRandomNumber() % maxRandomDelayBeforeTx;
+            uint32_t randomDelayAsTicks = randomNumber() % maxRandomDelayBeforeTx;
             startTimer(randomDelayAsTicks);
         } break;
 
@@ -1057,17 +1057,17 @@ messageType LoRaWAN::decodeMessage() {
     }
 
     // 2. Extract & guess the downLinkFrameCount, as we need this to check the MIC
-    uint16_t receivedDownlinkFramecount = getReceivedFramecount();
+    uint16_t receivedDownlinkFramecount = receivedFramecount();
     frameCount guessedDownlinkFramecount;
     guessedDownlinkFramecount = downlinkFrameCount;
     guessedDownlinkFramecount.guessFromUint16(receivedDownlinkFramecount);
     logging::snprintf(logging::source::lorawanMac, "receivedFramecount = %u, lastFramecount = %u, guessedFramecount = %u\n", receivedDownlinkFramecount, downlinkFrameCount.toUint32(), guessedDownlinkFramecount.toUint32());
 
     // 3. Check the MIC
-    uint32_t receivedMic = getReceivedMic();
+    uint32_t _receivedMic = receivedMic();
     insertBlockB0(linkDirection::downlink, guessedDownlinkFramecount);
     uint32_t calculatedMic = calculateMic();
-    if (receivedMic != calculatedMic) {
+    if (_receivedMic != calculatedMic) {
         if (logging::isActive(logging::source::error)) {
             logging::snprintf("Error : invalid MIC, loraPayload = ");
             for (uint8_t i = 0; i < loRaPayloadLength; i++) {
@@ -1079,9 +1079,9 @@ messageType LoRaWAN::decodeMessage() {
     }
 
     // 4. Extract the deviceAddress, to check if packet is addressed to this node
-    deviceAddress receivedDeviceAddress(getReceivedDeviceAddress());
-    if (receivedDeviceAddress != DevAddr) {
-        logging::snprintf(logging::source::lorawanMac, "Msg for other device : %08X\n", receivedDeviceAddress.asUint32);        // TODO : also log received deviceAddress
+    deviceAddress _receivedDeviceAddress(receivedDeviceAddress());
+    if (_receivedDeviceAddress != DevAddr) {
+        logging::snprintf(logging::source::lorawanMac, "Msg for other device : %08X\n", _receivedDeviceAddress.asUint32);        // TODO : also log received deviceAddress
         return messageType::invalid;
     }
 
@@ -1150,7 +1150,7 @@ void LoRaWAN::checkNetwork() {
     macOut.append(static_cast<uint8_t>(macCommand::linkCheckRequest));
 }
 
-uint32_t LoRaWAN::getRandomNumber() {
+uint32_t LoRaWAN::randomNumber() {
 #ifndef generic
     uint32_t result{0};
     HAL_RNG_GenerateRandomNumber(&hrng, &result);

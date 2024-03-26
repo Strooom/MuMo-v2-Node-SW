@@ -289,7 +289,7 @@ void test_getReceivedFramecount() {
     LoRaWAN::clearRawMessage();
     memcpy(LoRaWAN::rawMessage + LoRaWAN::loRaPayloadOffset, testLoRaPayload, testLoRaPayloadLength);
     LoRaWAN::setOffsetsAndLengthsRx(testLoRaPayloadLength);
-    TEST_ASSERT_EQUAL_UINT16(0xDDCC, LoRaWAN::getReceivedFramecount());
+    TEST_ASSERT_EQUAL_UINT16(0xDDCC, LoRaWAN::receivedFramecount());
 
 }
 
@@ -299,7 +299,7 @@ void test_receivedMic() {
     LoRaWAN::clearRawMessage();
     memcpy(LoRaWAN::rawMessage + LoRaWAN::loRaPayloadOffset, testLoRaPayload, testLoRaPayloadLength);
     LoRaWAN::setOffsetsAndLengthsRx(testLoRaPayloadLength);
-    TEST_ASSERT_EQUAL_UINT32(0x5E4EF113, LoRaWAN::getReceivedMic());
+    TEST_ASSERT_EQUAL_UINT32(0x5E4EF113, LoRaWAN::receivedMic());
 }
 
 void test_receivedDeviceAddress() {
@@ -308,7 +308,7 @@ void test_receivedDeviceAddress() {
     LoRaWAN::clearRawMessage();
     memcpy(LoRaWAN::rawMessage + LoRaWAN::loRaPayloadOffset, testLoRaPayload, testLoRaPayloadLength);
     LoRaWAN::setOffsetsAndLengthsRx(testLoRaPayloadLength);
-    TEST_ASSERT_EQUAL_UINT32(0x12345678, LoRaWAN::getReceivedDeviceAddress());
+    TEST_ASSERT_EQUAL_UINT32(0x12345678, LoRaWAN::receivedDeviceAddress());
 }
 
 

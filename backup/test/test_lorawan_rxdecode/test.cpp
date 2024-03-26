@@ -64,7 +64,7 @@ void test_getReceivedFramecount() {
     LoRaWAN theNetwork;
     memcpy(theNetwork.rawMessage + theNetwork.b0BlockLength, testVector, testVectorLength);
     theNetwork.setOffsetsAndLengthsRx(testVectorLength);
-    TEST_ASSERT_EQUAL_UINT32(0x3B, theNetwork.getReceivedFramecount());
+    TEST_ASSERT_EQUAL_UINT32(0x3B, theNetwork.receivedFramecount());
 }
 
 void test_verifyMic() {
@@ -74,7 +74,7 @@ void test_verifyMic() {
     memcpy(theNetwork.rawMessage + theNetwork.b0BlockLength, testVector, testVectorLength);
     theNetwork.setOffsetsAndLengthsRx(testVectorLength);
 
-    uint16_t receivedDownlinkFramecount = theNetwork.getReceivedFramecount();
+    uint16_t receivedDownlinkFramecount = theNetwork.receivedFramecount();
     uint32_t lastDownlinkFramecount     = theNetwork.downlinkFrameCount.asUint32;
     uint32_t guessedDownlinkFramecount  = frameCount::guessFromUint16(lastDownlinkFramecount, receivedDownlinkFramecount);
     frameCount tmpDownLinkFrameCount(guessedDownlinkFramecount);
@@ -124,7 +124,7 @@ void test_decryptPayload() {
     theNetwork.networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
     memcpy(theNetwork.rawMessage + theNetwork.b0BlockLength, testVector, testVectorLength);
     theNetwork.setOffsetsAndLengthsRx(testVectorLength);
-    uint16_t receivedDownlinkFramecount = theNetwork.getReceivedFramecount();
+    uint16_t receivedDownlinkFramecount = theNetwork.receivedFramecount();
     uint32_t lastDownlinkFramecount     = theNetwork.downlinkFrameCount.asUint32;
     uint32_t guessedDownlinkFramecount  = frameCount::guessFromUint16(lastDownlinkFramecount, receivedDownlinkFramecount);
     frameCount tmpDownLinkFrameCount(guessedDownlinkFramecount);
