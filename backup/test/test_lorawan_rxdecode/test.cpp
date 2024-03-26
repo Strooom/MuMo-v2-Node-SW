@@ -129,7 +129,7 @@ void test_decryptPayload() {
     uint32_t guessedDownlinkFramecount  = frameCount::guessFromUint16(lastDownlinkFramecount, receivedDownlinkFramecount);
     frameCount tmpDownLinkFrameCount(guessedDownlinkFramecount);
     theNetwork.downlinkFrameCount.set(tmpDownLinkFrameCount.asUint32);
-    theNetwork.decryptPayload(theNetwork.networkKey);        // this particular test vector has fPort == 0 so it is decrypted with Network Key
+    theNetwork.encryptDecryptPayload(theNetwork.networkKey);        // this particular test vector has fPort == 0 so it is decrypted with Network Key
     const uint8_t testVector[testVectorLength] = {7, 3, 24, 79, 132, 80, 7, 4, 232, 86, 132, 80, 7, 5, 184, 94, 132, 80, 7, 6, 136, 102, 132, 80, 7, 7, 88, 110, 132, 80};
     TEST_ASSERT_EQUAL_INT8_ARRAY(testVector, theNetwork.rawMessage + theNetwork.framePayloadOffset, theNetwork.framePayloadLength);
 }

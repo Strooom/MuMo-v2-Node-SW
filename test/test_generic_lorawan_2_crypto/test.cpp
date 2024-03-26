@@ -66,7 +66,7 @@ void test_encryptPayload() {
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testClearTextLength, 0);
     LoRaWAN::insertPayload(testClearText, testClearTextLength);
-    LoRaWAN::encryptPayload(LoRaWAN::applicationKey);
+    LoRaWAN::encryptDecryptPayload(LoRaWAN::applicationKey, linkDirection::uplink);
     const uint8_t expectedEncryptedPayload1[16]{0x4D, 0x97, 0x57, 0xC6, 0x57, 0xDB, 0xB8, 0xA7, 0xD7, 0xAF, 0x23, 0x00, 0xB6, 0xDE, 0xE5, 0xC6};
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedEncryptedPayload1, LoRaWAN::rawMessage + LoRaWAN::framePayloadOffset, testClearTextLength);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::framePayloadOffset);
@@ -78,7 +78,7 @@ void test_encryptPayload() {
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testClearTextLength, 0);
     LoRaWAN::insertPayload(testClearText, testClearTextLength);
-    LoRaWAN::encryptPayload(LoRaWAN::applicationKey);
+    LoRaWAN::encryptDecryptPayload(LoRaWAN::applicationKey, linkDirection::uplink);
     const uint8_t expectedEncryptedPayload2[32]{0x4D, 0x97, 0x57, 0xC6, 0x57, 0xDB, 0xB8, 0xA7, 0xD7, 0xAF, 0x23, 0x00, 0xB6, 0xDE, 0xE5, 0xC6, 0x83, 0x67, 0xFF, 0x84, 0x34, 0x2F, 0xA5, 0x48, 0x93, 0xE8, 0xB1, 0xC3, 0xAA, 0x23, 0x89, 0x31};
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedEncryptedPayload2, LoRaWAN::rawMessage + LoRaWAN::framePayloadOffset, testClearTextLength);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::framePayloadOffset);
@@ -90,7 +90,7 @@ void test_encryptPayload() {
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testClearTextLength, 0);
     LoRaWAN::insertPayload(testClearText, testClearTextLength);
-    LoRaWAN::encryptPayload(LoRaWAN::applicationKey);
+    LoRaWAN::encryptDecryptPayload(LoRaWAN::applicationKey, linkDirection::uplink);
     const uint8_t expectedEncryptedPayload3[40]{0x4D, 0x97, 0x57, 0xC6, 0x57, 0xDB, 0xB8, 0xA7, 0xD7, 0xAF, 0x23, 0x00, 0xB6, 0xDE, 0xE5, 0xC6, 0x83, 0x67, 0xFF, 0x84, 0x34, 0x2F, 0xA5, 0x48, 0x93, 0xE8, 0xB1, 0xC3, 0xAA, 0x23, 0x89, 0x31, 0x4B, 0x2D, 0x32, 0xC0, 0x59, 0x4C, 0x67, 0x32};
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedEncryptedPayload3, LoRaWAN::rawMessage + LoRaWAN::framePayloadOffset, testClearTextLength);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::framePayloadOffset);
@@ -102,7 +102,7 @@ void test_encryptPayload() {
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testClearTextLength, 0);
     LoRaWAN::insertPayload(testClearText, testClearTextLength);
-    LoRaWAN::encryptPayload(LoRaWAN::applicationKey);
+    LoRaWAN::encryptDecryptPayload(LoRaWAN::applicationKey, linkDirection::uplink);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::rawMessageLength);
 }
 
@@ -120,7 +120,7 @@ void test_decryptPayload() {
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsRx(testCypherTextLength + numberOfHeaderBytes);
     memcpy(LoRaWAN::rawMessage + LoRaWAN::framePayloadOffset, testCypherText1, testCypherTextLength);
-    LoRaWAN::decryptPayload(LoRaWAN::applicationKey);
+    LoRaWAN::encryptDecryptPayload(LoRaWAN::applicationKey, linkDirection::downlink);
 
     TEST_ASSERT_EQUAL_UINT8_ARRAY(testClearText, LoRaWAN::rawMessage + LoRaWAN::framePayloadOffset, testCypherTextLength);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::framePayloadOffset);
@@ -133,7 +133,7 @@ void test_decryptPayload() {
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsRx(testCypherTextLength + numberOfHeaderBytes);
     memcpy(LoRaWAN::rawMessage + LoRaWAN::framePayloadOffset, testCypherText2, testCypherTextLength);
-    LoRaWAN::decryptPayload(LoRaWAN::applicationKey);
+    LoRaWAN::encryptDecryptPayload(LoRaWAN::applicationKey, linkDirection::downlink);
 
     TEST_ASSERT_EQUAL_UINT8_ARRAY(testClearText, LoRaWAN::rawMessage + LoRaWAN::framePayloadOffset, testCypherTextLength);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::framePayloadOffset);
@@ -144,7 +144,7 @@ void test_decryptPayload() {
     testCypherTextLength = 0;
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsRx(testCypherTextLength + numberOfHeaderBytes);
-    LoRaWAN::decryptPayload(LoRaWAN::applicationKey);
+    LoRaWAN::encryptDecryptPayload(LoRaWAN::applicationKey, linkDirection::downlink);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::rawMessageLength);
 }
 

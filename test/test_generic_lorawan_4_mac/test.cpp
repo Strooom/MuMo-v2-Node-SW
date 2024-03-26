@@ -279,7 +279,7 @@ void test_construct_1() {
     LoRaWAN::setOffsetsAndLengthsTx(testClearTextPayloadLength, 0);                       // Check : assuming no Fopts but I'm not sure as I don't know the internals of the sender of this message
     LoRaWAN::insertHeaders(nullptr, 0, testClearTextPayloadLength, testFramePort);        //
     LoRaWAN::insertPayload(testClearTextPayload, testClearTextPayloadLength);
-    LoRaWAN::encryptPayload(LoRaWAN::applicationKey);
+    LoRaWAN::encryptDecryptPayload(LoRaWAN::applicationKey, linkDirection::uplink);
     LoRaWAN::insertBlockB0(linkDirection::uplink, LoRaWAN::uplinkFrameCount);
     LoRaWAN::insertMic();
 

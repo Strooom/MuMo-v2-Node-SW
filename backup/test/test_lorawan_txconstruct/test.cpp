@@ -191,7 +191,7 @@ void test_encryptFramePayload() {
 
     theNetwork.setOffsetsAndLengthsTx(testPayloadBytesLength);
     theNetwork.insertPayload(testPayloadBytesBeforeEncryption, testPayloadBytesLength);
-    theNetwork.encryptPayload(theNetwork.applicationKey);
+    theNetwork.encryptDecryptPayload(theNetwork.applicationKey, linkDirection::uplink);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(testPayloadBytesAfterEncryption, theNetwork.rawMessage + theNetwork.framePayloadOffset, testPayloadBytesLength);
 }
 
@@ -260,7 +260,7 @@ void test_insertMic() {
 
     theNetwork.setOffsetsAndLengthsTx(testPayloadBytesLength);
     theNetwork.insertPayload(testPayloadBytesBeforeEncryption, testPayloadBytesLength);
-    theNetwork.encryptPayload(theNetwork.applicationKey);
+    theNetwork.encryptDecryptPayload(theNetwork.applicationKey, linkDirection::uplink);
     theNetwork.insertHeaders(nullptr, 0, testPayloadBytesLength, 16U);
     theNetwork.insertBlockB0(linkDirection::uplink, theNetwork.DevAddr, theNetwork.uplinkFrameCount, (theNetwork.macHeaderLength + theNetwork.macPayloadLength));
     theNetwork.insertMic();

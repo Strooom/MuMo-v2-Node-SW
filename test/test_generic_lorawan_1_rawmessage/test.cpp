@@ -246,31 +246,27 @@ void test_padForMicCalculation() {
     LoRaWAN::setOffsetsAndLengthsTx(24, 0);
     memcpy(LoRaWAN::rawMessage + LoRaWAN::micOffset, allOnes, 16);        // writing 0xFF so we can be sure it's overwritten with zeroes for the correct amount and not just zeroes from initialization
     LoRaWAN::padForMicCalculation(LoRaWAN::micOffset);
-    TEST_ASSERT_EQUAL(15, LoRaWAN::nmbrOfBytesToPad);
     TEST_ASSERT_EQUAL_UINT8(0x80, LoRaWAN::rawMessage[LoRaWAN::micOffset]);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage + LoRaWAN::micOffset + 1, LoRaWAN::nmbrOfBytesToPad - 1);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(allOnes, LoRaWAN::rawMessage + LoRaWAN::micOffset + LoRaWAN::nmbrOfBytesToPad, 16 - LoRaWAN::nmbrOfBytesToPad);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage + LoRaWAN::micOffset + 1, 14);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(allOnes, LoRaWAN::rawMessage + LoRaWAN::micOffset + 15, 1);
 
     LoRaWAN::setOffsetsAndLengthsTx(23, 0);
     memcpy(LoRaWAN::rawMessage + LoRaWAN::micOffset, allOnes, 16);
     LoRaWAN::padForMicCalculation(LoRaWAN::micOffset);
-    TEST_ASSERT_EQUAL(0, LoRaWAN::nmbrOfBytesToPad);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(allOnes, LoRaWAN::rawMessage + LoRaWAN::micOffset + LoRaWAN::nmbrOfBytesToPad, 16 - LoRaWAN::nmbrOfBytesToPad);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(allOnes, LoRaWAN::rawMessage + LoRaWAN::micOffset, 16);
 
     LoRaWAN::setOffsetsAndLengthsTx(22, 0);
     memcpy(LoRaWAN::rawMessage + LoRaWAN::micOffset, allOnes, 16);
     LoRaWAN::padForMicCalculation(LoRaWAN::micOffset);
-    TEST_ASSERT_EQUAL(1, LoRaWAN::nmbrOfBytesToPad);
     TEST_ASSERT_EQUAL_UINT8(0x80, LoRaWAN::rawMessage[LoRaWAN::micOffset]);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(allOnes, LoRaWAN::rawMessage + LoRaWAN::micOffset + LoRaWAN::nmbrOfBytesToPad, 16 - LoRaWAN::nmbrOfBytesToPad);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(allOnes, LoRaWAN::rawMessage + LoRaWAN::micOffset + 1, 15);
 
     LoRaWAN::setOffsetsAndLengthsTx(21, 0);
     memcpy(LoRaWAN::rawMessage + LoRaWAN::micOffset, allOnes, 16);
     LoRaWAN::padForMicCalculation(LoRaWAN::micOffset);
-    TEST_ASSERT_EQUAL(2, LoRaWAN::nmbrOfBytesToPad);
     TEST_ASSERT_EQUAL_UINT8(0x80, LoRaWAN::rawMessage[LoRaWAN::micOffset]);
     TEST_ASSERT_EQUAL_UINT8(0x00, LoRaWAN::rawMessage[LoRaWAN::micOffset + 1]);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(allOnes, LoRaWAN::rawMessage + LoRaWAN::micOffset + LoRaWAN::nmbrOfBytesToPad, 16 - LoRaWAN::nmbrOfBytesToPad);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(allOnes, LoRaWAN::rawMessage + LoRaWAN::micOffset + 2, 14);
 }
 
 void test_insertMic() {

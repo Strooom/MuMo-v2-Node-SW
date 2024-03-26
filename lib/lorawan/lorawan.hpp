@@ -36,10 +36,9 @@ class LoRaWAN {
     static void saveState();
     static void saveChannels();
 
-    static void run();
     static void handleEvents(applicationEvent theEvent);
     static uint32_t getMaxApplicationPayloadLength();
-    static void sendUplink(uint8_t aFramePort = 0, const uint8_t data[] = nullptr, uint32_t length = 0);
+    static void sendUplink(uint8_t framePort, const uint8_t payload[], uint32_t payloadLength);
     static void getReceivedDownlinkMessage();
     static txRxCycleState getState();
     static bool isIdle();
@@ -49,7 +48,7 @@ class LoRaWAN {
   private:
 #endif
 
-    static txRxCycleState theTxRxCycleState;
+    static txRxCycleState state;
     static void goTo(txRxCycleState newState);
 
     static deviceAddress DevAddr;
@@ -96,14 +95,12 @@ class LoRaWAN {
     static uint32_t framePayloadOffset;
     static uint32_t micOffset;
 
-    static uint32_t nmbrOfBytesToPad;
-
     static constexpr uint32_t rawMessageLength{b0BlockLength + maxLoRaPayloadLength + 15};
     static uint8_t rawMessage[rawMessageLength];
     static void clearRawMessage();
 
     // ################################################################
-    // ### Helper functions for MAC layer                          ###
+    // ### Helper functions for MAC layer                           ###
     // ################################################################
 
     static constexpr uint32_t macInOutLength{64};
@@ -144,8 +141,8 @@ class LoRaWAN {
     static void insertPayload(const uint8_t data[], const uint32_t length);
     static void encryptPayload(aesKey &theKey);
     static void decryptPayload(aesKey &theKey);
+    static void encryptDecryptPayload(aesKey &theKey, linkDirection theDirection);
     static void insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort);
-    static void insertBlockB0(linkDirection theDirection, frameCount &aFrameCount);        // in downlink, the framecount is the received framecount, not necessarily the downlink framecount so I need to pass it as a parameter
     static void padForMicCalculation(const uint32_t messageLength);
     static void insertMic();
     static void insertMic(uint32_t aMic);
@@ -161,14 +158,19 @@ class LoRaWAN {
     static bool isValidDownlinkFrameCount(frameCount testFrameCount);
     static messageType decodeMessage();
 
+    // #############################################################
+    // ### Other Helper functions                                ###
+    // #############################################################
+
     static uint32_t getRandomNumber();
     static void startTimer(uint32_t timeOutIn4096zTicks);
     static void stopTimer();
+    static void insertBlockB0(linkDirection theDirection, frameCount &aFrameCount);        // in downlink, the framecount is the received framecount, not necessarily the downlink framecount so I need to pass it as a parameter
 
     static void prepareBlockAi(aesBlock &theBlock, linkDirection theDirection, uint32_t blockIndex);
     static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);
 
-    static uint32_t calculateMaxTransmitTimeout(uint32_t currentDataRateIndex, uint32_t loRaPayloadLength);        // TODO : provide an upper limit for the timeout
+    static uint32_t calculateMaxTransmitTimeout(uint32_t currentDataRateIndex, uint32_t loRaPayloadLength);
 
     static void dumpConfig();
     static void dumpState();

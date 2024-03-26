@@ -49,13 +49,13 @@ void test_txRxCycleStateToString() {
 
 void test_signature() {
     // Putting some dirty data in the context
-    LoRaWAN::theTxRxCycleState = txRxCycleState::waitForRxMessageReadout;
+    LoRaWAN::state = txRxCycleState::waitForRxMessageReadout;
     LoRaWAN::macIn.append(0xFF);
     LoRaWAN::macOut.append(0xFF);
     LoRaWAN::rawMessage[0] = 0xFF;
 
     LoRaWAN::initialize();
-    TEST_ASSERT_EQUAL(txRxCycleState::idle, LoRaWAN::theTxRxCycleState);
+    TEST_ASSERT_EQUAL(txRxCycleState::idle, LoRaWAN::state);
     TEST_ASSERT_EQUAL(txRxCycleState::idle, LoRaWAN::getState());
     TEST_ASSERT_TRUE(LoRaWAN::isIdle());
     TEST_ASSERT_TRUE(LoRaWAN::macIn.isEmpty());
@@ -64,25 +64,25 @@ void test_signature() {
 }
 
 void test_getState() {
-    LoRaWAN::theTxRxCycleState = txRxCycleState::idle;
+    LoRaWAN::state = txRxCycleState::idle;
     TEST_ASSERT_EQUAL(txRxCycleState::idle, LoRaWAN::getState());
-    LoRaWAN::theTxRxCycleState = txRxCycleState::waitForCadEnd;
+    LoRaWAN::state = txRxCycleState::waitForCadEnd;
     TEST_ASSERT_EQUAL(txRxCycleState::waitForCadEnd, LoRaWAN::getState());
-    LoRaWAN::theTxRxCycleState = txRxCycleState::waitForRandomTimeBeforeTransmit;
+    LoRaWAN::state = txRxCycleState::waitForRandomTimeBeforeTransmit;
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRandomTimeBeforeTransmit, LoRaWAN::getState());
-    LoRaWAN::theTxRxCycleState = txRxCycleState::waitForTxComplete;
+    LoRaWAN::state = txRxCycleState::waitForTxComplete;
     TEST_ASSERT_EQUAL(txRxCycleState::waitForTxComplete, LoRaWAN::getState());
-    LoRaWAN::theTxRxCycleState = txRxCycleState::waitForRx1Start;
+    LoRaWAN::state = txRxCycleState::waitForRx1Start;
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRx1Start, LoRaWAN::getState());
-    LoRaWAN::theTxRxCycleState = txRxCycleState::waitForRx1CompleteOrTimeout;
+    LoRaWAN::state = txRxCycleState::waitForRx1CompleteOrTimeout;
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRx1CompleteOrTimeout, LoRaWAN::getState());
-    LoRaWAN::theTxRxCycleState = txRxCycleState::waitForRx2Start;
+    LoRaWAN::state = txRxCycleState::waitForRx2Start;
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRx2Start, LoRaWAN::getState());
-    LoRaWAN::theTxRxCycleState = txRxCycleState::waitForRx2CompleteOrTimeout;
+    LoRaWAN::state = txRxCycleState::waitForRx2CompleteOrTimeout;
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRx2CompleteOrTimeout, LoRaWAN::getState());
-    LoRaWAN::theTxRxCycleState = txRxCycleState::waitForRxMessageReadout;
+    LoRaWAN::state = txRxCycleState::waitForRxMessageReadout;
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRxMessageReadout, LoRaWAN::getState());
-    LoRaWAN::theTxRxCycleState = static_cast<txRxCycleState>(99);
+    LoRaWAN::state = static_cast<txRxCycleState>(99);
     TEST_ASSERT_EQUAL(static_cast<txRxCycleState>(99), LoRaWAN::getState());
 }
 

@@ -43,7 +43,7 @@ void benchmark_encryptMessage() {
 
     before = HAL_GetTick();
     for (uint32_t loopIndex = 0; loopIndex < nmbrOfLoops; loopIndex++) {
-        LoRaWAN::encryptPayload(LoRaWAN::applicationKey);
+        LoRaWAN::encryptDecryptPayload(LoRaWAN::applicationKey, linkDirection::uplink);
     }
     after = HAL_GetTick();
     TEST_ASSERT_EQUAL_UINT32(0, after - before);

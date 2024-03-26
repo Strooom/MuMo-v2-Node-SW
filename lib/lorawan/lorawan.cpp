@@ -49,12 +49,10 @@ uint32_t LoRaWAN::framePortOffset{};
 uint32_t LoRaWAN::framePayloadOffset{};
 uint32_t LoRaWAN::micOffset{};
 
-uint32_t LoRaWAN::nmbrOfBytesToPad{};
+txRxCycleState LoRaWAN::state{txRxCycleState::idle};
 
-txRxCycleState LoRaWAN::theTxRxCycleState{txRxCycleState::idle};        // state variable tracking the TxRxCycle state machine : TODO : provide a getter()
-
-linearBuffer<64> LoRaWAN::macIn;         // buffer holding the received MAC requests and/or answers
-linearBuffer<64> LoRaWAN::macOut;        // buffer holding the MAC requests and/or answers to be sent
+linearBuffer<LoRaWAN::macInOutLength> LoRaWAN::macIn;
+linearBuffer<LoRaWAN::macInOutLength> LoRaWAN::macOut;
 
 #pragma endregion
 #pragma region Global Objects & Variables
@@ -65,7 +63,7 @@ extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 #pragma region 0 : General
 
 void LoRaWAN::initialize() {
-    theTxRxCycleState = txRxCycleState::idle;
+    state = txRxCycleState::idle;
     macIn.initialize();
     macOut.initialize();
     clearRawMessage();
@@ -230,7 +228,7 @@ void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCount)
 }
 
 void LoRaWAN::padForMicCalculation(const uint32_t messageLength) {
-    nmbrOfBytesToPad = aesBlock::calculateNmbrOfBytesToPad(messageLength);
+    uint32_t nmbrOfBytesToPad = aesBlock::calculateNmbrOfBytesToPad(messageLength);
     if (nmbrOfBytesToPad > 0) {
         rawMessage[micOffset] = 0x80;
         memset(rawMessage + micOffset + 1, 0, nmbrOfBytesToPad - 1);
@@ -359,6 +357,50 @@ void LoRaWAN::decryptPayload(aesKey& theKey) {
 
     for (uint32_t blockIndex = 0x00; blockIndex < nmbrOfBlocks; blockIndex++) {
         prepareBlockAi(theBlock, linkDirection::downlink, (blockIndex + 1));
+        theBlock.encrypt(theKey);
+
+        if (hasIncompleteLastBlock && (blockIndex == (nmbrOfBlocks - 1))) {
+            for (uint32_t byteIndex = 0; byteIndex < incompleteLastBlockSize; byteIndex++) {
+                rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
+            }
+        } else {
+            for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
+            }
+        }
+    }
+#endif
+}
+
+void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirection) {
+    uint32_t nmbrOfBlocks = aesBlock::nmbrOfBlocksFromBytes(framePayloadLength);
+#ifdef HARDWARE_AES
+    stm32wle5_aes::initialize(aesMode::CTR);
+    aesBlock A1;
+    prepareBlockAi(A1, theLinkDirection, 1);
+    stm32wle5_aes::setKey(theKey);
+    stm32wle5_aes::setInitializationVector(A1);
+    stm32wle5_aes::enable();
+    aesBlock tmpBlock;
+    for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
+        uint8_t* tmpOffset;
+        tmpOffset = rawMessage + (blockIndex * 16) + framePayloadOffset;
+        tmpBlock.setFromByteArray(tmpOffset);
+        stm32wle5_aes::write(tmpBlock);
+        while (!stm32wle5_aes::isComputationComplete()) {
+        }
+        stm32wle5_aes::read(tmpBlock);
+        stm32wle5_aes::clearComputationComplete();
+
+        memcpy(tmpOffset, tmpBlock.asBytes(), aesBlock::lengthInBytes);
+    }
+    stm32wle5_aes::disable();
+#else
+    aesBlock theBlock;
+    uint32_t incompleteLastBlockSize = aesBlock::incompleteLastBlockSizeFromBytes(framePayloadLength);
+    bool hasIncompleteLastBlock      = aesBlock::hasIncompleteLastBlockFromBytes(framePayloadLength);
+    for (uint32_t blockIndex = 0x00; blockIndex < nmbrOfBlocks; blockIndex++) {
+        prepareBlockAi(theBlock, theLinkDirection, (blockIndex + 1));
         theBlock.encrypt(theKey);
 
         if (hasIncompleteLastBlock && (blockIndex == (nmbrOfBlocks - 1))) {
@@ -519,25 +561,25 @@ void LoRaWAN::insertMic(uint32_t aMic) {
 #pragma endregion
 #pragma region 3 : TxRxCycle State Machine
 
-void LoRaWAN::run() {
-    if ((macOut.getLevel() > 15) && isIdle()) {        // if we have more than 15 bytes of MAC stuff, we need a separate uplink message (cannot piggyback on a data message), so we send the msg now
-        sendUplink();                                  // start an uplink cycle with the MAC stuff on port 0
-        removeNonStickyMacStuff();                     // after all MAC stuff was sent, remove it from the macOut buffer, except for the sticky MAC stuff, which is only removed after receiving a donwlink
-    }
-}
+// void LoRaWAN::run() {
+//     if ((macOut.getLevel() > 15) && isIdle()) {        // if we have more than 15 bytes of MAC stuff, we need a separate uplink message (cannot piggyback on a data message), so we send the msg now
+//         sendUplink();                                  // start an uplink cycle with the MAC stuff on port 0
+//         removeNonStickyMacStuff();                     // after all MAC stuff was sent, remove it from the macOut buffer, except for the sticky MAC stuff, which is only removed after receiving a donwlink
+//     }
+// }
 
 txRxCycleState LoRaWAN::getState() {
-    return theTxRxCycleState;
+    return state;
 }
 
 bool LoRaWAN::isIdle() {
-    return (theTxRxCycleState == txRxCycleState::idle);
+    return (state == txRxCycleState::idle);
 }
 
 void LoRaWAN::handleEvents(applicationEvent theEvent) {
-    logging::snprintf(logging::source::lorawanEvents, "LoRaWAN event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
+    logging::snprintf(logging::source::lorawanEvents, "LoRaWAN event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(state), toString(state));
 
-    switch (theTxRxCycleState) {
+    switch (state) {
         default:
         case txRxCycleState::idle:
             break;
@@ -676,14 +718,14 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
             }
             break;
     }
-    logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
+    logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(state), toString(state));
     goTo(txRxCycleState::idle);
 }
 
 void LoRaWAN::goTo(txRxCycleState newState) {
-    logging::snprintf(logging::source::applicationEvents, "LoRaWAN stateChange from [%d / %s] to [%d / %s]\n", theTxRxCycleState, toString(theTxRxCycleState), newState, toString(newState));
+    logging::snprintf(logging::source::applicationEvents, "LoRaWAN stateChange from [%d / %s] to [%d / %s]\n", state, toString(state), newState, toString(newState));
     // Tasks to do when leaving the current state
-    switch (theTxRxCycleState) {
+    switch (state) {
         case txRxCycleState::idle:
             break;
 
@@ -709,7 +751,7 @@ void LoRaWAN::goTo(txRxCycleState newState) {
         default:
             break;
     }
-    theTxRxCycleState = newState;
+    state = newState;
     // Tasks to do when entering the new state
     switch (newState) {
         case txRxCycleState::idle:
@@ -1045,22 +1087,21 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
         return;
     }
 
-    // Wake the radio up..
-    sx126x::initializeInterface();        // does HAL_SUBGHZ_Init
-    sx126x::initializeRadio();            // writes all config registers.. should not be needed if config is retained
+    sx126x::initializeInterface();
+    sx126x::initializeRadio();
 
     if (theFramePort == 0) {
         // uplink message with framePort 0, containing no frameOptions and framePayload is all MAC stuff, encrypted with networkKey
-        setOffsetsAndLengthsTx(macOut.getLevel());                    // sending all MAC stuff in the framePayload, so frameOptions are empty and frameOptionsLength is 0
-        insertHeaders(nullptr, 0, macOut.getLevel(), 0);              //
+        setOffsetsAndLengthsTx(macOut.getLevel());
+        insertHeaders(nullptr, 0, macOut.getLevel(), 0);
         insertPayload(macOut.asUint8Ptr(), macOut.getLevel());        // TODO : test the length of the MAC stuff we are going to send, so it does not exceed the maximum allowed length
-        encryptPayload(networkKey);                                   //
+        encryptDecryptPayload(networkKey, linkDirection::uplink); 
     } else {
         // uplink with application payload, encrypted with applicationKey. Optionally up to 15 bytes of (unencrypted) frameOptions in the header
-        setOffsetsAndLengthsTx(applicationDataLength, macOut.getLevel());                                  // sending application payload + <= 15 bytes , so frameOptionsLength is 15
-        insertHeaders(macOut.asUint8Ptr(), macOut.getLevel(), applicationDataLength, theFramePort);        //
-        insertPayload(applicationData, applicationDataLength);                                             //
-        encryptPayload(applicationKey);                                                                    //
+        setOffsetsAndLengthsTx(applicationDataLength, macOut.getLevel());
+        insertHeaders(macOut.asUint8Ptr(), macOut.getLevel(), applicationDataLength, theFramePort); 
+        insertPayload(applicationData, applicationDataLength);                   
+        encryptDecryptPayload(applicationKey, linkDirection::uplink);  
     }
     insertBlockB0(linkDirection::uplink, uplinkFrameCount);
     insertMic();
@@ -1161,11 +1202,11 @@ messageType LoRaWAN::decodeMessage() {
     // 8. If there is any framePayload, decrypt if
     if (framePayloadLength > 0) {
         if (rawMessage[framePortOffset] == 0) {
-            decryptPayload(networkKey);
+            encryptDecryptPayload(networkKey, linkDirection::downlink);
             macIn.append(rawMessage + framePayloadOffset, framePayloadLength);
             return messageType::lorawanMac;
         } else {
-            decryptPayload(applicationKey);
+            encryptDecryptPayload(applicationKey, linkDirection::downlink);
             return messageType::application;
         }
     } else {
