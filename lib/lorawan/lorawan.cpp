@@ -430,7 +430,7 @@ uint32_t LoRaWAN::calculateMic() {
         stm32wle5_aes::clearComputationComplete();
     }
     stm32wle5_aes::disable();
-    uint32_t mic = aesBlock::swapLittleBigEndian(tmpBlock.asWords()[0]); // TODO check this is I needed to swap the bytes on the SW implementation as well
+    uint32_t mic = tmpBlock.asWords()[0];
 
 #else
     uint32_t payloadLength      = micOffset;
@@ -538,17 +538,16 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
     logging::snprintf(logging::source::lorawanEvents, "LoRaWAN event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
 
     switch (theTxRxCycleState) {
+        default:
         case txRxCycleState::idle:
-            logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
             break;
 
         case txRxCycleState::waitForCadEnd:
             switch (theEvent) {
                 case applicationEvent::sx126xCadEnd:
+                    return;
                     break;
                 default:
-                    logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
-                    goTo(txRxCycleState::idle);
                     break;
             }
             break;
@@ -558,27 +557,21 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                 case applicationEvent::lowPowerTimerExpired:
                     sx126x::startTransmit();
                     goTo(txRxCycleState::waitForTxComplete);
+                    return;
                     break;
                 default:
-                    logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
-                    goTo(txRxCycleState::idle);
                     break;
             }
             break;
 
         case txRxCycleState::waitForTxComplete:
             switch (theEvent) {
-                case applicationEvent::sx126xTxComplete: {
+                case applicationEvent::sx126xTxComplete:
                     startTimer(ticksFromSeconds(rx1DelayInSeconds));
                     goTo(txRxCycleState::waitForRx1Start);
-                } break;
-                case applicationEvent::sx126xTimeout:
-                    logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
-                    goTo(txRxCycleState::idle);
+                    return;
                     break;
                 default:
-                    logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
-                    goTo(txRxCycleState::idle);
                     break;
             }
             break;
@@ -593,9 +586,9 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                     sx126x::configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
                     sx126x::startReceive(rxTimeout);
                     goTo(txRxCycleState::waitForRx1CompleteOrTimeout);
+                    return;
                 } break;
                 default:
-                    logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
                     break;
             }
             break;
@@ -611,24 +604,26 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                             processMacContents();
                             applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                             goTo(txRxCycleState::waitForRxMessageReadout);
+                            return;
                             break;
                         case messageType::lorawanMac:
                             stopTimer();
                             processMacContents();
                             goTo(txRxCycleState::idle);
+                            return;
                             break;
                         default:
                         case messageType::invalid:
                             goTo(txRxCycleState::waitForRx2Start);
+                            return;
                             break;
                     }
                 } break;
                 case applicationEvent::sx126xTimeout:
                     goTo(txRxCycleState::waitForRx2Start);
+                    return;
                     break;
                 default:
-                    logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
-                    goTo(txRxCycleState::idle);
                     break;
             }
             break;
@@ -641,10 +636,9 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                     sx126x::configForReceive(spreadingFactor::SF9, rx2FrequencyInHz);
                     sx126x::startReceive(rxTimeout);
                     goTo(txRxCycleState::waitForRx2CompleteOrTimeout);
+                    return;
                 } break;
                 default:
-                    logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
-                    goTo(txRxCycleState::idle);
                     break;
             }
             break;
@@ -659,29 +653,31 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                             processMacContents();
                             applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                             goTo(txRxCycleState::waitForRxMessageReadout);
+                            return;
                             break;
                         case messageType::lorawanMac:
                             processMacContents();
                             goTo(txRxCycleState::idle);
+                            return;
                             break;
                         default:
                         case messageType::invalid:
                             goTo(txRxCycleState::idle);
+                            return;
                             break;
                     }
                 } break;
                 case applicationEvent::sx126xTimeout:
                     goTo(txRxCycleState::idle);
+                    return;
                     break;
                 default:
-                    logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
-                    goTo(txRxCycleState::idle);
                     break;
             }
             break;
-        default:
-            break;
     }
+    logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
+    goTo(txRxCycleState::idle);
 }
 
 void LoRaWAN::goTo(txRxCycleState newState) {
