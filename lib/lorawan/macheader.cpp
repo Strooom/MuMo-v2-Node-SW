@@ -5,10 +5,10 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 
-#include <macheader.hpp>	
+#include <macheader.hpp>
 #include <frametype.hpp>
 
-   macHeader::macHeader(){};
+macHeader::macHeader(){};
 
 macHeader::macHeader(frameType theFrameType) : theFrameType{theFrameType} {};
 

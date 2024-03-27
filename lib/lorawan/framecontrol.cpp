@@ -2,12 +2,12 @@
 
 frameControl::frameControl() {
     theLinkDirection = linkDirection::uplink;
-    ADR       = false;
-    ADRACKReq = false;
-    ACK       = false;
-    ClassB    = false;
-    FPending  = false;
-    FOptsLen  = 0;
+    ADR              = false;
+    ADRACKReq        = false;
+    ACK              = false;
+    ClassB           = false;
+    FPending         = false;
+    FOptsLen         = 0;
 }
 
 frameControl::frameControl(linkDirection newLinkDirection) {
@@ -26,15 +26,15 @@ frameControl::frameControl(linkDirection newLinkDirection) {
 
 uint8_t frameControl::asByte() const {
     uint8_t result{0};
-    result = result | (ADR << 7);
-    result = result | (ADRACKReq << 6);
-    result = result | (ACK << 5);
-    result = result | (ClassB << 4);
+    result = result | (ADR << 7U);
+    result = result | (ADRACKReq << 6U);
+    result = result | (ACK << 5U);
+    result = result | (ClassB << 4U);
     result = result | (FOptsLen & 0x0F);
     return result;
 }
 
-void frameControl::fromByte(uint8_t theByte) {
+void frameControl::set(uint8_t theByte) {
     theLinkDirection = linkDirection::downlink;
     ADR              = ((theByte & 0x80) == 0x80);
     ADRACKReq        = ((theByte & 0x40) == 0x40);

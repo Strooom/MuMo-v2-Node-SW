@@ -79,3 +79,9 @@ void SUBGRF_GetPacketStatus( PacketStatus_t *pktStatus )
             break;
     }
 }
+
+
+# TxRxCycle 
+* get the timings right, now that lptim1 is running @ 4.096 kHz
+* see if we can sleep the MCU when waiting
+* Try everything in a target unit test, with optional radio transmission..

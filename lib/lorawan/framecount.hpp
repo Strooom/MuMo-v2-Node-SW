@@ -10,20 +10,27 @@
 
 class frameCount {
   public:
-    static constexpr uint32_t length{4};                                                     // length of the frameCount in bytes
-    frameCount();                                                                            //
-    explicit frameCount(uint32_t theFrameCount);                                             //
-    void set(uint32_t theFrameCount);                                                        // set the frameCount from a uint32_t
-    frameCount& operator=(uint32_t theFrameCount);                                           //
-    void set(uint8_t theFrameCount[length]);                                                 // set the frameCount from an array of 4 bytes
-    void increment();                                                                        //
-    static constexpr uint32_t maximumGap{256};                                               // maximum gap between last (valid) received framecount and next received framecount.
-    static uint32_t guessFromUint16(uint32_t frameCount32, uint16_t frameCount16Lsb);        // guess the 32 bit framecount from a 16-bit lsb value
+    static constexpr uint32_t lengthInBytes{4};
+    frameCount();
+    explicit frameCount(uint32_t theFrameCount);
+    frameCount& operator=(const uint32_t theFrameCount);
+    frameCount& operator=(const frameCount& theFrameCount);
+    bool operator==(const frameCount& theFrameCount);
+    bool operator!=(const frameCount& theFrameCount);
+    bool operator>(const frameCount& theFrameCount);
+    frameCount& operator++(int);
+    void guessFromUint16(uint16_t frameCount16Lsb);
+    uint32_t toUint32() const { return asUint32; };
+    uint8_t& operator[](int);
 
-    union {
-        uint32_t asUint32{0};
-        uint8_t asUint8[length];
-    };
+
+#ifndef unitTesting
 
   private:
+#endif
+    static constexpr uint32_t maximumGap{256};        // maximum gap between last (valid) received framecount and next received framecount.
+    union {
+        uint32_t asUint32{0};
+        uint8_t asUint8[lengthInBytes];
+    };
 };
