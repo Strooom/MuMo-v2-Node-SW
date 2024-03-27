@@ -1,9 +1,10 @@
+#include <ux.hpp>
 #include "graphics.hpp"
 #include "display.hpp"
 
 // Initialize the static variables
 
-void graphics::drawPixel(uint32_t x, uint32_t y, color theColor) {
+void graphics::drawPixel(const uint32_t x, const uint32_t y, const color theColor) {
     if (theColor == color::black) {
         display::setPixel(x, y);
     } else {
@@ -11,21 +12,21 @@ void graphics::drawPixel(uint32_t x, uint32_t y, color theColor) {
     }
 }
 
-void graphics::drawHorizontalLine(uint32_t xStart, uint32_t xEnd, uint32_t y, color theColor) {
+void graphics::drawHorizontalLine(uint32_t xStart, uint32_t xEnd, uint32_t y, const color theColor) {
     sort(xStart, xEnd);
     for (uint32_t x = xStart; x <= xEnd; x++) {
         drawPixel(x, y, theColor);
     }
 }
 
-void graphics::drawVerticalLine(uint32_t x, uint32_t yStart, uint32_t yEnd, color theColor) {
+void graphics::drawVerticalLine(uint32_t x, uint32_t yStart, uint32_t yEnd, const color theColor) {
     sort(yStart, yEnd);
     for (uint32_t y = yStart; y <= yEnd; y++) {
         drawPixel(x, y, theColor);
     }
 }
 
-void graphics::drawLine(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_t yEnd, color theColor) {
+void graphics::drawLine(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_t yEnd, const color theColor) {
     // Catch vertical and horizontal lines and send them to the dedicated functions
     if (xStart == xEnd) {
         drawVerticalLine(xStart, yStart, yEnd, theColor);
@@ -57,7 +58,7 @@ void graphics::drawLine(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_
     }
 }
 
-void graphics::drawCircle(uint32_t x, uint32_t y, uint32_t radius, color theColor) {
+void graphics::drawCircle(const uint32_t x, const uint32_t y, const uint32_t radius, const color theColor) {
     /* Bresenham algorithm */
     int x_pos = -radius;
     int y_pos = 0;
@@ -82,7 +83,7 @@ void graphics::drawCircle(uint32_t x, uint32_t y, uint32_t radius, color theColo
     } while (x_pos <= 0);
 }
 
-void graphics::drawFilledCircle(uint32_t x, uint32_t y, uint32_t radius, color theColor) {
+void graphics::drawFilledCircle(const uint32_t x, const uint32_t y, const uint32_t radius, const color theColor) {
     int x_pos = -radius;
     int y_pos = 0;
     int err   = 2 - 2 * radius;
@@ -104,8 +105,7 @@ void graphics::drawFilledCircle(uint32_t x, uint32_t y, uint32_t radius, color t
     } while (x_pos <= 0);
 }
 
-
-void graphics::drawRectangle(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_t yEnd, color theLineColor) {
+void graphics::drawRectangle(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_t yEnd, const color theLineColor) {
     sort(xStart, xEnd);
     sort(yStart, yEnd);
 
@@ -115,7 +115,7 @@ void graphics::drawRectangle(uint32_t xStart, uint32_t yStart, uint32_t xEnd, ui
     drawVerticalLine(xEnd, yStart, yEnd, theLineColor);
 }
 
-void graphics::drawFilledRectangle(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_t yEnd, color theFillColor) {
+void graphics::drawFilledRectangle(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_t yEnd, const color theFillColor) {
     sort(xStart, xEnd);
     sort(yStart, yEnd);
 
@@ -158,6 +158,39 @@ void graphics::drawText(const uint32_t xStart, const uint32_t y, const font &the
         xPos = xPos + theFont.getCharacterWidthInPixels(theText[charachterIndex]) + theFont.properties.spaceBetweenCharactersInPixels;
         charachterIndex++;
     }
+}
+
+void graphics::drawBatteryIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level) {
+    for (uint32_t i = 0; i < ux::batteryIconThickness; i++) {
+        drawRectangle(xStart + i, yStart + i, xStart + ux::batteryIconWidth - i, yStart + ux::batteryIconHeight - i, color::black);
+    }
+    drawFilledRectangle(xStart + ux::batteryIconTipLeft, yStart + ux::batteryIconHeight, xStart + ux::batteryIconTipLeft + ux::batteryIconTipWidth, yStart + ux::batteryIconHeight + ux::batteryIconTipHeight, color::black);
+    uint32_t fill = (ux::batteryIconGaugeHeight * level) / 100;
+    drawFilledRectangle(xStart, yStart, xStart + ux::batteryIconWidth, yStart + fill, color::black);
+}
+
+void graphics::drawNetworkSignalStrengthIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level) {
+    for (uint32_t i = 0; i < 4; i++) {
+        if (level >= (i + 1) * 25) {
+            drawFilledRectangle(xStart + (i * ux::netwerkSignalStrengthBarWidth), yStart, xStart + (i * ux::netwerkSignalStrengthBarWidth) + ux::netwerkSignalStrengthBarWidth, yStart + ux::netwerkSignalStrengthBaseHeight + (i * ux::netwerkSignalStrengthStepHeight), color::black);
+        } else {
+            drawRectangle(xStart + (i * ux::netwerkSignalStrengthBarWidth), yStart, xStart + (i * ux::netwerkSignalStrengthBarWidth) + ux::netwerkSignalStrengthBarWidth, yStart + ux::netwerkSignalStrengthBaseHeight + (i * ux::netwerkSignalStrengthStepHeight), color::black);
+            drawRectangle(xStart + (i * ux::netwerkSignalStrengthBarWidth) + 1, yStart + 1, xStart + (i * ux::netwerkSignalStrengthBarWidth) + ux::netwerkSignalStrengthBarWidth - 1, yStart + ux::netwerkSignalStrengthBaseHeight + (i * ux::netwerkSignalStrengthStepHeight) - 1, color::black);
+        }
+    }
+}
+
+uint32_t graphics::getTextwidth(const font &theFont, const char *theText) {
+    uint32_t result{0};
+    uint32_t charachterIndex{0};
+    while (theText[charachterIndex] != '\0') {
+        result = result + theFont.getCharacterWidthInPixels(theText[charachterIndex]);
+        charachterIndex++;
+        if (theText[charachterIndex] != '\0') {
+            result = result + theFont.properties.spaceBetweenCharactersInPixels;
+        }
+    }
+    return result;
 }
 
 void graphics::sort(uint32_t &c1, uint32_t &c2) {

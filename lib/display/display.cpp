@@ -11,11 +11,6 @@
 extern SPI_HandleTypeDef hspi2;
 #endif
 
-// extern peripheralRegister PORTA_BSRR;
-// extern peripheralRegister PORTB_BSRR;
-// extern peripheralRegister PORTC_BSRR;
-// extern peripheralRegister PORTB_IDR;
-
 displayPresence display::displayPresent{displayPresence::unknown};
 displayRotation display::rotation{displayRotation::rotation270};
 displayMirroring display::mirroring{displayMirroring::none};
@@ -259,8 +254,8 @@ void display::writeData(uint8_t data) {
 void display::writeCommand(SSD1681Commands theCommand, uint8_t* theData, uint32_t dataLength) {
     selectChip(true);
     setDataOrCommand(false);
-    uint8_t commandAsByte = static_cast<uint8_t>(theCommand);
 #ifndef generic
+    uint8_t commandAsByte = static_cast<uint8_t>(theCommand);
     HAL_SPI_Transmit(&hspi2, &commandAsByte, 1U, 1U);
 #endif
     if (dataLength > 0) {
