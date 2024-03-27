@@ -29,7 +29,7 @@ frameCount LoRaWAN::uplinkFrameCount;
 frameCount LoRaWAN::downlinkFrameCount;
 
 dataRates LoRaWAN::theDataRates;
-uint32_t LoRaWAN::currentDataRateIndex{0};
+uint32_t LoRaWAN::currentDataRateIndex{5};
 loRaTxChannelCollection LoRaWAN::txChannels;
 uint32_t LoRaWAN::rx1DelayInSeconds{1};
 uint32_t LoRaWAN::rx2DataRateIndex{0};
@@ -68,8 +68,8 @@ void LoRaWAN::initialize() {
     macOut.initialize();
     clearRawMessage();
     restoreConfig();
-    restoreState();
-    restoreChannels();
+    //restoreState();
+    //restoreChannels();
 
     dumpConfig();
     dumpState();

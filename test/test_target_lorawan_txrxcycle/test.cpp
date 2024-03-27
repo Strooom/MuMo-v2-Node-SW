@@ -9,6 +9,7 @@
 #include <maccommand.hpp>
 #include <stm32wlxx_hal_msp.c>
 #include <stm32wlxx_it.cpp>
+#include <logging.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 static constexpr uint32_t applicationDataLength{4};
@@ -18,10 +19,28 @@ void setUp(void) {
 }
 void tearDown(void) {}
 
+void custom_handle_events() {
+    while (applicationEventBuffer.hasEvents()) {
+        applicationEvent theEvent = applicationEventBuffer.pop();
+        logging::snprintf(logging::source::applicationEvents, "Application event : %s[%u]\n", toString(theEvent), static_cast<uint8_t>(theEvent));
+        switch (theEvent) {
+            case applicationEvent::lowPowerTimerExpired:
+            case applicationEvent::sx126xTxComplete:
+            case applicationEvent::sx126xRxComplete:
+            case applicationEvent::sx126xTimeout:
+                LoRaWAN::handleEvents(theEvent);
+                break;
+
+            default:
+                break;
+        }
+    }
+}
+
 void waitForStateOrTimeout(txRxCycleState toBeState, uint32_t timeout) {
     uint32_t start = HAL_GetTick();
     while (LoRaWAN::getState() != toBeState) {
-        mainController::handleEvents();
+        custom_handle_events();
         if (HAL_GetTick() - start > timeout) {
             break;
         }
@@ -63,14 +82,16 @@ void test_back_to_idle() {
     TEST_ASSERT_EQUAL(txRxCycleState::idle, LoRaWAN::getState());
 }
 
-
 int main(int argc, char** argv) {
     HAL_Init();
     HAL_Delay(2000);
     SystemClock_Config();
     MX_USART1_UART_Init();
+    // MX_USART2_UART_Init();
     MX_LPTIM1_Init();
     MX_SUBGHZ_Init();
+    MX_I2C2_Init();
+    gpio::enableGpio(gpio::group::i2cEeprom);
     LoRaWAN::initialize();
 
     UNITY_BEGIN();
@@ -82,4 +103,6 @@ int main(int argc, char** argv) {
     RUN_TEST(test_rx2);
     RUN_TEST(test_back_to_idle);
     UNITY_END();
+
+    MX_SUBGHZ_Init();
 }
