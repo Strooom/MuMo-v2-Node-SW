@@ -11,8 +11,8 @@ uint8_t mockSX126xDataBuffer[256];            // unitTesting mock for the LoRa R
 uint8_t mockSX126xRegisters[0x1000];          // unitTesting mock for the config registers, inside the SX126x
 uint8_t mockSX126xCommandData[256][8];        // unitTesting mock for capturing the commands and their parameters to configure the SX126x
 
-void setUp(void) {}                           // before test
-void tearDown(void) {}                        // after test
+void setUp(void) {}           // before test
+void tearDown(void) {}        // after test
 
 void test_readWriteTxBuffer() {
     uint8_t dataIn[sx126x::rxTxBufferLength];
@@ -59,18 +59,45 @@ void test_initialize() {
     // TODO : test all other config
 }
 
+void test_configForTransmit() {
+    TEST_IGNORE_MESSAGE("Implement me!");
+}
 
-// void test_configForTransmit() {
-//     sx126x::configForTransmit();
-//     TEST_ASSERT_EQUAL_UINT8(0x01, mockSX126xCommandData[150][0]);
+void test_configForReceive() {
+    TEST_IGNORE_MESSAGE("Implement me!");
+}
 
-// }
+void test_setTxParameters() {
+    TEST_IGNORE_MESSAGE("Implement me!");
+}
 
-// void test_configForReceive() {
-//     sx126x::configForReceive();
-//     TEST_ASSERT_EQUAL_UINT8(0x01, mockSX126xCommandData[150][0]);
+void test_setPacketParametersReceive() {
+    TEST_IGNORE_MESSAGE("Implement me!");
+}
 
-// }
+void test_setPacketParametersTransmit() {
+    TEST_IGNORE_MESSAGE("Implement me!");
+}
+
+void test_setModulationParameters() {
+    TEST_IGNORE_MESSAGE("Implement me!");
+}
+
+void test_setRfFrequency() {
+    TEST_IGNORE_MESSAGE("Implement me!");
+}
+
+void test_startReceive() {
+    TEST_IGNORE_MESSAGE("Implement me!");
+}
+
+void test_startTransmit() {
+    TEST_IGNORE_MESSAGE("Implement me!");
+}
+
+void test_goStandby() {
+    TEST_IGNORE_MESSAGE("Implement me!");
+}
 
 
 int main(int argc, char **argv) {
@@ -79,8 +106,16 @@ int main(int argc, char **argv) {
     RUN_TEST(test_executeSetGetCommand);
     RUN_TEST(test_readWriteRegisters);
     RUN_TEST(test_initialize);
-    //RUN_TEST(test_configForTransmit);
-    //RUN_TEST(test_configForReceive);
+    RUN_TEST(test_configForTransmit);
+    RUN_TEST(test_configForReceive);
     RUN_TEST(test_calculateFrequencyRegisterValue);
+    RUN_TEST(test_setTxParameters);
+    RUN_TEST(test_setPacketParametersReceive);
+    RUN_TEST(test_setPacketParametersTransmit);
+    RUN_TEST(test_setModulationParameters);
+    RUN_TEST(test_setRfFrequency);
+    RUN_TEST(test_startReceive);
+    RUN_TEST(test_startTransmit);
+    RUN_TEST(test_goStandby);
     UNITY_END();
 }

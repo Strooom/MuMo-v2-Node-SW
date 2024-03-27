@@ -1,11 +1,9 @@
 #include <unity.h>
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
-#include <lorawanevent.hpp>
 #include <maincontroller.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
-circularBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
 
 uint8_t mockSX126xDataBuffer[256];            // unitTesting mock for the LoRa Rx/Tx buffer, inside the SX126x
 uint8_t mockSX126xRegisters[0x1000];          // unitTesting mock for the config registers, inside the SX126x
@@ -54,6 +52,7 @@ void test_toString() {
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
+    RUN_TEST(test_handleEvents);
     RUN_TEST(test_toString);
     UNITY_END();
 }

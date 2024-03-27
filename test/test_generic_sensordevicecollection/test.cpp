@@ -1,8 +1,9 @@
 #include <unity.h>
 #include "power.hpp"
 #include "sensordevicecollection.hpp"
-#include "bme680.hpp"
-#include "tsl2591.hpp"
+#include <battery.hpp>
+#include <bme680.hpp>
+#include <tsl2591.hpp>
 
 uint8_t mockBME680Registers[256];
 uint8_t mockTSL2591Registers[256];
@@ -28,10 +29,52 @@ void test_discover() {
     TEST_ASSERT_EQUAL_UINT32(3U, sensorDeviceCollection::actualNumberOfDevices);
 }
 
+void test_name() {
+    TEST_ASSERT_EQUAL_STRING("battery", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::battery)));
+    TEST_ASSERT_EQUAL_STRING("bme680", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::bme680)));
+    TEST_ASSERT_EQUAL_STRING("tsl2591", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::tsl2591)));
+    TEST_ASSERT_EQUAL_STRING("unknown", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)));
+}
+
+void test_valueAsFloat() {
+    TEST_IGNORE_MESSAGE("Implement me!");
+}
+
+void test_channelDecimals() {
+    TEST_ASSERT_EQUAL(2, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
+    TEST_ASSERT_EQUAL(1, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
+}
+
+void test_channelName() {
+    TEST_ASSERT_EQUAL_STRING("voltage", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_EQUAL_STRING("percentCharged", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
+    TEST_ASSERT_EQUAL_STRING("temperature", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
+    TEST_ASSERT_EQUAL_STRING("relativeHumidity", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
+    TEST_ASSERT_EQUAL_STRING("barometricPressure", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
+    TEST_ASSERT_EQUAL_STRING("visibleLight", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
+}
+
+void test_channelUnits() {
+    TEST_ASSERT_EQUAL_STRING("V", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_EQUAL_STRING("%", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
+    TEST_ASSERT_EQUAL_STRING("~C", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
+    TEST_ASSERT_EQUAL_STRING("%RH", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
+    TEST_ASSERT_EQUAL_STRING("hPa", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
+    TEST_ASSERT_EQUAL_STRING("lux", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
+}
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initalize);
     RUN_TEST(test_discover);
+    RUN_TEST(test_name);
+    RUN_TEST(test_valueAsFloat);
+    RUN_TEST(test_channelDecimals);
+    RUN_TEST(test_channelName);
+    RUN_TEST(test_channelUnits);
     UNITY_END();
 }

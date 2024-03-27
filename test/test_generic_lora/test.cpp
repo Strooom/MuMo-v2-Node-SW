@@ -1,5 +1,4 @@
 #include <unity.h>
-#include "cli.h"
 
 void setUp(void) {}
 void tearDown(void) {}
