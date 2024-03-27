@@ -14,7 +14,8 @@ class logging {
     enum class destination : uint32_t {        // We can send logging to the following destinations, when they are connected and enabled :
         none,
         debugProbe,
-        uart
+        uart2usb,
+        uart1
     };
     enum class source : uint32_t {        // We can send logging from the following sources, when they are enabled :
         applicationEvents = 0,

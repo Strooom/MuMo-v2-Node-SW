@@ -12,6 +12,7 @@
 
 #ifndef generic
 #include "main.h"
+extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 #endif
 
@@ -53,9 +54,14 @@ void logging::write(uint32_t dataLength) {
 #endif
         }
     }
-    if (isActive(destination::uart)) {
+    if (isActive(destination::uart2usb)) {
 #ifndef generic
         HAL_UART_Transmit(&huart2, (uint8_t *)buffer, dataLength, 1000);
+#endif
+    }
+    if (isActive(destination::uart1)) {
+#ifndef generic
+        HAL_UART_Transmit(&huart1, (uint8_t *)buffer, dataLength, 1000);
 #endif
     }
 }

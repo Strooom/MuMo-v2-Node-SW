@@ -70,7 +70,7 @@ void mainController::initializeLogging() {
 
     gpio::enableGpio(gpio::group::usbPresent);
     if (power::hasUsbPower()) {
-        logging::enable(logging::destination::uart);
+        logging::enable(logging::destination::uart2usb);
     }
 
     logging::snprintf("MuMo v2 - %s\n", version::getIsVersionAsString());
@@ -83,7 +83,7 @@ void mainController::initializeLogging() {
         gpio::disableGpio(gpio::group::debugPort);
     }
 
-    if (logging::isActive(logging::destination::uart)) {
+    if (logging::isActive(logging::destination::uart2usb)) {
         logging::snprintf("USB connected\n");
     }
 
