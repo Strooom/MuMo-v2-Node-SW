@@ -136,15 +136,16 @@ int main(void) {
     MX_SUBGHZ_Init();
     MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
-    HAL_Delay(5000);
-    mainController::initialize();
+    gpio ::enableGpio(gpio::group::uart1);
+    HAL_Delay(3000);
+    mainController ::initialize();
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     while (1) {
-        mainController::handleEvents();
-        mainController::run();
+        mainController ::handleEvents();
+        mainController ::run();
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
