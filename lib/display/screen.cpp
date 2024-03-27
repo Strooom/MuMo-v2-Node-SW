@@ -32,7 +32,7 @@ void screen::show() {
 
 void screen::getContents() {
     isModified = false;
-    for (uint32_t lineIndex = 0; lineIndex < numberOfLines; lineIndex++) {
+    for (uint32_t lineIndex = 1; lineIndex < numberOfLines; lineIndex++) {
         float value       = sensorDeviceCollection::valueAsFloat(deviceIndex[lineIndex], channelIndex[lineIndex]);
         uint32_t decimals = sensorDeviceCollection::channelDecimals(deviceIndex[lineIndex], channelIndex[lineIndex]);
 
