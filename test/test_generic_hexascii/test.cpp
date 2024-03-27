@@ -55,7 +55,7 @@ void test_hexStringToByteArray() {
     const char input[17] = "0123456789ABCDEF";
     uint8_t output[8];
     uint8_t expectedOutput[8] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
-    hexAscii::hexStringToByteArray(input, output);
+    hexAscii::hexStringToByteArray(output, input);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedOutput, output, 8);
 }
 
@@ -63,7 +63,7 @@ void test_byteArrayToHexString() {
     uint8_t input[8] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
     char output[17];        // 1 extra for terminating zero
     const char expectedOutput[17] = "0123456789ABCDEF";
-    hexAscii::byteArrayToHexString(input, 8, output);
+    hexAscii::byteArrayToHexString(output, input, 8);
     TEST_ASSERT_EQUAL_STRING(expectedOutput, output);
 }
 

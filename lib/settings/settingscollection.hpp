@@ -25,29 +25,35 @@ class settingsCollection {
         applicationSessionKey,
         networkSessionKey,
         rx1Delay,
-        unusedLoRaWAN,
+        dataRate,
+        rx1DataRateOffset,
+        rx2DataRateIndex,
+        unusedLoRaWAN1,
+        txChannels,
+        rxChannel,
+        unusedLoRaWAN2,
 
         numberOfSettings
     };
     static bool isInitialized();
     static void initializeOnce();
     template <typename dataType>
-    static void save(settingIndex theIndex, const dataType& data);
+    static void save(const dataType& data, settingIndex theIndex);
     template <typename dataType>
     static dataType read(settingIndex theIndex);
-    static void save(settingIndex theIndex, const uint8_t* dataIn);
-    static void read(settingIndex theIndex, uint8_t* dataOut);
+    static void saveByteArray(const uint8_t* dataIn, settingIndex theIndex);
+    static void readByteArray(uint8_t* dataOut, settingIndex theIndex);
 
 #ifndef unitTesting
 
   private:
 #endif
     static bool isValidIndex(settingIndex aSettingIndex) { return (static_cast<uint32_t>(aSettingIndex) < static_cast<uint32_t>(settingsCollection::settingIndex::numberOfSettings)); }
-    static const setting settings[static_cast<uint32_t>(settingIndex::numberOfSettings)];        // static member is initialized in settingscollection.cpp
+    static const setting settings[static_cast<uint32_t>(settingIndex::numberOfSettings)];
 };
 
 template <typename dataType>
-void settingsCollection::save(settingIndex theIndex, const dataType& sourceData) {
+void settingsCollection::save(const dataType& sourceData, settingIndex theIndex) {
     if (settingsCollection::isValidIndex(theIndex)) {
         const uint8_t* bytePtr = reinterpret_cast<const uint8_t*>(&sourceData);
         uint32_t startAddress  = settingsCollection::settings[static_cast<uint32_t>(theIndex)].startAddress;
