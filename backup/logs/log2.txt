@@ -1,0 +1,31 @@
+Setting RTC to 10:27:04
+Time = 10:27:04
+LoRaWAN network initialisation :
+- devAddr = 260BAE51
+- applicationKey = 08D87B4F0EC1585F7946544570F3BFB4
+- networkKey = 8A930D546837FF2F4E12F2D2C44E65DE
+- uplinkFrameCount = 2
+- downlinkFrameCount = 1
+- dataRateIndex = 5
+Sending Uplink : channel = 0, frequency = 868100000, dataRate = 5, framePayloadLength = 10, frameOptionsLength = 0
+- LoRa msg = 40 51 AE 0B 26 00 02 00 10 7D 5C DF 0E F1 86 76 7B 8E 95 51 06 50 71 
+Sending Uplink : channel = 0, frequency = 868100000, dataRate = 5, framePayloadLength = 10, frameOptionsLength = 0
+- LoRa msg = 40 51 AE 0B 26 00 03 00 10 D3 12 32 8B E7 BF E3 CE 48 5D C2 4F 65 C7 
+Sending Uplink : channel = 0, frequency = 868100000, dataRate = 5, framePayloadLength = 10, frameOptionsLength = 0
+- LoRa msg = 40 51 AE 0B 26 00 04 00 10 B8 4A 67 BB 84 F1 DD F0 03 1C C4 B3 B5 42 
+Sending Uplink : channel = 0, frequency = 868100000, dataRate = 5, framePayloadLength = 10, frameOptionsLength = 0
+- LoRa msg = 40 51 AE 0B 26 00 05 00 10 A7 D5 4A C5 CB 91 2C A4 32 FE 4F 85 D4 62 
+Sending Uplink : channel = 0, frequency = 868100000, dataRate = 5, framePayloadLength = 10, frameOptionsLength = 0
+- LoRa msg = 40 51 AE 0B 26 00 06 00 10 28 5B B4 54 84 ED EE 7E F0 D4 38 43 81 9F 
+Received Downlink : framePayloadLength = 0, frameOptionsLength = 1
+- LoRa msg = 60 51 AE 0B 26 01 02 00 06 D1 F9 87 58 
+MAC input [1] = 06 
+DeviceStatusRequest 
+DeviceStatusAnswer : 0xff, 0x0a 
+MAC output [3] = 06 FF 0A 
+Sending Uplink : channel = 0, frequency = 868100000, dataRate = 5, framePayloadLength = 10, frameOptionsLength = 3
+- LoRa msg = 40 51 AE 0B 26 03 07 00 06 FF 0A 10 24 BB 9F 29 52 9D AD B4 35 CA 21 AD 09 36 
+Sending Uplink : channel = 0, frequency = 868100000, dataRate = 5, framePayloadLength = 10, frameOptionsLength = 0
+- LoRa msg = 40 51 AE 0B 26 00 08 00 10 D9 72 29 CB C2 81 0D 7F 3D D9 C9 93 2D 98 
+Sending Uplink : channel = 0, frequency = 868100000, dataRate = 5, framePayloadLength = 10, frameOptionsLength = 0
+- LoRa msg = 40 51 AE 0B 26 00 09 00 10 C3 8A 02 D6 18 22 FE 47 21 D2 69 F2 F2 D9 
