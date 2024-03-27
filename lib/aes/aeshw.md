@@ -1,3 +1,6 @@
+Useful tool : https://www.cryptool.org/en/cto/aes-step-by-step
+
+
 Mapping aes keys and datablocks to bytes and 32words is a bit tricky, as indexes are confusing :
 128bit AES Keys are shown as : "FF EE DD CC BB AA 99 88 77 66 55 44 33 22 11 00", where FF holds the Most Signiciant Digits of the number, 00 the least significant.
 When this is stored in a byte array : uint8_t keyBytes[16]{0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00};

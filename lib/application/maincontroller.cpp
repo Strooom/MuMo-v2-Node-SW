@@ -8,31 +8,25 @@
 #include <maincontroller.hpp>
 #include <circularbuffer.hpp>
 #include <linearbuffer.hpp>
-
 #include <applicationevent.hpp>
-
 #include <version.hpp>
 #include <buildinfo.hpp>
 #include <logging.hpp>
-
 #include <sensordevicecollection.hpp>
-
 #include <display.hpp>
 #include <screen.hpp>
-
 #include <gpio.hpp>
-
 #include <power.hpp>
 #include <settingscollection.hpp>
 #include <measurementcollection.hpp>
-
 #include <aeskey.hpp>
 #include <datarate.hpp>
-
 #include <lorawan.hpp>
 
 #ifndef generic
 #include "main.h"
+extern I2C_HandleTypeDef hi2c2;
+void MX_I2C2_Init(void);
 #endif
 
 mainState mainController::state{mainState::boot};
@@ -40,7 +34,7 @@ extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
     version::setIsVersion();
-    initializeLogging();        // further initializes some gpio : usbPresent, i2C, writeProtect, debugPort, ...
+    initializeLogging();
 
     if (nonVolatileStorage::isPresent()) {
         if (!settingsCollection::isInitialized()) {
@@ -57,24 +51,26 @@ void mainController::initialize() {
         logging::snprintf("Display not present\n");
     }
 
-    // gpio::enableGpio(gpio::group::rfControl);
-    // LoRaWAN::initialize(); // initialize the LoRaWAN network driver
+    gpio::enableGpio(gpio::group::uart1);
+
+    gpio::enableGpio(gpio::group::rfControl);
+    LoRaWAN::initialize();
     goTo(mainState::idle);
 }
 
 void mainController::initializeLogging() {
 #ifndef generic
-    if ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001) {        // if there is a SWD debugprobe connected...
-        logging::enable(logging::destination::debugProbe);                     // enable the output to SWO
+    if ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001) {        // is a SWD debugprobe connected ?
+        logging::enable(logging::destination::debugProbe);
+        LL_DBGMCU_EnableDBGStopMode();
+    } else {
+        LL_DBGMCU_DisableDBGStopMode();
     }
-#else
-    logging::disable(logging::destination::debugProbe);
-
 #endif
 
     gpio::enableGpio(gpio::group::usbPresent);
-    if (power::hasUsbPower()) {                             // if there is USB power...
-        logging::enable(logging::destination::uart);        // enable the output to UART
+    if (power::hasUsbPower()) {
+        logging::enable(logging::destination::uart);
     }
 
     logging::snprintf("MuMo v2 - %s\n", version::getIsVersionAsString());
@@ -82,15 +78,9 @@ void mainController::initializeLogging() {
     logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
 
     if (logging::isActive(logging::destination::debugProbe)) {
-#ifndef generic
-        LL_DBGMCU_EnableDBGStopMode();
-#endif
         logging::snprintf("debugProbe connected\n");
     } else {
-#ifndef generic
-        LL_DBGMCU_DisableDBGStopMode();        // no debugging in low power -> the MCU will really stop the clock
-#endif
-        gpio::disableGpio(gpio::group::debugPort);        // these IOs are enabled by default after reset, but as there is no debug probe, we disable them to reduce power consumption
+        gpio::disableGpio(gpio::group::debugPort);
     }
 
     if (logging::isActive(logging::destination::uart)) {
@@ -116,7 +106,7 @@ void mainController::handleEvents() {
 
             case applicationEvent::downlinkApplicationPayloadReceived: {
                 // byteBuffer receivedData;
-                // LoRaWAN::getDownlinkMessage(receivedData);
+                // LoRaWAN::getReceivedDownlinkMessage(receivedData);
             } break;
 
             case applicationEvent::realTimeClockTick: {
@@ -128,6 +118,13 @@ void mainController::handleEvents() {
                 }
             } break;
 
+            case applicationEvent::lowPowerTimerExpired:
+            case applicationEvent::sx126xTxComplete:
+            case applicationEvent::sx126xRxComplete:
+            case applicationEvent::sx126xTimeout:
+                LoRaWAN::handleEvents(theEvent);
+                break;
+
             default:
                 break;
         }
@@ -135,6 +132,13 @@ void mainController::handleEvents() {
 }
 
 void mainController::run() {
+    if (power::isUsbConnected()) {
+        applicationEventBuffer.push(applicationEvent::usbConnected);
+    }
+    if (power::isUsbRemoved()) {
+        applicationEventBuffer.push(applicationEvent::usbRemoved);
+    }
+
     switch (state) {
         case mainState::measuring:
             sensorDeviceCollection::run();
@@ -155,37 +159,63 @@ void mainController::run() {
         case mainState::storing:
             measurementCollection::run();
             if (measurementCollection::isReady()) {
-            	if (display::isPresent()) {
+                goTo(mainState::networking);
+            }
+            break;
+
+        case mainState::networking:
+            // LoRaWAN::run(); TODO : disabled while testing LoRaWAN networking
+            if (LoRaWAN::isIdle()) {
+                if (display::isPresent()) {
                     goTo(mainState::displaying);
                     screen::show();
-            	}
-            	else {
-                    goTo(mainState::networking);
-            	}
+                } else {
+                    goTo(mainState::idle);
+                }
             }
             break;
 
         case mainState::displaying:
             display::run();
             if (display::isReady()) {
-                // TODO : check if we need a transmission
-                goTo(mainState::networking);
-            }
-            break;
-
-        case mainState::networking:
-            LoRaWAN::run();
-            if (LoRaWAN::isReady()) {
                 goTo(mainState::idle);
             }
             break;
 
         case mainState::idle:
-            // here we decide to go into deepSleep depending on external conditions
-            // OR  goTo(mainState::sleeping);
+            if (!power::hasUsbPower()) {
+                gpio::disableGpio(gpio::group::spiDisplay);
+                gpio::disableGpio(gpio::group::writeProtect);
+                gpio::disableGpio(gpio::group::uart1);
+#ifndef generic
+                HAL_I2C_DeInit(&hi2c2);
+#endif
+                gpio::disableGpio(gpio::group::usbPresent);
+                gpio::disableGpio(gpio::group::rfControl);
+                goTo(mainState::sleeping);
+#ifndef generic
+                uint32_t currentPriMaskState = __get_PRIMASK();
+                __disable_irq();
+                HAL_SuspendTick();
+                HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
+                HAL_ResumeTick();
+                __set_PRIMASK(currentPriMaskState);
+#endif
+                gpio::disableGpio(gpio::group::rfControl);
+                gpio::enableGpio(gpio::group::usbPresent);
+#ifndef generic
+                MX_I2C2_Init();
+#endif
+                gpio::enableGpio(gpio::group::uart1);
+                gpio::enableGpio(gpio::group::writeProtect);
+                gpio::enableGpio(gpio::group::spiDisplay);
+
+                goTo(mainState::idle);
+            }
             break;
 
         default:
+            // Error : we are in an unknown state
             break;
     }
 }
