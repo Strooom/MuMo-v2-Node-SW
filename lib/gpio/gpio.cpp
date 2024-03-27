@@ -14,11 +14,21 @@ void gpio::disableGpio(group aGroup) {
     enableDisableGpio(aGroup, false);
 }
 
+void gpio::disableAllGpio() {
+    enableDisableGpio(gpio::group::i2c, false);
+    enableDisableGpio(gpio::group::writeProtect, false);
+    enableDisableGpio(gpio::group::spiDisplay, false);
+    enableDisableGpio(gpio::group::usbPresent, false);
+    enableDisableGpio(gpio::group::uart2, false);
+    enableDisableGpio(gpio::group::rfControl, false);
+    // NOTE : debugPort is not disabled as it is used for logging
+}
+
 void gpio::enableDisableGpio(group theGroup, bool enable) {
 #ifndef generic
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
-    // __HAL_RCC_GPIOC_CLK_ENABLE(); // No GPIO from port C are being used fttb
+    __HAL_RCC_GPIOC_CLK_ENABLE();
 
     switch (theGroup) {
         case gpio::group::rfControl:
@@ -186,6 +196,47 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
                 HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
             } else {
                 HAL_GPIO_DeInit(GPIOB, usbPowerPresent_Pin);
+            }
+            break;
+
+        case gpio::group::other:
+            // A set of unassigned, spare pins. Can be used for experimenting
+            if (enable) {
+                GPIO_InitTypeDef GPIO_InitStruct{0};
+
+                // PA9 = Wio-E5 pin 21
+                GPIO_InitStruct.Pin   = GPIO_PIN_9;
+                GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+                GPIO_InitStruct.Pull  = GPIO_NOPULL;
+                GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+                HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+                // PB0 = Wio-E5 pin 28
+                GPIO_InitStruct.Pin   = GPIO_PIN_0;
+                GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+                GPIO_InitStruct.Pull  = GPIO_NOPULL;
+                GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+                HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+                // PC0 = Wio-E5 pin 13
+                GPIO_InitStruct.Pin   = GPIO_PIN_0;
+                GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+                GPIO_InitStruct.Pull  = GPIO_NOPULL;
+                GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+                HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+                // PC1 = Wio-E5 pin 12
+                GPIO_InitStruct.Pin   = GPIO_PIN_1;
+                GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+                GPIO_InitStruct.Pull  = GPIO_NOPULL;
+                GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+                HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+            } else {
+                HAL_GPIO_DeInit(GPIOA, GPIO_PIN_9);
+                HAL_GPIO_DeInit(GPIOB, GPIO_PIN_0);
+                HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0);
+                HAL_GPIO_DeInit(GPIOC, GPIO_PIN_1);
             }
             break;
 

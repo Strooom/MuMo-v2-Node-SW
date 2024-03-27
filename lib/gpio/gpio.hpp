@@ -22,11 +22,13 @@ class gpio {
         debugPort,
         uart1,
         uart2,
-        usbPresent
+        usbPresent,
+        other
     };
 
     static void enableGpio(group aGroup);
     static void disableGpio(group aGroup);
+    static void disableAllGpio();
 
 #ifndef unitTesting
 
