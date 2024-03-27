@@ -94,4 +94,5 @@ SYNC.md
 # ###########################################
 # ### Buildscript generated source files  ###
 # ###########################################
-lib/version/buildinfo.cpp
+/lib/version/buildinfo.cpp
+
