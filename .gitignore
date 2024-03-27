@@ -89,3 +89,10 @@ SYNC.md
 # ### Coverage HTML Files   ###
 # #############################
 /test/coverage/*.*
+
+
+# ###########################################
+# ### Buildscript generated source files  ###
+# ###########################################
+/lib/version/buildinfo.cpp
+
