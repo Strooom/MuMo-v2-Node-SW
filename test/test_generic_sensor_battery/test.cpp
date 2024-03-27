@@ -11,10 +11,10 @@ void test_initilization() {
     TEST_ASSERT_EQUAL(batteryType::liFePO4_700mAh, battery::type);
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::state);
 
-    batteryType testType = batteryType::saft;
-    settingsCollection::save<batteryType>(settingsCollection::settingIndex::batteryVersion, testType);
+    batteryType testType = batteryType::saft_ls_14250;
+    settingsCollection::save<batteryType>(testType, settingsCollection::settingIndex::batteryVersion);
     battery::initalize();
-    TEST_ASSERT_EQUAL(batteryType::saft, battery::type);
+    TEST_ASSERT_EQUAL(batteryType::saft_ls_14250, battery::type);
 }
 
 void test_needsSampling() {
