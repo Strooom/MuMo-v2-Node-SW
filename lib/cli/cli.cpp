@@ -11,9 +11,10 @@ extern UART_HandleTypeDef huart2;
 circularBuffer<uint8_t, cli::commandBufferLength> cli::commandBuffer;
 circularBuffer<uint8_t, cli::responseBufferLength> cli::responseBuffer;
 
+
 void cli::startTx() {
     if (!commandBuffer.isEmpty()) {
-#ifndef generic
+    #ifndef generic
         bool interrupts_enabled = (__get_PRIMASK() == 0);
         __disable_irq();
         USART2->CR1 = USART2->CR1 | USART_CR1_TXEIE_TXFNFIE;
@@ -21,8 +22,9 @@ void cli::startTx() {
             __enable_irq();
         }
 
-#endif
-    }
+
+    #endif
+}
 }
 
 void cli::handleRxEvent() {
@@ -84,6 +86,8 @@ void cli::jumpToBootLoader() {
     while (1) {
     }
 }
+
+
 
 void cli::txEmptyInterrupt() {
 #ifndef generic

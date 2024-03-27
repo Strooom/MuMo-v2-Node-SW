@@ -11,13 +11,14 @@
 
 class cli {
   public:
-    static void startTx();
+  static void startTx();
     static void handleRxEvent();
     static void handleTxEvent();
 
     static void txEmptyInterrupt();
     static void txCompleteInterrupt();
     static void rxNotEmptyInterrupt();
+
 
   private:
     static void handleEvents();
