@@ -6,28 +6,32 @@ from datetime import datetime
 
 Import("env")
 
-latest_release_tag = subprocess.run(["git", "describe", "--tags"], stdout=subprocess.PIPE, text=True)
-latest_release_tag = latest_release_tag.stdout.strip()
+
+tag_hash = subprocess.run(["git", "rev-list", "--tags", "--max-count=1"],stdout=subprocess.PIPE, text=True, check=True).stdout.rstrip()
+latest_release_tag = subprocess.run(["git", "describe", "--tags", tag_hash], stdout=subprocess.PIPE, text=True, check=True).stdout.rstrip()
 print ("\033[93;1;4mLatest Release Tag     : " + latest_release_tag + "\033[0m")
 
 # determine last release version
 latest_release_tag_parts = latest_release_tag.split("-")
 latest_release_semver_incl_v = latest_release_tag_parts[0]
-# number_of_commits_ahead = latest_release_tag_parts[1]
+if latest_release_tag_parts.__len__() > 1:
+    number_of_commits_ahead = latest_release_tag_parts[1]
+else:
+    number_of_commits_ahead = 0
 latest_release_semver = latest_release_semver_incl_v[1:]
 latest_release_digits = latest_release_semver.split(".")
 latest_release_main = latest_release_digits[0]
 latest_release_minor = latest_release_digits[1]
 latest_release_patch = latest_release_digits[2]
-print ("\033[93;1;4mLatest Release Main    : " + latest_release_main + "\033[0m")
-print ("\033[93;1;4mLatest Release Minor   : " + latest_release_minor + "\033[0m")
-print ("\033[93;1;4mLatest Release Patch   : " + latest_release_patch + "\033[0m")
+print ("\033[93;1;4mLatest Release Main    : " + str(latest_release_main) + "\033[0m")
+print ("\033[93;1;4mLatest Release Minor   : " + str(latest_release_minor) + "\033[0m")
+print ("\033[93;1;4mLatest Release Patch   : " + str(latest_release_patch) + "\033[0m")
 
 # determine current commit hash
 current_commit_hash = subprocess.run(["git", "rev-parse", "--short", "HEAD"], stdout=subprocess.PIPE, text=True)
 current_commit_hash = current_commit_hash.stdout.strip()
 print ("\033[93;1;4mCurrent Commit Hash     : " + current_commit_hash + "\033[0m")
-# print ("\033[93;1;4mNumber of Commits ahead : " + number_of_commits_ahead + "\033[0m")
+print ("\033[93;1;4mNumber of Commits ahead : " + str(number_of_commits_ahead) + "\033[0m")
 
 # determine the build timstamp
 build_timestamp = datetime.now().strftime("%Y-%b-%d %H:%M:%S")
