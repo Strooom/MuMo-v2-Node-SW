@@ -8,7 +8,7 @@
 #pragma once
 #include <stdint.h>
 #ifndef generic
-#include "main.h"        // required for PRIMASK
+#include "main.h"        // required for suspending interrupts to make it thread safe
 #endif
 
 // This is a circular buffer template, so it works FIFO

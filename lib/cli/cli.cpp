@@ -11,7 +11,36 @@ extern UART_HandleTypeDef huart2;
 circularBuffer<uint8_t, cli::commandBufferLength> cli::commandBuffer;
 circularBuffer<uint8_t, cli::responseBufferLength> cli::responseBuffer;
 
+void cli::startTx() {
+    if (!commandBuffer.isEmpty()) {
+#ifndef generic
+        bool interrupts_enabled = (__get_PRIMASK() == 0);
+        __disable_irq();
+        USART2->CR1 = USART2->CR1 | USART_CR1_TXEIE_TXFNFIE;
+        if (interrupts_enabled) {
+            __enable_irq();
+        }
+
+#endif
+    }
+}
+
 void cli::handleRxEvent() {
+#ifndef generic
+    uint8_t received_char;
+    if (HAL_UART_Receive(&huart2, &received_char, 1, 0) == HAL_OK) {
+        commandBuffer.push(received_char);
+        if (received_char == '\r') {
+            handleEvents();
+        }
+        if (received_char == bootLoaderMagicValue) {
+            jumpToBootLoader();
+        }
+    }
+#endif
+}
+
+void cli::handleTxEvent() {
 #ifndef generic
     uint8_t received_char;
     if (HAL_UART_Receive(&huart2, &received_char, 1, 0) == HAL_OK) {
@@ -31,7 +60,7 @@ void cli::handleEvents() {
 
 void cli::jumpToBootLoader() {
 #ifndef generic
-    HAL_UART_DeInit(&huart2); // TODO : maybr need to reset some other stuff as well, to bring the MCU back to a clean state as after reset
+    HAL_UART_DeInit(&huart2);        // TODO : maybe need to reset some other stuff as well, to bring the MCU back to a clean state as after reset
 
     uint32_t i = 0;
     void (*SysMemBootJump)(void);
@@ -54,4 +83,34 @@ void cli::jumpToBootLoader() {
 #endif
     while (1) {
     }
+}
+
+void cli::txEmptyInterrupt() {
+#ifndef generic
+    if (responseBuffer.isEmpty()) {
+        USART2->CR1 = USART2->CR1 & ~USART_CR1_TXEIE_TXFNFIE;
+    } else {
+        USART2->TDR = responseBuffer.pop();
+    }
+#endif
+}
+
+void cli::txCompleteInterrupt() {
+#ifndef generic
+    USART2->CR1 = USART2->CR1 & ~USART_CR1_TCIE;
+#endif
+}
+
+void cli::rxNotEmptyInterrupt() {
+#ifndef generic
+    uint8_t received_char = USART2->RDR;
+    if (received_char == bootLoaderMagicValue) {
+        jumpToBootLoader();
+    } else {
+        commandBuffer.push(received_char);
+    }
+    // if (received_char == '\r') {
+    //     handleEvents();
+    // }
+#endif
 }
