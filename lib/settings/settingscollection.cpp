@@ -1,5 +1,6 @@
-#include "settingscollection.hpp"
-#include "nvs.hpp"
+#include <settingscollection.hpp>
+#include <nvs.hpp>
+#include <logging.hpp>
 
 const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::numberOfSettings)] = {
     // Important note : make sure that none of the settings are mapped into two pages of 128 Bytes, as the page-write of the EEPROM is limited to 128 Byte pages and the address will wrap around to the beginning of the page if addressing more than 128 Bytes. A unit test will check this
@@ -31,9 +32,8 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
 };
 
 bool settingsCollection::isInitialized() {
-    uint8_t currentSettingscollectionVersion{0};
-    currentSettingscollectionVersion = read<uint8_t>(settingsCollection::settingIndex::nvsMapVersion);
-    return (0xFF != currentSettingscollectionVersion);
+    uint8_t settingsCollectionVersion = read<uint8_t>(settingIndex::nvsMapVersion);
+    return (settingsCollectionVersion != nonVolatileStorage::blankEepromValue);
 }
 
 void settingsCollection::initializeOnce() {
@@ -50,21 +50,41 @@ void settingsCollection::initializeOnce() {
     save<uint8_t>(0, settingsCollection::settingIndex::rx1Delay);
 
     uint8_t data[16]{0};
-    settingsCollection::save(data, settingsCollection::settingIndex::applicationSessionKey);
-    settingsCollection::save(data, settingsCollection::settingIndex::networkSessionKey);
+    settingsCollection::save(data, settingIndex::applicationSessionKey);
+    settingsCollection::save(data, settingIndex::networkSessionKey);
 }
 
 void settingsCollection::saveByteArray(const uint8_t* dataIn, settingIndex theIndex) {
     if (settingsCollection::isValidIndex(theIndex)) {
-        uint32_t startAddress = settingsCollection::settings[static_cast<uint32_t>(theIndex)].startAddress;
-        uint32_t length       = settingsCollection::settings[static_cast<uint32_t>(theIndex)].length;
+        uint32_t startAddress = settings[static_cast<uint32_t>(theIndex)].startAddress;
+        uint32_t length       = settings[static_cast<uint32_t>(theIndex)].length;
         nonVolatileStorage::write(startAddress, dataIn, length);
     }
 }
 void settingsCollection::readByteArray(uint8_t* dataOut, settingIndex theIndex) {
     if (settingsCollection::isValidIndex(theIndex)) {
-        uint32_t startAddress = settingsCollection::settings[static_cast<uint32_t>(theIndex)].startAddress;
-        uint32_t length       = settingsCollection::settings[static_cast<uint32_t>(theIndex)].length;
+        uint32_t startAddress = settings[static_cast<uint32_t>(theIndex)].startAddress;
+        uint32_t length       = settings[static_cast<uint32_t>(theIndex)].length;
         nonVolatileStorage::read(startAddress, dataOut, length);
     }
+}
+
+void settingsCollection::dump() {
+    if ((!logging::isActive()) || (!logging::isActive(logging::source::eepromData))) {
+        return;
+    }
+    logging::snprintf("EEPROM dump");
+    uint8_t settingsCollectionVersion = read<uint8_t>(settingIndex::nvsMapVersion);
+    switch (settingsCollectionVersion) {
+        case nonVolatileStorage::blankEepromValue:
+            logging::snprintf("EEPROM is blank");
+            return;
+            break;
+        default:
+            logging::snprintf("%d : nvsMapVersion = %d", settings[static_cast<uint32_t>(settingIndex::nvsMapVersion)].startAddress, settingsCollectionVersion);
+            break;
+    }
+    logging::snprintf("%d : displayVersion = %d", settings[static_cast<uint32_t>(settingIndex::displayVersion)].startAddress, read<uint8_t>(settingIndex::displayVersion));
+    logging::snprintf("%d : batteryVersion = %d", settings[static_cast<uint32_t>(settingIndex::batteryVersion)].startAddress, read<uint8_t>(settingIndex::batteryVersion));
+    logging::snprintf("%d : activeLoggingSources = %d", settings[static_cast<uint32_t>(settingIndex::activeLoggingSources)].startAddress, read<uint32_t>(settingIndex::activeLoggingSources));
 }

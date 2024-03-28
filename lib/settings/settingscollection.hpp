@@ -43,6 +43,7 @@ class settingsCollection {
     static dataType read(settingIndex theIndex);
     static void saveByteArray(const uint8_t* dataIn, settingIndex theIndex);
     static void readByteArray(uint8_t* dataOut, settingIndex theIndex);
+    static void dump();
 
 #ifndef unitTesting
 
