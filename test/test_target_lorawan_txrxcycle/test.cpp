@@ -48,37 +48,43 @@ void waitForStateOrTimeout(txRxCycleState toBeState, uint32_t timeout) {
 }
 
 void test_start_send_packet() {
-    LoRaWAN::sendUplink(7, applicationData, applicationDataLength);
+    LoRaWAN::sendUplink(8, applicationData, applicationDataLength);
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRandomTimeBeforeTransmit, LoRaWAN::getState());
 }
 
 void test_send_packet() {
     waitForStateOrTimeout(txRxCycleState::waitForTxComplete, 2000U);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
     TEST_ASSERT_EQUAL(txRxCycleState::waitForTxComplete, LoRaWAN::getState());
 }
 
 void test_wait_rx1() {
     waitForStateOrTimeout(txRxCycleState::waitForRx1Start, 2000U);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRx1Start, LoRaWAN::getState());
 }
 
 void test_rx1() {
     waitForStateOrTimeout(txRxCycleState::waitForRx1CompleteOrTimeout, 2000U);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRx1CompleteOrTimeout, LoRaWAN::getState());
 }
 
 void test_wait_rx2() {
     waitForStateOrTimeout(txRxCycleState::waitForRx2Start, 2000U);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRx2Start, LoRaWAN::getState());
 }
 
 void test_rx2() {
     waitForStateOrTimeout(txRxCycleState::waitForRx2CompleteOrTimeout, 2000U);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
     TEST_ASSERT_EQUAL(txRxCycleState::waitForRx2CompleteOrTimeout, LoRaWAN::getState());
 }
 
 void test_back_to_idle() {
     waitForStateOrTimeout(txRxCycleState::idle, 2000U);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
     TEST_ASSERT_EQUAL(txRxCycleState::idle, LoRaWAN::getState());
 }
 
@@ -92,10 +98,11 @@ int main(int argc, char** argv) {
     MX_SUBGHZ_Init();
     MX_I2C2_Init();
     gpio::enableGpio(gpio::group::i2cEeprom);
+    gpio::enableGpio(gpio::group::other);
     LoRaWAN::initialize();
     LoRaWAN::generateKeysK1K2();
-    LoRaWAN::currentDataRateIndex = 5;
-    LoRaWAN::uplinkFrameCount = 1;
+    LoRaWAN::currentDataRateIndex = 4;
+    LoRaWAN::uplinkFrameCount     = 2;
 
     UNITY_BEGIN();
     RUN_TEST(test_start_send_packet);
