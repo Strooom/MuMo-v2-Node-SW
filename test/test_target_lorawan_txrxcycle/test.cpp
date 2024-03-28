@@ -93,6 +93,7 @@ int main(int argc, char** argv) {
     MX_I2C2_Init();
     gpio::enableGpio(gpio::group::i2cEeprom);
     LoRaWAN::initialize();
+    LoRaWAN::currentDataRateIndex = 0;
 
     UNITY_BEGIN();
     RUN_TEST(test_start_send_packet);
