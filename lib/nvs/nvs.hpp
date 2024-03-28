@@ -17,6 +17,7 @@ class nonVolatileStorage {
     static constexpr uint8_t halTrials{0x03};          // ST HAL requires a 'retry' parameters
     static constexpr uint8_t halTimeout{100};          // ST HAL requires a 'timeout' in ms
     static constexpr uint8_t writeCycleTime{4};        // [ms] : the BR24G512xxx EEPROM requires a wait time of 3.5 ms after writing to internally store the data
+    static constexpr uint8_t blankEepromValue{0xFF};
 
 #ifndef unitTesting
 
