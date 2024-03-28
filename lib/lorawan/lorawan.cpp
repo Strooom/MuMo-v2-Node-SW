@@ -68,8 +68,8 @@ void LoRaWAN::initialize() {
     macOut.initialize();
     clearRawMessage();
     restoreConfig();
-    //restoreState();
-    //restoreChannels();
+    // restoreState();
+    // restoreChannels();
 
     dumpConfig();
     dumpState();
@@ -276,7 +276,6 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
     theBlock[15] = blockIndex;                          // Blocks Ai are indexed from 1..k, where k is the number of blocks
 }
 
-
 void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirection) {
     uint32_t nmbrOfBlocks = aesBlock::nmbrOfBlocksFromBytes(framePayloadLength);
 #ifdef HARDWARE_AES
@@ -352,6 +351,8 @@ uint32_t LoRaWAN::calculateMic() {
     } else {
         hasIncompleteLastBlock = aesBlock::hasIncompleteLastBlockFromBytes(payloadLength);
     }
+    padForMicCalculation(payloadLength);
+
     aesBlock allZeroes;
 
     stm32wle5_aes::initialize(aesMode::CBC);
@@ -1000,13 +1001,13 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
         setOffsetsAndLengthsTx(macOut.getLevel());
         insertHeaders(nullptr, 0, macOut.getLevel(), 0);
         insertPayload(macOut.asUint8Ptr(), macOut.getLevel());        // TODO : test the length of the MAC stuff we are going to send, so it does not exceed the maximum allowed length
-        encryptDecryptPayload(networkKey, linkDirection::uplink); 
+        encryptDecryptPayload(networkKey, linkDirection::uplink);
     } else {
         // uplink with application payload, encrypted with applicationKey. Optionally up to 15 bytes of (unencrypted) frameOptions in the header
         setOffsetsAndLengthsTx(applicationDataLength, macOut.getLevel());
-        insertHeaders(macOut.asUint8Ptr(), macOut.getLevel(), applicationDataLength, theFramePort); 
-        insertPayload(applicationData, applicationDataLength);                   
-        encryptDecryptPayload(applicationKey, linkDirection::uplink);  
+        insertHeaders(macOut.asUint8Ptr(), macOut.getLevel(), applicationDataLength, theFramePort);
+        insertPayload(applicationData, applicationDataLength);
+        encryptDecryptPayload(applicationKey, linkDirection::uplink);
     }
     insertBlockB0(linkDirection::uplink, uplinkFrameCount);
     insertMic();

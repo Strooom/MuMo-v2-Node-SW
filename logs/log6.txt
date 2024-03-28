@@ -1,0 +1,27 @@
+40 uplink
+1bc70b26 devaddr
+00 fctrl
+0000 fcnt
+07 port
+4eaa794c payload-encrypted
+a9da0fb5 mic
+
+
+
+
+40
+1bc70b26
+00
+0000
+07
+4eaa794c99d25ebeffcee0463c3b34de
+0e169362
+
+40
+1bc70b26
+00
+0000
+07
+4eaa794c99d25ebeffcee0463c3b34de
+596d16a3
+

@@ -12,7 +12,7 @@
 #include <logging.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
-static constexpr uint32_t applicationDataLength{4};
+static constexpr uint32_t applicationDataLength{16};
 const uint8_t applicationData[applicationDataLength]{};
 
 void setUp(void) {
@@ -93,7 +93,9 @@ int main(int argc, char** argv) {
     MX_I2C2_Init();
     gpio::enableGpio(gpio::group::i2cEeprom);
     LoRaWAN::initialize();
-    LoRaWAN::currentDataRateIndex = 0;
+    LoRaWAN::generateKeysK1K2();
+    LoRaWAN::currentDataRateIndex = 5;
+    LoRaWAN::uplinkFrameCount = 1;
 
     UNITY_BEGIN();
     RUN_TEST(test_start_send_packet);

@@ -9,6 +9,7 @@
 #include <settingscollection.hpp>
 #include <lorawan.hpp>
 #include <hexascii.hpp>
+#include <swaplittleandbigendian.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -17,9 +18,7 @@ void tearDown(void) {}
 
 void test_nvs() {
     LoRaWAN::restoreConfig();
-
-    //TEST_ASSERT_EQUAL(0x05, LoRaWAN::rx1DelayInSeconds);
-    TEST_ASSERT_EQUAL(0x1BC70B26, LoRaWAN::DevAddr.asUint32);
+    TEST_ASSERT_EQUAL(0x260BC71B, LoRaWAN::DevAddr.asUint32);
     char tmpKeyAsHexString[33];
     hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::applicationKey.asBytes(), 16);
     TEST_ASSERT_EQUAL_STRING("ECF61A5B18BFBF81EF4FA7DBA764CE8B", tmpKeyAsHexString);
