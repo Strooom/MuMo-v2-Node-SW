@@ -1,0 +1,1 @@
+need a method which dumps the complete contents of the eeprom to a human readible form, eg on uart1
