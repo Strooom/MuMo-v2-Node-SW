@@ -60,6 +60,9 @@ void test_initialize() {
 }
 
 void test_configForTransmit() {
+    static constexpr uint32_t testPayloadLength{32};
+    uint8_t testPayload[testPayloadLength]{};
+    sx126x::configForTransmit(spreadingFactor::SF10, 86810000U, testPayload, testPayloadLength);
     TEST_IGNORE_MESSAGE("Implement me!");
 }
 
@@ -68,15 +71,33 @@ void test_configForReceive() {
 }
 
 void test_setTxParameters() {
-    TEST_IGNORE_MESSAGE("Implement me!");
+    int8_t testTransmitPowerdBm{0};
+    sx126x::setTxParameters(testTransmitPowerdBm);
+    uint8_t expectedCommandData[2] = {0x00, 0x02};
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedCommandData, mockSX126xCommandData[static_cast<int>(sx126x::command::setTxParams)], 2);
+
+    testTransmitPowerdBm = 14;
+    sx126x::setTxParameters(testTransmitPowerdBm);
+    expectedCommandData[0] = 0x0E;
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedCommandData, mockSX126xCommandData[static_cast<int>(sx126x::command::setTxParams)], 2);
+
+    testTransmitPowerdBm = -3;
+    sx126x::setTxParameters(testTransmitPowerdBm);
+    expectedCommandData[0] = 0xFD;
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedCommandData, mockSX126xCommandData[static_cast<int>(sx126x::command::setTxParams)], 2);
 }
 
 void test_setPacketParametersReceive() {
-    TEST_IGNORE_MESSAGE("Implement me!");
+    sx126x::setPacketParametersReceive();
+    uint8_t expectedCommandData[8] = {0x00, 0x08, 0x00, 0xFF, 0x00, 0x01, 0x00, 0x00};
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedCommandData, mockSX126xCommandData[static_cast<int>(sx126x::command::setPacketParameters)], 8);
 }
 
 void test_setPacketParametersTransmit() {
-    TEST_IGNORE_MESSAGE("Implement me!");
+    uint8_t testPayloadLength{32};
+    sx126x::setPacketParametersTransmit(testPayloadLength);
+    uint8_t expectedCommandData[8] = {0x00, 0x08, 0x00, testPayloadLength, 0x01, 0x00, 0x00, 0x00};
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedCommandData, mockSX126xCommandData[static_cast<int>(sx126x::command::setPacketParameters)], 8);
 }
 
 void test_setModulationParameters() {
@@ -99,6 +120,11 @@ void test_goStandby() {
     TEST_IGNORE_MESSAGE("Implement me!");
 }
 
+void test_getStatus() {
+    TEST_IGNORE_MESSAGE("Implement me!");
+//sx126x::getStatus()
+}
+
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
@@ -117,5 +143,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_startReceive);
     RUN_TEST(test_startTransmit);
     RUN_TEST(test_goStandby);
+    RUN_TEST(test_getStatus);
     UNITY_END();
 }
