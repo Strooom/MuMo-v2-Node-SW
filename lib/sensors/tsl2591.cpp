@@ -164,6 +164,7 @@ void tsl2591::run() {
 
 void tsl2591::log() {
     if (channels[visibleLight].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", channelFormats[visibleLight].name, channels[visibleLight].getOutput(), channelFormats[visibleLight].unit);
+//        logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", channelFormats[visibleLight].name, channels[visibleLight].getOutput(), channelFormats[visibleLight].unit);
+        logging::snprintf(logging::source::sensorData, "%s = ... %s\n", channelFormats[visibleLight].name, channelFormats[visibleLight].unit);
     }
 }

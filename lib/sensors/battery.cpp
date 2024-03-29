@@ -8,6 +8,7 @@
 #include <settingscollection.hpp>
 #include <chargefromvoltage.hpp>
 #include <logging.hpp>
+#include <float.hpp>
 
 #ifndef generic
 #include <main.h>
@@ -138,9 +139,17 @@ float battery::voltageFromRaw(uint32_t rawADC) {
 
 void battery::log() {
     if (channels[voltage].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", channelFormats[voltage].name, channels[voltage].getOutput(), channelFormats[voltage].unit);
+        float value       = valueAsFloat(voltage);
+        uint32_t decimals = channelFormats[voltage].decimals;
+        uint32_t intPart = integerPart(value, decimals);
+        uint32_t fracPart = fractionalPart(value, decimals);
+        logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[voltage].name, intPart, fracPart, channelFormats[voltage].unit);
     }
     if (channels[percentCharged].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[percentCharged].name, channels[percentCharged].getOutput() * 100.0F, channelFormats[percentCharged].unit);
+        //        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[percentCharged].name, channels[percentCharged].getOutput() * 100.0F, channelFormats[percentCharged].unit);
+        logging::snprintf(logging::source::sensorData, "%s = ... %s\n", channelFormats[percentCharged].name, channelFormats[percentCharged].unit);
     }
 }
+
+
+

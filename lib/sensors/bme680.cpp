@@ -7,6 +7,7 @@
 #include <bme680.hpp>
 #include <settingscollection.hpp>
 #include <logging.hpp>
+#include <float.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -105,10 +106,9 @@ bool bme680::hasNewMeasurement() {
 
 void bme680::clearNewMeasurements() {
     channels[temperature].hasNewValue        = false;
-    channels[relativeHumidity].hasNewValue = false;
+    channels[relativeHumidity].hasNewValue   = false;
     channels[barometricPressure].hasNewValue = false;
 }
-
 
 float bme680::valueAsFloat(uint32_t index) {
     return channels[index].getOutput();
@@ -283,12 +283,21 @@ void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* dest
 
 void bme680::log() {
     if (channels[temperature].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.2f *C\n", channelFormats[temperature].name, channels[temperature].getOutput());
+        float value       = valueAsFloat(temperature);
+        uint32_t decimals = channelFormats[temperature].decimals;
+        uint32_t intPart  = integerPart(value, decimals);
+        uint32_t fracPart = fractionalPart(value, decimals);
+        logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[temperature].name, intPart, fracPart, channelFormats[temperature].unit);
     }
     if (channels[relativeHumidity].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[relativeHumidity].name, channels[relativeHumidity].getOutput(), channelFormats[relativeHumidity].unit);
+        float value       = valueAsFloat(relativeHumidity);
+        uint32_t decimals = channelFormats[relativeHumidity].decimals;
+        uint32_t intPart  = integerPart(value, decimals);
+        uint32_t fracPart = fractionalPart(value, decimals);
+        logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[relativeHumidity].name, intPart, fracPart, channelFormats[relativeHumidity].unit);
     }
     if (channels[barometricPressure].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[barometricPressure].name, channels[barometricPressure].getOutput(), channelFormats[barometricPressure].unit);
+        // logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[barometricPressure].name, channels[barometricPressure].getOutput(), channelFormats[barometricPressure].unit);
+        logging::snprintf(logging::source::sensorData, "%s = ... %s\n", channelFormats[barometricPressure].name, channelFormats[barometricPressure].unit);
     }
 }

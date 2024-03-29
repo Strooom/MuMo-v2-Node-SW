@@ -173,8 +173,8 @@ int main(void) {
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     while (1) {
-        // mainController ::handleEvents();
-        // mainController ::run();
+        mainController ::handleEvents();
+        mainController ::run();
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
