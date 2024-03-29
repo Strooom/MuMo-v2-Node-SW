@@ -8,7 +8,10 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdarg>
-#include "logging.hpp"
+#include <logging.hpp>
+#include <gpio.hpp>
+#include <power.hpp>
+#include <settingscollection.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -19,6 +22,30 @@ extern UART_HandleTypeDef huart2;
 uint32_t logging::activeSources{0};
 uint32_t logging::activeDestinations{0};
 char logging::buffer[bufferLength]{};
+
+void logging::initialize() {
+    #ifndef generic
+    if ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001) {        // is a SWD debugprobe connected ?
+        logging::enable(logging::destination::debugProbe);
+        LL_DBGMCU_EnableDBGStopMode();
+    } else {
+        LL_DBGMCU_DisableDBGStopMode();
+    }
+#endif
+
+    gpio::enableGpio(gpio::group::usbPresent);
+    if (power::hasUsbPower()) {
+        logging::enable(logging::destination::uart2usb);
+    }
+
+    if (!logging::isActive(logging::destination::debugProbe)) {
+        gpio::disableGpio(gpio::group::debugPort);
+    }
+
+    gpio::enableGpio(gpio::group::i2cEeprom);
+    logging::setActiveSources(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));
+
+}
 
 uint32_t logging::snprintf(const char *format, ...) {
     uint32_t length{0};

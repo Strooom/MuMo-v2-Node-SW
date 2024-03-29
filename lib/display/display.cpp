@@ -4,7 +4,8 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
-#include "display.hpp"
+#include <display.hpp>
+#include <logging.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -91,7 +92,7 @@ bool display::isReady() {
 }
 
 void display::goSleep() {
-    uint8_t commandData[1]{0x03}; // Deep Sleep Mode 2 - SSD1681 Datasheet Rev 0l.13 Page 23
+    uint8_t commandData[1]{0x03};        // Deep Sleep Mode 2 - SSD1681 Datasheet Rev 0l.13 Page 23
     writeCommand(SSD1681Commands::DEEP_SLEEP_MODE, commandData, 1);
 }
 
@@ -274,15 +275,20 @@ void display::waitWhileBusy() {
     }
 }
 
-
-
 void display::update() {
     uint8_t commandData[4]{0};
     writeCommand(SSD1681Commands::WRITE_RAM, nullptr, 0);
     writeData(displayBuffer, bufferSize);
-    commandData[0] = 0xF7; // SSD1681 Datasheet Rev 0l.13 - Full update Display Mode 1
+    commandData[0] = 0xF7;        // SSD1681 Datasheet Rev 0l.13 - Full update Display Mode 1
     writeCommand(SSD1681Commands::DISPLAY_UPDATE_CONTROL_2, commandData, 1);
     writeCommand(SSD1681Commands::MASTER_ACTIVATION, nullptr, 0);
     waitWhileBusy();
 }
 
+void display::dump() {
+    if (display::isPresent()) {
+        logging::snprintf("Display present\n");
+    } else {
+        logging::snprintf("Display not present\n");
+    }
+}

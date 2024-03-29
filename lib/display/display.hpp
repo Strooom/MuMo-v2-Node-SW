@@ -46,6 +46,8 @@ class display {
     static constexpr uint32_t heightInPixels{200};                    // [pixels]
     static constexpr uint32_t widthInBytes{widthInPixels / 8};        // [bytes]
 
+    static void dump();
+
 #ifndef unitTesting
 
   private:

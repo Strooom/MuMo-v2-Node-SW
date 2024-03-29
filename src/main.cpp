@@ -33,6 +33,7 @@
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
 #include <sensordevicecollection.hpp>
+#include <buildinfo.hpp>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -139,6 +140,11 @@ int main(void) {
     gpio ::enableGpio(gpio::group::uart1);
     HAL_Delay(3000);
     mainController ::initialize();
+    logging::snprintf("MuMo v2 - %s\n", version::getIsVersionAsString());
+    logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
+    logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
+
+    logging::dump();
     /* USER CODE END 2 */
 
     /* Infinite loop */

@@ -34,7 +34,7 @@ extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
     version::setIsVersion();
-    initializeLogging();
+    logging::initialize();
 
     if (nonVolatileStorage::isPresent()) {
         if (!settingsCollection::isInitialized()) {
@@ -45,50 +45,12 @@ void mainController::initialize() {
     sensorDeviceCollection::discover();
 
     gpio::enableGpio(gpio::group::spiDisplay);
-    if (display::isPresent()) {
-        logging::snprintf("Display present\n");
-    } else {
-        logging::snprintf("Display not present\n");
-    }
 
     gpio::enableGpio(gpio::group::uart1);
 
     gpio::enableGpio(gpio::group::rfControl);
     LoRaWAN::initialize();
     goTo(mainState::idle);
-}
-
-void mainController::initializeLogging() {
-#ifndef generic
-    if ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001) {        // is a SWD debugprobe connected ?
-        logging::enable(logging::destination::debugProbe);
-        LL_DBGMCU_EnableDBGStopMode();
-    } else {
-        LL_DBGMCU_DisableDBGStopMode();
-    }
-#endif
-
-    gpio::enableGpio(gpio::group::usbPresent);
-    if (power::hasUsbPower()) {
-        logging::enable(logging::destination::uart2usb);
-    }
-
-    logging::snprintf("MuMo v2 - %s\n", version::getIsVersionAsString());
-    logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
-    logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
-
-    if (logging::isActive(logging::destination::debugProbe)) {
-        logging::snprintf("debugProbe connected\n");
-    } else {
-        gpio::disableGpio(gpio::group::debugPort);
-    }
-
-    if (logging::isActive(logging::destination::uart2usb)) {
-        logging::snprintf("USB connected\n");
-    }
-
-    gpio::enableGpio(gpio::group::i2cEeprom);
-    logging::setActiveSources(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));
 }
 
 void mainController::handleEvents() {
