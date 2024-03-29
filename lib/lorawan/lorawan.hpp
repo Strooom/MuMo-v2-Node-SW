@@ -44,6 +44,30 @@ class LoRaWAN {
     static bool isIdle();
     static void checkNetwork();
 
+    static void dumpConfig();
+    static void dumpState();
+    static void dumpChannels();
+
+    static void dumpMacIn();
+    static void dumpMacOut();
+    static void dumpRawMessage();
+    static void dumpRawMessageHeader();
+    static void dumpRawMessageFrameOptions();
+    static void dumpRawMessagePayload();
+
+    static void dumpLinkCheckAnswer();
+    static void dumpLinkAdaptiveDataRateRequest();
+    static void dumpDutyCycleRequest();
+    static void dumpDeviceStatusRequest();
+    static void dumpNewChannelRequest();
+    static void dumpNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate);
+    static void dumpReceiveParameterSetupRequest();
+    static void dumpReceiveTimingSetupRequest();
+    static void dumpReceiveTimingSetupRequest(uint32_t rx1Delay);
+    static void dumpTransmitParameterSetupRequest();
+    static void dumpDownlinkChannelRequest();
+    static void dumpDeviceTimeAnswer();
+
 #ifndef unitTesting
   private:
 #endif
@@ -123,27 +147,6 @@ class LoRaWAN {
 
     static void removeNonStickyMacStuff();
 
-    static void dumpMacIn();
-    static void dumpMacOut();
-    static void dumpRawMessage();
-    static void dumpRawMessageHeader();
-    static void dumpRawMessageFrameOptions();
-    static void dumpRawMessagePayload();
-
-    static void dumpLinkCheckAnswer();
-    static void dumpLinkAdaptiveDataRateRequest();
-    static void dumpDutyCycleRequest();
-    static void dumpDeviceStatusRequest();
-    static void dumpNewChannelRequest();
-    static void dumpNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate);
-    static void dumpReceiveParameterSetupRequest();
-    static void dumpReceiveTimingSetupRequest();
-    static void dumpReceiveTimingSetupRequest(uint32_t rx1Delay);
-    static void dumpTransmitParameterSetupRequest();
-    static void dumpDownlinkChannelRequest();
-    static void dumpDeviceTimeAnswer();
-
-
     // ################################################################
     // ### Helper functions for Message Integrity Code (MIC)        ###
     // ################################################################
@@ -190,7 +193,4 @@ class LoRaWAN {
 
     static uint32_t calculateMaxTransmitTimeout(uint32_t currentDataRateIndex, uint32_t loRaPayloadLength);
 
-    static void dumpConfig();
-    static void dumpState();
-    static void dumpChannels();
 };

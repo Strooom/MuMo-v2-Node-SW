@@ -1,7 +1,7 @@
 // ######################################################################################
 // ### MuMo node : https://github.com/Strooom/MuMo-v2-Node-SW                         ###
-// ### Author : Pascal Roobrouck - https://github.com/Strooom                         ###
-// ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
+// ### Author : Pascal Roobrouck  https://github.com/Strooom                         ###
+// ### License : CC 4.0 BY-NC-SA  https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
 #include <stdint.h>
@@ -24,7 +24,7 @@ uint32_t logging::activeDestinations{0};
 char logging::buffer[bufferLength]{};
 
 void logging::initialize() {
-    #ifndef generic
+#ifndef generic
     if ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001) {        // is a SWD debugprobe connected ?
         logging::enable(logging::destination::debugProbe);
         LL_DBGMCU_EnableDBGStopMode();
@@ -44,7 +44,6 @@ void logging::initialize() {
 
     gpio::enableGpio(gpio::group::i2cEeprom);
     logging::setActiveSources(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));
-
 }
 
 uint32_t logging::snprintf(const char *format, ...) {
@@ -96,21 +95,23 @@ void logging::write(uint32_t dataLength) {
 void logging::dump() {
     logging::snprintf("logging : \n");
     if (activeSources == 0) {
-        logging::snprintf("no active sources\n");
+        logging::snprintf("  no active sources\n");
     } else {
-        logging::snprintf("sources :\n");
+        logging::snprintf("  sources : ");
         for (uint32_t index = 0; index < 32; index++) {
             if ((activeSources & (0x01 << index)) != 0) {
-                logging::snprintf("* %s\n", toString(static_cast<source>(index)));
+                logging::snprintf("%s ", toString(static_cast<source>(index)));
             }
         }
+        logging::snprintf("\n");
     }
-    logging::snprintf("destinations :\n");
+    logging::snprintf("  destinations : ");
     for (uint32_t index = 0; index < 32; index++) {
         if ((activeDestinations & (0x01 << index)) != 0) {
-            logging::snprintf("* %s\n", toString(static_cast<destination>(index)));
+            logging::snprintf(" %s ", toString(static_cast<destination>(index)));
         }
     }
+    logging::snprintf("\n");
 }
 const char *toString(logging::source aSource) {
     switch (aSource) {

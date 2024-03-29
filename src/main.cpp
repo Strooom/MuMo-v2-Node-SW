@@ -34,6 +34,7 @@
 #include <applicationevent.hpp>
 #include <sensordevicecollection.hpp>
 #include <buildinfo.hpp>
+#include <lorawan.hpp>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -140,18 +141,26 @@ int main(void) {
     gpio ::enableGpio(gpio::group::uart1);
     HAL_Delay(3000);
     mainController ::initialize();
+    logging::enable(logging::destination::uart1);
+    logging::enable(logging::source::lorawanData);
+    logging::enable(logging::source::lorawanMac);
+
     logging::snprintf("MuMo v2 - %s\n", version::getIsVersionAsString());
     logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
     logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
-
     logging::dump();
+    LoRaWAN::dumpConfig();
+    LoRaWAN::dumpState();
+    LoRaWAN::dumpChannels();
+
+
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     while (1) {
-        mainController ::handleEvents();
-        mainController ::run();
+        //mainController ::handleEvents();
+        //mainController ::run();
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
