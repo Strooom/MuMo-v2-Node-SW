@@ -1,6 +1,5 @@
 #include <settingscollection.hpp>
 #include <nvs.hpp>
-#include <logging.hpp>
 
 const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::numberOfSettings)] = {
     // Important note : make sure that none of the settings are mapped into two pages of 128 Bytes, as the page-write of the EEPROM is limited to 128 Byte pages and the address will wrap around to the beginning of the page if addressing more than 128 Bytes. A unit test will check this
@@ -69,22 +68,22 @@ void settingsCollection::readByteArray(uint8_t* dataOut, settingIndex theIndex) 
     }
 }
 
-void settingsCollection::dump() {
-    if ((!logging::isActive()) || (!logging::isActive(logging::source::eepromData))) {
-        return;
-    }
-    logging::snprintf("EEPROM dump");
-    uint8_t settingsCollectionVersion = read<uint8_t>(settingIndex::nvsMapVersion);
-    switch (settingsCollectionVersion) {
-        case nonVolatileStorage::blankEepromValue:
-            logging::snprintf("EEPROM is blank");
-            return;
-            break;
-        default:
-            logging::snprintf("%d : nvsMapVersion = %d", settings[static_cast<uint32_t>(settingIndex::nvsMapVersion)].startAddress, settingsCollectionVersion);
-            break;
-    }
-    logging::snprintf("%d : displayVersion = %d", settings[static_cast<uint32_t>(settingIndex::displayVersion)].startAddress, read<uint8_t>(settingIndex::displayVersion));
-    logging::snprintf("%d : batteryVersion = %d", settings[static_cast<uint32_t>(settingIndex::batteryVersion)].startAddress, read<uint8_t>(settingIndex::batteryVersion));
-    logging::snprintf("%d : activeLoggingSources = %d", settings[static_cast<uint32_t>(settingIndex::activeLoggingSources)].startAddress, read<uint32_t>(settingIndex::activeLoggingSources));
-}
+// void settingsCollection::dump() {
+//     if ((!logging::isActive()) || (!logging::isActive(logging::source::eepromData))) {
+//         return;
+//     }
+//     logging::snprintf("EEPROM dump");
+//     uint8_t settingsCollectionVersion = read<uint8_t>(settingIndex::nvsMapVersion);
+//     switch (settingsCollectionVersion) {
+//         case nonVolatileStorage::blankEepromValue:
+//             logging::snprintf("EEPROM is blank");
+//             return;
+//             break;
+//         default:
+//             logging::snprintf("%d : nvsMapVersion = %d", settings[static_cast<uint32_t>(settingIndex::nvsMapVersion)].startAddress, settingsCollectionVersion);
+//             break;
+//     }
+//     logging::snprintf("%d : displayVersion = %d", settings[static_cast<uint32_t>(settingIndex::displayVersion)].startAddress, read<uint8_t>(settingIndex::displayVersion));
+//     logging::snprintf("%d : batteryVersion = %d", settings[static_cast<uint32_t>(settingIndex::batteryVersion)].startAddress, read<uint8_t>(settingIndex::batteryVersion));
+//     logging::snprintf("%d : activeLoggingSources = %d", settings[static_cast<uint32_t>(settingIndex::activeLoggingSources)].startAddress, read<uint32_t>(settingIndex::activeLoggingSources));
+// }
