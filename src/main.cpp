@@ -148,19 +148,33 @@ int main(void) {
     logging::snprintf("MuMo v2 - %s\n", version::getIsVersionAsString());
     logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
     logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
+
+    typedef struct
+    {
+        __IO uint32_t W0;
+        __IO uint32_t W1;
+
+    } UID_typeDef;
+
+#define UID ((UID_typeDef *)UID64_BASE)
+
+    uint32_t lsword = UID->W0;
+    uint32_t msword = UID->W1;
+
+    logging::snprintf("Device UID: %08X%08X\n", msword, lsword);
+
     logging::dump();
     LoRaWAN::dumpConfig();
     LoRaWAN::dumpState();
     LoRaWAN::dumpChannels();
-
 
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     while (1) {
-        //mainController ::handleEvents();
-        //mainController ::run();
+        // mainController ::handleEvents();
+        // mainController ::run();
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
