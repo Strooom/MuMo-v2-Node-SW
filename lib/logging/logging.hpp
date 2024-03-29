@@ -62,6 +62,7 @@ class logging {
     static uint32_t getActiveDestinations() { return activeDestinations; }
     static void setActiveDestinations(uint32_t aDestinations) { activeDestinations = aDestinations; }
 
+    static void dump();
 #ifndef unitTesting
 
   private:
@@ -71,3 +72,6 @@ class logging {
     static uint32_t activeDestinations;        // bitfield of active logging destinations
     static void write(uint32_t dataLength);
 };
+
+const char *toString(logging::source aSource);
+const char *toString(logging::destination aDestination);

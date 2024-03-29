@@ -65,3 +65,72 @@ void logging::write(uint32_t dataLength) {
 #endif
     }
 }
+
+void logging::dump() {
+    logging::snprintf("logging : \n");
+    if (activeSources == 0) {
+        logging::snprintf("no active sources\n");
+    } else {
+        logging::snprintf("sources :\n");
+        for (uint32_t index = 0; index < 32; index++) {
+            if ((activeSources & (0x01 << index)) != 0) {
+                logging::snprintf("* %s\n", toString(static_cast<source>(index)));
+            }
+        }
+    }
+    logging::snprintf("destinations :\n");
+    for (uint32_t index = 0; index < 32; index++) {
+        if ((activeDestinations & (0x01 << index)) != 0) {
+            logging::snprintf("* %s\n", toString(static_cast<destination>(index)));
+        }
+    }
+}
+const char *toString(logging::source aSource) {
+    switch (aSource) {
+        case logging::source::applicationEvents:
+            return "applicationEvents";
+        case logging::source::sensorEvents:
+            return "sensorEvents";
+        case logging::source::sensorData:
+            return "sensorData";
+        case logging::source::displayEvents:
+            return "displayEvents";
+        case logging::source::displayData:
+            return "displayData";
+        case logging::source::eepromData:
+            return "eepromData";
+        case logging::source::eepromEvents:
+            return "eepromEvents";
+        case logging::source::lorawanEvents:
+            return "lorawanEvents";
+        case logging::source::lorawanData:
+            return "lorawanData";
+        case logging::source::lorawanMac:
+            return "lorawanMac";
+        case logging::source::sx126xControl:
+            return "sx126xControl";
+        case logging::source::sx126xBufferData:
+            return "sx126xBufferData";
+        case logging::source::settings:
+            return "settings";
+        case logging::source::error:
+            return "error";
+        case logging::source::criticalError:
+            return "criticalError";
+        default:
+            return "unknown";
+    }
+}
+
+const char *toString(logging::destination aDestination) {
+    switch (aDestination) {
+        case logging::destination::debugProbe:
+            return "debugProbe";
+        case logging::destination::uart2usb:
+            return "uart2usb";
+        case logging::destination::uart1:
+            return "uart1";
+        default:
+            return "unknown";
+    }
+}
