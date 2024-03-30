@@ -218,6 +218,9 @@ void test_process_unknown_MAC_command() {
 
 void test_dump() {
     TEST_MESSAGE("For Coverage only");
+    logging::enable(logging::destination::uart2usb);
+    logging::enable(logging::source::lorawanData);
+    logging::enable(logging::source::lorawanEvents);
     logging::enable(logging::source::lorawanMac);
     LoRaWAN::dumpConfig();
     LoRaWAN::dumpState();
@@ -229,7 +232,6 @@ void test_dump() {
     LoRaWAN::macOut.append(0x01);
     LoRaWAN::dumpMacIn();
     LoRaWAN::dumpMacOut();
-    logging::disable(logging::source::lorawanMac);
 }
 
 void test_parse_1() {
