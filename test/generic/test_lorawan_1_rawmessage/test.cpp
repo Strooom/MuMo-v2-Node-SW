@@ -2,6 +2,7 @@
 #include <lorawan.hpp>
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
+#include <logging.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -155,13 +156,12 @@ void test_insertBlockB0_uplink() {
 }
 
 void test_insertBlockB0_downlink() {
-TEST_IGNORE_MESSAGE("Implement !!!");
+    TEST_IGNORE_MESSAGE("Implement !!!");
     // LoRaWAN::insertBlockB0(linkDirection::downlink, LoRaWAN::downlinkFrameCount);
     // const uint8_t expectedRx[LoRaWAN::b0BlockLength]{0x49, 0x00, 0x00, 0x00, 0x00, 0x01, 0x78, 0x56, 0x34, 0x12, 0x33, 0x22, 0x11, 0x00, 0x00, 41};
     // TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedRx, LoRaWAN::rawMessage, LoRaWAN::b0BlockLength);
     // TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage + LoRaWAN::b0BlockLength, (LoRaWAN::rawMessageLength - LoRaWAN::b0BlockLength));
 }
-
 
 void test_insertHeaders() {
     LoRaWAN::DevAddr          = 0x12345678;
@@ -290,7 +290,6 @@ void test_getReceivedFramecount() {
     memcpy(LoRaWAN::rawMessage + LoRaWAN::loRaPayloadOffset, testLoRaPayload, testLoRaPayloadLength);
     LoRaWAN::setOffsetsAndLengthsRx(testLoRaPayloadLength);
     TEST_ASSERT_EQUAL_UINT16(0xDDCC, LoRaWAN::receivedFramecount());
-
 }
 
 void test_receivedMic() {
@@ -311,6 +310,17 @@ void test_receivedDeviceAddress() {
     TEST_ASSERT_EQUAL_UINT32(0x12345678, LoRaWAN::receivedDeviceAddress());
 }
 
+void test_dump() {
+    logging::enable(logging::destination::uart2usb);
+    logging::enable(logging::source::lorawanData);
+    logging::enable(logging::source::lorawanEvents);
+    logging::enable(logging::source::lorawanMac);
+    LoRaWAN::dumpRawMessage();
+    LoRaWAN::dumpRawMessageHeader();
+    LoRaWAN::dumpRawMessagePayload();
+
+    TEST_IGNORE_MESSAGE("For Coverage Only");
+}
 
 int main(int argc, char **argv) {
 #ifndef generic
@@ -330,7 +340,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_receivedMic);
     RUN_TEST(test_receivedDeviceAddress);
     RUN_TEST(test_getReceivedFramecount);
-
+    RUN_TEST(test_dump);
 
     UNITY_END();
 }
