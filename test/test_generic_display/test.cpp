@@ -145,7 +145,6 @@ void test_setGetClearPixel() {
     TEST_ASSERT_EQUAL(0b11111110, display::displayBuffer[5000 - 1]);
     TEST_ASSERT_TRUE(display::getPixel((display::widthInPixels - 1), (display::heightInPixels - 1)));
 
-
     // clear the pixel in the four corners, and check the related bytes in the buffer and the pixel state
     display::clearPixel(0, 0);
     TEST_ASSERT_EQUAL(0b11111111, display::displayBuffer[0]);
@@ -162,7 +161,6 @@ void test_setGetClearPixel() {
     display::clearPixel((display::widthInPixels - 1), (display::heightInPixels - 1));
     TEST_ASSERT_EQUAL(0b11111111, display::displayBuffer[5000 - 1]);
     TEST_ASSERT_FALSE(display::getPixel((display::widthInPixels - 1), (display::heightInPixels - 1)));
-    
 }
 
 void test_changePixelOutOfBounds() {
@@ -174,14 +172,39 @@ void test_changePixelOutOfBounds() {
     display::setPixel(0, 200);
     display::setPixel(200, 200);
 
+    TEST_ASSERT_FALSE(display::getPixel(200, 0));
+    TEST_ASSERT_FALSE(display::getPixel(0, 200));
+    TEST_ASSERT_FALSE(display::getPixel(200, 200));
+
+
     for (uint32_t i = 0; i < display::bufferSize; i++) {
         TEST_ASSERT_EQUAL(0xFF, display::displayBuffer[i]);        // all of the displaybuffer should still be cleared
     }
+
+    for (uint32_t i = 0; i < display::bufferSize; i++) {
+        display::displayBuffer[i] = 0x00;        // set all pixels
+    }
+    display::clearPixel(200, 0);        // set some pixels outside the display area
+    display::clearPixel(0, 200);
+    display::clearPixel(200, 200);
+
+    for (uint32_t i = 0; i < display::bufferSize; i++) {
+        TEST_ASSERT_EQUAL(0x00, display::displayBuffer[i]);        // all of the displaybuffer should still be set
+    }
+}
+
+void test_read_busy() {
+    TEST_ASSERT_TRUE(display::isReady());
+    TEST_ASSERT_FALSE(display::isBusy());
 }
 
 void test_dummy() {
+    display::isPresent();
     display::initialize();
+    display::dump();
+    display::update();
     display::goSleep();
+
     TEST_IGNORE_MESSAGE("For testCoverage only");
 }
 
@@ -196,6 +219,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_getBitOffset);
     RUN_TEST(test_setGetClearPixel);
     RUN_TEST(test_changePixelOutOfBounds);
+    RUN_TEST(test_read_busy);
     RUN_TEST(test_dummy);
     UNITY_END();
 }

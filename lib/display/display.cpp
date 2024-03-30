@@ -86,10 +86,6 @@ void display::initialize() {
 void display::run() {
 }
 
-bool display::isReady() {
-    // TODO : implement : when updating is done, ie. busyflag no longer set, return true
-    return true;
-}
 
 void display::goSleep() {
     uint8_t commandData[1]{0x03};        // Deep Sleep Mode 2 - SSD1681 Datasheet Rev 0l.13 Page 23
@@ -221,6 +217,11 @@ void display::selectChip(bool active) {
     }
 #endif
 }
+
+bool display::isReady() {
+    return !isBusy();
+}
+
 
 bool display::isBusy() {
 #ifndef generic

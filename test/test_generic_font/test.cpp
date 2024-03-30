@@ -16,8 +16,8 @@ const characterProperties testRoboto16Characters[] =
         {10, 28},        // B
         {12, 48},        // C
         {11, 72},        // D
-        {9, 94},         // E
-        {9, 112},        // F
+        {0, 94},         // E is not present in pixel data
+        {9, 94},         // F
 };
 const uint8_t testRoboto16PixelData[] =
     {
@@ -76,18 +76,7 @@ const uint8_t testRoboto16PixelData[] =
         0x1F, 0xF0,        //    #########
         0x03, 0x80,        //       ###
 
-        // @94 'E' (9 pixels wide)
-        0xFF, 0xFE,        // ###############
-        0xFF, 0xFE,        // ###############
-        0xC1, 0x86,        // ##     ##    ##
-        0xC1, 0x86,        // ##     ##    ##
-        0xC1, 0x86,        // ##     ##    ##
-        0xC1, 0x86,        // ##     ##    ##
-        0xC1, 0x86,        // ##     ##    ##
-        0xC1, 0x86,        // ##     ##    ##
-        0xC0, 0x06,        // ##           ##
-
-        // @112 'F' (9 pixels wide)
+        // @94  'F' (9 pixels wide)
         0xFF, 0xFE,        // ###############
         0xFF, 0xFE,        // ###############
         0x03, 0x06,        //       ##     ##
@@ -113,8 +102,10 @@ void test_initialize() {
 void test_charIsInBounds() {
     TEST_ASSERT_TRUE(testRoboto16.charIsInBounds('A'));
     TEST_ASSERT_TRUE(testRoboto16.charIsInBounds('F'));
+
     TEST_ASSERT_FALSE(testRoboto16.charIsInBounds(' '));
     TEST_ASSERT_FALSE(testRoboto16.charIsInBounds('G'));
+    TEST_ASSERT_FALSE(testRoboto16.charIsInBounds('E'));
 }
 
 void test_getCharacterWidthInPixels() {
@@ -122,9 +113,10 @@ void test_getCharacterWidthInPixels() {
     TEST_ASSERT_EQUAL(10, testRoboto16.getCharacterWidthInPixels('B'));
     TEST_ASSERT_EQUAL(12, testRoboto16.getCharacterWidthInPixels('C'));
     TEST_ASSERT_EQUAL(11, testRoboto16.getCharacterWidthInPixels('D'));
-    TEST_ASSERT_EQUAL(9, testRoboto16.getCharacterWidthInPixels('E'));
+    TEST_ASSERT_EQUAL(0, testRoboto16.getCharacterWidthInPixels('E'));
     TEST_ASSERT_EQUAL(9, testRoboto16.getCharacterWidthInPixels('F'));
     TEST_ASSERT_EQUAL(0, testRoboto16.getCharacterWidthInPixels(' '));
+    TEST_ASSERT_EQUAL(0, testRoboto16.getCharacterWidthInPixels('G'));
 }
 
 void test_getOffsetInBytes() {
@@ -133,8 +125,9 @@ void test_getOffsetInBytes() {
     TEST_ASSERT_EQUAL(48, testRoboto16.getOffsetInBytes('C'));
     TEST_ASSERT_EQUAL(72, testRoboto16.getOffsetInBytes('D'));
     TEST_ASSERT_EQUAL(94, testRoboto16.getOffsetInBytes('E'));
-    TEST_ASSERT_EQUAL(112, testRoboto16.getOffsetInBytes('F'));
+    TEST_ASSERT_EQUAL(94, testRoboto16.getOffsetInBytes('F'));
     TEST_ASSERT_EQUAL(0, testRoboto16.getOffsetInBytes(' '));
+    TEST_ASSERT_EQUAL(0, testRoboto16.getOffsetInBytes('G'));
 }
 
 void test_getOffsetInBytes2() {

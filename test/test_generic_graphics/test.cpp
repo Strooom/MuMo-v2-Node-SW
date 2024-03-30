@@ -321,6 +321,13 @@ void test_getTextwidth() {
     TEST_ASSERT_EQUAL(toBeWidth, graphics::getTextwidth(testRoboto16, "ABCDEF"));
 }
 
+void test_dummy() {
+    graphics::drawText(0, 0, testRoboto16, "ABCDEF");
+    graphics::drawBatteryIcon(0, 0, 50);
+    graphics::drawNetworkSignalStrengthIcon(0, 0, 50);
+    TEST_IGNORE_MESSAGE("Implement me!");
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_sort);
@@ -337,5 +344,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_drawCircle);
     RUN_TEST(test_drawFilledCircle);
     RUN_TEST(test_getTextwidth);
+    RUN_TEST(test_dummy);
     UNITY_END();
 }

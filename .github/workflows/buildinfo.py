@@ -9,7 +9,7 @@ Import("env")
 
 tag_hash = subprocess.run(["git", "rev-list", "--tags", "--max-count=1"],stdout=subprocess.PIPE, text=True, check=True).stdout.rstrip()
 latest_release_tag = subprocess.run(["git", "describe", "--tags", tag_hash], stdout=subprocess.PIPE, text=True, check=True).stdout.rstrip()
-print ("\033[93;1;4mLatest Release Tag     : " + latest_release_tag + "\033[0m")
+print ("\033[93;1;4mLatest Release Tag      : " + latest_release_tag + "\033[0m")
 
 # determine last release version
 latest_release_tag_parts = latest_release_tag.split("-")
@@ -23,9 +23,9 @@ latest_release_digits = latest_release_semver.split(".")
 latest_release_main = latest_release_digits[0]
 latest_release_minor = latest_release_digits[1]
 latest_release_patch = latest_release_digits[2]
-print ("\033[93;1;4mLatest Release Main    : " + str(latest_release_main) + "\033[0m")
-print ("\033[93;1;4mLatest Release Minor   : " + str(latest_release_minor) + "\033[0m")
-print ("\033[93;1;4mLatest Release Patch   : " + str(latest_release_patch) + "\033[0m")
+print ("\033[93;1;4mLatest Release Main     : " + str(latest_release_main) + "\033[0m")
+print ("\033[93;1;4mLatest Release Minor    : " + str(latest_release_minor) + "\033[0m")
+print ("\033[93;1;4mLatest Release Patch    : " + str(latest_release_patch) + "\033[0m")
 
 # determine current commit hash
 current_commit_hash = subprocess.run(["git", "rev-parse", "--short", "HEAD"], stdout=subprocess.PIPE, text=True)
@@ -35,7 +35,7 @@ print ("\033[93;1;4mNumber of Commits ahead : " + str(number_of_commits_ahead) +
 
 # determine the build timstamp
 build_timestamp = datetime.now().strftime("%Y-%b-%d %H:%M:%S")
-print ("\033[93;1;4mBuild Timestamp        : " + build_timestamp + "\033[0m")
+print ("\033[93;1;4mBuild Timestamp         : " + build_timestamp + "\033[0m")
 
 # store the results in a source file, so our source code has access to it
 include_file = open('lib/version/buildinfo.cpp', 'w')
