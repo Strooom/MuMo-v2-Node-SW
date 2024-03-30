@@ -6,6 +6,7 @@
 #include <maccommand.hpp>
 #include <hexascii.hpp>
 #include <txchannelcollection.hpp>
+#include <logging.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -126,6 +127,13 @@ void test_isValidDownlinkFrameCount() {
 }
 
 void test_dump() {
+    LoRaWAN::dumpConfig();
+    LoRaWAN::dumpState();
+    LoRaWAN::dumpChannels();
+    logging::enable(logging::destination::uart2usb);
+    logging::enable(logging::source::lorawanData);
+    logging::enable(logging::source::lorawanEvents);
+    logging::enable(logging::source::lorawanMac);
     LoRaWAN::dumpConfig();
     LoRaWAN::dumpState();
     LoRaWAN::dumpChannels();
