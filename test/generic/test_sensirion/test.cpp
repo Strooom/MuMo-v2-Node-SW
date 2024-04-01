@@ -14,6 +14,16 @@ void tearDown(void) {}
 void test_crc() {
     uint8_t testData[2] = {0xBE, 0xEF};
     TEST_ASSERT_EQUAL(0x92, sensirion::crc(0xBE, 0xEF));        // testvector from SHT4X datasheet, page 11.
+                                                                // testvectors from SCD4x datasheet
+    TEST_ASSERT_EQUAL(0xA2, sensirion::crc(0x66, 0x67));
+    TEST_ASSERT_EQUAL(0x3C, sensirion::crc(0x5E, 0xB9));
+    TEST_ASSERT_EQUAL(0x48, sensirion::crc(0x07, 0xE6));
+    TEST_ASSERT_EQUAL(0x63, sensirion::crc(0x09, 0x12));
+    TEST_ASSERT_EQUAL(0x09, sensirion::crc(0x07, 0x9E));
+    TEST_ASSERT_EQUAL(0x42, sensirion::crc(0x04, 0x4C));
+    TEST_ASSERT_EQUAL(0x42, sensirion::crc(0x03, 0xDB));
+
+    //    TEST_ASSERT_EQUAL(0, sensirion::crc(0x05, 0x00));
 }
 
 void test_Checkcrc() {
