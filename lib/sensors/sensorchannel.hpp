@@ -57,4 +57,5 @@ class sensorChannel {
     friend class bme680;
     friend class tsl2591;
     friend class sht40;
+    friend class sps30;
 };
