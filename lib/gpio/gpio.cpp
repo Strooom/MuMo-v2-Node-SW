@@ -199,18 +199,28 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
             }
             break;
 
-        case gpio::group::other:
-            // A set of unassigned, spare pins. Can be used for experimenting
+        case gpio::group::vddEnable:
+
             if (enable) {
                 GPIO_InitTypeDef GPIO_InitStruct{0};
 
-                // PA9 = Wio-E5 pin 21
-                GPIO_InitStruct.Pin   = GPIO_PIN_9;
+                // PA9 = Wio-E5 pin 21 - switches the 3.3V towards sensors and eeprom
+                GPIO_InitStruct.Pin   = vddEnable_Pin;
                 GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
                 GPIO_InitStruct.Pull  = GPIO_NOPULL;
                 GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
                 HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+            } else {
+                HAL_GPIO_DeInit(GPIOA, vddEnable_Pin);
+            }
+            break;
+
+
+        case gpio::group::other:
+            // A set of unassigned, spare pins. Can be used for experimenting
+            if (enable) {
+                GPIO_InitTypeDef GPIO_InitStruct{0};
                 // PB0 = Wio-E5 pin 28
                 // GPIO_InitStruct.Pin   = GPIO_PIN_0;
                 // GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
@@ -233,7 +243,6 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
                 // HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
             } else {
-                HAL_GPIO_DeInit(GPIOA, GPIO_PIN_9);
                 // HAL_GPIO_DeInit(GPIOB, GPIO_PIN_0);
                 // HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0);
                 // HAL_GPIO_DeInit(GPIOC, GPIO_PIN_1);

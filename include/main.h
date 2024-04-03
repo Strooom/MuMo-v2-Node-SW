@@ -51,8 +51,8 @@ extern "C" {
 #define rfControl1_GPIO_Port GPIOA
 #define rfControl2_Pin GPIO_PIN_5
 #define rfControl2_GPIO_Port GPIOA
-#define loraTiming_Pin GPIO_PIN_9
-#define loraTiming_GPIO_Port GPIOA
+#define vddEnable_Pin GPIO_PIN_9
+#define vddEnable_GPIO_Port GPIOA
 
 /* USER CODE END Includes */
 

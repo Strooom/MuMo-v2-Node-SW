@@ -23,6 +23,7 @@ class gpio {
         uart1,
         uart2,
         usbPresent,
+        vddEnable,
         other
     };
 

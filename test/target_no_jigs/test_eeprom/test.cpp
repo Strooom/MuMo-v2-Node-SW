@@ -1,6 +1,7 @@
 #include <unity.h>
 #include "main.h"
 #include <cube.hpp>
+#include <gpio.hpp>
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
 #include <stm32wlxx_hal_msp.c>
@@ -42,6 +43,9 @@ int main(int argc, char **argv) {
     SystemClock_Config();
 
     MX_I2C2_Init();
+    gpio::enableGpio(gpio::group::vddEnable);
+    HAL_GPIO_WritePin(GPIOA, vddEnable_Pin, GPIO_PIN_RESET);
+
     gpio::enableGpio(gpio::group::i2cEeprom);
 
     UNITY_BEGIN();
