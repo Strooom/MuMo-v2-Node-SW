@@ -135,7 +135,7 @@ float sht40::calculateTemperature() {
 
 float sht40::calculateRelativeHumidity() {
     float result;
-    result = -49.0F + 315.0F * (static_cast<float>(rawDataRelativeHumidity) / 65535.0F);        // SH4x datasheet section 4.6 (1)
+    result = -6.0F + 125.0F * (static_cast<float>(rawDataRelativeHumidity) / 65535.0F);        // SH4x datasheet section 4.6 (1)
     if (result < 0.0F) {
         result = 0.0F;
     }
