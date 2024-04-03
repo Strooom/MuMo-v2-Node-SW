@@ -40,10 +40,31 @@ void test_insertCrc() {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, testDataIn, 9U);
 }
 
+void test_asUint16() {
+    uint8_t testDataIn[3] = {0x66, 0x67, 0xA2};
+    TEST_ASSERT_EQUAL(0x6667, sensirion::asUint16(testDataIn));
+    uint8_t testDataIn2[3] = {0x5E, 0xB9, 0x3C};
+    TEST_ASSERT_EQUAL(0x5EB9, sensirion::asUint16(testDataIn2));
+}
+
+void test_asUint32() {
+    uint8_t testDataIn[6] = {0x66, 0x67, 0xA2, 0x5E, 0xB9, 0x3C};
+    TEST_ASSERT_EQUAL(0x66675EB9, sensirion::asUint32(testDataIn));
+}
+
+void test_asFloat() {
+    uint8_t testDataIn[6] = {0x66, 0x67, 0xA2, 0x5E, 0xB9, 0x3C};
+    (void)sensirion::asFloat(testDataIn);
+    TEST_IGNORE_MESSAGE("Implement this test...");
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_crc);
     RUN_TEST(test_Checkcrc);
     RUN_TEST(test_insertCrc);
+    RUN_TEST(test_asUint16);
+    RUN_TEST(test_asUint32);
+    RUN_TEST(test_asFloat);
     UNITY_END();
 }

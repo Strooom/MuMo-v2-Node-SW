@@ -120,39 +120,29 @@ bool sht40::samplingIsReady() {
 }
 
 void sht40::readSample() {
-    // constexpr uint32_t nmbrRegisters{8};
-    // uint8_t registerData[nmbrRegisters];
-    // readRegisters(0x1F, nmbrRegisters, registerData);        // reads 8 registers, from 0x1F up to 0x26, they contain the raw ADC results for temperature, relativeHumidity and pressure
-    // rawDataTemperature        = ((static_cast<uint32_t>(registerData[3]) << 12) | (static_cast<uint32_t>(registerData[4]) << 4) | (static_cast<uint32_t>(registerData[5]) >> 4));
-    // rawDataRelativeHumidity   = ((static_cast<uint32_t>(registerData[6]) << 8) | (static_cast<uint32_t>(registerData[7])));
-    // rawDataBarometricPressure = ((static_cast<uint32_t>(registerData[0]) << 12) | (static_cast<uint32_t>(registerData[1]) << 4) | (static_cast<uint32_t>(registerData[2]) >> 4));
+    static constexpr uint32_t responseLength{6};
+    uint8_t response[responseLength];
+    read(command::getMeasurementHighPrecision, response, responseLength);        // SH4x datasheet section 4.5
+    if (sensirion::checkCrc(response, responseLength)) {
+        rawDataTemperature      = sensirion::asUint16(response);
+        rawDataRelativeHumidity = sensirion::asUint16(response + 3);
+    }
 }
 
 float sht40::calculateTemperature() {
-    // float var1                         = ((((float)rawDataTemperature / 16384.0f) - (calibrationCoefficientTemperature1 / 1024.0f)) * (calibrationCoefficientTemperature2));
-    // float var2                         = (((((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f)) * (((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f))) * (calibrationCoefficientTemperature3 * 16.0f));
-    // calibrationCoefficientTemperature4 = var1 + var2;
-    // return (calibrationCoefficientTemperature4 / 5120.0f);
-    return 0.0F;
+    return -45.0F + 175.0F * (static_cast<float>(rawDataTemperature) / 65535.0F);        // SH4x datasheet section 4.6 (2)
 }
 
 float sht40::calculateRelativeHumidity() {
-    // float calc_hum;
-
-    // float temp_comp = ((calibrationCoefficientTemperature4) / 5120.0f);
-    // float var1      = static_cast<float>(rawDataRelativeHumidity) - (calibrationCoefficientHumidity1 * 16.0f) + ((calibrationCoefficientHumidity3 / 2.0f) * temp_comp);
-    // float var2      = var1 * (calibrationCoefficientHumidity2 / 262144.0f) * (1.0f + ((calibrationCoefficientHumidity4 / 16384.0f) * temp_comp) + ((calibrationCoefficientHumidity5 / 1048576.0f) * temp_comp * temp_comp));
-    // float var3      = calibrationCoefficientHumidity6 / 16384.0f;
-    // float var4      = calibrationCoefficientHumidity7 / 2097152.0f;
-    // calc_hum        = var2 + ((var3 + (var4 * temp_comp)) * var2 * var2);
-    // if (calc_hum > 100.0f) {
-    //     calc_hum = 100.0f;
-    // } else if (calc_hum < 0.0f) {
-    //     calc_hum = 0.0f;
-    // }
-
-    // return calc_hum;
-    return 0.0F;
+    float result;
+    result = -49.0F + 315.0F * (static_cast<float>(rawDataRelativeHumidity) / 65535.0F);        // SH4x datasheet section 4.6 (1)
+    if (result < 0.0F) {
+        result = 0.0F;
+    }
+    if (result > 100.0F) {
+        result = 100.0F;
+    }
+    return result;
 }
 
 bool sht40::testI2cAddress(uint8_t addressToTest) {
@@ -163,29 +153,11 @@ bool sht40::testI2cAddress(uint8_t addressToTest) {
 #endif
 }
 
-uint8_t sht40::readRegister(registers registerAddress) {
-    uint8_t result;
+void sht40::read(command aCommand, uint8_t* response, uint32_t responseLength) {
 #ifndef generic
-    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &result, 1, halTimeout);
+    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, static_cast<uint8_t>(aCommand), I2C_MEMADD_SIZE_8BIT, response, responseLength, halTimeout);
 #else
-    result = mockBME680Registers[static_cast<uint8_t>(registerAddress)];
-#endif
-    return result;
-}
-
-void sht40::writeRegister(registers registerAddress, uint8_t value) {
-#ifndef generic
-    HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
-#else
-    mockBME680Registers[static_cast<uint8_t>(registerAddress)] = value;
-#endif
-}
-
-void sht40::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* destination) {
-#ifndef generic
-    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_8BIT, destination, length, halTimeout);
-#else
-    memcpy(destination, mockBME680Registers + startAddress, length);
+// TODO add mock for generic Unit testing
 #endif
 }
 

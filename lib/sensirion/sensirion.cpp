@@ -22,6 +22,16 @@ const uint8_t sensirion::substitute[256] = {
     0x1a, 0x2b, 0xbc, 0x8d, 0xde, 0xef, 0x82, 0xb3, 0xe0, 0xd1, 0x46, 0x77, 0x24,
     0x15, 0x3b, 0x0a, 0x59, 0x68, 0xff, 0xce, 0x9d, 0xac};
 
+// This algorithm is an alternative to the lookup table.
+// void sensirion::substitute(uint8_t& aByte) {
+//     for (uint8_t bitIndex = 0; bitIndex < 8; bitIndex++) {
+//         if (aByte & 0x80)
+//             aByte = (aByte << 1) ^ crcPolynome;
+//         else
+//             aByte = (aByte << 1);
+//     }
+// }
+
 uint8_t sensirion::crc(const uint8_t byte0, const uint8_t byte1) {
     uint8_t result = crcInit;
     result ^= byte0;
@@ -48,50 +58,23 @@ void sensirion::insertCrc(uint8_t* data, uint32_t count) {
     }
 }
 
-// This algorithm is an alternative to the lookup table.
-// void sensirion::div(uint8_t& aByte) {
-//     for (uint8_t bitIndex = 0; bitIndex < 8; bitIndex++) {
-//         if (aByte & 0x80)
-//             aByte = (aByte << 1) ^ crcPolynome;
-//         else
-//             aByte = (aByte << 1);
-//     }
-// }
-
 float sensirion::asFloat(const uint8_t* bytes) {
     union {
         uint8_t asBytes[4];
         float asFloat;
     } tmp;
-    tmp.asBytes[0] = bytes[0];
-    tmp.asBytes[1] = bytes[1];
-    tmp.asBytes[2] = bytes[3];        // skip 1 byte for a CRC byte
-    tmp.asBytes[3] = bytes[4];
-
+    tmp.asBytes[0] = bytes[4];
+    tmp.asBytes[1] = bytes[3];
+    // skip 1 byte for a CRC byte
+    tmp.asBytes[2] = bytes[1];
+    tmp.asBytes[3] = bytes[0];
     return tmp.asFloat;
 }
 
-float sensirion::asUint32(const uint8_t* bytes) {
-    union {
-        uint8_t asBytes[4];
-        uint32_t asUint32;
-    } tmp;
-    tmp.asBytes[0] = bytes[0];
-    tmp.asBytes[1] = bytes[1];
-    tmp.asBytes[2] = bytes[3];        // skip 1 byte for a CRC byte
-    tmp.asBytes[3] = bytes[4];
-
-    return tmp.asUint32;
+uint32_t sensirion::asUint32(const uint8_t* bytes) {
+    return (static_cast<uint32_t>(bytes[0]) << 24) + (static_cast<uint32_t>(bytes[1]) << 16) + (static_cast<uint32_t>(bytes[3]) << 8) + static_cast<uint32_t>(bytes[4]);
 }
 
-float sensirion::asUint16(const uint8_t* bytes) {
-    union {
-        uint8_t asBytes[2];
-        uint16_t asUint16;
-    } tmp;
-    tmp.asBytes[0] = bytes[0];
-    tmp.asBytes[1] = bytes[1];
-
-    return tmp.asUint16;
+uint16_t sensirion::asUint16(const uint8_t* bytes) {
+    return (static_cast<uint16_t>(bytes[0]) << 8) + static_cast<uint16_t>(bytes[1]);
 }
-
