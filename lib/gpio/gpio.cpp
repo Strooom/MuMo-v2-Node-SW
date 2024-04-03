@@ -220,7 +220,7 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
         case gpio::group::other:
             // A set of unassigned, spare pins. Can be used for experimenting
             if (enable) {
-                GPIO_InitTypeDef GPIO_InitStruct{0};
+                // GPIO_InitTypeDef GPIO_InitStruct{0};
                 // PB0 = Wio-E5 pin 28
                 // GPIO_InitStruct.Pin   = GPIO_PIN_0;
                 // GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;

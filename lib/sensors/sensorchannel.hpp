@@ -56,4 +56,5 @@ class sensorChannel {
     friend class battery;
     friend class bme680;
     friend class tsl2591;
+    friend class sht40;
 };

@@ -15,6 +15,9 @@ class sps30 {
   public:
     static bool isPresent();
     static void initialize();
+    static void wakeUp();
+    static void goSleep();
+
     static sensorDeviceState getState() { return state; };
     static bool hasNewMeasurement();
     static float valueAsFloat(uint32_t channelIndex);
@@ -25,9 +28,10 @@ class sps30 {
     static void run();
     static void log();
 
-    static constexpr uint32_t nmbrChannels{2};
-    static constexpr uint32_t temperature{0};
-    static constexpr uint32_t relativeHumidity{1};
+    static constexpr uint32_t nmbrChannels{3};
+    static constexpr uint32_t pme2dot5{0};
+    static constexpr uint32_t pme4{0};
+    static constexpr uint32_t pme10{0};
     static sensorChannel channels[nmbrChannels];
     static sensorChannelFormat channelFormats[nmbrChannels];
 
@@ -40,39 +44,38 @@ class sps30 {
     static void adjustAllCounters();
     static void startSampling();
     static bool samplingIsReady();
+    static void stopSampling();
     static void readSample();
-
-    static float calculateTemperature();
-    static float calculateRelativeHumidity();
-    static float calculateBarometricPressure();
 
     static void clearNewMeasurements();
 
-    static constexpr uint8_t i2cAddress{0x44};
-    static constexpr uint8_t halTrials{0x03};         // ST HAL requires a 'retry' parameters
-    static constexpr uint8_t halTimeout{0x10};        // ST HAL requires a 'timeout' in ms
-
-    // Registers
-    enum class registers : uint8_t {
-
-    };
+    static constexpr uint8_t i2cAddress{0x69};
+    static constexpr uint8_t halTrials{0x03};
+    static constexpr uint8_t halTimeout{0x10};
 
     // Commands
-    enum class commands : uint8_t {
+    enum class command : uint16_t {
+        startMeasurement       = 0x0010,
+        stopMeasurement        = 0x0104,
+        readMeasurement        = 0x0300,
+        isDataReady            = 0x0202,
+        reset                  = 0xD304,
+        goSleep                = 0x1001,
+        startManualFanCleaning = 0x5607,
+        wakeUp                 = 0x1103,
+        readProductType        = 0xD002,
     };
 
     // Other
-    static constexpr uint8_t chipIdValue{0x61};        // value to expect at the chipIdregister, this allows to discover/recognize the BME68x
+    static constexpr uint8_t chipIdValue{0x61};
 
-    static bool testI2cAddress(uint8_t addressToTest);                                              //
-    static uint8_t readRegister(registers aRegister);                                               // read a single register
-    static void readRegisters(uint16_t startAddress, uint16_t length, uint8_t* destination);        // read a range of registers into a buffer
-    static void writeRegister(registers aRegister, const uint8_t value);                            // write a single register
+    static bool testI2cAddress(uint8_t addressToTest);
+    static void write(command aRegister);
+    static void write(command aRegister, const uint8_t value);
+    static void write(command startAddress, uint8_t* sourceData, uint16_t length);
+    static uint8_t readData(command aRegister);
+    static void read(command startAddress, uint8_t* destination, uint16_t length);
 
-    static uint32_t rawDataTemperature;
-    static uint32_t rawDataRelativeHumidity;
 
     static bool awake;
-
 };
-

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <sensirion.hpp>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
 #include <sensorchannelformat.hpp>
@@ -48,9 +49,9 @@ class sht40 {
 
     static void clearNewMeasurements();
 
-    static constexpr uint8_t i2cAddress{0x44};
-    static constexpr uint8_t halTrials{0x03};         // ST HAL requires a 'retry' parameters
-    static constexpr uint8_t halTimeout{0x10};        // ST HAL requires a 'timeout' in ms
+    static uint8_t i2cAddress; // SHT40 can have 0x44 or 0x45 as address -> so we need to probe for it
+    static constexpr uint8_t halTrials{0x03};
+    static constexpr uint8_t halTimeout{0x10};
 
     // Registers
     enum class registers : uint8_t {
@@ -59,20 +60,36 @@ class sht40 {
 
     // Commands
     enum class commands : uint8_t {
+        MEASURE_HIGH_PRECISION_TICKS_CMD_ID              = 0xfd,
+        MEASURE_MEDIUM_PRECISION_TICKS_CMD_ID            = 0xf6,
+        MEASURE_LOWEST_PRECISION_TICKS_CMD_ID            = 0xe0,
+        ACTIVATE_HIGHEST_HEATER_POWER_LONG_TICKS_CMD_ID  = 0x39,
+        ACTIVATE_HIGHEST_HEATER_POWER_SHORT_TICKS_CMD_ID = 0x32,
+        ACTIVATE_MEDIUM_HEATER_POWER_LONG_TICKS_CMD_ID   = 0x2f,
+        ACTIVATE_MEDIUM_HEATER_POWER_SHORT_TICKS_CMD_ID  = 0x24,
+        ACTIVATE_LOWEST_HEATER_POWER_LONG_TICKS_CMD_ID   = 0x1e,
+        ACTIVATE_LOWEST_HEATER_POWER_SHORT_TICKS_CMD_ID  = 0x15,
+        SERIAL_NUMBER_CMD_ID                             = 0x89,
+        SOFT_RESET_CMD_ID                                = 0x94,
     };
 
     // Other
-    static constexpr uint8_t chipIdValue{0x61};        // value to expect at the chipIdregister, this allows to discover/recognize the BME68x
-
-    static bool testI2cAddress(uint8_t addressToTest);                                              //
-    static uint8_t readRegister(registers aRegister);                                               // read a single register
-    static void readRegisters(uint16_t startAddress, uint16_t length, uint8_t* destination);        // read a range of registers into a buffer
-    static void writeRegister(registers aRegister, const uint8_t value);                            // write a single register
+    static bool testI2cAddress(uint8_t addressToTest);
+    static uint8_t readRegister(registers aRegister);
+    static void readRegisters(uint16_t startAddress, uint16_t length, uint8_t* destination);
+    static void writeRegister(registers aRegister, const uint8_t value);
 
     static uint32_t rawDataTemperature;
     static uint32_t rawDataRelativeHumidity;
 
     static bool awake;
-
 };
 
+static float temperatureFromRaw(uint32_t rawData);
+static float relativeHumidityFromRaw(uint32_t rawData);
+
+// float sensirion::temperatureFromRaw(uint32_t rawData) {
+// }
+
+// float sensirion::relativeHumidityFromRaw(uint32_t rawData) {
+// }
