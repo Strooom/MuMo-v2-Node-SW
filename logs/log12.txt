@@ -1,0 +1,775 @@
+MainController stateChange : boot[0] -> test[8]
+MuMo v2 - v0.1.23
+local development build - 2024-Apr-04 14:00:28
+Creative Commons 4.0 - BY-NC-SA
+Device UID: 0080E11505474C71
+logging : 
+  sources      : sensorData lorawanEvents lorawanData lorawanMac error criticalError 
+  destinations : debugProbe 
+LoRaWAN Config :
+  devAddr        = 260BC71B
+  applicationKey = ECF61A5B18BFBF81EF4FA7DBA764CE8B
+  networkKey     = 34CE07A8DDE81F4C29A0AED7B4F1D7BB
+LoRaWAN State :
+  uplinkFrameCount   = 1
+  downlinkFrameCount = 0
+  dataRateIndex      = 5
+  rx1Delay           = 1 [s]
+LoRaWAN Channels :
+  Tx channel[00] : frequency = 868100000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[01] : frequency = 868300000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[02] : frequency = 868500000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[03] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[04] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[05] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[06] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[07] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[08] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[09] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[10] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[11] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[12] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[13] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[14] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[15] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Rx2 channel    : frequency = 869525000 [Hz], rx1DROffset = 0, rx2DR = 0
+Uplink :
+  dataRate = 5
+  spreadingFactor = SF7
+  channel = 2
+  frequency = 868500000
+LoRaWAN msg :
+[000]      : MacHeader 40 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 01 00
+no FrameOptions
+[  x]      : FramePort 08
+[025..035] : FramePayload[10]  25 D7 E7 F9 3A F5 42 86 0C C7 
+[035..039] : MIC 96 13 D4 C4
+LoRaWAN stateChange from idle [0] to waitForRandomTimeBeforeTransmit [2]
+LoRaWAN event lowPower Timer Expired [4] in state waitForRandomTimeBeforeTransmit [2] 
+LoRaWAN stateChange from waitForRandomTimeBeforeTransmit [2] to waitForTxComplete [3]
+LoRaWAN event sx126x Tx Complete [8] in state waitForTxComplete [3] 
+LoRaWAN stateChange from waitForTxComplete [3] to waitForRx1Start [4]
+LoRaWAN event lowPower Timer Expired [4] in state waitForRx1Start [4] 
+LoRaWAN stateChange from waitForRx1Start [4] to waitForRx1CompleteOrTimeout [5]
+LoRaWAN event sx126x Rx Complete [9] in state waitForRx1CompleteOrTimeout [5] 
+LoRaWAN msg :
+[000]      : MacHeader 60 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 00 00
+no FrameOptions
+[  x]      : FramePort 00
+[025..062] : FramePayload[37]  D1 D4 A2 34 ED C5 C3 D2 F8 36 C6 E9 F9 0D 07 1F 16 C5 D7 93 9F 1D 61 30 DB 91 DE 14 97 49 60 6A 11 98 8A 1C 85 
+[062..066] : MIC 29 12 78 92
+receivedFramecount = 0, lastFramecount = 0, guessedFramecount = 0
+LoRaWAN msg :
+[000]      : MacHeader 60 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 00 00
+no FrameOptions
+[  x]      : FramePort 00
+[025..062] : FramePayload[37]  05 03 D2 AD 84 07 03 18 4F 84 50 07 04 E8 56 84 50 07 05 B8 5E 84 50 07 06 88 66 84 50 07 07 58 6E 84 50 08 05 
+[062..066] : MIC 29 12 78 92
+MAC input [37] = 05 03 D2 AD 84 07 03 18 4F 84 50 07 04 E8 56 84 50 07 05 B8 5E 84 50 07 06 88 66 84 50 07 07 58 6E 84 50 08 05 
+ReceiveParameterSetupRequest : 0x03, 869525000 
+ReceiveParameterSetupAnswer : 0x07 
+NewChannelRequest for channel 3, frequency = 867100000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+NewChannelRequest for channel 4, frequency = 867300000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+NewChannelRequest for channel 5, frequency = 867500000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+NewChannelRequest for channel 6, frequency = 867700000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+NewChannelRequest for channel 7, frequency = 867900000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+ReceiveTimingSetupRequest : rx1Delay changed from 1 to 5
+ReceiveTimingSetupAnswer 
+MAC output [13] = 05 07 07 03 07 03 07 03 07 03 07 03 08 
+LoRaWAN stateChange from waitForRx1CompleteOrTimeout [5] to idle [0]
+Uplink :
+  dataRate = 5
+  spreadingFactor = SF7
+  channel = 1
+  frequency = 868300000
+LoRaWAN msg :
+[000]      : MacHeader 40 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 0D
+[006..007] : FCnt 02 00
+[008..021] : FrameOptions 05 07 07 03 07 03 07 03 07 03 07 03 08 
+[  x]      : FramePort 08
+[038..048] : FramePayload[10]  D2 A2 2B 51 09 A0 C0 E7 18 80 
+[048..052] : MIC 4C BE 7D 4D
+LoRaWAN stateChange from idle [0] to waitForRandomTimeBeforeTransmit [2]
+LoRaWAN event lowPower Timer Expired [4] in state waitForRandomTimeBeforeTransmit [2] 
+LoRaWAN stateChange from waitForRandomTimeBeforeTransmit [2] to waitForTxComplete [3]
+LoRaWAN event sx126x Tx Complete [8] in state waitForTxComplete [3] 
+LoRaWAN stateChange from waitForTxComplete [3] to waitForRx1Start [4]
+LoRaWAN event lowPower Timer Expired [4] in state waitForRx1Start [4] 
+LoRaWAN stateChange from waitForRx1Start [4] to waitForRx1CompleteOrTimeout [5]
+LoRaWAN event sx126x Rx Complete [9] in state waitForRx1CompleteOrTimeout [5] 
+
+60 1bc70b26
+00
+0100
+f7c8ac85
+
+LoRaWAN msg :
+[000]      : MacHeader 60 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 01 00
+no FrameOptions
+[024..028] : MIC F7 C8 AC 85
+receivedFramecount = 1, lastFramecount = 0, guessedFramecount = 1
+LoRaWAN msg :
+[000]      : MacHeader 60 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 01 00
+no FrameOptions
+[024..028] : MIC F7 C8 AC 85
+MAC input [0] = 
+MAC output [0] = 
+LoRaWAN stateChange from waitForRx1CompleteOrTimeout [5] to idle [0]
+
+
+Gateway Msg 1 :
+{
+  "name": "gs.up.receive",
+  "time": "2024-04-04T15:15:21.774991700Z",
+  "identifiers": [
+    {
+      "gateway_ids": {
+        "gateway_id": "eui-ac1f09fffe08d721",
+        "eui": "AC1F09FFFE08D721"
+      }
+    }
+  ],
+  "data": {
+    "@type": "type.googleapis.com/ttn.lorawan.v3.GatewayUplinkMessage",
+    "message": {
+      "raw_payload": "QBvHCyYAAQAIJdfn+Tr1QoYMx5YT1MQ=",
+      "payload": {
+        "m_hdr": {
+          "m_type": "UNCONFIRMED_UP"
+        },
+        "mic": "lhPUxA==",
+        "mac_payload": {
+          "f_hdr": {
+            "dev_addr": "260BC71B",
+            "f_ctrl": {},
+            "f_cnt": 1
+          },
+          "f_port": 8,
+          "frm_payload": "Jdfn+Tr1QoYMxw=="
+        }
+      },
+      "settings": {
+        "data_rate": {
+          "lora": {
+            "bandwidth": 125000,
+            "spreading_factor": 7,
+            "coding_rate": "4/5"
+          }
+        },
+        "frequency": "868500000",
+        "timestamp": 675610618,
+        "time": "2024-04-04T15:15:21.694844007Z"
+      },
+      "rx_metadata": [
+        {
+          "gateway_ids": {
+            "gateway_id": "eui-ac1f09fffe08d721",
+            "eui": "AC1F09FFFE08D721"
+          },
+          "time": "2024-04-04T15:15:21.694844007Z",
+          "timestamp": 675610618,
+          "rssi": -53,
+          "channel_rssi": -53,
+          "snr": 11.75,
+          "location": {
+            "latitude": 51.212771197056746,
+            "longitude": 4.396121228692907,
+            "source": "SOURCE_REGISTRY"
+          },
+          "uplink_token": "CiIKIAoUZXVpLWFjMWYwOWZmZmUwOGQ3MjESCKwfCf/+CNchEPr/k8ICGgwIiYi7sAYQjKa48QIgkNGf7NSBgwE=",
+          "received_at": "2024-04-04T15:15:21.757722259Z"
+        }
+      ],
+      "received_at": "2024-04-04T15:15:21.774771468Z",
+      "correlation_ids": [
+        "gs:uplink:01HTMTVHHE46HT95PW5VYWSC4Z"
+      ]
+    },
+    "band_id": "EU_863_870"
+  },
+  "correlation_ids": [
+    "gs:uplink:01HTMTVHHE46HT95PW5VYWSC4Z"
+  ],
+  "origin": "ip-10-100-4-113.eu-west-1.compute.internal",
+  "context": {
+    "tenant-id": "CgN0dG4="
+  },
+  "visibility": {
+    "rights": [
+      "RIGHT_GATEWAY_TRAFFIC_READ"
+    ]
+  },
+  "unique_id": "01HTMTVHHEYGC64HX0ZF0MHTXN"
+}
+
+Response to msg 1
+{
+  "name": "gs.down.send",
+  "time": "2024-04-04T15:15:22.181582983Z",
+  "identifiers": [
+    {
+      "gateway_ids": {
+        "gateway_id": "eui-ac1f09fffe08d721",
+        "eui": "AC1F09FFFE08D721"
+      }
+    }
+  ],
+  "data": {
+    "@type": "type.googleapis.com/ttn.lorawan.v3.DownlinkMessage",
+    "raw_payload": "YBvHCyYAAAAA0dSiNO3Fw9L4Nsbp+Q0HHxbF15OfHWEw25HeFJdJYGoRmIochSkSeJI=",
+    "scheduled": {
+      "data_rate": {
+        "lora": {
+          "bandwidth": 125000,
+          "spreading_factor": 7,
+          "coding_rate": "4/5"
+        }
+      },
+      "frequency": "868500000",
+      "timestamp": 676610618,
+      "downlink": {
+        "tx_power": 16.15,
+        "invert_polarization": true
+      },
+      "concentrator_timestamp": "576202228282000"
+    },
+    "correlation_ids": [
+      "gs:uplink:01HTMTVHHE46HT95PW5VYWSC4Z",
+      "ns:downlink:01HTMTVHY56B9CDENHD33CHS50",
+      "ns:transmission:01HTMTVHY5GVP3HWPW3Q8PYJ73"
+    ]
+  },
+  "correlation_ids": [
+    "gs:uplink:01HTMTVHHE46HT95PW5VYWSC4Z",
+    "ns:downlink:01HTMTVHY56B9CDENHD33CHS50",
+    "ns:transmission:01HTMTVHY5GVP3HWPW3Q8PYJ73"
+  ],
+  "origin": "ip-10-100-4-113.eu-west-1.compute.internal",
+  "context": {
+    "tenant-id": "CgN0dG4="
+  },
+  "visibility": {
+    "rights": [
+      "RIGHT_GATEWAY_TRAFFIC_READ"
+    ]
+  },
+  "unique_id": "01HTMTVHY51XT6CTMSYBBC379R"
+}
+ Uplink 2
+ {
+  "name": "gs.up.receive",
+  "time": "2024-04-04T15:15:48.727028373Z",
+  "identifiers": [
+    {
+      "gateway_ids": {
+        "gateway_id": "eui-ac1f09fffe08d721",
+        "eui": "AC1F09FFFE08D721"
+      }
+    }
+  ],
+  "data": {
+    "@type": "type.googleapis.com/ttn.lorawan.v3.GatewayUplinkMessage",
+    "message": {
+      "raw_payload": "QBvHCyYNAgAFBwcDBwMHAwcDBwMICNKiK1EJoMDnGIBMvn1N",
+      "payload": {
+        "m_hdr": {
+          "m_type": "UNCONFIRMED_UP"
+        },
+        "mic": "TL59TQ==",
+        "mac_payload": {
+          "f_hdr": {
+            "dev_addr": "260BC71B",
+            "f_ctrl": {},
+            "f_cnt": 2,
+            "f_opts": "BQcHAwcDBwMHAwcDCA=="
+          },
+          "f_port": 8,
+          "frm_payload": "0qIrUQmgwOcYgA=="
+        }
+      },
+      "settings": {
+        "data_rate": {
+          "lora": {
+            "bandwidth": 125000,
+            "spreading_factor": 7,
+            "coding_rate": "4/5"
+          }
+        },
+        "frequency": "868300000",
+        "timestamp": 702570120,
+        "time": "2024-04-04T15:15:48.649568080Z"
+      },
+      "rx_metadata": [
+        {
+          "gateway_ids": {
+            "gateway_id": "eui-ac1f09fffe08d721",
+            "eui": "AC1F09FFFE08D721"
+          },
+          "time": "2024-04-04T15:15:48.649568080Z",
+          "timestamp": 702570120,
+          "rssi": -53,
+          "channel_rssi": -53,
+          "snr": 14,
+          "location": {
+            "latitude": 51.212771197056746,
+            "longitude": 4.396121228692907,
+            "source": "SOURCE_REGISTRY"
+          },
+          "uplink_token": "CiIKIAoUZXVpLWFjMWYwOWZmZmUwOGQ3MjESCKwfCf/+CNchEIi9gc8CGgwIpIi7sAYQw7HK2gIgwIbFo7mCgwE=",
+          "received_at": "2024-04-04T15:15:48.709633472Z"
+        }
+      ],
+      "received_at": "2024-04-04T15:15:48.726833347Z",
+      "correlation_ids": [
+        "gs:uplink:01HTMTWBVQQZ5ECJDNE8AA5N3Z"
+      ]
+    },
+    "band_id": "EU_863_870"
+  },
+  "correlation_ids": [
+    "gs:uplink:01HTMTWBVQQZ5ECJDNE8AA5N3Z"
+  ],
+  "origin": "ip-10-100-4-113.eu-west-1.compute.internal",
+  "context": {
+    "tenant-id": "CgN0dG4="
+  },
+  "visibility": {
+    "rights": [
+      "RIGHT_GATEWAY_TRAFFIC_READ"
+    ]
+  },
+  "unique_id": "01HTMTWBVQ3XT7CZJVTZT6BDTK"
+}
+
+Downlink 2
+{
+  "name": "gs.down.send",
+  "time": "2024-04-04T15:15:49.136142907Z",
+  "identifiers": [
+    {
+      "gateway_ids": {
+        "gateway_id": "eui-ac1f09fffe08d721",
+        "eui": "AC1F09FFFE08D721"
+      }
+    }
+  ],
+  "data": {
+    "@type": "type.googleapis.com/ttn.lorawan.v3.DownlinkMessage",
+    "raw_payload": "YBvHCyYAAQD3yKyF",
+    "scheduled": {
+      "data_rate": {
+        "lora": {
+          "bandwidth": 125000,
+          "spreading_factor": 7,
+          "coding_rate": "4/5"
+        }
+      },
+      "frequency": "868300000",
+      "timestamp": 707570120,
+      "downlink": {
+        "tx_power": 16.15,
+        "invert_polarization": true
+      },
+      "concentrator_timestamp": "576233187784000"
+    },
+    "correlation_ids": [
+      "gs:uplink:01HTMTWBVQQZ5ECJDNE8AA5N3Z",
+      "ns:downlink:01HTMTWC8F5BXN0QVCTYAQF9B3",
+      "ns:transmission:01HTMTWC8F2QTQHHADXKGZRA17"
+    ]
+  },
+  "correlation_ids": [
+    "gs:uplink:01HTMTWBVQQZ5ECJDNE8AA5N3Z",
+    "ns:downlink:01HTMTWC8F5BXN0QVCTYAQF9B3",
+    "ns:transmission:01HTMTWC8F2QTQHHADXKGZRA17"
+  ],
+  "origin": "ip-10-100-4-113.eu-west-1.compute.internal",
+  "context": {
+    "tenant-id": "CgN0dG4="
+  },
+  "visibility": {
+    "rights": [
+      "RIGHT_GATEWAY_TRAFFIC_READ"
+    ]
+  },
+  "unique_id": "01HTMTWC8GZVVW0BCKZZAG35W1"
+}
+
+Application Server 
+
+uplink 1
+{
+  "name": "as.up.data.forward",
+  "time": "2024-04-04T15:15:21.980742974Z",
+  "identifiers": [
+    {
+      "device_ids": {
+        "device_id": "mumo-v2-000",
+        "application_ids": {
+          "application_id": "pascal-dev-sandbox"
+        },
+        "dev_eui": "0080E11505474C71",
+        "dev_addr": "260BC71B"
+      }
+    }
+  ],
+  "data": {
+    "@type": "type.googleapis.com/ttn.lorawan.v3.ApplicationUp",
+    "end_device_ids": {
+      "device_id": "mumo-v2-000",
+      "application_ids": {
+        "application_id": "pascal-dev-sandbox"
+      },
+      "dev_eui": "0080E11505474C71",
+      "dev_addr": "260BC71B"
+    },
+    "correlation_ids": [
+      "gs:uplink:01HTMTVHHE46HT95PW5VYWSC4Z"
+    ],
+    "received_at": "2024-04-04T15:15:21.978168931Z",
+    "uplink_message": {
+      "f_port": 8,
+      "f_cnt": 1,
+      "frm_payload": "AgGv+Uhksp1bQA==",
+      "decoded_payload": {
+        "battery": 3.43149995803833,
+        "version": 2
+      },
+      "rx_metadata": [
+        {
+          "gateway_ids": {
+            "gateway_id": "eui-ac1f09fffe08d721",
+            "eui": "AC1F09FFFE08D721"
+          },
+          "time": "2024-04-04T15:15:21.694844007Z",
+          "timestamp": 675610618,
+          "rssi": -53,
+          "channel_rssi": -53,
+          "snr": 11.75,
+          "location": {
+            "latitude": 51.212771197056746,
+            "longitude": 4.396121228692907,
+            "source": "SOURCE_REGISTRY"
+          },
+          "uplink_token": "CiIKIAoUZXVpLWFjMWYwOWZmZmUwOGQ3MjESCKwfCf/+CNchEPr/k8ICGgwIiYi7sAYQjKa48QIgkNGf7NSBgwE=",
+          "received_at": "2024-04-04T15:15:21.757722259Z"
+        }
+      ],
+      "settings": {
+        "data_rate": {
+          "lora": {
+            "bandwidth": 125000,
+            "spreading_factor": 7,
+            "coding_rate": "4/5"
+          }
+        },
+        "frequency": "868500000",
+        "timestamp": 675610618,
+        "time": "2024-04-04T15:15:21.694844007Z"
+      },
+      "received_at": "2024-04-04T15:15:21.775680816Z",
+      "consumed_airtime": "0.061696s",
+      "network_ids": {
+        "net_id": "000013",
+        "ns_id": "EC656E0000000181",
+        "tenant_id": "ttn",
+        "cluster_id": "eu1",
+        "cluster_address": "eu1.cloud.thethings.network"
+      }
+    }
+  },
+  "correlation_ids": [
+    "gs:uplink:01HTMTVHHE46HT95PW5VYWSC4Z"
+  ],
+  "origin": "ip-10-100-12-191.eu-west-1.compute.internal",
+  "context": {
+    "tenant-id": "CgN0dG4="
+  },
+  "visibility": {
+    "rights": [
+      "RIGHT_APPLICATION_TRAFFIC_READ"
+    ]
+  },
+  "unique_id": "01HTMTVHQW0B3JYWHKKJKHMW87"
+}
+
+Downlink 1
+{
+  "name": "ns.down.data.schedule.attempt",
+  "time": "2024-04-04T15:15:22.181062285Z",
+  "identifiers": [
+    {
+      "device_ids": {
+        "device_id": "mumo-v2-000",
+        "application_ids": {
+          "application_id": "pascal-dev-sandbox"
+        },
+        "dev_eui": "0080E11505474C71",
+        "dev_addr": "260BC71B"
+      }
+    }
+  ],
+  "data": {
+    "@type": "type.googleapis.com/ttn.lorawan.v3.DownlinkMessage",
+    "raw_payload": "YBvHCyYAAAAA0dSiNO3Fw9L4Nsbp+Q0HHxbF15OfHWEw25HeFJdJYGoRmIochSkSeJI=",
+    "payload": {
+      "m_hdr": {
+        "m_type": "UNCONFIRMED_DOWN"
+      },
+      "mic": "KRJ4kg==",
+      "mac_payload": {
+        "f_hdr": {
+          "dev_addr": "260BC71B",
+          "f_ctrl": {}
+        },
+        "frm_payload": "0dSiNO3Fw9L4Nsbp+Q0HHxbF15OfHWEw25HeFJdJYGoRmIochQ=="
+      }
+    },
+    "request": {
+      "downlink_paths": [
+        {
+          "uplink_token": "CiIKIAoUZXVpLWFjMWYwOWZmZmUwOGQ3MjESCKwfCf/+CNchEPr/k8ICGgwIiYi7sAYQjKa48QIgkNGf7NSBgwE="
+        }
+      ],
+      "rx1_delay": 1,
+      "rx1_data_rate": {
+        "lora": {
+          "bandwidth": 125000,
+          "spreading_factor": 7,
+          "coding_rate": "4/5"
+        }
+      },
+      "rx1_frequency": "868500000",
+      "rx2_data_rate": {
+        "lora": {
+          "bandwidth": 125000,
+          "spreading_factor": 12,
+          "coding_rate": "4/5"
+        }
+      },
+      "rx2_frequency": "869525000",
+      "priority": "HIGHEST",
+      "frequency_plan_id": "EU_863_870_TTN"
+    },
+    "correlation_ids": [
+      "gs:uplink:01HTMTVHHE46HT95PW5VYWSC4Z",
+      "ns:downlink:01HTMTVHY56B9CDENHD33CHS50",
+      "ns:transmission:01HTMTVHY5GVP3HWPW3Q8PYJ73"
+    ]
+  },
+  "correlation_ids": [
+    "gs:uplink:01HTMTVHHE46HT95PW5VYWSC4Z",
+    "ns:downlink:01HTMTVHY56B9CDENHD33CHS50",
+    "ns:transmission:01HTMTVHY5GVP3HWPW3Q8PYJ73"
+  ],
+  "origin": "ip-10-100-7-97.eu-west-1.compute.internal",
+  "context": {
+    "tenant-id": "CgN0dG4="
+  },
+  "visibility": {
+    "rights": [
+      "RIGHT_APPLICATION_TRAFFIC_READ"
+    ]
+  },
+  "unique_id": "01HTMTVHY5KGM4K11E45VCGXN7"
+}
+
+uplink 2
+{
+  "name": "as.up.data.forward",
+  "time": "2024-04-04T15:15:48.936385045Z",
+  "identifiers": [
+    {
+      "device_ids": {
+        "device_id": "mumo-v2-000",
+        "application_ids": {
+          "application_id": "pascal-dev-sandbox"
+        },
+        "dev_eui": "0080E11505474C71",
+        "dev_addr": "260BC71B"
+      }
+    }
+  ],
+  "data": {
+    "@type": "type.googleapis.com/ttn.lorawan.v3.ApplicationUp",
+    "end_device_ids": {
+      "device_id": "mumo-v2-000",
+      "application_ids": {
+        "application_id": "pascal-dev-sandbox"
+      },
+      "dev_eui": "0080E11505474C71",
+      "dev_addr": "260BC71B"
+    },
+    "correlation_ids": [
+      "gs:uplink:01HTMTWBVQQZ5ECJDNE8AA5N3Z"
+    ],
+    "received_at": "2024-04-04T15:15:48.931871648Z",
+    "uplink_message": {
+      "f_port": 8,
+      "f_cnt": 2,
+      "frm_payload": "AgGv+Uhksp1bQA==",
+      "decoded_payload": {
+        "battery": 3.43149995803833,
+        "version": 2
+      },
+      "rx_metadata": [
+        {
+          "gateway_ids": {
+            "gateway_id": "eui-ac1f09fffe08d721",
+            "eui": "AC1F09FFFE08D721"
+          },
+          "time": "2024-04-04T15:15:48.649568080Z",
+          "timestamp": 702570120,
+          "rssi": -53,
+          "channel_rssi": -53,
+          "snr": 14,
+          "location": {
+            "latitude": 51.212771197056746,
+            "longitude": 4.396121228692907,
+            "source": "SOURCE_REGISTRY"
+          },
+          "uplink_token": "CiIKIAoUZXVpLWFjMWYwOWZmZmUwOGQ3MjESCKwfCf/+CNchEIi9gc8CGgwIpIi7sAYQw7HK2gIgwIbFo7mCgwE=",
+          "received_at": "2024-04-04T15:15:48.709633472Z"
+        }
+      ],
+      "settings": {
+        "data_rate": {
+          "lora": {
+            "bandwidth": 125000,
+            "spreading_factor": 7,
+            "coding_rate": "4/5"
+          }
+        },
+        "frequency": "868300000",
+        "timestamp": 702570120,
+        "time": "2024-04-04T15:15:48.649568080Z"
+      },
+      "received_at": "2024-04-04T15:15:48.727679731Z",
+      "consumed_airtime": "0.077056s",
+      "network_ids": {
+        "net_id": "000013",
+        "ns_id": "EC656E0000000181",
+        "tenant_id": "ttn",
+        "cluster_id": "eu1",
+        "cluster_address": "eu1.cloud.thethings.network"
+      }
+    }
+  },
+  "correlation_ids": [
+    "gs:uplink:01HTMTWBVQQZ5ECJDNE8AA5N3Z"
+  ],
+  "origin": "ip-10-100-5-160.eu-west-1.compute.internal",
+  "context": {
+    "tenant-id": "CgN0dG4="
+  },
+  "visibility": {
+    "rights": [
+      "RIGHT_APPLICATION_TRAFFIC_READ"
+    ]
+  },
+  "unique_id": "01HTMTWC282Z7BMNA54736Q3AW"
+}
+
+downlink 2
+{
+  "name": "ns.down.data.schedule.attempt",
+  "time": "2024-04-04T15:15:49.135592391Z",
+  "identifiers": [
+    {
+      "device_ids": {
+        "device_id": "mumo-v2-000",
+        "application_ids": {
+          "application_id": "pascal-dev-sandbox"
+        },
+        "dev_eui": "0080E11505474C71",
+        "dev_addr": "260BC71B"
+      }
+    }
+  ],
+  "data": {
+    "@type": "type.googleapis.com/ttn.lorawan.v3.DownlinkMessage",
+    "raw_payload": "YBvHCyYAAQD3yKyF",
+    "payload": {
+      "m_hdr": {
+        "m_type": "UNCONFIRMED_DOWN"
+      },
+      "mic": "98ishQ==",
+      "mac_payload": {
+        "f_hdr": {
+          "dev_addr": "260BC71B",
+          "f_ctrl": {},
+          "f_cnt": 1
+        },
+        "full_f_cnt": 1
+      }
+    },
+    "request": {
+      "downlink_paths": [
+        {
+          "uplink_token": "CiIKIAoUZXVpLWFjMWYwOWZmZmUwOGQ3MjESCKwfCf/+CNchEIi9gc8CGgwIpIi7sAYQw7HK2gIgwIbFo7mCgwE="
+        }
+      ],
+      "rx1_delay": 5,
+      "rx1_data_rate": {
+        "lora": {
+          "bandwidth": 125000,
+          "spreading_factor": 7,
+          "coding_rate": "4/5"
+        }
+      },
+      "rx1_frequency": "868300000",
+      "rx2_data_rate": {
+        "lora": {
+          "bandwidth": 125000,
+          "spreading_factor": 9,
+          "coding_rate": "4/5"
+        }
+      },
+      "rx2_frequency": "869525000",
+      "priority": "HIGHEST",
+      "frequency_plan_id": "EU_863_870_TTN"
+    },
+    "correlation_ids": [
+      "gs:uplink:01HTMTWBVQQZ5ECJDNE8AA5N3Z",
+      "ns:downlink:01HTMTWC8F5BXN0QVCTYAQF9B3",
+      "ns:transmission:01HTMTWC8F2QTQHHADXKGZRA17"
+    ]
+  },
+  "correlation_ids": [
+    "gs:uplink:01HTMTWBVQQZ5ECJDNE8AA5N3Z",
+    "ns:downlink:01HTMTWC8F5BXN0QVCTYAQF9B3",
+    "ns:transmission:01HTMTWC8F2QTQHHADXKGZRA17"
+  ],
+  "origin": "ip-10-100-7-97.eu-west-1.compute.internal",
+  "context": {
+    "tenant-id": "CgN0dG4="
+  },
+  "visibility": {
+    "rights": [
+      "RIGHT_APPLICATION_TRAFFIC_READ"
+    ]
+  },
+  "unique_id": "01HTMTWC8FX6WRBZ6VZDV4ATZ4"
+}

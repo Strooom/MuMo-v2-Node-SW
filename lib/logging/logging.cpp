@@ -97,7 +97,7 @@ void logging::dump() {
     if (activeSources == 0) {
         logging::snprintf("  no active sources\n");
     } else {
-        logging::snprintf("  sources : ");
+        logging::snprintf("  sources      : ");
         for (uint32_t index = 0; index < 32; index++) {
             if ((activeSources & (0x01 << index)) != 0) {
                 logging::snprintf("%s ", toString(static_cast<source>(index)));
@@ -108,7 +108,7 @@ void logging::dump() {
     logging::snprintf("  destinations : ");
     for (uint32_t index = 0; index < 32; index++) {
         if ((activeDestinations & (0x01 << index)) != 0) {
-            logging::snprintf(" %s ", toString(static_cast<destination>(index)));
+            logging::snprintf("%s ", toString(static_cast<destination>(index)));
         }
     }
     logging::snprintf("\n");

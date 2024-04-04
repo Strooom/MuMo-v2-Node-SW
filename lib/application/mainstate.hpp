@@ -15,7 +15,8 @@ enum class mainState : uint32_t {
     storing,
     displaying, 
     networking,
-    sleeping
+    sleeping,
+    test
 };
 
 const char* toString(const mainState aState);

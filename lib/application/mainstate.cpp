@@ -32,6 +32,9 @@ const char *toString(mainState aState) {
         case mainState::sleeping:
             return "sleeping";
             break;
+        case mainState::test:
+            return "test";
+            break;
         default:
             return "unknown";
             break;

@@ -1,5 +1,9 @@
 # LoRaWAN layer TODO's
 
+io sending payloadEncodingVersion as a payload byte, we could use a port for that...
+
+* need a solution for units without config, state and channels in NVS -> restore doesn't restore proper data
+
 * need a solution for units on V0 firmware, with only devAdrr, networkKey and applicationKey in NVS : how to initialize the rest of the NVS
  - a 1-time firmware who does the migration <-- preferred : it can also dump the results to logging..
  

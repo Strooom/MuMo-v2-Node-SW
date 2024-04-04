@@ -33,8 +33,6 @@ mainState mainController::state{mainState::boot};
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
-    version::setIsVersion();
-    logging::initialize();
 
     if (nonVolatileStorage::isPresent()) {
         if (!settingsCollection::isInitialized()) {
@@ -71,12 +69,16 @@ void mainController::handleEvents() {
             } break;
 
             case applicationEvent::realTimeClockTick: {
-                if (state == mainState::idle) {
-                    sensorDeviceCollection::tick();
-                    goTo(mainState::measuring);
-                } else {
-                    logging::snprintf(logging::source::error, "RealTimeClockTick event received in state %s[%d] - Ignored\n", toString(state), static_cast<uint32_t>(state));
-                }
+                uint32_t testPayloadLength{10};
+                uint8_t testPayload[] = {2, 1, 175, 249, 72, 100, 178, 157, 91, 64};
+                LoRaWAN::sendUplink(8, testPayload, testPayloadLength);
+
+//                if (state == mainState::idle) {
+//                    // sensorDeviceCollection::tick();
+//                    // goTo(mainState::measuring);
+//                } else {
+//                    logging::snprintf(logging::source::error, "RealTimeClockTick event received in state %s[%d] - Ignored\n", toString(state), static_cast<uint32_t>(state));
+//                }
             } break;
 
             case applicationEvent::lowPowerTimerExpired:
@@ -125,7 +127,6 @@ void mainController::run() {
             break;
 
         case mainState::networking:
-            // LoRaWAN::run(); TODO : disabled while testing LoRaWAN networking
             if (LoRaWAN::isIdle()) {
                 if (display::isPresent()) {
                     goTo(mainState::displaying);
@@ -175,6 +176,9 @@ void mainController::run() {
             }
             break;
 
+        case mainState::test:
+            break;
+
         default:
             // Error : we are in an unknown state
             break;
@@ -182,6 +186,6 @@ void mainController::run() {
 }
 
 void mainController::goTo(mainState newState) {
-    logging::snprintf(logging::source::applicationEvents, "MainController stateChange : %s[%d] -> %s[%d]\n", toString(state), static_cast<uint32_t>(state), toString(newState), static_cast<uint32_t>(newState));
+    logging::snprintf(logging::source::applicationEvents, "MainController stateChange : %s[%u] -> %s[%u]\n", toString(state), static_cast<uint32_t>(state), toString(newState), static_cast<uint32_t>(newState));
     state = newState;
 }

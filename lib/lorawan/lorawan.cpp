@@ -25,8 +25,8 @@ aesKey LoRaWAN::applicationKey;
 aesKey LoRaWAN::networkKey;
 aesBlock LoRaWAN::K1;
 aesBlock LoRaWAN::K2;
-frameCount LoRaWAN::uplinkFrameCount;
-frameCount LoRaWAN::downlinkFrameCount;
+frameCount LoRaWAN::uplinkFrameCount(1);
+frameCount LoRaWAN::downlinkFrameCount(0);
 
 dataRates LoRaWAN::theDataRates;
 uint32_t LoRaWAN::currentDataRateIndex{0};
@@ -68,9 +68,9 @@ void LoRaWAN::initialize() {
     macOut.initialize();
     clearRawMessage();
     restoreConfig();
+    generateKeysK1K2();
     restoreState();
     restoreChannels();
-
     sx126x::initialize();
 }
 
@@ -479,7 +479,7 @@ bool LoRaWAN::isIdle() {
 }
 
 void LoRaWAN::handleEvents(applicationEvent theEvent) {
-    logging::snprintf(logging::source::lorawanEvents, "LoRaWAN event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(state), toString(state));
+    logging::snprintf(logging::source::lorawanEvents, "LoRaWAN event %s [%u] in state %s [%u] \n", toString(theEvent), static_cast<uint8_t>(theEvent), toString(state), static_cast<uint8_t>(state));
 
     switch (state) {
         default:
@@ -540,8 +540,8 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
         case txRxCycleState::waitForRx1CompleteOrTimeout:
             switch (theEvent) {
                 case applicationEvent::sx126xRxComplete: {
+                    logging::snprintf(logging::source::applicationEvents, "Received LoRaWAN  msg in Rx1\n");
                     messageType receivedMessageType = decodeMessage();
-                    logging::snprintf(logging::source::applicationEvents, "Received LoRaWAN  %s msg in Rx1\n", toString(receivedMessageType));
                     switch (receivedMessageType) {
                         case messageType::application:
                             stopTimer();
@@ -590,8 +590,8 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
         case txRxCycleState::waitForRx2CompleteOrTimeout:
             switch (theEvent) {
                 case applicationEvent::sx126xRxComplete: {
+                    logging::snprintf(logging::source::applicationEvents, "Received LoRaWAN  msg in Rx2\n");
                     messageType receivedMessageType = decodeMessage();
-                    logging::snprintf(logging::source::applicationEvents, "Received LoRaWAN  %s msg in Rx2\n", toString(receivedMessageType));
                     switch (receivedMessageType) {
                         case messageType::application:
                             processMacContents();
@@ -620,12 +620,12 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
             }
             break;
     }
-    logging::snprintf(logging::source::error, "Error : received event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(state), toString(state));
+    logging::snprintf(logging::source::error, "Error : received event %s [%u] in state %s [%u] \n", toString(theEvent), static_cast<uint8_t>(theEvent), toString(state), static_cast<uint8_t>(state));
     goTo(txRxCycleState::idle);
 }
 
 void LoRaWAN::goTo(txRxCycleState newState) {
-    logging::snprintf(logging::source::applicationEvents, "LoRaWAN stateChange from [%d / %s] to [%d / %s]\n", state, toString(state), newState, toString(newState));
+    logging::snprintf(logging::source::lorawanEvents, "LoRaWAN stateChange from %s [%u] to %s [%u]\n", toString(state), state, toString(newState), newState);
     // Tasks to do when leaving the current state
     switch (state) {
         case txRxCycleState::idle:
@@ -864,10 +864,11 @@ void LoRaWAN::processDutyCycleRequest() {
 
 void LoRaWAN::processReceiveParameterSetupRequest() {
     constexpr uint32_t receiveParameterSetupRequestLength{5};        // commandId, downLinkSettings, frequency[3]
-    uint8_t downLinkSettings = macIn[1];
-    uint32_t frequency       = (static_cast<uint32_t>(macIn[2]) + (static_cast<uint32_t>(macIn[3]) << 8) + (static_cast<uint32_t>(macIn[4]) << 16)) * 100;
+    rx1DataRateOffset = (macIn[1] & 0x70) >> 4;
+    rx2DataRateIndex  = macIn[1] & 0x0F;
+    rx2FrequencyInHz  = (static_cast<uint32_t>(macIn[2]) + (static_cast<uint32_t>(macIn[3]) << 8) + (static_cast<uint32_t>(macIn[4]) << 16)) * 100;
     macIn.consume(receiveParameterSetupRequestLength);
-    logging::snprintf(logging::source::lorawanMac, "ReceiveParameterSetupRequest : 0x%02X, %u \n", downLinkSettings, frequency);
+    logging::snprintf(logging::source::lorawanMac, "ReceiveParameterSetupRequest : rx1DataRateOffset = %u, rx2DataRateIndex = %u, rx2Frequency = %u Hz \n", rx1DataRateOffset, rx2DataRateIndex, rx2FrequencyInHz);
 
     constexpr uint32_t receiveParameterSetupAnswerLength{2};        // commandId, status
     uint8_t answer[receiveParameterSetupAnswerLength];
@@ -892,12 +893,19 @@ void LoRaWAN::processDeviceStatusRequest() {
 }
 
 void LoRaWAN::processNewChannelRequest() {
-    constexpr uint32_t newChannelRequestLength{6};                                                                                                                // 6 bytes : commandId, channelIndex, frequency[3], DRrange
-    uint32_t channelIndex    = macIn[1];                                                                                                                          //
-    uint32_t frequency       = (static_cast<uint32_t>(macIn[2]) + (static_cast<uint32_t>(macIn[3]) << 8) + (static_cast<uint32_t>(macIn[4]) << 16)) * 100;        //
-    uint32_t minimumDataRate = macIn[5] & 0x0F;                                                                                                                   //
-    uint32_t maximumDataRate = (macIn[5] & 0xF0) >> 4;
-    processNewChannelRequest(channelIndex, frequency, minimumDataRate, maximumDataRate);
+    constexpr uint32_t newChannelRequestLength{6};        // 6 bytes : commandId, channelIndex, frequency[3], DRrange
+    uint32_t channelIndex = macIn[1];                     //
+    if ((channelIndex >= 3) && (channelIndex <= 15)) {
+        txChannels.channel[channelIndex].frequencyInHz        = (static_cast<uint32_t>(macIn[2]) + (static_cast<uint32_t>(macIn[3]) << 8) + (static_cast<uint32_t>(macIn[4]) << 16)) * 100;
+        txChannels.channel[channelIndex].minimumDataRateIndex = macIn[5] & 0x0F;
+        txChannels.channel[channelIndex].maximumDataRateIndex = (macIn[5] & 0xF0) >> 4;
+        logging::snprintf(logging::source::lorawanMac, "NewChannelRequest for channel %u, frequency = %u, minimumDataRate = %u, maximumDataRate = %u \n", channelIndex, txChannels.channel[channelIndex].frequencyInHz, txChannels.channel[channelIndex].minimumDataRateIndex, txChannels.channel[channelIndex].maximumDataRateIndex);
+    } else {
+        logging::snprintf(logging::source::error, "NewChannelRequest for channel %u \n", channelIndex);
+        // channels 0..2 are always active and newChannelRequest should be ignored on them... L2 Spec 1.0.4 line 1135
+        // EU-868 only has 16 channels, 0..15
+    }
+
     macIn.consume(newChannelRequestLength);
 
     constexpr uint32_t newChannelAnswerLength{2};                                                     // 2 bytes : commandId, status
@@ -908,41 +916,24 @@ void LoRaWAN::processNewChannelRequest() {
     logging::snprintf(logging::source::lorawanMac, "NewChannelAnswer : 0x%02X \n", answer[1]);        //
 }
 
-void LoRaWAN::processNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate) {
-    if ((channelIndex < 3) || (channelIndex > 15)) {
-        logging::snprintf(logging::source::error, "NewChannelRequest for channel %u \n", channelIndex);
-        // channels 0..2 are always active and newChannelRequest should be ignored on them... L2 Spec 1.0.4 line 1135
-        // EU-868 only has 16 channels, 0..15
-        return;
-    }
-    logging::snprintf(logging::source::lorawanMac, "NewChannelRequest for channel %u, frequency = %u, minimumDataRate = %u, maximumDataRate = %u \n", channelIndex, frequency, minimumDataRate, maximumDataRate);
-    txChannels.channel[channelIndex].frequencyInHz        = frequency;        // NOTE : frequency of 0 deactivates channel..
-    txChannels.channel[channelIndex].minimumDataRateIndex = minimumDataRate;
-    txChannels.channel[channelIndex].maximumDataRateIndex = maximumDataRate;
-    // TODO : save the new channel info in the NVS
-}
-
 void LoRaWAN::processReceiveTimingSetupRequest() {
-    constexpr uint32_t receiveTimingSetupRequestLength{2};        // 2 bytes : commandId, delay
+    constexpr uint32_t receiveTimingSetupRequestLength{2};
     uint32_t receivedRx1Delay = macIn[1] & 0x0F;
-    processReceiveTimingSetupRequest(receivedRx1Delay);
+    if (receivedRx1Delay == 0) {
+        receivedRx1Delay = 1;        // a value of 0, also results in a delay of 1 second. Link Layer Spec V1.0.4, line 1237
+    }
+    rx1DelayInSeconds = receivedRx1Delay;
+    logging::snprintf(logging::source::lorawanMac, "ReceiveTimingSetupRequest : rx1Delay set to %u\n", rx1DelayInSeconds);        //
+    settingsCollection::save(rx1DelayInSeconds, settingsCollection::settingIndex::rx1Delay);
     macIn.consume(receiveTimingSetupRequestLength);
 
-    constexpr uint32_t receiveTimingSetupAnswerLength{1};        // 1 byte : commandId
+    constexpr uint32_t receiveTimingSetupAnswerLength{1};
     uint8_t answer[receiveTimingSetupAnswerLength];
     answer[0] = static_cast<uint8_t>(macCommand::receiveTimingSetupAnswer);
     macOut.append(answer, receiveTimingSetupAnswerLength);
     logging::snprintf(logging::source::lorawanMac, "ReceiveTimingSetupAnswer \n");
 }
 
-void LoRaWAN::processReceiveTimingSetupRequest(uint32_t receivedRx1Delay) {
-    if (receivedRx1Delay == 0) {
-        receivedRx1Delay = 1;        // a value of 0, also results in a delay of 1 second. Link Layer Spec V1.0.4, line 1237
-    }
-    logging::snprintf(logging::source::lorawanMac, "ReceiveTimingSetupRequest : rx1Delay changed from %u to %u\n", rx1DelayInSeconds, receivedRx1Delay);        //
-    rx1DelayInSeconds = receivedRx1Delay;
-    settingsCollection::save(rx1DelayInSeconds, settingsCollection::settingIndex::rx1Delay);
-}
 
 void LoRaWAN::processTransmitParameterSetupRequest() {
     // Not implemented in EU-868 Region : see Regional Parameters 1.0.3, line 334
@@ -1015,20 +1006,17 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
     sx126x::configForTransmit(csf, txFrequency, rawMessage + macHeaderOffset, loRaPayloadLength);
 
     if (logging::isActive(logging::source::lorawanMac)) {
-        logging::snprintf("Scheduled Uplink : channel = %u, frequency = %u, dataRate = %u, framePayloadLength = %u, frameOptionsLength = %u\n", txChannels.getCurrentChannelIndex(), txFrequency, currentDataRateIndex, framePayloadLength, frameOptionsLength);
-        logging::snprintf("  LoRa msg = ");
-        for (uint8_t i = 0; i < loRaPayloadLength; i++) {
-            logging::snprintf("%02X ", rawMessage[i + b0BlockLength]);
-        }
-        logging::snprintf("\n");
+        dumpTransmitSettings();
+        dumpRawMessage();
     }
 
     goTo(txRxCycleState::waitForRandomTimeBeforeTransmit);
 
     // 3. txRxCycle is started..
-    uplinkFrameCount++;        //
-    // TODO nonVolatileStorage::write(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), uplinkFrameCount.asUint32);        // TODO : update the setting/context and let the NVS do things under the hood
-    removeNonStickyMacStuff();        //
+    uplinkFrameCount++;
+    settingsCollection::save(uplinkFrameCount.toUint32(), settingsCollection::settingIndex::uplinkFrameCounter);
+    settingsCollection::save(downlinkFrameCount.toUint32(), settingsCollection::settingIndex::downlinkFrameCounter);
+    removeNonStickyMacStuff();
 }
 
 void LoRaWAN::getReceivedDownlinkMessage() {
@@ -1041,17 +1029,9 @@ messageType LoRaWAN::decodeMessage() {
     uint8_t response[2];
     sx126x::executeGetCommand(sx126x::command::getRxBufferStatus, response, 2);
     loRaPayloadLength = response[0];
-    sx126x::readBuffer(rawMessage + b0BlockLength, loRaPayloadLength);        // This reads the full LoRaWAN payload into rawMessage buffer, at an offset so the B0 block still fits in front
+    sx126x::readBuffer(rawMessage + b0BlockLength, loRaPayloadLength);
     setOffsetsAndLengthsRx(loRaPayloadLength);
-
-    if (logging::isActive(logging::source::lorawanMac)) {
-        logging::snprintf("Received Downlink : framePayloadLength = %u, frameOptionsLength = %u\n", framePayloadLength, frameOptionsLength);
-        logging::snprintf("  LoRa msg = ");
-        for (uint8_t i = 0; i < loRaPayloadLength; i++) {
-            logging::snprintf("%02X ", rawMessage[i + b0BlockLength]);
-        }
-        logging::snprintf("\n");
-    }
+    dumpRawMessage();
 
     // 2. Extract & guess the downLinkFrameCount, as we need this to check the MIC
     uint16_t receivedDownlinkFramecount = receivedFramecount();
@@ -1090,7 +1070,7 @@ messageType LoRaWAN::decodeMessage() {
 
     // 6. Seems a valid message, so update the downlinkFrameCount to what we've received (not just incrementing it, as there could be gaps in the sequence due to lost packets)
     downlinkFrameCount = guessedDownlinkFramecount;
-    // nonVolatileStorage::write(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), downlinkFrameCount.asUint32); TODO : reactivate
+    settingsCollection::save(downlinkFrameCount.toUint32(), settingsCollection::settingIndex::downlinkFrameCounter);
 
     // 6.5 If we had sticky macOut stuff, we can clear that now, as we did receive a valid downlink
     macOut.initialize();
@@ -1098,7 +1078,6 @@ messageType LoRaWAN::decodeMessage() {
     // 7. If we have MAC stuff in the frameOptions, extract them
     if (frameOptionsLength > 0) {
         macIn.append(rawMessage + frameOptionsOffset, frameOptionsLength);
-        // TODO : we could remember this with a flag, because the combination of MAC stuff in frameOptions and in framePayload (with framePort == 0) is not allowed
     }
 
     // 8. If there is any framePayload, decrypt if
@@ -1106,12 +1085,15 @@ messageType LoRaWAN::decodeMessage() {
         if (rawMessage[framePortOffset] == 0) {
             encryptDecryptPayload(networkKey, linkDirection::downlink);
             macIn.append(rawMessage + framePayloadOffset, framePayloadLength);
+            dumpRawMessage();
             return messageType::lorawanMac;
         } else {
             encryptDecryptPayload(applicationKey, linkDirection::downlink);
+            dumpRawMessage();
             return messageType::application;
         }
     } else {
+        dumpRawMessage();
         return messageType::lorawanMac;
     }
 }
@@ -1187,12 +1169,12 @@ void LoRaWAN::dumpConfig() {
         return;
     }
     logging::snprintf("LoRaWAN Config :\n");
-    logging::snprintf("  devAddr = %04X\n", DevAddr.asUint32);
+    logging::snprintf("  devAddr        = %04X\n", DevAddr.asUint32);
     char tmpKeyAsHexAscii[33];
     hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, applicationKey.asBytes(), 16);
     logging::snprintf("  applicationKey = %s\n", tmpKeyAsHexAscii);
     hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, networkKey.asBytes(), 16);
-    logging::snprintf("  networkKey = %s\n", tmpKeyAsHexAscii);
+    logging::snprintf("  networkKey     = %s\n", tmpKeyAsHexAscii);
 }
 
 void LoRaWAN::dumpState() {
@@ -1200,10 +1182,10 @@ void LoRaWAN::dumpState() {
         return;
     }
     logging::snprintf("LoRaWAN State :\n");
-    logging::snprintf("  uplinkFrameCount = %u\n", uplinkFrameCount.toUint32());
+    logging::snprintf("  uplinkFrameCount   = %u\n", uplinkFrameCount.toUint32());
     logging::snprintf("  downlinkFrameCount = %u\n", downlinkFrameCount.toUint32());
-    logging::snprintf("  dataRateIndex = %u\n", currentDataRateIndex);
-    logging::snprintf("  rx1Delay = %u [s]\n", rx1DelayInSeconds);
+    logging::snprintf("  dataRateIndex      = %u\n", currentDataRateIndex);
+    logging::snprintf("  rx1Delay           = %u [s]\n", rx1DelayInSeconds);
 }
 
 void LoRaWAN::dumpChannels() {
@@ -1212,9 +1194,9 @@ void LoRaWAN::dumpChannels() {
     }
     logging::snprintf("LoRaWAN Channels :\n");
     for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
-        logging::snprintf("  Tx channel[%u] : frequency = %u [Hz], minDR = %u, maxDR = %u\n", channelIndex, txChannels.channel[channelIndex].frequencyInHz, txChannels.channel[channelIndex].minimumDataRateIndex, txChannels.channel[channelIndex].maximumDataRateIndex);
+        logging::snprintf("  Tx channel[%02u] : frequency = %09u [Hz], minDR = %u, maxDR = %u\n", channelIndex, txChannels.channel[channelIndex].frequencyInHz, txChannels.channel[channelIndex].minimumDataRateIndex, txChannels.channel[channelIndex].maximumDataRateIndex);
     }
-    logging::snprintf("  Rx2 channel : frequency = %u [Hz], rx1DROffset = %u, rx2DR = %u\n", rx2FrequencyInHz, rx1DataRateOffset, rx2DataRateIndex);
+    logging::snprintf("  Rx2 channel    : frequency = %09u [Hz], rx1DROffset = %u, rx2DR = %u\n", rx2FrequencyInHz, rx1DataRateOffset, rx2DataRateIndex);
 }
 
 void LoRaWAN::dumpRawMessage() {
@@ -1223,10 +1205,10 @@ void LoRaWAN::dumpRawMessage() {
     }
     dumpRawMessageHeader();
     if (framePortLength > 0) {
-        logging::snprintf("[x] : FramePort %02x\n", rawMessage[framePortOffset]);
+        logging::snprintf("[%03u]      : FramePort %02X\n", (framePortOffset - macHeaderOffset), rawMessage[framePortOffset]);
     }
     dumpRawMessagePayload();
-    logging::snprintf("[%d..%d] : MIC %02X %02X %02X %02X ", micOffset, micOffset + 4, rawMessage[micOffset], rawMessage[micOffset + 1], rawMessage[micOffset + 2], rawMessage[micOffset + 3]);
+    logging::snprintf("[%03u..%03u] : MIC %02X %02X %02X %02X\n\n", (micOffset - macHeaderOffset), (micOffset - macHeaderOffset + 4), rawMessage[micOffset], rawMessage[micOffset + 1], rawMessage[micOffset + 2], rawMessage[micOffset + 3]);
 }
 
 void LoRaWAN::dumpRawMessageHeader() {
@@ -1234,19 +1216,12 @@ void LoRaWAN::dumpRawMessageHeader() {
         return;
     }
     logging::snprintf("LoRaWAN msg :\n");
-    logging::snprintf("[0]    : MacHeader %02x \n", rawMessage[macHeaderOffset]);
-    logging::snprintf("[1..4] : DevAddr %02x %02x %02x %02x\n", rawMessage[deviceAddressOffset], rawMessage[deviceAddressOffset + 1], rawMessage[deviceAddressOffset + 2], rawMessage[deviceAddressOffset + 3]);
-    logging::snprintf("[5]    : FCtrl %02x\n", rawMessage[frameControlOffset]);
-    logging::snprintf("[6..7] : FCnt %02x %02x\n", rawMessage[frameCountOffset], rawMessage[frameCountOffset + 1]);
-    dumpRawMessageFrameOptions();
-}
-
-void LoRaWAN::dumpRawMessageFrameOptions() {
-    if (!logging::isActive() || !logging::isActive(logging::source::lorawanData)) {
-        return;
-    }
+    logging::snprintf("[000]      : MacHeader %02X \n", rawMessage[macHeaderOffset]);
+    logging::snprintf("[001..004] : DevAddr %02X %02X %02X %02X\n", rawMessage[deviceAddressOffset], rawMessage[deviceAddressOffset + 1], rawMessage[deviceAddressOffset + 2], rawMessage[deviceAddressOffset + 3]);
+    logging::snprintf("[005]      : FCtrl %02X\n", rawMessage[frameControlOffset]);
+    logging::snprintf("[006..007] : FCnt %02X %02X\n", rawMessage[frameCountOffset], rawMessage[frameCountOffset + 1]);
     if (frameOptionsLength > 0) {
-        logging::snprintf("[8..%d] : FrameOptions ", 8 + frameOptionsLength);
+        logging::snprintf("[008..%03u] : FrameOptions ", 8 + frameOptionsLength);
         for (uint8_t i = 0; i < frameOptionsLength; i++) {
             logging::snprintf("%02X ", rawMessage[frameOptionsOffset + i]);
         }
@@ -1259,12 +1234,26 @@ void LoRaWAN::dumpRawMessagePayload() {
         return;
     }
     if (framePayloadLength > 0) {
-        logging::snprintf("[%d..%d] : FramePayload ", framePayloadOffset, framePayloadOffset + framePayloadLength);
+        logging::snprintf("[%03u..%03u] : FramePayload[%u]  ", (framePayloadOffset - macHeaderOffset), (framePayloadOffset + framePayloadLength - macHeaderOffset), framePayloadLength);
         for (uint8_t i = 0; i < framePayloadLength; i++) {
             logging::snprintf("%02X ", rawMessage[framePayloadOffset + i]);
         }
-        logging::snprintf("\n");
+        logging::snprintf("\n\n");
     }
+}
+
+void LoRaWAN::dumpTransmitSettings() {
+    if (!logging::isActive() || !logging::isActive(logging::source::lorawanData)) {
+        return;
+    }
+
+    uint32_t txFrequency = txChannels.channel[txChannels.getCurrentChannelIndex()].frequencyInHz;
+    spreadingFactor csf  = theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor;
+    logging::snprintf("Uplink :\n");
+    logging::snprintf("  dataRate = %u\n", currentDataRateIndex);
+    logging::snprintf("  spreadingFactor = %s\n", toString(csf));
+    logging::snprintf("  channel = %u\n", txChannels.getCurrentChannelIndex());
+    logging::snprintf("  frequency = %u\n\n", txFrequency);
 }
 
 void LoRaWAN::dumpLinkCheckAnswer() {}
@@ -1279,3 +1268,12 @@ void LoRaWAN::dumpReceiveTimingSetupRequest(uint32_t rx1Delay) {}
 void LoRaWAN::dumpTransmitParameterSetupRequest() {}
 void LoRaWAN::dumpDownlinkChannelRequest() {}
 void LoRaWAN::dumpDeviceTimeAnswer() {}
+
+// if (logging::isActive(logging::source::lorawanMac)) {
+//     logging::snprintf("Received Downlink : framePayloadLength = %u, frameOptionsLength = %u\n", framePayloadLength, frameOptionsLength);
+//     logging::snprintf("  LoRa msg = ");
+//     for (uint8_t i = 0; i < loRaPayloadLength; i++) {
+//         logging::snprintf("%02X ", rawMessage[i + b0BlockLength]);
+//     }
+//     logging::snprintf("\n");
+// }

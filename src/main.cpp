@@ -140,10 +140,14 @@ int main(void) {
     /* USER CODE BEGIN 2 */
     gpio ::enableGpio(gpio::group::uart1);
     HAL_Delay(3000);
+    version::setIsVersion();
+    logging::initialize();
     mainController ::initialize();
-    logging::enable(logging::destination::uart1);
+    // logging::enable(logging::destination::uart1);
     logging::enable(logging::source::lorawanData);
     logging::enable(logging::source::lorawanMac);
+    logging::enable(logging::source::lorawanEvents);
+    logging::disable(logging::source::applicationEvents);
 
     logging::snprintf("MuMo v2 - %s\n", version::getIsVersionAsString());
     logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
@@ -172,11 +176,11 @@ int main(void) {
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
+
     while (1) {
         mainController ::handleEvents();
         mainController ::run();
         /* USER CODE END WHILE */
-
         /* USER CODE BEGIN 3 */
     }
     /* USER CODE END 3 */
@@ -625,3 +629,15 @@ void assert_failed(uint8_t *file, uint32_t line) {
     /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
+void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    applicationEventBuffer.push(applicationEvent::sx126xTxComplete);
+}
+
+void HAL_SUBGHZ_RxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    applicationEventBuffer.push(applicationEvent::sx126xRxComplete);
+}
+
+void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    applicationEventBuffer.push(applicationEvent::sx126xTimeout);
+}

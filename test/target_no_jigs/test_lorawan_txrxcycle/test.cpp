@@ -10,6 +10,7 @@
 #include <stm32wlxx_hal_msp.c>
 #include <stm32wlxx_it.cpp>
 #include <logging.hpp>
+#include <gpio.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 static constexpr uint32_t applicationDataLength{16};
@@ -22,7 +23,7 @@ void tearDown(void) {}
 void custom_handle_events() {
     while (applicationEventBuffer.hasEvents()) {
         applicationEvent theEvent = applicationEventBuffer.pop();
-        logging::snprintf(logging::source::applicationEvents, "Application event : %s[%u]\n", toString(theEvent), static_cast<uint8_t>(theEvent));
+        logging::snprintf(logging::source::applicationEvents, "Application event : %s [%u]\n", toString(theEvent), static_cast<uint8_t>(theEvent));
         switch (theEvent) {
             case applicationEvent::lowPowerTimerExpired:
             case applicationEvent::sx126xTxComplete:
@@ -101,7 +102,7 @@ int main(int argc, char** argv) {
     gpio::enableGpio(gpio::group::other);
     LoRaWAN::initialize();
     LoRaWAN::generateKeysK1K2();
-    LoRaWAN::currentDataRateIndex = 4;
+    LoRaWAN::currentDataRateIndex = 5;
     LoRaWAN::uplinkFrameCount     = 2;
 
     UNITY_BEGIN();
