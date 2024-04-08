@@ -149,7 +149,7 @@ int main(void) {
     logging::enable(logging::source::lorawanEvents);
     logging::disable(logging::source::applicationEvents);
 
-    logging::snprintf("MuMo v2 - %s\n", version::getIsVersionAsString());
+    logging::snprintf("https://github.com/Strooom - %s\n", version::getIsVersionAsString());
     logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
     logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
 

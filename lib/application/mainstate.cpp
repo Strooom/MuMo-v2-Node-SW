@@ -1,5 +1,4 @@
 // ######################################################################################
-// ### MuMo node : https://github.com/Strooom/MuMo-v2-Node-SW                         ###
 // ### Author : Pascal Roobrouck - https://github.com/Strooom                         ###
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
@@ -8,8 +7,14 @@
 
 const char *toString(mainState aState) {
     switch (aState) {
-        case mainState::boot:
+        case mainState::boot: 
             return "boot";
+            break;
+        case mainState::waitingForNetwork:
+            return "waitingForNetwork";
+            break;
+        case mainState::waitingForTime:
+            return "waitingForTime";
             break;
         case mainState::idle:
             return "idle";

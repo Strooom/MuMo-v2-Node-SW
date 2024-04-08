@@ -3,17 +3,17 @@
 
 const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::numberOfSettings)] = {
     // Important note : make sure that none of the settings are mapped into two pages of 128 Bytes, as the page-write of the EEPROM is limited to 128 Byte pages and the address will wrap around to the beginning of the page if addressing more than 128 Bytes. A unit test will check this
+
     {0, 1},               // nvsMapVersion : 1 byte
-    {1, 1},               // displayVersion : 1 byte
-    {2, 1},               // batteryVersion : 1 byte
-    {3, 4},               // activelogging::sources : 4 bytes
-    {7, 121},             // unusedGeneral : extra settings can be inserted hereafter
-                          //
-    {128, 4},             // measurementWriteIndex : 32 bits
-    {132, 4},             // oldestUnsentMeasurementIndex : 32 bits
-    {136, 4},             // oldestUnconfirmedMeasurementindex : 32 bits
-    {140, 116},           // unusedMeasurementDataManagement : extra settings can be inserted hereafter for a maximum of 116 bytes
-                          //
+    {1, 1},               // displayType : 1 byte
+    {2, 1},               // batteryType : 1 byte
+    {3, 1},               // eepromType : 1 byte
+    {4, 60},              // unusedGeneral : extra hardware settings can be inserted hereafter
+    {64, 4},              // activelogging::sources : 4 bytes
+    {68, 60},             // unusedGeneral : extra settings can be inserted hereafter
+
+    {128, 128},           // unusedMeasurements : 128 bytes
+
     {256, 8},             // DevEUI : 64 bits
     {264, 4},             // DevAddr : 32 bits
     {268, 4},             // uplinkFrameCounter : 32 bits
@@ -25,6 +25,7 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     {310, 1},             // rx1DataRateOffset : 1 byte
     {311, 1},             // rx2DataRateIndex : 1 byte
     {312, 72},            // unusedLoRaWAN : extra settings can be inserted herea
+
     {384, 16 * 6},        // 16 Tx channels : 6 bytes / channel [frequency, minDR, maxDR]
     {480, 6},             // Rx channel : [frequency, rx1DataRateOffset, rx2DataRateIndex]
     {486, 26},            // unusedLoRaWAN : extra settings can be inserted hereafter
@@ -39,11 +40,6 @@ bool settingsCollection::isInitialized() {
 
 void settingsCollection::initializeOnce() {
     save<uint8_t>(0x01, settingsCollection::settingIndex::nvsMapVersion);
-
-    save<uint32_t>(0, settingsCollection::settingIndex::measurementWriteIndex);
-    save<uint32_t>(0, settingsCollection::settingIndex::oldestUnsentMeasurementIndex);
-    save<uint32_t>(0, settingsCollection::settingIndex::oldestUnconfirmedMeasurementindex);
-    save<uint32_t>(0, settingsCollection::settingIndex::unusedMeasurementDataManagement);
 
     save<uint32_t>(0, settingsCollection::settingIndex::DevAddr);
     save<uint32_t>(0, settingsCollection::settingIndex::uplinkFrameCounter);
@@ -85,7 +81,7 @@ void settingsCollection::readByteArray(uint8_t* dataOut, settingIndex theIndex) 
 //             logging::snprintf("%d : nvsMapVersion = %d", settings[static_cast<uint32_t>(settingIndex::nvsMapVersion)].startAddress, settingsCollectionVersion);
 //             break;
 //     }
-//     logging::snprintf("%d : displayVersion = %d", settings[static_cast<uint32_t>(settingIndex::displayVersion)].startAddress, read<uint8_t>(settingIndex::displayVersion));
-//     logging::snprintf("%d : batteryVersion = %d", settings[static_cast<uint32_t>(settingIndex::batteryVersion)].startAddress, read<uint8_t>(settingIndex::batteryVersion));
+//     logging::snprintf("%d : displayType = %d", settings[static_cast<uint32_t>(settingIndex::displayType)].startAddress, read<uint8_t>(settingIndex::displayType));
+//     logging::snprintf("%d : batteryType = %d", settings[static_cast<uint32_t>(settingIndex::batteryType)].startAddress, read<uint8_t>(settingIndex::batteryType));
 //     logging::snprintf("%d : activeLoggingSources = %d", settings[static_cast<uint32_t>(settingIndex::activeLoggingSources)].startAddress, read<uint32_t>(settingIndex::activeLoggingSources));
 // }

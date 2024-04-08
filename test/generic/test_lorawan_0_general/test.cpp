@@ -39,7 +39,7 @@ void test_initialize_state() {
     TEST_ASSERT_EQUAL(1, LoRaWAN::uplinkFrameCount.asUint32);
     TEST_ASSERT_EQUAL(0, LoRaWAN::downlinkFrameCount.asUint32);
     TEST_ASSERT_EQUAL(0, LoRaWAN::currentDataRateIndex);
-    TEST_ASSERT_EQUAL(0, LoRaWAN::rx2DataRateIndex);
+    TEST_ASSERT_EQUAL(3, LoRaWAN::rx2DataRateIndex);
     TEST_ASSERT_EQUAL(0, LoRaWAN::rx1DataRateOffset);
 }
 
@@ -57,17 +57,14 @@ void test_initialize_channels() {
 }
 
 void test_save_restore_config() {
-    LoRaWAN::rx1DelayInSeconds = 0x05;
-    LoRaWAN::DevAddr           = 0x1234;
+    LoRaWAN::DevAddr = 0x1234;
     LoRaWAN::applicationKey.setFromHexString("000102030405060708090A0B0C0D0E0F");
     LoRaWAN::networkKey.setFromHexString("101112131415161718191A1B1C1D1E1F");
     LoRaWAN::saveConfig();
-    LoRaWAN::rx1DelayInSeconds = 0x0;
-    LoRaWAN::DevAddr           = 0x0;
+    LoRaWAN::DevAddr = 0x0;
     LoRaWAN::applicationKey.setFromHexString("00000000000000000000000000000000");
     LoRaWAN::networkKey.setFromHexString("00000000000000000000000000000000");
     LoRaWAN::restoreConfig();
-    TEST_ASSERT_EQUAL(0x05, LoRaWAN::rx1DelayInSeconds);
     TEST_ASSERT_EQUAL(0x1234, LoRaWAN::DevAddr.asUint32);
     char tmpKeyAsHexString[33];
     hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::applicationKey.asBytes(), 16);
@@ -77,18 +74,21 @@ void test_save_restore_config() {
 }
 
 void test_save_restore_state() {
+    LoRaWAN::rx1DelayInSeconds    = 0x05;
     LoRaWAN::uplinkFrameCount     = 0x1234;
     LoRaWAN::downlinkFrameCount   = 0x5678;
     LoRaWAN::currentDataRateIndex = 0x02;
     LoRaWAN::rx2DataRateIndex     = 0x03;
     LoRaWAN::rx1DataRateOffset    = 0x04;
     LoRaWAN::saveState();
+    LoRaWAN::rx1DelayInSeconds    = 0x0;
     LoRaWAN::uplinkFrameCount     = 0;
     LoRaWAN::downlinkFrameCount   = 0;
     LoRaWAN::currentDataRateIndex = 0;
     LoRaWAN::rx2DataRateIndex     = 0;
     LoRaWAN::rx1DataRateOffset    = 0;
     LoRaWAN::restoreState();
+    TEST_ASSERT_EQUAL(0x05, LoRaWAN::rx1DelayInSeconds);
     TEST_ASSERT_EQUAL(0x1234, LoRaWAN::uplinkFrameCount.asUint32);
     TEST_ASSERT_EQUAL(0x5678, LoRaWAN::downlinkFrameCount.asUint32);
     TEST_ASSERT_EQUAL(0x02, LoRaWAN::currentDataRateIndex);

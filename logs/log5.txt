@@ -1,4 +1,3 @@
-MuMo v2 - Boot
 LoRaWAN Settings :
 - devAddr = 260BAE51
 - applicationKey = 08D87B4F0EC1585F7946544570F3BFB4

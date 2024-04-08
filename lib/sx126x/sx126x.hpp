@@ -1,6 +1,4 @@
 // #############################################################################
-// ### This file is part of the source code for the MuMo project             ###
-// ### https://github.com/Strooom/MuMo-v2-Node-SW                            ###
 // ### Author(s) : Pascal Roobrouck - @strooom                               ###
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
@@ -36,7 +34,6 @@ class sx126x {
     static constexpr uint32_t transmitTimeout{64000U};
     static void startTransmit(uint32_t timeOut = transmitTimeout);
     static void startReceive(uint32_t timeOut);
-
 
 #ifndef unitTesting
 
@@ -159,6 +156,8 @@ class sx126x {
     static void setTxParameters(int8_t transmitPowerdBm);
     static void setRegulatorMode();
     static void setRfSwitch(rfSwitchState newState);
+
+    static float getPacketSnr();
 
     static uint32_t calculateFrequencyRegisterValue(uint32_t rfFrequency);
 

@@ -1,0 +1,138 @@
+local development build - 2024-Apr-04 14:00:28
+Creative Commons 4.0 - BY-NC-SA
+Device UID: 0080E11505474C71
+logging : 
+  sources      : sensorData lorawanEvents lorawanData lorawanMac error criticalError 
+  destinations : debugProbe 
+LoRaWAN Config :
+  devAddr        = 260BC71B
+  applicationKey = ECF61A5B18BFBF81EF4FA7DBA764CE8B
+  networkKey     = 34CE07A8DDE81F4C29A0AED7B4F1D7BB
+LoRaWAN State :
+  uplinkFrameCount   = 1
+  downlinkFrameCount = 0
+  dataRateIndex      = 5
+  rx1Delay           = 1 [s]
+LoRaWAN Channels :
+  Tx channel[00] : frequency = 868100000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[01] : frequency = 868300000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[02] : frequency = 868500000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[03] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[04] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[05] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[06] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[07] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[08] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[09] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[10] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[11] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[12] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[13] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[14] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Tx channel[15] : frequency = 000000000 [Hz], minDR = 0, maxDR = 5
+  Rx2 channel    : frequency = 869525000 [Hz], rx1DROffset = 0, rx2DR = 3
+Uplink :
+  dataRate = 5
+  spreadingFactor = SF7
+  channel = 0
+  frequency = 868100000
+
+LoRaWAN msg :
+[000]      : MacHeader 40 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 01 00
+[008]      : FramePort 08
+[009..019] : FramePayload[10]  25 D7 E7 F9 3A F5 42 86 0C C7 
+
+[019..023] : MIC 96 13 D4 C4
+
+LoRaWAN stateChange from idle [0] to waitForRandomTimeBeforeTransmit [2]
+LoRaWAN event lowPower Timer Expired [4] in state waitForRandomTimeBeforeTransmit [2] 
+LoRaWAN stateChange from waitForRandomTimeBeforeTransmit [2] to waitForTxComplete [3]
+LoRaWAN event sx126x Tx Complete [8] in state waitForTxComplete [3] 
+LoRaWAN stateChange from waitForTxComplete [3] to waitForRx1Start [4]
+LoRaWAN event lowPower Timer Expired [4] in state waitForRx1Start [4] 
+LoRaWAN stateChange from waitForRx1Start [4] to waitForRx1CompleteOrTimeout [5]
+LoRaWAN event sx126x Rx Complete [9] in state waitForRx1CompleteOrTimeout [5] 
+LoRaWAN msg :
+[000]      : MacHeader 60 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 00 00
+[008]      : FramePort 00
+[009..046] : FramePayload[37]  D1 D4 A2 34 ED C5 C3 D2 F8 36 C6 E9 F9 0D 07 1F 16 C5 D7 93 9F 1D 61 30 DB 91 DE 14 97 49 60 6A 11 98 8A 1C 85 
+
+[046..050] : MIC 29 12 78 92
+
+receivedFramecount = 0, lastFramecount = 0, guessedFramecount = 0
+LoRaWAN msg :
+[000]      : MacHeader 60 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 00 00
+[008]      : FramePort 00
+[009..046] : FramePayload[37]  05 03 D2 AD 84 07 03 18 4F 84 50 07 04 E8 56 84 50 07 05 B8 5E 84 50 07 06 88 66 84 50 07 07 58 6E 84 50 08 05 
+
+[046..050] : MIC 00 DC 45 39
+
+MAC input [37] = 05 03 D2 AD 84 07 03 18 4F 84 50 07 04 E8 56 84 50 07 05 B8 5E 84 50 07 06 88 66 84 50 07 07 58 6E 84 50 08 05 
+ReceiveParameterSetupRequest : rx1DataRateOffset = 0, rx2DataRateIndex = 3, rx2Frequency = 869525000 Hz 
+ReceiveParameterSetupAnswer : 0x07 
+NewChannelRequest for channel 3, frequency = 867100000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+NewChannelRequest for channel 4, frequency = 867300000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+NewChannelRequest for channel 5, frequency = 867500000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+NewChannelRequest for channel 6, frequency = 867700000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+NewChannelRequest for channel 7, frequency = 867900000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+ReceiveTimingSetupRequest : rx1Delay set to 5
+ReceiveTimingSetupAnswer 
+MAC output [13] = 05 07 07 03 07 03 07 03 07 03 07 03 08 
+LoRaWAN stateChange from waitForRx1CompleteOrTimeout [5] to idle [0]
+Uplink :
+  dataRate = 5
+  spreadingFactor = SF7
+  channel = 3
+  frequency = 867100000
+
+LoRaWAN msg :
+[000]      : MacHeader 40 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 0D
+[006..007] : FCnt 02 00
+[008..021] : FrameOptions 05 07 07 03 07 03 07 03 07 03 07 03 08 
+[021]      : FramePort 08
+[022..032] : FramePayload[10]  D2 A2 2B 51 09 A0 C0 E7 18 80 
+
+[032..036] : MIC 4C BE 7D 4D
+
+LoRaWAN stateChange from idle [0] to waitForRandomTimeBeforeTransmit [2]
+LoRaWAN event lowPower Timer Expired [4] in state waitForRandomTimeBeforeTransmit [2] 
+LoRaWAN stateChange from waitForRandomTimeBeforeTransmit [2] to waitForTxComplete [3]
+LoRaWAN event sx126x Tx Complete [8] in state waitForTxComplete [3] 
+LoRaWAN stateChange from waitForTxComplete [3] to waitForRx1Start [4]
+LoRaWAN event lowPower Timer Expired [4] in state waitForRx1Start [4] 
+LoRaWAN stateChange from waitForRx1Start [4] to waitForRx1CompleteOrTimeout [5]
+LoRaWAN event sx126x Rx Complete [9] in state waitForRx1CompleteOrTimeout [5] 
+LoRaWAN msg :
+[000]      : MacHeader 60 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 01 00
+[008..012] : MIC F7 C8 AC 85
+
+receivedFramecount = 1, lastFramecount = 0, guessedFramecount = 1
+LoRaWAN msg :
+[000]      : MacHeader 60 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 01 00
+[008..012] : MIC 80 00 00 00
+
+MAC input [0] = 
+MAC output [0] = 
+LoRaWAN stateChange from waitForRx1CompleteOrTimeout [5] to idle [0]

@@ -1,5 +1,4 @@
 MainController stateChange : boot[0] -> test[8]
-MuMo v2 - v0.1.23
 local development build - 2024-Apr-04 14:00:28
 Creative Commons 4.0 - BY-NC-SA
 Device UID: 0080E11505474C71

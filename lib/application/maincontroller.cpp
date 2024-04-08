@@ -47,7 +47,7 @@ void mainController::initialize() {
     gpio::enableGpio(gpio::group::rfControl);
 
     LoRaWAN::initialize();
-    goTo(mainState::idle);
+    goTo(mainState::waitingForNetwork);
 }
 
 void mainController::handleEvents() {
@@ -103,6 +103,12 @@ void mainController::run() {
     }
 
     switch (state) {
+        case mainState::waitingForNetwork:
+            break;
+
+        case mainState::waitingForTime:
+            break;
+
         case mainState::measuring:
             sensorDeviceCollection::run();
             if (sensorDeviceCollection::isSleeping()) {
@@ -120,10 +126,10 @@ void mainController::run() {
             break;
 
         case mainState::storing:
-            measurementCollection::run();
-            if (measurementCollection::isReady()) {
-                goTo(mainState::networking);
-            }
+            // measurementCollection::run();
+            // if (measurementCollection::isReady()) {
+            //     goTo(mainState::networking);
+            // }
             break;
 
         case mainState::networking:

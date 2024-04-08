@@ -17,7 +17,7 @@ void tearDown(void) {}        // after test
 void test_initialize() {
     TEST_ASSERT_EQUAL(mainState::boot, mainController::state);
     mainController::initialize();
-    TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
+    TEST_ASSERT_EQUAL(mainState::waitingForNetwork, mainController::state);
 }
 
 void test_handleEvents() {

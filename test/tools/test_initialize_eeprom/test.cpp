@@ -7,24 +7,95 @@
 #include <stm32wlxx_it.cpp>
 #include <gpio.hpp>
 #include <lorawan.hpp>
+#include <hexascii.hpp>
+#include <settingscollection.hpp>
+#include <logging.hpp>
+#include <batterytype.hpp>
+#include <eepromtype.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void setUp(void) {}
 void tearDown(void) {}
 
-void initializeSettings() {
+void initializeNvsVersion() {
+    settingsCollection::save(static_cast<uint8_t>(1U), settingsCollection::settingIndex::nvsMapVersion);
+    TEST_ASSERT_EQUAL_UINT8(1, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::nvsMapVersion));
+}
+
+void initializeDisplayType() {
+    uint8_t testDisplayType{0};
+    settingsCollection::save(testDisplayType, settingsCollection::settingIndex::displayType);
+    TEST_ASSERT_EQUAL_UINT8(testDisplayType, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::displayType));
+}
+
+void initializeBatteryType() {
+    batteryType testBatteryType{batteryType::liFePO4_700mAh};
+    settingsCollection::save(static_cast<uint8_t>(testBatteryType), settingsCollection::settingIndex::batteryType);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(testBatteryType), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
+}
+
+void initializeEepromType() {
+    eepromType testEepromType{eepromType::BR24G512};
+    settingsCollection::save(static_cast<uint8_t>(testEepromType), settingsCollection::settingIndex::eepromType);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(testEepromType), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::eepromType));
+}
+
+
+void initializeActiveLoggingSources() {
+    logging::reset();
+    logging::enable(logging::source::lorawanMac);
+    logging::enable(logging::source::lorawanData);
+    logging::enable(logging::source::error);
+    logging::enable(logging::source::criticalError);
+    uint32_t expectedActiveSources = logging::getActiveSources();
+    settingsCollection::save(expectedActiveSources, settingsCollection::settingIndex::activeLoggingSources);
+    TEST_ASSERT_EQUAL_UINT32(expectedActiveSources, settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));
+}
+
+void initializeLorawanConfig() {
+    uint32_t toBeDevAddr            = 0x260BB2ED;
+    const char toBeApplicationKey[] = "CC15EE97462D9C58ABF8530EB0B9BD06";
+    const char toBeNetworkKey[]     = "CE872B9471751FD5B0D826353A15A6F5";
+    LoRaWAN::DevAddr.asUint32       = toBeDevAddr;
+    LoRaWAN::networkKey.setFromHexString(toBeNetworkKey);
+    LoRaWAN::applicationKey.setFromHexString(toBeApplicationKey);
+    LoRaWAN::saveConfig();
+    LoRaWAN::restoreConfig();
+
+    TEST_ASSERT_EQUAL_UINT32(toBeDevAddr, LoRaWAN::DevAddr.asUint32);
+    uint8_t test[16];
+    hexAscii::hexStringToByteArray(test, toBeApplicationKey);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(test, LoRaWAN::applicationKey.asBytes(), 16);
+    hexAscii::hexStringToByteArray(test, toBeNetworkKey);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(test, LoRaWAN::networkKey.asBytes(), 16);
+}
+
+void initializeLorawanState() {
     LoRaWAN::currentDataRateIndex = 5;
     LoRaWAN::saveState();
-    LoRaWAN::saveChannels();
+    LoRaWAN::restoreState();
 
-    LoRaWAN::restoreConfig();
-    LoRaWAN::restoreConfig();
-    LoRaWAN::restoreChannels();
-
-    TEST_ASSERT_NOT_EQUAL_UINT32(0xFFFFFFFF, LoRaWAN::DevAddr.asUint32);
+    TEST_ASSERT_EQUAL_UINT32(5, LoRaWAN::currentDataRateIndex);
+    TEST_ASSERT_EQUAL_UINT32(0, LoRaWAN::rx1DataRateOffset);
+    TEST_ASSERT_EQUAL_UINT32(3, LoRaWAN::rx2DataRateIndex);
+    TEST_ASSERT_EQUAL_UINT32(1, LoRaWAN::rx1DelayInSeconds);
     TEST_ASSERT_EQUAL_UINT32(1, LoRaWAN::uplinkFrameCount.asUint32);
     TEST_ASSERT_EQUAL_UINT32(0, LoRaWAN::downlinkFrameCount.asUint32);
+}
+
+void initializeLorawanChannels() {
+    LoRaWAN::saveChannels();
+    LoRaWAN::restoreChannels();
+
+    TEST_ASSERT_EQUAL_UINT32(868'100'000U, loRaTxChannelCollection::channel[0].frequencyInHz);
+    TEST_ASSERT_EQUAL_UINT32(868'300'000U, loRaTxChannelCollection::channel[1].frequencyInHz);
+    TEST_ASSERT_EQUAL_UINT32(868'500'000U, loRaTxChannelCollection::channel[2].frequencyInHz);
+
+    for (auto index = 3U; index < static_cast<uint32_t>(loRaTxChannelCollection::maxNmbrChannels); index++) {
+        TEST_ASSERT_EQUAL_UINT32(0U, loRaTxChannelCollection::channel[index].frequencyInHz);
+    }
+    TEST_ASSERT_EQUAL(869525000U, LoRaWAN::rx2FrequencyInHz);
 }
 
 int main(int argc, char **argv) {
@@ -35,6 +106,13 @@ int main(int argc, char **argv) {
     gpio::enableGpio(gpio::group::i2cEeprom);
 
     UNITY_BEGIN();
-    RUN_TEST(initializeSettings);
+    RUN_TEST(initializeNvsVersion);
+    RUN_TEST(initializeDisplayType);
+    RUN_TEST(initializeBatteryType);
+    RUN_TEST(initializeEepromType);
+    RUN_TEST(initializeActiveLoggingSources);
+    RUN_TEST(initializeLorawanConfig);
+    RUN_TEST(initializeLorawanState);
+    RUN_TEST(initializeLorawanChannels);
     UNITY_END();
 }

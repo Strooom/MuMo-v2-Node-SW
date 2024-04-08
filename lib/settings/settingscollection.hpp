@@ -8,15 +8,15 @@ class settingsCollection {
     settingsCollection() = delete;
     enum class settingIndex : uint32_t {
         nvsMapVersion = 0,
-        displayVersion,
-        batteryVersion,
+        displayType,
+        batteryType,
+        eepromType,
+        unusedHardware,
+
         activeLoggingSources,
         unusedGeneral,
 
-        measurementWriteIndex,
-        oldestUnsentMeasurementIndex,
-        oldestUnconfirmedMeasurementindex,
-        unusedMeasurementDataManagement,
+        unusedMeasurements,
 
         DevEUI,
         DevAddr,
