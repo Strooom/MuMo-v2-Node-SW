@@ -11,6 +11,7 @@ class settingsCollection {
         displayType,
         batteryType,
         eepromType,
+        mcuType,
         unusedHardware,
 
         activeLoggingSources,

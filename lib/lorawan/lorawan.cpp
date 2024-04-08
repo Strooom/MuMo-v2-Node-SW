@@ -985,21 +985,19 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
     sx126x::initializeInterface();
     sx126x::initializeRadio();
 
-    //macOut.append(static_cast<uint8_t>(macCommand::linkCheckRequest));
-    //macOut.append(static_cast<uint8_t>(macCommand::deviceTimeRequest));
 
     if (theFramePort == 0) {
-        // uplink message with framePort 0, containing no frameOptions and framePayload is all MAC stuff, encrypted with networkKey
         setOffsetsAndLengthsTx(macOut.getLevel());
         insertHeaders(nullptr, 0, macOut.getLevel(), 0);
         insertPayload(macOut.asUint8Ptr(), macOut.getLevel());        // TODO : test the length of the MAC stuff we are going to send, so it does not exceed the maximum allowed length
         encryptDecryptPayload(networkKey, linkDirection::uplink);
     } else {
-        // uplink with application payload, encrypted with applicationKey. Optionally up to 15 bytes of (unencrypted) frameOptions in the header
         setOffsetsAndLengthsTx(applicationDataLength, macOut.getLevel());
         insertHeaders(macOut.asUint8Ptr(), macOut.getLevel(), applicationDataLength, theFramePort);
-        insertPayload(applicationData, applicationDataLength);
-        encryptDecryptPayload(applicationKey, linkDirection::uplink);
+        if (applicationDataLength > 0) {
+            insertPayload(applicationData, applicationDataLength);
+            encryptDecryptPayload(applicationKey, linkDirection::uplink);
+        }
     }
     insertBlockB0(linkDirection::uplink, uplinkFrameCount);
     insertMic();

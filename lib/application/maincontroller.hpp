@@ -16,7 +16,8 @@ class mainController {
     static void initialize();
     static void handleEvents();
     static void run();
-    
+
+    static constexpr uint32_t nmbrUplinksWaitingForNetwork{3};
 
 #ifndef unitTesting
 

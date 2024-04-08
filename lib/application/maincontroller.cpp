@@ -22,6 +22,7 @@
 #include <aeskey.hpp>
 #include <datarate.hpp>
 #include <lorawan.hpp>
+#include <maccommand.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -33,7 +34,6 @@ mainState mainController::state{mainState::boot};
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
-
     if (nonVolatileStorage::isPresent()) {
         if (!settingsCollection::isInitialized()) {
             settingsCollection::initializeOnce();
@@ -69,16 +69,28 @@ void mainController::handleEvents() {
             } break;
 
             case applicationEvent::realTimeClockTick: {
-                uint32_t testPayloadLength{10};
-                uint8_t testPayload[] = {2, 1, 175, 249, 72, 100, 178, 157, 91, 64};
-                LoRaWAN::sendUplink(8, testPayload, testPayloadLength);
+                {
+                    switch (state) {
+                        case mainState::waitingForNetwork: {
+                            LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::linkCheckRequest));
+                            LoRaWAN::sendUplink(1, nullptr, 0);
+                        } break;
 
-//                if (state == mainState::idle) {
-//                    // sensorDeviceCollection::tick();
-//                    // goTo(mainState::measuring);
-//                } else {
-//                    logging::snprintf(logging::source::error, "RealTimeClockTick event received in state %s[%d] - Ignored\n", toString(state), static_cast<uint32_t>(state));
-//                }
+                        case mainState::waitingForTime: {
+                            LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::deviceTimeRequest));
+                            LoRaWAN::sendUplink(1, nullptr, 0);
+                        } break;
+
+                        case mainState::idle:
+                            sensorDeviceCollection::tick();
+                            goTo(mainState::measuring);
+                            break;
+
+                        default:
+                            logging::snprintf(logging::source::error, "RealTimeClockTick event received in state %s[%d] - Ignored\n", toString(state), static_cast<uint32_t>(state));
+                            break;
+                    }
+                }
             } break;
 
             case applicationEvent::lowPowerTimerExpired:

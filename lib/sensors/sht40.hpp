@@ -47,9 +47,10 @@ class sht40 {
 
     static void clearNewMeasurements();
 
-    static uint8_t i2cAddress;        // SHT40 can have 0x44 or 0x45 as address -> so we need to probe for it
+    static uint8_t i2cAddress;        // SHT40 can have 0x44 or 0x45 as address
     static constexpr uint8_t halTrials{0x03};
     static constexpr uint8_t halTimeout{0x10};
+    static constexpr uint8_t measurementDurationInTicks{10};        // Datasheet section 3.2 : 8.3 ms max for high precision mode
 
     // Commands
     enum class command : uint8_t {
@@ -58,11 +59,12 @@ class sht40 {
 
     // Other
     static bool testI2cAddress(uint8_t addressToTest);
-    static void read(command aCommand, uint8_t* response, uint32_t responseLength);
+    static void write(command aCommand);
+    static void read(uint8_t* response, uint32_t responseLength);
 
     static uint32_t rawDataTemperature;
     static uint32_t rawDataRelativeHumidity;
+    static uint32_t measurementStartTick;
 
     static bool awake;
 };
-

@@ -11,7 +11,7 @@
 #include "main.h"
 extern I2C_HandleTypeDef hi2c2;
 #else
-extern uint8_t mockBME680Registers[256];
+extern uint8_t mockSHT40Registers[256];
 #include <cstring>
 
 #endif
@@ -40,10 +40,8 @@ bool sht40::isPresent() {
 }
 
 void sht40::initialize() {
-    // TODO : need to read the sensorChannel settins from EEPROM and restore them
     channels[temperature].set(0, 1, 0, 1);
     channels[relativeHumidity].set(0, 1, 0, 1);
-
     state = sensorDeviceState::sleeping;
 }
 
@@ -110,18 +108,19 @@ void sht40::adjustAllCounters() {
 }
 
 void sht40::startSampling() {
-    state = sensorDeviceState::sampling;
+    write(command::getMeasurementHighPrecision);
+    measurementStartTick = HAL_GetTick();
+    state                = sensorDeviceState::sampling;
 }
 
 bool sht40::samplingIsReady() {
-    bool noNewData{false};
-    return !noNewData;
+    return (HAL_GetTick() - measurementStartTick) > measurementDurationInTicks;
 }
 
 void sht40::readSample() {
     static constexpr uint32_t responseLength{6};
     uint8_t response[responseLength];
-    read(command::getMeasurementHighPrecision, response, responseLength);        // SH4x datasheet section 4.5
+    read(response, responseLength);        // SH4x datasheet section 4.5
     if (sensirion::checkCrc(response, responseLength)) {
         rawDataTemperature      = sensirion::asUint16(response);
         rawDataRelativeHumidity = sensirion::asUint16(response + 3);
@@ -152,9 +151,18 @@ bool sht40::testI2cAddress(uint8_t addressToTest) {
 #endif
 }
 
-void sht40::read(command aCommand, uint8_t* response, uint32_t responseLength) {
+void sht40::write(command aCommand) {
+    uint8_t pCommand = static_cast<uint8_t>(aCommand);
 #ifndef generic
-    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, static_cast<uint8_t>(aCommand), I2C_MEMADD_SIZE_8BIT, response, responseLength, halTimeout);
+    HAL_I2C_Master_Transmit(&hi2c2, i2cAddress << 1, &pCommand, 1, halTimeout);
+#else
+// TODO add mock for generic Unit testing
+#endif
+}
+
+void sht40::read(uint8_t* response, uint32_t responseLength) {
+#ifndef generic
+    HAL_I2C_Master_Receive(&hi2c2, i2cAddress << 1, response, responseLength, halTimeout);
 #else
 // TODO add mock for generic Unit testing
 #endif

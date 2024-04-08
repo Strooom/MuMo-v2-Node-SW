@@ -10,6 +10,7 @@ class applicationTime {
   public:
     static void tick();
     static bool needsUpdate();
+    static void update(time_t unixTime);
 
   private:
     static constexpr uint32_t rtcTicksBetweenUpdate{2880};        // 1 rtc-tick = 30 seconds, so 2880 ticks = 24 hours
