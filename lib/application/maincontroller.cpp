@@ -72,12 +72,12 @@ void mainController::handleEvents() {
                 {
                     switch (state) {
                         case mainState::waitingForNetwork: {
-                            LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::linkCheckRequest));
+                            //LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::linkCheckRequest));
                             LoRaWAN::sendUplink(1, nullptr, 0);
                         } break;
 
                         case mainState::waitingForTime: {
-                            LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::deviceTimeRequest));
+                            //LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::deviceTimeRequest));
                             LoRaWAN::sendUplink(1, nullptr, 0);
                         } break;
 

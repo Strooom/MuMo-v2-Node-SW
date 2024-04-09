@@ -4,7 +4,6 @@
 // ######################################################################################
 
 #include <time.hpp>
-#include <ctime>
 
 #ifndef generic
 #include <main.h>
@@ -36,10 +35,10 @@ void applicationTime::update(time_t unixTime) {
     if (timeInfo->tm_wday == 0) {
         timeInfo->tm_wday = 7;
     }        // the chip goes mon tue wed thu fri sat sun
-    sDate.WeekDay         = timeInfo->tm_wday;
-    sDate.Month           = timeInfo->tm_mon + 1;
-    sDate.Date            = timeInfo->tm_mday;
-    sDate.Year            = timeInfo->tm_year - 100;        // time.h is years since 1900, STM32-RTC is years since 2000
+    sDate.WeekDay = timeInfo->tm_wday;
+    sDate.Month   = timeInfo->tm_mon + 1;
+    sDate.Date    = timeInfo->tm_mday;
+    sDate.Year    = timeInfo->tm_year - 100;        // time.h is years since 1900, STM32-RTC is years since 2000
 
     if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
         Error_Handler();
@@ -51,38 +50,39 @@ void applicationTime::update(time_t unixTime) {
 }
 
 void updateRTC(time_t now) {
+#ifndef generic
     RTC_TimeTypeDef sTime;
     RTC_DateTypeDef sDate;
 
-    struct tm time_tm;
+    struct tm time_tm;        // https://cplusplus.com/reference/ctime/tm/
     time_tm = *(localtime(&now));
 
     sTime.Hours   = (uint8_t)time_tm.tm_hour;
     sTime.Minutes = (uint8_t)time_tm.tm_min;
     sTime.Seconds = (uint8_t)time_tm.tm_sec;
-    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
-        _Error_Handler(__FILE__, __LINE__);
-    }
+    HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+
+    // time_tm.tm_wday is 0..6 for sunday to saturday
+    // rtc.WeekDay is 1..7 for monday to sunday
 
     if (time_tm.tm_wday == 0) {
         time_tm.tm_wday = 7;
-    }        // the chip goes mon tue wed thu fri sat sun
+    }
     sDate.WeekDay = (uint8_t)time_tm.tm_wday;
-    sDate.Month   = (uint8_t)time_tm.tm_mon + 1;        // momth 1- This is why date math is frustrating.
-    sDate.Date    = (uint8_t)time_tm.tm_mday;
-    sDate.Year    = (uint16_t)(time_tm.tm_year + 1900 - 2000);        // time.h is years since 1900, chip is years since 2000
+    sDate.Month   = (uint8_t)time_tm.tm_mon + 1;                      // tm_mon goes 0..11 for jan to dec  rtc.Month goes 1..12
+    sDate.Date    = (uint8_t)time_tm.tm_mday;                         // tm_mday goes 1..31  rtc.Date goes 1..31
+    sDate.Year    = (uint16_t)(time_tm.tm_year + 1900 - 2000);        // tm_year is years since 1900, rtc.Year is years since 2000
 
     /*
      * update the RTC
      */
-    if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
-        _Error_Handler(__FILE__, __LINE__);
-    }
-
+    HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
     HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR0, 0x32F2);        // lock it in with the backup registers
+#endif
 }
 
 void getRTC() {
+#ifndef generic
     RTC_DateTypeDef rtcDate;
     RTC_TimeTypeDef rtcTime;
     HAL_RTC_GetTime(&hrtc, &rtcTime, RTC_FORMAT_BIN);
@@ -106,6 +106,5 @@ void getRTC() {
     currentTime        = mktime(&tim);
     struct tm printTm  = {0};
     printTm            = *(localtime(&currentTime));
-    char buffer[80];
-    strftime(buffer, 80, 'RTC %m/%d/%y %H:%M:%S', &printTm);
-    printf('%s ', buffer);}
+#endif
+}

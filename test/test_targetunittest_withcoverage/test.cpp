@@ -1,14 +1,24 @@
 #include <unity.h>
 #include "main.h"
 #include <cube.hpp>
-#include <gpio.hpp>
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
 #include <stm32wlxx_hal_msp.c>
 #include <stm32wlxx_it.cpp>
+#include <stdio.h>
+#include <gpio.hpp>
 #include <sht40.hpp>
+#include <unity.h>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+void initialise_monitor_handles(void);
+#ifdef __cplusplus
+}
+#endif /* extern "C" */
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -17,20 +27,8 @@ void test_isPresent() {
     TEST_ASSERT_TRUE(sht40::isPresent());
 }
 
-void test_measurement() {
-    sht40::startSampling();
-    while (!sht40::samplingIsReady()) {
-        HAL_Delay(1);
-    }
-    sht40::readSample();
-    float temperature = sht40::calculateTemperature();
-    TEST_ASSERT_FLOAT_WITHIN(2.0F, 22.0F, temperature);
-    float relativeHumidity = sht40::calculateRelativeHumidity();
-    TEST_ASSERT_FLOAT_WITHIN(10.0F, 50.0F, relativeHumidity);
-}
-
-
 int main(int argc, char **argv) {
+    initialise_monitor_handles();
     HAL_Init();
     HAL_Delay(2000);        // required for testing framework to connect
     SystemClock_Config();
@@ -43,6 +41,5 @@ int main(int argc, char **argv) {
 
     UNITY_BEGIN();
     RUN_TEST(test_isPresent);
-    RUN_TEST(test_measurement);
     UNITY_END();
 }

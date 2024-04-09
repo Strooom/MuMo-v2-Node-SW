@@ -47,6 +47,9 @@ void test_toString() {
     TEST_ASSERT_EQUAL_STRING("displaying", toString(mainState::displaying));
     TEST_ASSERT_EQUAL_STRING("networking", toString(mainState::networking));
     TEST_ASSERT_EQUAL_STRING("sleeping", toString(mainState::sleeping));
+    TEST_ASSERT_EQUAL_STRING("waitingForNetwork", toString(mainState::waitingForNetwork));
+    TEST_ASSERT_EQUAL_STRING("waitingForTime", toString(mainState::waitingForTime));
+    TEST_ASSERT_EQUAL_STRING("test", toString(mainState::test));
 }
 
 int main(int argc, char **argv) {

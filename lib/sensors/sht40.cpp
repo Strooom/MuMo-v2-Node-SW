@@ -26,6 +26,7 @@ sensorChannelFormat sht40::channelFormats[nmbrChannels] = {
 
 uint32_t sht40::rawDataTemperature;
 uint32_t sht40::rawDataRelativeHumidity;
+uint32_t sht40::measurementStartTick;
 
 bool sht40::isPresent() {
     i2cAddress = 0x44;
@@ -109,12 +110,20 @@ void sht40::adjustAllCounters() {
 
 void sht40::startSampling() {
     write(command::getMeasurementHighPrecision);
+#ifndef generic
     measurementStartTick = HAL_GetTick();
-    state                = sensorDeviceState::sampling;
+#else
+    measurementStartTick = 0;
+#endif
+    state = sensorDeviceState::sampling;
 }
 
 bool sht40::samplingIsReady() {
+#ifndef generic
     return (HAL_GetTick() - measurementStartTick) > measurementDurationInTicks;
+#else
+
+#endif
 }
 
 void sht40::readSample() {
@@ -164,7 +173,7 @@ void sht40::read(uint8_t* response, uint32_t responseLength) {
 #ifndef generic
     HAL_I2C_Master_Receive(&hi2c2, i2cAddress << 1, response, responseLength, halTimeout);
 #else
-// TODO add mock for generic Unit testing
+    memcpy(response, mockSHT40Registers, responseLength);
 #endif
 }
 
