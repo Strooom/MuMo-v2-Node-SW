@@ -34,14 +34,13 @@ def extra_http_configuration(env, node):
     return env.Object(
         node,
         CPPDEFINES=env["CPPDEFINES"],
-        CCFLAGS=env["CCFLAGS"] + ["-lgcov"] + ["--coverage"] + ["-fprofile-arcs"] + ["-ftest-coverage"],
+        CCFLAGS=env["CCFLAGS"] + ["-fprofile-arcs"] + ["-ftest-coverage"],
     )
 
 env.AddBuildMiddleware(extra_http_configuration)
 
 env.Append(
   LINKFLAGS=[
-      "-lgcov",
       "--coverage"
   ]
 )

@@ -9,6 +9,8 @@
 #include <gpio.hpp>
 #include <sht40.hpp>
 #include <unity.h>
+#include <gcov.h>
+#include <gcov_support.h>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -28,6 +30,18 @@ void test_isPresent() {
 }
 
 int main(int argc, char **argv) {
+    // gcov_init();
+    void (**p)(void);
+    extern uint32_t __init_array_start, __init_array_end; /* linker defined symbols, array of function pointers */
+    uint32_t beg = (uint32_t)&__init_array_start;
+    uint32_t end = (uint32_t)&__init_array_end;
+
+    while (beg < end) {
+        p = (void (**)(void))beg; /* get function pointer */
+        (*p)();                   /* call constructor */
+        beg += sizeof(p);         /* next pointer */
+    }
+
     initialise_monitor_handles();
     HAL_Init();
     HAL_Delay(2000);        // required for testing framework to connect
@@ -42,4 +56,6 @@ int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_isPresent);
     UNITY_END();
+    //gcov_write();
+      __gcov_flush();
 }
