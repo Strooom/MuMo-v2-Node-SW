@@ -9,18 +9,29 @@
 #include "main.h"
 extern I2C_HandleTypeDef hi2c2;
 #else
-#include <cstring>        // required for memcpy
-uint8_t mockEepromMemory[nonVolatileStorage::size];        // array emulating the EEPROM for unitTesting
+uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
+#include <cstring>
 #endif
+
+uint32_t nonVolatileStorage::bytesInCurrentPage(uint32_t address, uint32_t dataLength) {
+    uint32_t startPage{pageNumber(address)};
+    uint32_t endPage{pageNumber(address + dataLength)};
+
+    if (endPage == startPage) {
+        return dataLength;
+    } else {
+        return pageSize - (address % pageSize);
+    }
+}
 
 void nonVolatileStorage::erase() {
     fill(0xFF);
 }
 
 void nonVolatileStorage::fill(uint8_t value) {
-    uint8_t data[128];        // writing data in chunks of 128 bytes as this is optimized for the EEPROM device
+    uint8_t data[128];        // writing data in chunks of 128 bytes as this is optimized for the EEPROM device TODO : make this work for different EEPROM sizes / page sizes
     constexpr uint32_t pageSize{128};
-    constexpr uint32_t nmbrOfPages{size / pageSize};
+    constexpr uint32_t nmbrOfPages{totalSize / pageSize};
 
     for (uint32_t i = 0; i < pageSize; i++) {
         data[i] = value;
@@ -52,12 +63,26 @@ void nonVolatileStorage::read(const uint32_t startAddress, uint8_t* data, const 
 }
 
 void nonVolatileStorage::write(const uint32_t startAddress, const uint8_t* data, const uint32_t dataLength) {
+    // This function can write accross eeprom page boundaries
+    uint8_t* remainingData{const_cast<uint8_t*>(data)};
+    uint32_t remainingLength{dataLength};
+    uint32_t currentAddress{startAddress};
+
 #ifndef generic
-    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_RESET);                                                                                 // Drive writeProtect LOW = enable write
-    HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_16BIT, const_cast<uint8_t*>(data), dataLength, halTimeoutIsPresent);        // my wrapper does not allow the to-be-written source data to be modified, but the STM32 HAL doesn't have a const uint8_t ptr
-    HAL_Delay(writeCycleTime);                                                                                                                  // the EEPROM needs 3.5 ms to internally write the data, if WriteProtect goes HIGH too early, the data is not written
-    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_SET);                                                                                   // disable write
+    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_RESET);        // Drive writeProtect LOW = enable write
+#endif
+    while (remainingLength > 0) {
+        uint32_t bytesInThisPage = bytesInCurrentPage(currentAddress, remainingLength);
+#ifndef generic
+        HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, currentAddress, I2C_MEMADD_SIZE_16BIT, remainingData, bytesInThisPage, halTimeoutIsPresent);        // my wrapper does not allow the to-be-written source data to be modified, but the STM32 HAL doesn't have a const uint8_t ptr
 #else
-    memcpy(mockEepromMemory + startAddress, data, dataLength);
+        memcpy(mockEepromMemory + currentAddress, remainingData, bytesInThisPage);
+#endif
+        currentAddress += bytesInThisPage;
+        remainingData += bytesInThisPage;
+        remainingLength -= bytesInThisPage;
+    }
+#ifndef generic
+    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_SET);        // disable write
 #endif
 }

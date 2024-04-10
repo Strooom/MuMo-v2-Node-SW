@@ -12,7 +12,7 @@
 #include "main.h"
 extern I2C_HandleTypeDef hi2c2;
 #else
-extern uint8_t mockBME680Registers[256];
+uint8_t mockBME680Registers[256];
 #include <cstring>
 
 #endif

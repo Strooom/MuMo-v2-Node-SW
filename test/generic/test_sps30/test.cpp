@@ -1,7 +1,7 @@
 #include <unity.h>
 #include "sps30.hpp"
 
-uint8_t mockSPS30Registers[256];
+extern uint8_t mockSPS30Registers[256];
 
 void setUp(void) {
     //mockSPS30Registers[static_cast<uint8_t>(tsl2591::registers::id)]      = tsl2591::chipIdValue;

@@ -11,12 +11,8 @@ enum class sensorDeviceType : uint32_t {
     battery,
     bme680,
     tsl2591,
-    bme688,
     sht40,
     lis3dh,
     sths34,
     nmbrOfKnownDevices
-
 };
-
-const char* toString(sensorDeviceType theType);

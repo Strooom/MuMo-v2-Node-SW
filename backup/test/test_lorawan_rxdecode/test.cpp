@@ -17,7 +17,7 @@ nonVolatileStorage nvs;
 eventBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
 eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 sx126x theRadio;
-// extern uint8_t mockSx126xDataBuffer[256];
+// extern extern uint8_t mockSx126xDataBuffer[256];
 
 // Test vector is a message I actually received and intercepted
 constexpr uint32_t testVectorLength        = 43;

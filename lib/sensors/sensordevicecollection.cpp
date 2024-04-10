@@ -2,6 +2,7 @@
 #include <logging.hpp>
 #include <battery.hpp>
 #include <bme680.hpp>
+#include <sht40.hpp>
 #include <tsl2591.hpp>
 // All known sensordevices' include files are to be added here
 
@@ -16,6 +17,11 @@ void sensorDeviceCollection::discover() {
     if (bme680::isPresent()) {
         isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)] = true;
         bme680::initialize();
+        actualNumberOfDevices++;
+    }
+    if (sht40::isPresent()) {
+        isPresent[static_cast<uint32_t>(sensorDeviceType::sht40)] = true;
+        sht40::initialize();
         actualNumberOfDevices++;
     }
     if (tsl2591::isPresent()) {
@@ -35,6 +41,9 @@ void sensorDeviceCollection::tick() {
                     break;
                 case sensorDeviceType::bme680:
                     bme680::tick();
+                    break;
+                case sensorDeviceType::sht40:
+                    sht40::tick();
                     break;
                 case sensorDeviceType::tsl2591:
                     tsl2591::tick();
@@ -56,6 +65,9 @@ void sensorDeviceCollection::run() {
                     break;
                 case sensorDeviceType::bme680:
                     bme680::run();
+                    break;
+                case sensorDeviceType::sht40:
+                    sht40::run();
                     break;
                 case sensorDeviceType::tsl2591:
                     tsl2591::run();
@@ -79,6 +91,11 @@ bool sensorDeviceCollection::isSleeping() {
                     break;
                 case sensorDeviceType::bme680:
                     if (bme680::getState() != sensorDeviceState::sleeping) {
+                        return false;
+                    }
+                    break;
+                case sensorDeviceType::sht40:
+                    if (sht40::getState() != sensorDeviceState::sleeping) {
                         return false;
                     }
                     break;
@@ -110,6 +127,11 @@ bool sensorDeviceCollection::hasNewMeasurements() {
                         return true;
                     }
                     break;
+                case sensorDeviceType::sht40:
+                    if (sht40::hasNewMeasurement()) {
+                        return true;
+                    }
+                    break;
                 case sensorDeviceType::tsl2591:
                     if (tsl2591::hasNewMeasurement()) {
                         return true;
@@ -129,9 +151,11 @@ const char* sensorDeviceCollection::name(uint32_t index) {
         case sensorDeviceType::battery:
             return "battery";
         case sensorDeviceType::bme680:
-            return "bme680";
+            return "BME680";
+        case sensorDeviceType::sht40:
+            return "SHT40";
         case sensorDeviceType::tsl2591:
-            return "tsl2591";
+            return "TSL2591";
         // Add more types of sensors here
         default:
             return "unknown";
@@ -143,15 +167,15 @@ float sensorDeviceCollection::valueAsFloat(uint32_t deviceIndex, uint32_t channe
         case sensorDeviceType::battery:
             return battery::valueAsFloat(channelIndex);
             break;
-
         case sensorDeviceType::bme680:
             return bme680::valueAsFloat(channelIndex);
             break;
-
+        case sensorDeviceType::sht40:
+            return sht40::valueAsFloat(channelIndex);
+            break;
         case sensorDeviceType::tsl2591:
             return tsl2591::valueAsFloat(channelIndex);
             break;
-
         // Add more types of sensors here
         default:
             return 0.0F;
@@ -162,15 +186,15 @@ uint32_t sensorDeviceCollection::channelDecimals(uint32_t deviceIndex, uint32_t 
         case sensorDeviceType::battery:
             return battery::channelFormats[channelIndex].decimals;
             break;
-
         case sensorDeviceType::bme680:
             return bme680::channelFormats[channelIndex].decimals;
             break;
-
+        case sensorDeviceType::sht40:
+            return sht40::channelFormats[channelIndex].decimals;
+            break;
         case sensorDeviceType::tsl2591:
             return tsl2591::channelFormats[channelIndex].decimals;
             break;
-
         // Add more types of sensors here
         default:
             return 0;
@@ -182,11 +206,12 @@ const char* sensorDeviceCollection::channelName(uint32_t deviceIndex, uint32_t c
         case sensorDeviceType::battery:
             return battery::channelFormats[channelIndex].name;
             break;
-
         case sensorDeviceType::bme680:
             return bme680::channelFormats[channelIndex].name;
             break;
-
+        case sensorDeviceType::sht40:
+            return sht40::channelFormats[channelIndex].name;
+            break;
         case sensorDeviceType::tsl2591:
             return tsl2591::channelFormats[channelIndex].name;
             break;
@@ -202,15 +227,15 @@ const char* sensorDeviceCollection::channelUnits(uint32_t deviceIndex, uint32_t 
         case sensorDeviceType::battery:
             return battery::channelFormats[channelIndex].unit;
             break;
-
         case sensorDeviceType::bme680:
             return bme680::channelFormats[channelIndex].unit;
             break;
-
+        case sensorDeviceType::sht40:
+            return sht40::channelFormats[channelIndex].unit;
+            break;
         case sensorDeviceType::tsl2591:
             return tsl2591::channelFormats[channelIndex].unit;
             break;
-
         // Add more types of sensors here
         default:
             return "";
@@ -229,6 +254,11 @@ void sensorDeviceCollection::log() {
                 case sensorDeviceType::bme680:
                     if (bme680::hasNewMeasurement()) {
                         bme680::log();
+                    }
+                    break;
+                case sensorDeviceType::sht40:
+                    if (sht40::hasNewMeasurement()) {
+                        sht40::log();
                     }
                     break;
                 case sensorDeviceType::tsl2591:

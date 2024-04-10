@@ -10,11 +10,11 @@
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-uint8_t mockSX126xDataBuffer[256];
-uint8_t mockSX126xRegisters[0x1000];
-uint8_t mockSX126xCommandData[256][8];
+extern uint8_t mockSX126xDataBuffer[256];
+extern uint8_t mockSX126xRegisters[0x1000];
+extern uint8_t mockSX126xCommandData[256][8];
 
-extern uint8_t mockEepromMemory[nonVolatileStorage::size];
+extern uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
 
 void setUp(void) {}
 void tearDown(void) {}

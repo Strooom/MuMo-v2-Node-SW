@@ -5,8 +5,8 @@
 #include <unity.h>
 #include <float.hpp>
 
-uint8_t mockBME680Registers[256];
-uint8_t mockTSL2591Registers[256];
+extern uint8_t mockBME680Registers[256];
+extern uint8_t mockTSL2591Registers[256];
 
 void setUp(void) {}
 void tearDown(void) {}

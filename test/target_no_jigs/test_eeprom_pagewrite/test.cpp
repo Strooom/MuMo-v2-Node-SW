@@ -10,20 +10,24 @@
 #include <lorawan.hpp>
 #include <hexascii.hpp>
 #include <swaplittleandbigendian.hpp>
-
+#include <gpio.hpp>
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void setUp(void) {}
 void tearDown(void) {}
 
-void test_nvs() {
-    LoRaWAN::restoreConfig();
-    TEST_ASSERT_EQUAL(0x260BC71B, LoRaWAN::DevAddr.asUint32);
-    char tmpKeyAsHexString[33];
-    hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::applicationKey.asBytes(), 16);
-    TEST_ASSERT_EQUAL_STRING("ECF61A5B18BFBF81EF4FA7DBA764CE8B", tmpKeyAsHexString);
-    hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::networkKey.asBytes(), 16);
-    TEST_ASSERT_EQUAL_STRING("34CE07A8DDE81F4C29A0AED7B4F1D7BB", tmpKeyAsHexString);
+void test_nvs_pagewrites() {
+    uint8_t testData[384];
+    for (uint32_t index = 0; index < 384; index++) {
+        testData[index] = index % 0xFF;
+    }
+    nonVolatileStorage::write(nonVolatileStorage::measurementsStartAddress + 64, testData, 384);
+    nonVolatileStorage::read(nonVolatileStorage::measurementsStartAddress + 64, testData, 384);
+    for (uint32_t index = 0; index < 384; index++) {
+        if (testData[index] != index % 0xFF) {
+            TEST_FAIL();
+        }
+    }
 }
 
 int main(int argc, char **argv) {
@@ -35,6 +39,6 @@ int main(int argc, char **argv) {
     gpio::enableGpio(gpio::group::i2cEeprom);
 
     UNITY_BEGIN();
-    RUN_TEST(test_nvs);
+    RUN_TEST(test_nvs_pagewrites);
     UNITY_END();
 }

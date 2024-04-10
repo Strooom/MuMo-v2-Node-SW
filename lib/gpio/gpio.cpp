@@ -192,7 +192,7 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
                 // PB4     ------> usbPowerPresent
                 GPIO_InitStruct.Pin  = usbPowerPresent_Pin;
                 GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-                GPIO_InitStruct.Pull = GPIO_NOPULL;
+                GPIO_InitStruct.Pull = GPIO_PULLDOWN;
                 HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
             } else {
                 HAL_GPIO_DeInit(GPIOB, usbPowerPresent_Pin);

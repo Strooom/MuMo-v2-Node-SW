@@ -28,31 +28,31 @@
 // If the bytes after that are not 0xFF, older measurements are overwritten and the start of measurements is after the 0xFF, 0xFF, 0xFF, 0xFF
 // If the bytes are 0xFF, 0xFF, 0xFF, 0xFF, the start of measurements is at 4096
 
+// struct transmit {
+//     uint32_t uplinkFrameCount;
+//     uint32_t startAddress;
+// };
 
-struct transmit {
-    uint32_t uplinkFrameCount;
-    uint32_t startAddress;
-};
+// static constexpr uint32_t maxNmbrOfRetransmitItems{8};
+// transmit reTransmitData[maxNmbrOfRetransmitItems];
+// uint32_t reTransmitWriteIndex{0};
 
-static constexpr uint32_t maxNmbrOfRetransmitItems{8};
-transmit reTransmitData[maxNmbrOfRetransmitItems];
-uint32_t reTransmitWriteIndex{0};
-
-    class measurementCollection2 {
+class measurementCollection {
   public:
     void dump();
+    static void initialize();
+    static uint32_t startAddress;
+    static uint32_t endAddress;
 
 #ifndef unitTesting
 
   private:
 #endif
+    static void findStartEndAddress();
     static uint32_t writeAddress;
-    static constexpr uint32_t maxNmbrOfUnsavedMeasurements{16};
-    static linearBuffer<maxNmbrOfUnsavedMeasurements> unsavedMeasurements;
+    // static constexpr uint32_t maxNmbrOfUnsavedMeasurements{16};
+    // static linearBuffer<maxNmbrOfUnsavedMeasurements> unsavedMeasurements;
 
-    static constexpr uint32_t measurementsAddressStart{4096};                     // First 4K is for settings, Last 124K for measurements
-    static constexpr uint32_t measurementsAddressEnd{(128U * 1024U) - 1U};        // 128K EEPROM
-
-    static void read(uint32_t measurementIndex, measurement& destination);        // reads the measurement from EEPROM and stores it in the destination measurement object
-    static void write(uint32_t measurementIndex, measurement& source);            // write data from source measurement object to the EEPROM at specific location
+    // static void read(uint32_t measurementIndex, measurement& destination);        // reads the measurement from EEPROM and stores it in the destination measurement object
+    // static void write(uint32_t measurementIndex, measurement& source);            // write data from source measurement object to the EEPROM at specific location
 };

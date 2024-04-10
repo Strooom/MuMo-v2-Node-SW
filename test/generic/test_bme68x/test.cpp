@@ -2,7 +2,7 @@
 #include <bme680.hpp>
 #include <cstring>
 
-uint8_t mockBME680Registers[256]{};
+extern uint8_t mockBME680Registers[256];
 
 void setUp(void) {
     mockBME680Registers[static_cast<uint8_t>(bme680::registers::chipId)]      = bme680::chipIdValue;

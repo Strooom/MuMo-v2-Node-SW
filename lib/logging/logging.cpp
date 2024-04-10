@@ -25,7 +25,9 @@ char logging::buffer[bufferLength]{};
 void logging::initialize() {
 #ifndef generic
     if ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001) {        // is a SWD debugprobe connected ?
+#ifndef platformio                                                             // SWO TRACE is not working on PlatformIO
         logging::enable(logging::destination::debugProbe);
+#endif
         LL_DBGMCU_EnableDBGStopMode();
     } else {
         LL_DBGMCU_DisableDBGStopMode();
@@ -40,6 +42,10 @@ void logging::initialize() {
     if (!logging::isActive(logging::destination::debugProbe)) {
         gpio::disableGpio(gpio::group::debugPort);
     }
+
+#if !defined unitTesting && defined platformio        // when on platformio, we don't have SWO trace, so use UART1, except when unitTesting because then we need UART1 for test-results transport
+    logging::enable(logging::destination::uart1);
+#endif
 
     gpio::enableGpio(gpio::group::i2cEeprom);
     logging::setActiveSources(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));

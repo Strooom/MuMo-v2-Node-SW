@@ -7,27 +7,23 @@ const char* toString(sensorDeviceType theType) {
             break;
 
         case sensorDeviceType::mcu:
-            return "mcu";
+            return "STM32WLE5";
             break;
 
         case sensorDeviceType::bme680:
-            return "bme680";
-            break;
-
-        case sensorDeviceType::bme688:
-            return "bme688";
+            return "BME680";
             break;
 
         case sensorDeviceType::tsl2591:
-            return "tsl2591";
+            return "TSL2591";
             break;
 
         case sensorDeviceType::sht40:
-            return "sht40";
+            return "SHT40";
             break;
 
         case sensorDeviceType::lis3dh:
-            return "lis3dh";
+            return "LIS3DH";
             break;
 
         default:

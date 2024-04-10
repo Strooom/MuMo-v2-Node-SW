@@ -1,7 +1,15 @@
 #include <measurementcollection.hpp>
 #include <nvs.hpp>
+#include <logging.hpp>
+#include <sensordevicetype.hpp>
 
-// initialization of static members
+uint32_t measurementCollection::writeAddress{0};
+uint32_t measurementCollection::startAddress{0};        // TODO : what should be good initial value?
+uint32_t measurementCollection::endAddress{0};
+
+void measurementCollection::initialize() {
+    findStartEndAddress();
+}
 
 // uint32_t measurementCollection::head{0};
 // uint32_t measurementCollection::level{0};
@@ -64,3 +72,66 @@
 //     // TODO - implement
 //     return true;
 // }
+
+void measurementCollection::findStartEndAddress() {
+    // search the end of measurements by searching for 0xFF, 0xFF, 0xFF, 0xFF
+    // If the bytes after that are not 0xFF, older measurements are overwritten and the start of measurements is after the 0xFF, 0xFF, 0xFF, 0xFF
+    // If the bytes are 0xFF, 0xFF, 0xFF, 0xFF, the start of measurements is at 4096
+    union {
+        uint32_t dword;
+        uint8_t bytes[4];
+    } data;
+    startAddress = nonVolatileStorage::measurementsStartAddress;
+    endAddress   = nonVolatileStorage::measurementsStartAddress + nonVolatileStorage::measurementsSize;
+    for (uint32_t address = nonVolatileStorage::measurementsStartAddress; address < nonVolatileStorage::measurementsStartAddress + nonVolatileStorage::measurementsSize; address++) {
+        nonVolatileStorage::read(address, data.bytes, 1);
+        if (data.bytes[0] == 0xFF) {
+            nonVolatileStorage::read(address, data.bytes, 4);
+            if (data.dword == 0xFFFFFFFF) {
+                endAddress = address;
+                nonVolatileStorage::read(address + 4, data.bytes, 4);
+                if (data.dword == 0xFFFFFFFF) {
+                    startAddress = nonVolatileStorage::measurementsStartAddress;
+                } else {
+                    startAddress = address + 4;
+                }
+                break;
+            }
+        }
+    }
+}
+
+void measurementCollection::dump() {
+    if (endAddress <= startAddress) {
+        logging::snprintf("No measurements found");
+        return;
+    }
+    uint32_t address = startAddress;
+    uint8_t byteZero;
+    union {
+        uint32_t asUint32;
+        uint8_t asBytes[4];
+    } timestamp;
+    union {
+        uint32_t asFloat;
+        uint32_t asUint32;
+        uint8_t asBytes[4];
+    } value;
+
+    while (address < endAddress) {
+        nonVolatileStorage::read(address, &byteZero, 1);
+        bool hasTimestamp = byteZero & 0x80;
+        sensorDeviceType theSensorDeviceType = static_cast<sensorDeviceType>((byteZero & 0x7C) >> 2);
+        uint8_t channelId = (byteZero & 0x03);
+        if (hasTimestamp) {
+            nonVolatileStorage::read(address + 1, timestamp.asBytes, 4);
+            nonVolatileStorage::read(address + 5, value.asBytes, 4);
+            logging::snprintf("date:time %u:%u value", theSensorDeviceType, channelId);
+            address += 9;
+        } else {
+            nonVolatileStorage::read(address + 1, value.asBytes, 4);
+            logging::snprintf("????:???? %u:%u value", theSensorDeviceType, channelId);
+            address += 5;
+        }
+    }
+}

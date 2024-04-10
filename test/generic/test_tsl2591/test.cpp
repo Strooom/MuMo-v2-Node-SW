@@ -1,7 +1,7 @@
 #include <unity.h>
 #include "tsl2591.hpp"
 
-uint8_t mockTSL2591Registers[256];
+extern uint8_t mockTSL2591Registers[256];
 
 void setUp(void) {
     mockTSL2591Registers[static_cast<uint8_t>(tsl2591::registers::id)]      = tsl2591::chipIdValue;

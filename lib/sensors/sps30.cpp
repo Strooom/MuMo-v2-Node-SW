@@ -13,7 +13,7 @@
 #include "main.h"
 extern I2C_HandleTypeDef hi2c2;
 #else
-extern uint8_t mockSPS30Registers[14][60];
+uint8_t mockSPS30Registers[14][60];
 #endif
 
 sensorDeviceState sps30::state{sensorDeviceState::unknown};
@@ -209,7 +209,7 @@ void sps30::read(command theCommand, uint8_t* destination, uint16_t length) {
 #ifndef generic
     //HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_8BIT, destination, length, halTimeout);
 #else
-    // memcpy(destination, mockBME680Registers + theCommand, length);
+    // memcpy(destination, mockSPS30Registers + theCommand, length);
 #endif
 }
 
@@ -217,7 +217,7 @@ void sps30::write(command startAddress) {
 #ifndef generic
     //HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
 #else
-    // mockBME680Registers[static_cast<uint8_t>(registerAddress)] = value;
+    // mockSPS30Registers[static_cast<uint8_t>(registerAddress)] = value;
 #endif
 }
 
@@ -225,7 +225,7 @@ void sps30::write(command startAddress, uint8_t value) {
 #ifndef generic
     //HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
 #else
-    // mockBME680Registers[static_cast<uint8_t>(registerAddress)] = value;
+    // mockSPS30Registers[static_cast<uint8_t>(registerAddress)] = value;
 #endif
 }
 
@@ -233,7 +233,7 @@ void sps30::write(command startAddress, uint8_t* destination, uint16_t length) {
 #ifndef generic
     //HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
 #else
-    // mockBME680Registers[static_cast<uint8_t>(registerAddress)] = value;
+    // mockSPS30Registers[static_cast<uint8_t>(registerAddress)] = value;
 #endif
 }
 

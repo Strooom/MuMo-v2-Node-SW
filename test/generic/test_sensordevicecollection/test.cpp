@@ -5,8 +5,8 @@
 #include <bme680.hpp>
 #include <tsl2591.hpp>
 
-uint8_t mockBME680Registers[256];
-uint8_t mockTSL2591Registers[256];
+extern uint8_t mockBME680Registers[256];
+extern uint8_t mockTSL2591Registers[256];
 
 void setUp(void) {
     mockBME680Registers[static_cast<uint8_t>(bme680::registers::chipId)] = bme680::chipIdValue;
@@ -26,13 +26,15 @@ void test_discover() {
     TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::battery)]);
     TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)]);
     TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::tsl2591)]);
-    TEST_ASSERT_EQUAL_UINT32(3U, sensorDeviceCollection::actualNumberOfDevices);
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::sht40)]);
+    TEST_ASSERT_EQUAL_UINT32(4U, sensorDeviceCollection::actualNumberOfDevices);
 }
 
 void test_name() {
     TEST_ASSERT_EQUAL_STRING("battery", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::battery)));
-    TEST_ASSERT_EQUAL_STRING("bme680", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::bme680)));
-    TEST_ASSERT_EQUAL_STRING("tsl2591", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::tsl2591)));
+    TEST_ASSERT_EQUAL_STRING("BME680", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::bme680)));
+    TEST_ASSERT_EQUAL_STRING("TSL2591", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::tsl2591)));
+    TEST_ASSERT_EQUAL_STRING("SHT40", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::sht40)));
     TEST_ASSERT_EQUAL_STRING("unknown", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)));
 }
 

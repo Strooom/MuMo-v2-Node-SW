@@ -9,8 +9,8 @@
 #include "font.hpp"
 #include <cstring>                           // strncmp, strncpy
 
-uint8_t mockBME680Registers[256];
-uint8_t mockTSL2591Registers[256];
+extern uint8_t mockBME680Registers[256];
+extern uint8_t mockTSL2591Registers[256];
 
 void setUp(void) {}
 void tearDown(void) {}        // after test

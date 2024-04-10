@@ -73,12 +73,12 @@ void mainController::handleEvents() {
                     switch (state) {
                         case mainState::waitingForNetwork: {
                             //LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::linkCheckRequest));
-                            LoRaWAN::sendUplink(1, nullptr, 0);
+                            //LoRaWAN::sendUplink(1, nullptr, 0);
                         } break;
 
                         case mainState::waitingForTime: {
                             //LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::deviceTimeRequest));
-                            LoRaWAN::sendUplink(1, nullptr, 0);
+                            //LoRaWAN::sendUplink(1, nullptr, 0);
                         } break;
 
                         case mainState::idle:
@@ -140,7 +140,7 @@ void mainController::run() {
         case mainState::storing:
             // measurementCollection::run();
             // if (measurementCollection::isReady()) {
-            //     goTo(mainState::networking);
+                 goTo(mainState::networking);
             // }
             break;
 

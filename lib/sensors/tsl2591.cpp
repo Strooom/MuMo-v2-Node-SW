@@ -12,7 +12,7 @@
 extern I2C_HandleTypeDef hi2c2;
 #else
 #include <cstring>
-extern uint8_t mockTSL2591Registers[256];
+uint8_t mockTSL2591Registers[256];
 #endif
 
 sensorDeviceState tsl2591::state{sensorDeviceState::unknown};

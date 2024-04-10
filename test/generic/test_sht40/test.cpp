@@ -2,10 +2,13 @@
 #include <sht40.hpp>
 #include <cstring>
 
-void setUp(void) {}
-void tearDown(void) {}
+extern uint8_t mockSHT40Registers[6];
 
-uint8_t mockSHT40Registers[6]{0x80, 0x00, 0xA2, 0x80, 0x00, 0xA2};
+void setUp(void) {
+    uint8_t testData[6]{0x80, 0x00, 0xA2, 0x80, 0x00, 0xA2};
+    memcpy(mockSHT40Registers, testData, 6);
+}
+void tearDown(void) {}
 
 void test_isPresent() {
     TEST_ASSERT_TRUE(sht40::isPresent());

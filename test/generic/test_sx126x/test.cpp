@@ -5,9 +5,9 @@
 #include <unity.h>
 #include <sx126x.hpp>
 
-uint8_t mockSX126xDataBuffer[256];            // unitTesting mock for the LoRa Rx/Tx buffer, inside the SX126x
-uint8_t mockSX126xRegisters[0x1000];          // unitTesting mock for the config registers, inside the SX126x
-uint8_t mockSX126xCommandData[256][8];        // unitTesting mock for capturing the commands and their parameters to configure the SX126x
+extern uint8_t mockSX126xDataBuffer[256];            // unitTesting mock for the LoRa Rx/Tx buffer, inside the SX126x
+extern uint8_t mockSX126xRegisters[0x1000];          // unitTesting mock for the config registers, inside the SX126x
+extern uint8_t mockSX126xCommandData[256][8];        // unitTesting mock for capturing the commands and their parameters to configure the SX126x
 
 void setUp(void) {}           // before test
 void tearDown(void) {}        // after test
