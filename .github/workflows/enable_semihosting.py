@@ -16,7 +16,7 @@ env.Append(
     ],
 )
 
-def extra_http_configuration(env, node):
+def build_flags_for_selected_files_only(env, node):
     """
     `node.name` - a name of File System Node
     `node.get_path()` - a relative path
@@ -37,7 +37,7 @@ def extra_http_configuration(env, node):
         CCFLAGS=env["CCFLAGS"] + ["-fprofile-arcs"] + ["-ftest-coverage"],
     )
 
-env.AddBuildMiddleware(extra_http_configuration)
+env.AddBuildMiddleware(build_flags_for_selected_files_only)
 
 env.Append(
   LINKFLAGS=[

@@ -23,12 +23,24 @@ extern font tahoma24bold;
 void screen::initialize() {
 }
 
-void screen::show() {
+void screen::showMeasurements() {
     getContents();
 
     if (isModified) {
         drawContents();
     }
+}
+
+void screen::showMessage(const char* line1, const char* line2) {
+    display::initialize();
+    uint32_t line1Width = graphics::getTextwidth(tahoma24bold, line1);
+    uint32_t line2Width = graphics::getTextwidth(tahoma24bold, line2);
+    uint32_t line1x     = ux::mid - (line1Width / 2);
+    uint32_t line2x     = ux::mid - (line2Width / 2);
+    graphics::drawText(line1x, 100, tahoma24bold, line1);
+    graphics::drawText(line2x, 150, tahoma24bold, line2);
+    display::update();
+    display::goSleep();
 }
 
 void screen::getContents() {
@@ -62,7 +74,6 @@ void screen::drawContents() {
     display::update();
     display::goSleep();
 }
-
 
 void screen::buildBigTextString(int32_t value, uint32_t lineIndex) {
     char base[8];

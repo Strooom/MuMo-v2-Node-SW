@@ -148,7 +148,7 @@ void mainController::run() {
             if (LoRaWAN::isIdle()) {
                 if (display::isPresent()) {
                     goTo(mainState::displaying);
-                    screen::show();
+                    screen::showMeasurements();
                 } else {
                     goTo(mainState::idle);
                 }

@@ -9,7 +9,8 @@
 class screen {
   public:
     static void initialize();
-    static void show();
+    static void showMeasurements();
+    static void showMessage(const char* line1, const char* line2);
 
 #ifndef unitTesting
 
