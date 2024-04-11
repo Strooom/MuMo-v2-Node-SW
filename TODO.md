@@ -13,11 +13,13 @@
 
  # Small Next Steps
 
- OK 1. write a target unit test which verifies the hardware AES for LoRaWAN encryptions
- OK 1b. collect some real messages payloads from the old firmware, especially on the downlink direction
- - they can be used to test message processing and mac parsing etc.
- 2. try a transmit cycle
+* extend stateMachine : if not LoRaWAN config found -> show msg asking for config
+* extend SX126x code to the 14dBm veriant of the Wio-E5
+* reading the tamper button and wake up from it
+* 
 
- merge hw aes tests into 1, in order to not have too many target unit tests
 
- Put some of the aesKey stuff, only needed for SW-AES in conditional compilation, eg key expansion
+
+
+* merge hw aes tests into 1, in order to not have too many target unit tests
+* Put some of the aesKey stuff, only needed for SW-AES in conditional compilation, eg key expansion
