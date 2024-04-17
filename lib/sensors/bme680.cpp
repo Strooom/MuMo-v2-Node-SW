@@ -276,7 +276,7 @@ void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* dest
 #ifndef generic
     HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_8BIT, destination, length, halTimeout);
 #else
-    memcpy(destination, mockBME680Registers + startAddress, length);
+    (void)memcpy(destination, mockBME680Registers + startAddress, length);
 #endif
 }
 

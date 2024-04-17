@@ -122,7 +122,7 @@ bool sht40::samplingIsReady() {
 #ifndef generic
     return (HAL_GetTick() - measurementStartTick) > measurementDurationInTicks;
 #else
-
+    return true;
 #endif
 }
 
@@ -173,7 +173,7 @@ void sht40::read(uint8_t* response, uint32_t responseLength) {
 #ifndef generic
     HAL_I2C_Master_Receive(&hi2c2, i2cAddress << 1, response, responseLength, halTimeout);
 #else
-    memcpy(response, mockSHT40Registers, responseLength);
+    (void)memcpy(response, mockSHT40Registers, responseLength);
 #endif
 }
 

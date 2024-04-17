@@ -293,7 +293,7 @@ void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {
 #ifndef generic
     HAL_SUBGHZ_WriteBuffer(&hsubghz, 0U, payload, payloadLength);        // copy the raw LoRa message into the transmitBuffer of the SX126
 #else
-    memcpy(mockSX126xDataBuffer, payload, payloadLength);
+    (void)memcpy(mockSX126xDataBuffer, payload, payloadLength);
 #endif
 }
 
@@ -301,7 +301,7 @@ void sx126x::readBuffer(uint8_t* payload, uint32_t payloadLength) {
 #ifndef generic
     HAL_SUBGHZ_ReadBuffer(&hsubghz, 0U, payload, payloadLength);        // read the raw LoRa message which has been received from the SX126 into the receiveBuffer of the LoRaWAN stack
 #else
-    memcpy(payload, mockSX126xDataBuffer, payloadLength);
+    (void)memcpy(payload, mockSX126xDataBuffer, payloadLength);
 #endif
 }
 
@@ -309,7 +309,7 @@ void sx126x::executeSetCommand(command theCommand, uint8_t* commandParameters, u
 #ifndef generic
     HAL_SUBGHZ_ExecSetCmd(&hsubghz, static_cast<SUBGHZ_RadioSetCmd_t>(theCommand), commandParameters, commandParametersLength);
 #else
-    memcpy(mockSX126xCommandData[static_cast<uint8_t>(theCommand)], commandParameters, commandParametersLength);
+    (void)memcpy(mockSX126xCommandData[static_cast<uint8_t>(theCommand)], commandParameters, commandParametersLength);
 #endif
 }
 
@@ -317,7 +317,7 @@ void sx126x::executeGetCommand(command theCommand, uint8_t* responseData, uint8_
 #ifndef generic
     HAL_SUBGHZ_ExecGetCmd(&hsubghz, static_cast<SUBGHZ_RadioGetCmd_t>(theCommand), responseData, responseDataLength);
 #else
-    memcpy(responseData, mockSX126xCommandData[static_cast<uint8_t>(theCommand)], responseDataLength);
+    (void)memcpy(responseData, mockSX126xCommandData[static_cast<uint8_t>(theCommand)], responseDataLength);
 #endif
 }
 
@@ -325,7 +325,7 @@ void sx126x::writeRegisters(registerAddress theRegister, uint8_t* data, uint8_t 
 #ifndef generic
     HAL_SUBGHZ_WriteRegisters(&hsubghz, static_cast<uint16_t>(theRegister), data, dataLength);
 #else
-    memcpy(&mockSX126xRegisters[static_cast<uint16_t>(theRegister)], data, dataLength);
+    (void)memcpy(&mockSX126xRegisters[static_cast<uint16_t>(theRegister)], data, dataLength);
 #endif
 }
 
@@ -333,6 +333,6 @@ void sx126x::readRegisters(registerAddress theRegister, uint8_t* data, uint8_t d
 #ifndef generic
     HAL_SUBGHZ_ReadRegisters(&hsubghz, static_cast<uint16_t>(theRegister), data, dataLength);
 #else
-    memcpy(data, &mockSX126xRegisters[static_cast<uint16_t>(theRegister)], dataLength);
+    (void)memcpy(data, &mockSX126xRegisters[static_cast<uint16_t>(theRegister)], dataLength);
 #endif
 }

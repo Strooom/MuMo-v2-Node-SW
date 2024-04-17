@@ -11,7 +11,7 @@
 #endif
 
 void aesBlock::setFromByteArray(const uint8_t bytesIn[lengthInBytes]) {
-    memcpy(state.asByte, bytesIn, lengthInBytes);
+    (void)memcpy(state.asByte, bytesIn, lengthInBytes);
 }
 
 void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
@@ -23,7 +23,7 @@ void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
 void aesBlock::setFromHexString(const char *string) {
     uint8_t tmpBytes[lengthInBytes];
     hexAscii::hexStringToByteArray(tmpBytes, string);
-    memcpy(state.asByte, tmpBytes, lengthInBytes);
+    (void)memcpy(state.asByte, tmpBytes, lengthInBytes);
 }
 
 uint8_t &aesBlock::operator[](std::size_t index) {
@@ -35,7 +35,7 @@ bool aesBlock::operator==(const aesBlock &block) {
 }
 
 aesBlock &aesBlock::operator=(const aesBlock &block) {
-    memcpy(state.asByte, block.state.asByte, lengthInBytes);
+    (void)memcpy(state.asByte, block.state.asByte, lengthInBytes);
     return *this;
 }
 
