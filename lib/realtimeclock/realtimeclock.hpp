@@ -8,9 +8,15 @@
 
 class realTimeClock {
   public:
-    static void setFromGpsTime(uint32_t gpsTime);
+    static void set();        // from build time - not very accurate but better than 1-jan-2000 00:00:00
+    static void set(time_t unixTime);
+    static void set(tm brokenDownTime);
+    static time_t get();
+
 #ifndef unitTesting
 
   private:
 #endif
+
+    static time_t unixTimeFromGpsTime(uint32_t gpsTime);
 };

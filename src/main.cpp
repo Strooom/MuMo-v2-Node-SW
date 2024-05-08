@@ -143,7 +143,7 @@ int main(void) {
     version::setIsVersion();
     logging::initialize();
     mainController ::initialize();
-    // logging::enable(logging::destination::uart1);
+    logging::enable(logging::destination::uart1);
     logging::enable(logging::source::lorawanData);
     logging::enable(logging::source::lorawanMac);
     logging::enable(logging::source::lorawanEvents);

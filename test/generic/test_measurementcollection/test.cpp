@@ -101,13 +101,24 @@ void test_setTransmitted() {
 
 }
 
+void test_addMeasurement() {
+
+}
+
+void test_addMeasurement() {
+
+}
+
+
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
     RUN_TEST(test_addressFromOffset);
-    RUN_TEST(test_nmbrOfBytesToTransmit);
     RUN_TEST(test_findStartEndOffsets);
+    RUN_TEST(test_addMeasurement);
     RUN_TEST(test_save);
+    RUN_TEST(test_nmbrOfBytesToTransmit);
     RUN_TEST(test_setTransmitted);
     UNITY_END();
 }

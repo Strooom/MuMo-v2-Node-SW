@@ -71,14 +71,12 @@ void measurementCollection::findStartEndOffsets() {
     }
 }
 
-// TODO : this still uses addresses io offsets, so it won't work
-
 void measurementCollection::dump() {
-    if (newMeasurementsOffset <= oldestMeasurementOffset) {
+    if (newMeasurementsOffset = oldestMeasurementOffset) {
         logging::snprintf("No measurements found");
         return;
     }
-    uint32_t address = oldestMeasurementOffset;
+    uint32_t offset = oldestMeasurementOffset;
     uint8_t byteZero;
     union {
         uint32_t asUint32;
@@ -90,20 +88,25 @@ void measurementCollection::dump() {
         uint8_t asBytes[4];
     } value;
 
-    while (address < newMeasurementsOffset) {
-        nonVolatileStorage::read(address, &byteZero, 1);
+    while (offset < newMeasurementsOffset) {
+        nonVolatileStorage::read(addressFromOffset(offset), &byteZero, 1);
         bool hasTimestamp                    = byteZero & 0x80;
         sensorDeviceType theSensorDeviceType = static_cast<sensorDeviceType>((byteZero & 0x7C) >> 2);
         uint8_t channelId                    = (byteZero & 0x03);
         if (hasTimestamp) {
-            nonVolatileStorage::read(address + 1, timestamp.asBytes, 4);
-            nonVolatileStorage::read(address + 5, value.asBytes, 4);
+            nonVolatileStorage::read(addressFromOffset(offset + 1), timestamp.asBytes, 4);
+            nonVolatileStorage::read(addressFromOffset(offset + 5), value.asBytes, 4);
             logging::snprintf("date:time %u:%u value", theSensorDeviceType, channelId);
-            address += 9;
+            offset = (offset + 9) % nonVolatileStorage::measurementsSize;
         } else {
-            nonVolatileStorage::read(address + 1, value.asBytes, 4);
+            nonVolatileStorage::read(addressFromOffset(offset + 1), value.asBytes, 4);
             logging::snprintf("????:???? %u:%u value", theSensorDeviceType, channelId);
-            address += 5;
+            offset = (offset + 5) % nonVolatileStorage::measurementsSize;
         }
     }
 }
+
+
+     void measurementCollection::addMeasurement(measurement &newMeasurement){
+        
+     };
