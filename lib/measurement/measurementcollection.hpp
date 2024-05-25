@@ -36,12 +36,12 @@ class measurementCollection {
     static uint32_t oldestMeasurementOffset;
     static uint32_t newMeasurementsOffset;
     static uint32_t lastMeasurementWithTimestampOffset;
-    static uint32_t nmbrOfBytesToTransmit();        // count from uplinkMemory[uplinkMemoryIndex] to endAddress
+    static uint32_t nmbrOfBytesToTransmit();
 
-    static void save();
+    static void saveNewMeasurementsToEeprom();
     static void setTransmitted(uint32_t frameCount, uint32_t length);
 
-    static void addMeasurement(measurement &newMeasurement); // adds a measurement to the newMeasurements buffer
+    static void addMeasurement(measurement &newMeasurement);
 
 #ifndef unitTesting
 

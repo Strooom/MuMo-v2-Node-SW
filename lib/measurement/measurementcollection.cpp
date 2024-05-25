@@ -27,7 +27,7 @@ uint32_t measurementCollection::nmbrOfBytesToTransmit() {
     return (newMeasurementsOffset - uplinkMemory[uplinkMemoryIndex].startOffset);
 }
 
-void measurementCollection::save() {
+void measurementCollection::saveNewMeasurementsToEeprom() {
     uint32_t level           = newMeasurements.getLevel();
     uint8_t trailingBytes[4] = {0xFF, 0xFF, 0xFF, 0xFF};
     newMeasurements.append(trailingBytes, 4);
@@ -106,7 +106,13 @@ void measurementCollection::dump() {
     }
 }
 
-
-     void measurementCollection::addMeasurement(measurement &newMeasurement){
-        
-     };
+void measurementCollection::addMeasurement(measurement &newMeasurement) {
+    newMeasurements.append(&newMeasurement.id, 1);
+    newMeasurementsOffset = (newMeasurementsOffset + 1) % nonVolatileStorage::measurementsSize;
+    if (newMeasurement.id & measurement::hasTimestampMask) {
+        newMeasurements.append(newMeasurement.timestamp.asBytes, 4);
+        newMeasurementsOffset = (newMeasurementsOffset + 4) % nonVolatileStorage::measurementsSize;
+    }
+    newMeasurements.append(newMeasurement.value.asBytes, 4);
+    newMeasurementsOffset = (newMeasurementsOffset + 4) % nonVolatileStorage::measurementsSize;
+}
