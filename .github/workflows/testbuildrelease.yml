@@ -150,6 +150,12 @@ jobs:
           echo "  Patch         : ${{ steps.selectversion.outputs.nextpatchdigit }}"
           echo "Build Filename  : ${{ steps.selectversion.outputs.buildversionfilename }}.bin"
           echo "Build Timestamp : ${{ steps.versioninfo.outputs.buildtimestamp }}"
+          echo "Build Year      : ${{ steps.versioninfo.outputs.buildYear }}"
+          echo "Build Month     : ${{ steps.versioninfo.outputs.buildMonth }}"
+          echo "Build Day       : ${{ steps.versioninfo.outputs.buildDay }}"
+          echo "Build Hour      : ${{ steps.versioninfo.outputs.buildHour }}"
+          echo "Build Minute    : ${{ steps.versioninfo.outputs.buildMinute }}"
+          echo "Build Second    : ${{ steps.versioninfo.outputs.buildSecond }}"
 
       - name: Save Build info
         uses: "DamianReeves/write-file-action@master"
