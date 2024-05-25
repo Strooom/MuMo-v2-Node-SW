@@ -5,11 +5,11 @@
 
 #include <stdint.h>
 #include <ctime>
+#include <buildinfo.hpp>
 
 class realTimeClock {
   public:
-    static void set();        // from build time - not very accurate but better than 1-jan-2000 00:00:00
-    static void set(time_t unixTime);
+    static void set(time_t unixTime = buildInfo::buildEpoch);
     static void set(tm brokenDownTime);
     static time_t get();
 

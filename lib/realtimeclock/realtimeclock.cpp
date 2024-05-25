@@ -13,27 +13,6 @@ time_t realTimeClock::unixTimeFromGpsTime(uint32_t gpsTime) {
     return (gpsTime + unixToGpsOffset - leapSecondsOffset);
 }
 
-void realTimeClock::set() {
-    RTC_TimeTypeDef stm32Time;
-    RTC_DateTypeDef stm32Date;
-
-    stm32Time.Hours          = buildInfo::buildHour;
-    stm32Time.Minutes        = buildInfo::buildMinute;
-    stm32Time.Seconds        = buildInfo::buildSecond;
-    stm32Time.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-    stm32Time.StoreOperation = RTC_STOREOPERATION_RESET;
-    stm32Date.Date           = buildInfo::buildDay;
-    stm32Date.Month          = buildInfo::buildMonth;
-    stm32Date.Year           = buildInfo::buildYear - 2000;
-    if (buildInfo::buildDayOfWeek == 0) {
-        stm32Date.WeekDay = 7;
-    } else {
-        stm32Date.WeekDay = (buildInfo::buildDayOfWeek);
-    }
-
-    HAL_RTC_SetTime(&hrtc, &stm32Time, RTC_FORMAT_BIN);
-    HAL_RTC_SetDate(&hrtc, &stm32Date, RTC_FORMAT_BIN);
-}
 
 void realTimeClock::set(time_t unixTime) {
     tm brokenDownTime;
