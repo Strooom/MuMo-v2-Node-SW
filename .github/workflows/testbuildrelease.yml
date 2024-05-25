@@ -188,6 +188,7 @@ jobs:
             const int buildInfo::buildHour          = ${{ steps.versioninfo.outputs.buildHour }};
             const int buildInfo::buildMinute        = ${{ steps.versioninfo.outputs.buildMinute }};
             const int buildInfo::buildSecond        = ${{ steps.versioninfo.outputs.buildSecond }};
+            const int buildInfo::buildDayOfWeek     = ${{ steps.versioninfo.outputs.buildDayOfWeek }};
 
       - name: Verify Saved Build info
         run: |
