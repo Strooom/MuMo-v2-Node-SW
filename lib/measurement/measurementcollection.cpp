@@ -72,7 +72,7 @@ void measurementCollection::findStartEndOffsets() {
 }
 
 void measurementCollection::dump() {
-    if (newMeasurementsOffset = oldestMeasurementOffset) {
+    if (newMeasurementsOffset == oldestMeasurementOffset) {
         logging::snprintf("No measurements found");
         return;
     }

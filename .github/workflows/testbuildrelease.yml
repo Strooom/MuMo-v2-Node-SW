@@ -20,6 +20,7 @@ jobs:
       buildHour: ${{ steps.versioninfo.outputs.buildHour }}
       buildMinute: ${{ steps.versioninfo.outputs.buildMinute }}
       buildSecond: ${{ steps.versioninfo.outputs.buildSecond }}
+      buildDayOfWeek: ${{ steps.versioninfo.outputs.buildDayOfWeek }}
       lastmajordigit: ${{ steps.versioninfo.outputs.lastmajordigit }}
       lastminordigit: ${{ steps.versioninfo.outputs.lastminordigit }}
       lastpatchdigit: ${{ steps.versioninfo.outputs.lastpatchdigit }}
@@ -61,6 +62,8 @@ jobs:
           declare -i buildHour=$(date "+%H")
           declare -i buildMinute=$(date "+%M")
           declare -i buildSecond=$(date "+%S")
+          declare -i buildDayOfWeek=$(date "+%w")
+
           declare fulltag=$(git describe --tag $(git rev-parse --verify refs/remotes/origin/main))
           echo "fulltag = [$fulltag]"
           declare versiontag=$(echo $fulltag | cut -d'-' -f1)
@@ -84,7 +87,8 @@ jobs:
           echo "buildDay=$buildDay" >> $GITHUB_OUTPUT
           echo "buildHour=$buildHour" >> $GITHUB_OUTPUT
           echo "buildMinute=$buildMinute" >> $GITHUB_OUTPUT
-          echo "buildSecond=$buildSecond" >> $GITHUB_OUTPUT         
+          echo "buildSecond=$buildSecond" >> $GITHUB_OUTPUT
+          echo "buildDayOfWeek=$buildDayOfWeek" >> $GITHUB_OUTPUT
           echo "lastversion=$lastversion" >> $GITHUB_OUTPUT
 
       - name: Determine which version to build
@@ -156,6 +160,7 @@ jobs:
           echo "Build Hour      : ${{ steps.versioninfo.outputs.buildHour }}"
           echo "Build Minute    : ${{ steps.versioninfo.outputs.buildMinute }}"
           echo "Build Second    : ${{ steps.versioninfo.outputs.buildSecond }}"
+          echo "Build DayOfWeek : ${{ steps.versioninfo.outputs.buildDayOfWeek }}"
 
       - name: Save Build info
         uses: "DamianReeves/write-file-action@master"
