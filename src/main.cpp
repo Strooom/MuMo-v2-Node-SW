@@ -35,6 +35,7 @@
 #include <sensordevicecollection.hpp>
 #include <buildinfo.hpp>
 #include <lorawan.hpp>
+#include <realtimeclock.hpp>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -76,6 +77,9 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
+uint8_t aShowTime[16] = "hh:ms:ss";
+uint8_t aShowDate[16] = "dd-mm-yyyy";
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -92,7 +96,7 @@ static void MX_LPTIM1_Init(void);
 static void MX_SUBGHZ_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
+static void RTC_CalendarShow(uint8_t *showtime, uint8_t *showdate);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -167,6 +171,17 @@ int main(void) {
 
     logging::snprintf("Device UID: %08X%08X\n", msword, lsword);
 
+    time_t nowEpoch = realTimeClock::get();
+    tm brokenDownTime;
+    (void)gmtime_r(&nowEpoch, &brokenDownTime);
+
+    if (brokenDownTime.tm_year == 100U) {
+        realTimeClock::set();
+        logging::snprintf("RTC initialized to buildTime\n");
+    }
+    time_t now = realTimeClock::get();
+    logging::snprintf("UTC = %s", ctime(&now));
+
     logging::dump();
     LoRaWAN::dumpConfig();
     LoRaWAN::dumpState();
@@ -178,9 +193,13 @@ int main(void) {
     /* USER CODE BEGIN WHILE */
 
     while (1) {
-        mainController ::handleEvents();
-        mainController ::run();
+        HAL_Delay(5000);
+        time_t now = realTimeClock::get();
+        logging::snprintf("RTC time: %s", ctime(&now));
+        // mainController ::handleEvents();
+        // mainController ::run();
         /* USER CODE END WHILE */
+
         /* USER CODE BEGIN 3 */
     }
     /* USER CODE END 3 */
@@ -205,13 +224,11 @@ void SystemClock_Config(void) {
 
     /** Initializes the CPU, AHB and APB buses clocks
      */
-    RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_LSI | RCC_OSCILLATORTYPE_LSE | RCC_OSCILLATORTYPE_MSI;
+    RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_LSE | RCC_OSCILLATORTYPE_MSI;
     RCC_OscInitStruct.LSEState            = RCC_LSE_ON;
     RCC_OscInitStruct.MSIState            = RCC_MSI_ON;
     RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
     RCC_OscInitStruct.MSIClockRange       = RCC_MSIRANGE_8;
-    RCC_OscInitStruct.LSIDiv              = RCC_LSI_DIV1;
-    RCC_OscInitStruct.LSIState            = RCC_LSI_ON;
     RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_NONE;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
         Error_Handler();
@@ -409,6 +426,9 @@ static void MX_RTC_Init(void) {
 
     /* USER CODE END RTC_Init 0 */
 
+    RTC_TimeTypeDef sTime = {0};
+    RTC_DateTypeDef sDate = {0};
+
     /* USER CODE BEGIN RTC_Init 1 */
 
     /* USER CODE END RTC_Init 1 */
@@ -428,6 +448,29 @@ static void MX_RTC_Init(void) {
     if (HAL_RTC_Init(&hrtc) != HAL_OK) {
         Error_Handler();
     }
+
+    /* USER CODE BEGIN Check_RTC_BKUP */
+
+    /* USER CODE END Check_RTC_BKUP */
+
+    /** Initialize RTC and set the Time and Date
+     */
+    // sTime.Hours          = 0x0;
+    // sTime.Minutes        = 0x0;
+    // sTime.Seconds        = 0x0;
+    // sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+    // sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+    // if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
+    //     Error_Handler();
+    // }
+    // sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+    // sDate.Month   = RTC_MONTH_JANUARY;
+    // sDate.Date    = 0x1;
+    // sDate.Year    = 0x0;
+
+    // if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
+    //     Error_Handler();
+    // }
 
     /** Enable the WakeUp
      */
@@ -598,7 +641,17 @@ static void MX_GPIO_Init(void) {
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    applicationEventBuffer.push(applicationEvent::sx126xTxComplete);
+}
 
+void HAL_SUBGHZ_RxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    applicationEventBuffer.push(applicationEvent::sx126xRxComplete);
+}
+
+void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    applicationEventBuffer.push(applicationEvent::sx126xTimeout);
+}
 /* USER CODE END 4 */
 
 /**
@@ -629,15 +682,3 @@ void assert_failed(uint8_t *file, uint32_t line) {
     /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
-    applicationEventBuffer.push(applicationEvent::sx126xTxComplete);
-}
-
-void HAL_SUBGHZ_RxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
-    applicationEventBuffer.push(applicationEvent::sx126xRxComplete);
-}
-
-void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
-    applicationEventBuffer.push(applicationEvent::sx126xTimeout);
-}

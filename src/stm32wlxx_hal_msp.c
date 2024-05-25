@@ -20,7 +20,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -63,6 +62,7 @@
   */
 void HAL_MspInit(void)
 {
+
   /* USER CODE BEGIN MspInit 0 */
 
   /* USER CODE END MspInit 0 */
@@ -326,7 +326,7 @@ void HAL_RNG_MspInit(RNG_HandleTypeDef* hrng)
   /** Initializes the peripherals clocks
   */
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RNG;
-    PeriphClkInitStruct.RngClockSelection = RCC_RNGCLKSOURCE_LSI;
+    PeriphClkInitStruct.RngClockSelection = RCC_RNGCLKSOURCE_MSI;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
     {
       Error_Handler();

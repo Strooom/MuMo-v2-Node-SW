@@ -12,6 +12,15 @@ class buildInfo {
     static const char* lastCommitTag;                         //
     static const char* buildTimeStamp;                        //
 
+    static const int buildYear;
+    static const int buildMonth;
+    static const int buildDay;
+    static const int buildHour;
+    static const int buildMinute;
+    static const int buildSecond;
+    static const int buildDayOfWeek;
+    
+
     static void dump();
 };
 

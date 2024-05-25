@@ -2,7 +2,7 @@ import subprocess
 import os
 import sys
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 
 Import("env")
 
@@ -34,8 +34,16 @@ print ("\033[93;1;4mCurrent Commit Hash     : " + current_commit_hash + "\033[0m
 print ("\033[93;1;4mNumber of Commits ahead : " + str(number_of_commits_ahead) + "\033[0m")
 
 # determine the build timstamp
-build_timestamp = datetime.now().strftime("%Y-%b-%d %H:%M:%S")
-print ("\033[93;1;4mBuild Timestamp         : " + build_timestamp + "\033[0m")
+
+build_timestamp = datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M:%S")
+build_year = '{d.year}'.format(d=datetime.now(timezone.utc))
+build_month = '{d.month}'.format(d=datetime.now(timezone.utc))
+build_day = '{d.day}'.format(d=datetime.now(timezone.utc))
+build_hour = '{d.hour}'.format(d=datetime.now(timezone.utc))
+build_minute = '{d.minute}'.format(d=datetime.now(timezone.utc))
+build_second = '{d.second}'.format(d=datetime.now(timezone.utc))
+build_day_of_week = datetime.now(timezone.utc).strftime("%w")
+print ("\033[93;1;4mBuild Timestamp UTC     : " + build_timestamp + "\033[0m")
 
 # store the results in a source file, so our source code has access to it
 include_file = open('lib/version/buildinfo.cpp', 'w')
@@ -55,4 +63,11 @@ include_file.write("const int buildInfo::minorVersionDigit  = " + latest_release
 include_file.write("const int buildInfo::patchVersionDigit  = " + latest_release_patch + ";\n")
 include_file.write("const char* buildInfo::lastCommitTag    = \"" + current_commit_hash + "\";\n")
 include_file.write("const char* buildInfo::buildTimeStamp   = \"" + build_timestamp + "\";\n")
+include_file.write("const int buildInfo::buildYear          =  " + build_year + ";\n")
+include_file.write("const int buildInfo::buildMonth         =  " + build_month + ";\n")
+include_file.write("const int buildInfo::buildDay           =  " + build_day + ";\n")
+include_file.write("const int buildInfo::buildHour          =  " + build_hour + ";\n")
+include_file.write("const int buildInfo::buildMinute        =  " + build_minute + ";\n")
+include_file.write("const int buildInfo::buildSecond        =  " + build_second + ";\n")
+include_file.write("const int buildInfo::buildDayOfWeek     =  " + build_day_of_week + ";\n")
 include_file.close()

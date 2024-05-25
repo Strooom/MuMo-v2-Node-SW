@@ -14,6 +14,12 @@ jobs:
       branchname: ${{ steps.versioninfo.outputs.branchname }}
       commithash: ${{ steps.versioninfo.outputs.commithash }}
       buildtimestamp: ${{ steps.versioninfo.outputs.buildtimestamp }}
+      buildYear: ${{ steps.versioninfo.outputs.buildYear }}
+      buildMonth: ${{ steps.versioninfo.outputs.buildMonth }}
+      buildDay: ${{ steps.versioninfo.outputs.buildDay }}
+      buildHour: ${{ steps.versioninfo.outputs.buildHour }}
+      buildMinute: ${{ steps.versioninfo.outputs.buildMinute }}
+      buildSecond: ${{ steps.versioninfo.outputs.buildSecond }}
       lastmajordigit: ${{ steps.versioninfo.outputs.lastmajordigit }}
       lastminordigit: ${{ steps.versioninfo.outputs.lastminordigit }}
       lastpatchdigit: ${{ steps.versioninfo.outputs.lastpatchdigit }}
@@ -49,6 +55,12 @@ jobs:
           echo "extract build timestamp"
           declare buildtimestamp=$(date "+%Y-%b-%d-%H:%M:%S")
           echo "buildtimestamp = $buildtimestamp"
+          declare -i buildYear=$(date "+%Y")
+          declare -i buildMonth=$(date "+%m")
+          declare -i buildDay=$(date "+%d")
+          declare -i buildHour=$(date "+%H")
+          declare -i buildMinute=$(date "+%M")
+          declare -i buildSecond=$(date "+%S")
           declare fulltag=$(git describe --tag $(git rev-parse --verify refs/remotes/origin/main))
           echo "fulltag = [$fulltag]"
           declare versiontag=$(echo $fulltag | cut -d'-' -f1)
@@ -67,6 +79,12 @@ jobs:
           echo "lastpatchdigit=$lastpatchdigit" >> $GITHUB_OUTPUT
           echo "commithash=$commithash" >> $GITHUB_OUTPUT
           echo "buildtimestamp=$buildtimestamp" >> $GITHUB_OUTPUT
+          echo "buildYear=$buildYear" >> $GITHUB_OUTPUT
+          echo "buildMonth=$buildMonth" >> $GITHUB_OUTPUT
+          echo "buildDay=$buildDay" >> $GITHUB_OUTPUT
+          echo "buildHour=$buildHour" >> $GITHUB_OUTPUT
+          echo "buildMinute=$buildMinute" >> $GITHUB_OUTPUT
+          echo "buildSecond=$buildSecond" >> $GITHUB_OUTPUT         
           echo "lastversion=$lastversion" >> $GITHUB_OUTPUT
 
       - name: Determine which version to build
@@ -153,6 +171,12 @@ jobs:
             const int buildInfo::patchVersionDigit  = ${{ steps.selectversion.outputs.nextpatchdigit }};
             const char* buildInfo::lastCommitTag    = "${{ steps.versioninfo.outputs.commithash }}";
             const char* buildInfo::buildTimeStamp   = "${{ steps.versioninfo.outputs.buildtimestamp }}";
+            const int buildInfo::buildYear          = ${{ steps.versioninfo.outputs.buildYear }};
+            const int buildInfo::buildMonth         = ${{ steps.versioninfo.outputs.buildMonth }};
+            const int buildInfo::buildDay           = ${{ steps.versioninfo.outputs.buildDay }};
+            const int buildInfo::buildHour          = ${{ steps.versioninfo.outputs.buildHour }};
+            const int buildInfo::buildMinute        = ${{ steps.versioninfo.outputs.buildMinute }};
+            const int buildInfo::buildSecond        = ${{ steps.versioninfo.outputs.buildSecond }};
 
       - name: Verify Saved Build info
         run: |
