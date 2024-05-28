@@ -63,7 +63,20 @@ void test_byteArrayToHexString() {
     const char expectedOutput[17] = "0123456789ABCDEF";
     hexAscii::byteArrayToHexString(output, input, 8);
     TEST_ASSERT_EQUAL_STRING(expectedOutput, output);
+    TEST_ASSERT_EQUAL(0x00, output[16]);
 }
+
+void test_uint65ToHexString() {
+    const char expectedOutput1[17] = "0123456789ABCDEF";
+    const char expectedOutput2[17] = "FEDCBA9876543210";
+    char output[17];
+    hexAscii::uint64ToHexString(output, 0x0123456789ABCDEF);
+    TEST_ASSERT_EQUAL_STRING(expectedOutput1, output);
+    hexAscii::uint64ToHexString(output, 0xFEDCBA9876543210);
+    TEST_ASSERT_EQUAL_STRING(expectedOutput2, output);
+    TEST_ASSERT_EQUAL(0x00, output[16]);
+}
+
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
@@ -73,5 +86,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_hexCharacterFromValue);
     RUN_TEST(test_hexStringToByteArray);
     RUN_TEST(test_byteArrayToHexString);
+    RUN_TEST(test_uint65ToHexString);
     UNITY_END();
 }
