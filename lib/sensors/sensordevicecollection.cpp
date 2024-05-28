@@ -5,9 +5,12 @@
 #include <sht40.hpp>
 #include <tsl2591.hpp>
 // All known sensordevices' include files are to be added here
+#include <measurementcollection.hpp>
 
 bool sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)]{false};
 uint32_t sensorDeviceCollection::actualNumberOfDevices{0};
+uint32_t sensorDeviceCollection::newMeasurementSearchDevice{0};
+uint32_t sensorDeviceCollection::newMeasurementSearchChannel{0};
 
 void sensorDeviceCollection::discover() {
     isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
@@ -272,4 +275,87 @@ void sensorDeviceCollection::log() {
             }
         }
     }
+}
+
+uint32_t sensorDeviceCollection::nmbrOfNewMeasurements() {
+    uint32_t result{0};
+    for (uint32_t index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
+        if (isPresent[index]) {
+            switch (static_cast<sensorDeviceType>(index)) {
+                case sensorDeviceType::battery:
+                    result += battery::nmbrOfNewMeasurements();
+                    break;
+                case sensorDeviceType::bme680:
+                    result += bme680::nmbrOfNewMeasurements();
+                    break;
+                case sensorDeviceType::sht40:
+                    result += sht40::nmbrOfNewMeasurements();
+                    break;
+                case sensorDeviceType::tsl2591:
+                    result += tsl2591::nmbrOfNewMeasurements();
+                    break;
+                // Add more types of sensors here
+                default:
+                    break;
+            }
+        }
+    }
+    return result;
+}
+
+bool sensorDeviceCollection::nextNewMeasurement(uint32_t& resultDeviceIndex, uint32_t& resultChannelIndex) {
+    for (uint32_t device = newMeasurementSearchDevice; device < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); device++) {
+        if (isPresent[device]) {
+            switch (static_cast<sensorDeviceType>(device)) {
+                case sensorDeviceType::battery: {
+                    for (uint32_t channel = newMeasurementSearchChannel; channel < battery::nmbrChannels; channel++) {
+                        if (battery::hasNewMeasurement(channel)) {
+                            resultDeviceIndex           = device;
+                            resultChannelIndex          = channel;
+                            newMeasurementSearchChannel = channel + 1;
+                            return true;
+                        }
+                    }
+                    newMeasurementSearchDevice++;
+                } break;
+                case sensorDeviceType::bme680: {
+                    for (uint32_t channel = newMeasurementSearchChannel; channel < bme680::nmbrChannels; channel++) {
+                        if (bme680::hasNewMeasurement(channel)) {
+                            resultDeviceIndex           = device;
+                            resultChannelIndex          = channel;
+                            newMeasurementSearchChannel = channel + 1;
+                            return true;
+                        }
+                    }
+                    newMeasurementSearchDevice++;
+                } break;
+                case sensorDeviceType::sht40: {
+                    for (uint32_t channel = newMeasurementSearchChannel; channel < sht40::nmbrChannels; channel++) {
+                        if (sht40::hasNewMeasurement(channel)) {
+                            resultDeviceIndex           = device;
+                            resultChannelIndex          = channel;
+                            newMeasurementSearchChannel = channel + 1;
+                            return true;
+                        }
+                    }
+                    newMeasurementSearchDevice++;
+                } break;
+                case sensorDeviceType::tsl2591: {
+                    for (uint32_t channel = newMeasurementSearchChannel; channel < tsl2591::nmbrChannels; channel++) {
+                        if (tsl2591::hasNewMeasurement(channel)) {
+                            resultDeviceIndex           = device;
+                            resultChannelIndex          = channel;
+                            newMeasurementSearchChannel = channel + 1;
+                            return true;
+                        }
+                    }
+                    newMeasurementSearchDevice++;
+                } break;
+                // Add more types of sensors here
+                default:
+                    break;
+            }
+        }
+    }
+    return false;
 }

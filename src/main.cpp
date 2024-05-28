@@ -36,6 +36,8 @@
 #include <buildinfo.hpp>
 #include <lorawan.hpp>
 #include <realtimeclock.hpp>
+#include <uniqueid.hpp>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -77,9 +79,6 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
-uint8_t aShowTime[16] = "hh:ms:ss";
-uint8_t aShowDate[16] = "dd-mm-yyyy";
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -96,7 +95,6 @@ static void MX_LPTIM1_Init(void);
 static void MX_SUBGHZ_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-static void RTC_CalendarShow(uint8_t *showtime, uint8_t *showdate);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -142,62 +140,28 @@ int main(void) {
     MX_SUBGHZ_Init();
     MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
-    gpio ::enableGpio(gpio::group::uart1);
+    gpio ::enableGpio(gpio::group::uart1);        // check if this is needed on top of MX_USART1_UART_Init();
+
     HAL_Delay(3000);
     version::setIsVersion();
     logging::initialize();
+    logging::enable(logging::source::applicationEvents);
+    uniqueId::dump();
+    realTimeClock::initialize();
     mainController ::initialize();
-    logging::enable(logging::destination::uart1);
-    logging::enable(logging::source::lorawanData);
-    logging::enable(logging::source::lorawanMac);
-    logging::enable(logging::source::lorawanEvents);
-    logging::disable(logging::source::applicationEvents);
-
-    logging::snprintf("https://github.com/Strooom - %s\n", version::getIsVersionAsString());
-    logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
-    logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
-
-    typedef struct
-    {
-        __IO uint32_t W0;
-        __IO uint32_t W1;
-
-    } UID_typeDef;
-
-#define UID ((UID_typeDef *)UID64_BASE)
-
-    uint32_t lsword = UID->W0;
-    uint32_t msword = UID->W1;
-
-    logging::snprintf("Device UID: %08X%08X\n", msword, lsword);
-
-    time_t nowEpoch = realTimeClock::get();
-    tm brokenDownTime;
-    (void)gmtime_r(&nowEpoch, &brokenDownTime);
-
-    if (brokenDownTime.tm_year == 100U) {
-        realTimeClock::set();
-        logging::snprintf("RTC initialized to buildTime\n");
-    }
-    time_t now = realTimeClock::get();
-    logging::snprintf("UTC = %s", ctime(&now));
 
     logging::dump();
     LoRaWAN::dumpConfig();
     LoRaWAN::dumpState();
     LoRaWAN::dumpChannels();
-
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
     while (1) {
-        HAL_Delay(5000);
-        time_t now = realTimeClock::get();
-        logging::snprintf("RTC time: %s", ctime(&now));
-        // mainController ::handleEvents();
-        // mainController ::run();
+        mainController ::handleEvents();
+        mainController ::run();
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
@@ -425,9 +389,6 @@ static void MX_RTC_Init(void) {
     /* USER CODE BEGIN RTC_Init 0 */
 
     /* USER CODE END RTC_Init 0 */
-
-    RTC_TimeTypeDef sTime = {0};
-    RTC_DateTypeDef sDate = {0};
 
     /* USER CODE BEGIN RTC_Init 1 */
 

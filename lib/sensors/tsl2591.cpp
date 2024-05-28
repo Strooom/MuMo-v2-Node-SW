@@ -44,6 +44,17 @@ void tsl2591::initialize() {
     goSleep();
 }
 
+uint32_t tsl2591::nmbrOfNewMeasurements() {
+    uint32_t count{0};
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            count++;
+        }
+    }
+    return count;
+}
+
+
 float tsl2591::valueAsFloat(uint32_t index) {
     return channels[index].getOutput();
 }
@@ -52,10 +63,13 @@ bool tsl2591::hasNewMeasurement() {
     return (channels[visibleLight].hasNewValue);
 }
 
-void tsl2591::clearNewMeasurements() {
-    channels[visibleLight].hasNewValue        = false;
+bool tsl2591::hasNewMeasurement(uint32_t channelIndex) {
+    return channels[channelIndex].hasNewValue;
 }
 
+void tsl2591::clearNewMeasurements() {
+    channels[visibleLight].hasNewValue = false;
+}
 
 void tsl2591::goSleep() {
     writeRegister(registers::enable, powerOff);
@@ -163,7 +177,7 @@ void tsl2591::run() {
 
 void tsl2591::log() {
     if (channels[visibleLight].hasNewValue) {
-//        logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", channelFormats[visibleLight].name, channels[visibleLight].getOutput(), channelFormats[visibleLight].unit);
+        //        logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", channelFormats[visibleLight].name, channels[visibleLight].getOutput(), channelFormats[visibleLight].unit);
         logging::snprintf(logging::source::sensorData, "%s = ... %s\n", channelFormats[visibleLight].name, channelFormats[visibleLight].unit);
     }
 }

@@ -134,8 +134,8 @@ void mainController::run() {
             break;
 
         case mainState::logging:
-            if (sensorDeviceCollection::hasNewMeasurements()) {
-                if (logging::isActive(logging::source::sensorData)) {
+            if (logging::isActive(logging::source::sensorData)) {
+                if (sensorDeviceCollection::hasNewMeasurements()) {
                     sensorDeviceCollection::log();
                 }
             }
@@ -143,10 +143,8 @@ void mainController::run() {
             break;
 
         case mainState::storing:
-            // measurementCollection::run();
-            // if (measurementCollection::isReady()) {
+            measurementCollection::saveNewMeasurementsToEeprom();
             goTo(mainState::networking);
-            // }
             break;
 
         case mainState::networking:

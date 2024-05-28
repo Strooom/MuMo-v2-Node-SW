@@ -46,9 +46,25 @@ void sht40::initialize() {
     state = sensorDeviceState::sleeping;
 }
 
+uint32_t sht40::nmbrOfNewMeasurements() {
+    uint32_t count{0};
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            count++;
+        }
+    }
+    return count;
+}
+
+
 bool sht40::hasNewMeasurement() {
     return (channels[temperature].hasNewValue || channels[relativeHumidity].hasNewValue);
 }
+
+bool sht40::hasNewMeasurement(uint32_t channelIndex) {
+    return channels[channelIndex].hasNewValue;
+}
+
 
 void sht40::clearNewMeasurements() {
     channels[temperature].hasNewValue      = false;

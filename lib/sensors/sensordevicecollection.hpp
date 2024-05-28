@@ -22,7 +22,10 @@ class sensorDeviceCollection {
     static const char* channelName(uint32_t deviceIndex, uint32_t channelIndex);
     static const char* channelUnits(uint32_t deviceIndex, uint32_t channelIndex);
 
+    static uint32_t nmbrOfNewMeasurements();
     static bool hasNewMeasurements();
+    static bool nextNewMeasurement(uint32_t& deviceIndex, uint32_t& channelIndex);
+
 
 #ifndef unitTesting
 
@@ -31,4 +34,6 @@ class sensorDeviceCollection {
 
     static bool isPresent[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)];        // an array of bools, with true for each known device that is present
     static uint32_t actualNumberOfDevices;
+    static uint32_t newMeasurementSearchDevice;
+    static uint32_t newMeasurementSearchChannel;
 };

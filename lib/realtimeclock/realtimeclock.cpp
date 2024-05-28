@@ -1,6 +1,7 @@
 #include <realtimeclock.hpp>
 #include <buildinfo.hpp>
 #include <cstring>
+#include <logging.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -13,6 +14,18 @@ time_t realTimeClock::unixTimeFromGpsTime(uint32_t gpsTime) {
     return (gpsTime + unixToGpsOffset - leapSecondsOffset);
 }
 
+void realTimeClock::initialize() {
+    time_t nowEpoch = get();
+    tm brokenDownTime;
+    (void)gmtime_r(&nowEpoch, &brokenDownTime);
+
+    if (brokenDownTime.tm_year == 100U) {
+        set();
+        logging::snprintf("RTC initialized to buildTime\n");
+    }
+    time_t now = get();
+    logging::snprintf("UTC = %s", ctime(&now));
+}
 
 void realTimeClock::set(time_t unixTime) {
     tm brokenDownTime;

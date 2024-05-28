@@ -6,10 +6,10 @@
 #pragma once
 
 #include <stdint.h>
+#include <batterytype.hpp>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
 #include <sensorchannelformat.hpp>
-#include <batterytype.hpp>
 
 class battery {
   public:

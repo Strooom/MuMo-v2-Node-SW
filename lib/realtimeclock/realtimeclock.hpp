@@ -9,6 +9,7 @@
 
 class realTimeClock {
   public:
+    static void initialize();
     static void set(time_t unixTime = buildInfo::buildEpoch);
     static void set(tm brokenDownTime);
     static time_t get();
