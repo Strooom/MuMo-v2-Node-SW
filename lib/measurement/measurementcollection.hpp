@@ -33,9 +33,6 @@ class measurementCollection {
   public:
     void dump();
     static void initialize();
-    static uint32_t oldestMeasurementOffset;
-    static uint32_t newMeasurementsOffset;
-    static uint32_t lastMeasurementWithTimestampOffset;
     static uint32_t nmbrOfBytesToTransmit();
 
     static void saveNewMeasurementsToEeprom();
@@ -49,16 +46,20 @@ class measurementCollection {
 #endif
     static void findStartEndOffsets();
 
-    struct measurementsInUplink {
-        uint32_t uplinkFrameCount;        // frameCount used to transmit the message
-        uint32_t startOffset;             // start address of the measurements in EEPROM for that uplink
+    struct uplinkMeasurement {
+        uint32_t frameCount;
+        uint32_t startOffset;
     };
-    static constexpr uint32_t maxNumberOfUplinksMemory{256};        // length of the uplinkMemory table
-    static uint32_t uplinkMemoryIndex;                              // index into the next write position in uplinkMemory table
-    static measurementsInUplink uplinkMemory[maxNumberOfUplinksMemory];
+    static constexpr uint32_t uplinkHistoryLength{256};
+    static uint32_t uplinkHistoryIndex;
+    static uplinkMeasurement uplinkHistory[uplinkHistoryLength];
 
     static uint32_t addressFromOffset(uint32_t offset) { return (nonVolatileStorage::measurementsStartAddress + offset) % nonVolatileStorage::measurementsSize; };
 
     static constexpr uint32_t newMeasurementsLength{260};
     static linearBuffer<newMeasurementsLength> newMeasurements;        // this collects measurements before writing them to EEPROM
+
+    static uint32_t oldestMeasurementOffset;
+    static uint32_t newMeasurementsOffset;
+    static uint32_t lastMeasurementWithTimestampOffset;
 };

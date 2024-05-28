@@ -7,24 +7,24 @@ extern uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
 
 uint32_t measurementCollection::oldestMeasurementOffset{0};
 uint32_t measurementCollection::newMeasurementsOffset{0};
-uint32_t measurementCollection::uplinkMemoryIndex{0};
-measurementCollection::measurementsInUplink measurementCollection::uplinkMemory[maxNumberOfUplinksMemory]{};
+uint32_t measurementCollection::uplinkHistoryIndex{0};
+measurementCollection::uplinkMeasurement measurementCollection::uplinkHistory[uplinkHistoryLength]{};
 linearBuffer<measurementCollection::newMeasurementsLength> measurementCollection::newMeasurements;
 
 void measurementCollection::initialize() {
     measurementCollection::oldestMeasurementOffset = 0;
     measurementCollection::newMeasurementsOffset   = 0;
-    measurementCollection::uplinkMemoryIndex       = 0;
-    for (uint32_t i = 0; i < maxNumberOfUplinksMemory; i++) {
-        measurementCollection::uplinkMemory[i].uplinkFrameCount = 0;
-        measurementCollection::uplinkMemory[i].startOffset      = 0;
+    measurementCollection::uplinkHistoryIndex       = 0;
+    for (uint32_t i = 0; i < uplinkHistoryLength; i++) {
+        measurementCollection::uplinkHistory[i].frameCount = 0;
+        measurementCollection::uplinkHistory[i].startOffset      = 0;
     }
     newMeasurements.initialize();
     findStartEndOffsets();
 }
 
 uint32_t measurementCollection::nmbrOfBytesToTransmit() {
-    return (newMeasurementsOffset - uplinkMemory[uplinkMemoryIndex].startOffset);
+    return (newMeasurementsOffset - uplinkHistory[uplinkHistoryIndex].startOffset);
 }
 
 void measurementCollection::saveNewMeasurementsToEeprom() {
@@ -37,10 +37,10 @@ void measurementCollection::saveNewMeasurementsToEeprom() {
 }
 
 void measurementCollection::setTransmitted(uint32_t frameCount, uint32_t length) {
-    uplinkMemory[uplinkMemoryIndex].uplinkFrameCount = frameCount;
-    uint32_t offset                                  = uplinkMemory[uplinkMemoryIndex].startOffset;
-    uplinkMemoryIndex                                = (uplinkMemoryIndex + 1) % maxNumberOfUplinksMemory;
-    uplinkMemory[uplinkMemoryIndex].startOffset      = (offset + length) % nonVolatileStorage::measurementsSize;
+    uplinkHistory[uplinkHistoryIndex].frameCount = frameCount;
+    uint32_t offset                                  = uplinkHistory[uplinkHistoryIndex].startOffset;
+    uplinkHistoryIndex                                = (uplinkHistoryIndex + 1) % uplinkHistoryLength;
+    uplinkHistory[uplinkHistoryIndex].startOffset      = (offset + length) % nonVolatileStorage::measurementsSize;
 }
 
 void measurementCollection::findStartEndOffsets() {

@@ -47,7 +47,12 @@ void mainController::initialize() {
     gpio::enableGpio(gpio::group::rfControl);
 
     LoRaWAN::initialize();
-    goTo(mainState::waitingForNetwork);
+    // goTo(mainState::waitingForNetwork);
+    goTo(mainState::idle);
+
+    logging::snprintf("https://github.com/Strooom - %s\n", version::getIsVersionAsString());
+    logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
+    logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
 }
 
 void mainController::handleEvents() {
@@ -72,13 +77,13 @@ void mainController::handleEvents() {
                 {
                     switch (state) {
                         case mainState::waitingForNetwork: {
-                            //LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::linkCheckRequest));
-                            //LoRaWAN::sendUplink(1, nullptr, 0);
+                            // LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::linkCheckRequest));
+                            // LoRaWAN::sendUplink(1, nullptr, 0);
                         } break;
 
                         case mainState::waitingForTime: {
-                            //LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::deviceTimeRequest));
-                            //LoRaWAN::sendUplink(1, nullptr, 0);
+                            // LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::deviceTimeRequest));
+                            // LoRaWAN::sendUplink(1, nullptr, 0);
                         } break;
 
                         case mainState::idle:
@@ -140,7 +145,7 @@ void mainController::run() {
         case mainState::storing:
             // measurementCollection::run();
             // if (measurementCollection::isReady()) {
-                 goTo(mainState::networking);
+            goTo(mainState::networking);
             // }
             break;
 
@@ -156,14 +161,15 @@ void mainController::run() {
             break;
 
         case mainState::displaying:
-            display::run();
-            if (display::isReady()) {
-                goTo(mainState::idle);
-            }
+            // display::run();
+            // if (display::isReady()) {
+            goTo(mainState::idle);
+            // }
             break;
 
         case mainState::idle:
-            if (!power::hasUsbPower()) {
+            if (false) {
+                //             if (!power::hasUsbPower()) {
                 gpio::disableGpio(gpio::group::spiDisplay);
                 gpio::disableGpio(gpio::group::writeProtect);
                 gpio::disableGpio(gpio::group::uart1);
@@ -190,7 +196,7 @@ void mainController::run() {
                 gpio::enableGpio(gpio::group::writeProtect);
                 gpio::enableGpio(gpio::group::spiDisplay);
 
-                goTo(mainState::idle);
+                goTo(mainState::idle);        // ??
             }
             break;
 

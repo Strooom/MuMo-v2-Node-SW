@@ -21,11 +21,11 @@ void test_initialize() {
     measurementCollection::initialize();
     TEST_ASSERT_EQUAL(0, measurementCollection::oldestMeasurementOffset);
     TEST_ASSERT_EQUAL(0, measurementCollection::newMeasurementsOffset);
-    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkMemoryIndex);
-    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkMemory[0].uplinkFrameCount);
-    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkMemory[0].startOffset);
-    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkMemory[measurementCollection::maxNumberOfUplinksMemory - 1].uplinkFrameCount);
-    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkMemory[measurementCollection::maxNumberOfUplinksMemory - 1].startOffset);
+    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistoryIndex);
+    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistory[0].frameCount);
+    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistory[0].startOffset);
+    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistory[measurementCollection::uplinkHistoryLength - 1].frameCount);
+    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistory[measurementCollection::uplinkHistoryLength - 1].startOffset);
     TEST_ASSERT_EQUAL(0, measurementCollection::newMeasurements.getLevel());
 }
 
@@ -104,7 +104,7 @@ void test_nmbrOfBytesToTransmit() {
     TEST_ASSERT_EQUAL(0, measurementCollection::nmbrOfBytesToTransmit());
     measurementCollection::newMeasurementsOffset = 16;
     TEST_ASSERT_EQUAL(16, measurementCollection::nmbrOfBytesToTransmit());
-    measurementCollection::uplinkMemory[0].startOffset = 8;
+    measurementCollection::uplinkHistory[0].startOffset = 8;
     TEST_ASSERT_EQUAL(8, measurementCollection::nmbrOfBytesToTransmit());
 }
 
@@ -118,9 +118,9 @@ void test_setTransmitted() {
     static constexpr uint32_t uplinkFrameCount{123};
     uint32_t bytesToTransmit = measurementCollection::nmbrOfBytesToTransmit();
     TEST_ASSERT_EQUAL(14, bytesToTransmit);
-    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkMemoryIndex);
+    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistoryIndex);
     measurementCollection::setTransmitted(uplinkFrameCount, bytesToTransmit);
-    TEST_ASSERT_EQUAL(1, measurementCollection::uplinkMemoryIndex);
+    TEST_ASSERT_EQUAL(1, measurementCollection::uplinkHistoryIndex);
     TEST_ASSERT_EQUAL(0, measurementCollection::nmbrOfBytesToTransmit());
 }
 
