@@ -11,6 +11,12 @@ void sensorChannel::set(uint32_t newOversamplingLowPower, uint32_t newPrescalerL
     oversamplingHighPower = newOversamplingHighPower;
     prescalerHighPower    = newPrescalerHighPower;
     limitOversamplingAndPrescaler();
+    oversamplingCounter = getCurrentOversampling();
+    if (getCurrentPrescaler() > 0) {
+        prescaleCounter = getCurrentPrescaler()-1;
+    } else {
+        prescaleCounter = 0;
+    }
 }
 
 bool sensorChannel::needsSampling() {
