@@ -64,7 +64,7 @@ void test_nmbrOfNewMeasurements() {
     TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::barometricPressure));
 }
 
-void test_tick() {
+void test_tickAndRun() {
     power::mockUsbPower = false;
     bme680::initialize();
     bme680::channels[bme680::temperature].set(0, 1, 0, 0);
@@ -107,6 +107,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_isPresent);
     RUN_TEST(test_initialize);
     RUN_TEST(test_nmbrOfNewMeasurements);
-    RUN_TEST(test_tick);
+    RUN_TEST(test_tickAndRun);
     UNITY_END();
 }
