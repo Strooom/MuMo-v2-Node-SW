@@ -5,7 +5,6 @@
 
 #pragma once
 #include <stdint.h>
-#include <main.h>
 
 typedef struct
 {
@@ -20,5 +19,4 @@ class uniqueId {
     static uint64_t get();
 };
 
-#define UID ((UID_typeDef *)UID64_BASE)
 
