@@ -33,6 +33,7 @@ class measurementCollection {
   public:
     void dump();
     static void initialize();
+    static void erase();
     static uint32_t nmbrOfBytesToTransmit();
 
     static void saveNewMeasurementsToEeprom();
@@ -55,7 +56,7 @@ class measurementCollection {
     static uint32_t uplinkHistoryIndex;
     static uplinkMeasurement uplinkHistory[uplinkHistoryLength];
 
-    static uint32_t addressFromOffset(uint32_t offset) { return (nonVolatileStorage::measurementsStartAddress + offset) % nonVolatileStorage::measurementsSize; };
+    static uint32_t addressFromOffset(uint32_t offset) { return (nonVolatileStorage::measurementsStartAddress + offset); };
 
     static constexpr uint32_t newMeasurementsLength{260};
     static linearBuffer<newMeasurementsLength> newMeasurements;        // this collects measurements before writing them to EEPROM

@@ -1,0 +1,1 @@
+I need a mechanism for the address pointers to properly overflow when the eeprom section is full

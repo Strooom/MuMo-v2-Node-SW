@@ -41,7 +41,8 @@ void mainController::initialize() {
     }
 
     sensorDeviceCollection::discover();
-
+    measurementCollection::initialize();
+    
     gpio::enableGpio(gpio::group::spiDisplay);
     gpio::enableGpio(gpio::group::uart1);
     gpio::enableGpio(gpio::group::rfControl);
@@ -130,11 +131,11 @@ void mainController::run() {
             break;
 
         case mainState::logging:
-            if (logging::isActive(logging::source::sensorData)) {
-                if (sensorDeviceCollection::hasNewMeasurements()) {
+            if (sensorDeviceCollection::hasNewMeasurements()) {
+                if (logging::isActive(logging::source::sensorData)) {
                     sensorDeviceCollection::log();
-                    sensorDeviceCollection::saveNewMeasurementsToEeprom();
                 }
+                sensorDeviceCollection::saveNewMeasurementsToEeprom();
             }
             goTo(mainState::networking);
             break;

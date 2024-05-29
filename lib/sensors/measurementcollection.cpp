@@ -21,7 +21,17 @@ void measurementCollection::initialize() {
         measurementCollection::uplinkHistory[i].startOffset = 0;
     }
     newMeasurements.initialize();
-    findStartEndOffsets();
+    //findStartEndOffsets();
+}
+
+void measurementCollection::erase() {
+    static constexpr uint32_t blockSize{128};
+    uint8_t defaultData[blockSize];
+    memset(defaultData, 0xFF, blockSize);
+    uint32_t nmbrOfBlocks = nonVolatileStorage::measurementsSize / blockSize;
+    for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
+        nonVolatileStorage::write(addressFromOffset(blockIndex * blockSize), defaultData, blockSize);
+    }
 }
 
 uint32_t measurementCollection::nmbrOfBytesToTransmit() {
@@ -121,10 +131,9 @@ void measurementCollection::addMeasurement(measurement &newMeasurement) {
 void measurementCollection::addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float measurementValue) {
     uint8_t header;
     header = measurement::hasTimestampMask;
-    header = header | ((static_cast<uint8_t>(deviceIndex) & 0b01111100) << 2);
+    header = header | ((static_cast<uint8_t>(deviceIndex) << 2) & 0b01111100);
     header = header | (static_cast<uint8_t>(channelIndex) & 0b00000011);
     newMeasurements.append(&header, 1);
-    newMeasurementsOffset = (newMeasurementsOffset + 1) % nonVolatileStorage::measurementsSize;
 
     if (measurement::hasTimestampMask) {
         union {
@@ -133,7 +142,6 @@ void measurementCollection::addMeasurement(uint32_t deviceIndex, uint32_t channe
         } now;
         now.asUint32 = realTimeClock::get();
         newMeasurements.append(now.asBytes, 4);
-        newMeasurementsOffset = (newMeasurementsOffset + 4) % nonVolatileStorage::measurementsSize;
     }
 
     union {
@@ -142,5 +150,4 @@ void measurementCollection::addMeasurement(uint32_t deviceIndex, uint32_t channe
     } value;
     value.asFloat = measurementValue;
     newMeasurements.append(value.asBytes, 4);
-    newMeasurementsOffset = (newMeasurementsOffset + 4) % nonVolatileStorage::measurementsSize;
 }
