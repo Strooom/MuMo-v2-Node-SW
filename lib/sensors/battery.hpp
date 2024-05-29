@@ -17,7 +17,7 @@ class battery {
     static sensorDeviceState getState() { return state; };
     static uint32_t nmbrOfNewMeasurements();
     static bool hasNewMeasurement(uint32_t startSearchIndex = 0);
-    static void saveNewMeasurementsToEeprom();
+    static void addNewMeasurements();
     static uint32_t nextNewMeasurementChannel(uint32_t startSearchIndex = 0);
     static float valueAsFloat(uint32_t channelIndex);
 

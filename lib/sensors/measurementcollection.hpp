@@ -39,6 +39,7 @@ class measurementCollection {
     static void setTransmitted(uint32_t frameCount, uint32_t length);
 
     static void addMeasurement(measurement &newMeasurement);
+    static void addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float value);
 
 #ifndef unitTesting
 

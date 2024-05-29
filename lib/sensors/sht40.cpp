@@ -2,10 +2,12 @@
 // ### Author : Pascal Roobrouck - https://github.com/Strooom                         ###
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
-
+#include <sensordevicetype.hpp>
 #include <sht40.hpp>
 #include <settingscollection.hpp>
+#include <float.hpp>
 #include <logging.hpp>
+#include <measurementcollection.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -194,13 +196,21 @@ void sht40::read(uint8_t* response, uint32_t responseLength) {
 }
 
 void sht40::log() {
-    if (channels[temperature].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.2f *C\n", channelFormats[temperature].name, channels[temperature].getOutput());
-    }
-    if (channels[relativeHumidity].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[relativeHumidity].name, channels[relativeHumidity].getOutput(), channelFormats[relativeHumidity].unit);
+        for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            float value       = valueAsFloat(channelIndex);
+            uint32_t decimals = channelFormats[channelIndex].decimals;
+            uint32_t intPart  = integerPart(value, decimals);
+            uint32_t fracPart = fractionalPart(value, decimals);
+            logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
+        }
     }
 }
 
-void sht40::saveNewMeasurementsToEeprom() {
+void sht40::addNewMeasurements() {
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::sht40), channelIndex, channels[channelIndex].getOutput());
+        }
+    }
 }

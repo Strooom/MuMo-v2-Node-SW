@@ -3,11 +3,13 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
+#include <sensordevicetype.hpp>
 #include <battery.hpp>
 #include <settingscollection.hpp>
 #include <chargefromvoltage.hpp>
 #include <logging.hpp>
 #include <float.hpp>
+#include <measurementcollection.hpp>
 
 #ifndef generic
 #include <main.h>
@@ -152,19 +154,22 @@ float battery::voltageFromRaw(uint32_t rawADC) {
 #endif
 }
 
-void battery::saveNewMeasurementsToEeprom() {
+void battery::addNewMeasurements() {
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::battery), channelIndex, channels[channelIndex].getOutput());
+        }
+    }
 }
 
 void battery::log() {
-    // if (channels[voltage].hasNewValue) {
-    //     float value       = valueAsFloat(voltage);
-    //     uint32_t decimals = channelFormats[voltage].decimals;
-    //     uint32_t intPart  = integerPart(value, decimals);
-    //     uint32_t fracPart = fractionalPart(value, decimals);
-    //     logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[voltage].name, intPart, fracPart, channelFormats[voltage].unit);
-    // }
-    // if (channels[percentCharged].hasNewValue) {
-    //     //        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[percentCharged].name, channels[percentCharged].getOutput() * 100.0F, channelFormats[percentCharged].unit);
-    //     logging::snprintf(logging::source::sensorData, "%s = ... %s\n", channelFormats[percentCharged].name, channelFormats[percentCharged].unit);
-    // }
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            float value       = valueAsFloat(channelIndex);
+            uint32_t decimals = channelFormats[channelIndex].decimals;
+            uint32_t intPart  = integerPart(value, decimals);
+            uint32_t fracPart = fractionalPart(value, decimals);
+            logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
+        }
+    }
 }

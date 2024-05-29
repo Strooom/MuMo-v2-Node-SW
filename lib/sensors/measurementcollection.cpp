@@ -2,6 +2,7 @@
 #include <nvs.hpp>
 #include <logging.hpp>
 #include <sensordevicetype.hpp>
+#include <realtimeclock.hpp>
 
 extern uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
 
@@ -14,10 +15,10 @@ linearBuffer<measurementCollection::newMeasurementsLength> measurementCollection
 void measurementCollection::initialize() {
     measurementCollection::oldestMeasurementOffset = 0;
     measurementCollection::newMeasurementsOffset   = 0;
-    measurementCollection::uplinkHistoryIndex       = 0;
+    measurementCollection::uplinkHistoryIndex      = 0;
     for (uint32_t i = 0; i < uplinkHistoryLength; i++) {
-        measurementCollection::uplinkHistory[i].frameCount = 0;
-        measurementCollection::uplinkHistory[i].startOffset      = 0;
+        measurementCollection::uplinkHistory[i].frameCount  = 0;
+        measurementCollection::uplinkHistory[i].startOffset = 0;
     }
     newMeasurements.initialize();
     findStartEndOffsets();
@@ -37,10 +38,10 @@ void measurementCollection::saveNewMeasurementsToEeprom() {
 }
 
 void measurementCollection::setTransmitted(uint32_t frameCount, uint32_t length) {
-    uplinkHistory[uplinkHistoryIndex].frameCount = frameCount;
-    uint32_t offset                                  = uplinkHistory[uplinkHistoryIndex].startOffset;
-    uplinkHistoryIndex                                = (uplinkHistoryIndex + 1) % uplinkHistoryLength;
-    uplinkHistory[uplinkHistoryIndex].startOffset      = (offset + length) % nonVolatileStorage::measurementsSize;
+    uplinkHistory[uplinkHistoryIndex].frameCount  = frameCount;
+    uint32_t offset                               = uplinkHistory[uplinkHistoryIndex].startOffset;
+    uplinkHistoryIndex                            = (uplinkHistoryIndex + 1) % uplinkHistoryLength;
+    uplinkHistory[uplinkHistoryIndex].startOffset = (offset + length) % nonVolatileStorage::measurementsSize;
 }
 
 void measurementCollection::findStartEndOffsets() {
@@ -114,5 +115,32 @@ void measurementCollection::addMeasurement(measurement &newMeasurement) {
         newMeasurementsOffset = (newMeasurementsOffset + 4) % nonVolatileStorage::measurementsSize;
     }
     newMeasurements.append(newMeasurement.value.asBytes, 4);
+    newMeasurementsOffset = (newMeasurementsOffset + 4) % nonVolatileStorage::measurementsSize;
+}
+
+void measurementCollection::addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float measurementValue) {
+    uint8_t header;
+    header = measurement::hasTimestampMask;
+    header = header | ((static_cast<uint8_t>(deviceIndex) & 0b01111100) << 2);
+    header = header | (static_cast<uint8_t>(channelIndex) & 0b00000011);
+    newMeasurements.append(&header, 1);
+    newMeasurementsOffset = (newMeasurementsOffset + 1) % nonVolatileStorage::measurementsSize;
+
+    if (measurement::hasTimestampMask) {
+        union {
+            float asUint32;
+            uint8_t asBytes[4];
+        } now;
+        now.asUint32 = realTimeClock::get();
+        newMeasurements.append(now.asBytes, 4);
+        newMeasurementsOffset = (newMeasurementsOffset + 4) % nonVolatileStorage::measurementsSize;
+    }
+
+    union {
+        float asFloat;
+        uint8_t asBytes[4];
+    } value;
+    value.asFloat = measurementValue;
+    newMeasurements.append(value.asBytes, 4);
     newMeasurementsOffset = (newMeasurementsOffset + 4) % nonVolatileStorage::measurementsSize;
 }

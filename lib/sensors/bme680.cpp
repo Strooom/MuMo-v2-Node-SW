@@ -3,10 +3,12 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
+#include <sensordevicetype.hpp>
 #include <bme680.hpp>
 #include <settingscollection.hpp>
 #include <logging.hpp>
 #include <float.hpp>
+#include <measurementcollection.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -142,7 +144,6 @@ void bme680::run() {
     if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
         readSample();
 
-
         if (channels[temperature].needsSampling()) {
             float bme680Temperature = calculateTemperature();
             channels[temperature].addSample(bme680Temperature);
@@ -187,134 +188,129 @@ void bme680::adjustAllCounters() {
     }
 }
 
-    void bme680::startSampling() {
-        state = sensorDeviceState::sampling;
-        // run a ADC conversion cycle for Temp Hum and Presure, and when ready, read and store all raw ADC results
-        writeRegister(bme680::registers::ctrl_hum, 0b00000001);
-        writeRegister(bme680::registers::ctrl_meas, 0b00100101);
-        state = sensorDeviceState::sampling;
+void bme680::startSampling() {
+    state = sensorDeviceState::sampling;
+    // run a ADC conversion cycle for Temp Hum and Presure, and when ready, read and store all raw ADC results
+    writeRegister(bme680::registers::ctrl_hum, 0b00000001);
+    writeRegister(bme680::registers::ctrl_meas, 0b00100101);
+    state = sensorDeviceState::sampling;
+}
+
+bool bme680::samplingIsReady() {
+    uint8_t status    = readRegister(bme680::registers::meas_status);
+    uint8_t statusBit = status & 0x80;
+    bool noNewData    = statusBit == 0;
+    return !noNewData;
+}
+
+void bme680::readSample() {
+    constexpr uint32_t nmbrRegisters{8};
+    uint8_t registerData[nmbrRegisters];
+    readRegisters(0x1F, nmbrRegisters, registerData);        // reads 8 registers, from 0x1F up to 0x26, they contain the raw ADC results for temperature, relativeHumidity and pressure
+    rawDataTemperature        = ((static_cast<uint32_t>(registerData[3]) << 12) | (static_cast<uint32_t>(registerData[4]) << 4) | (static_cast<uint32_t>(registerData[5]) >> 4));
+    rawDataRelativeHumidity   = ((static_cast<uint32_t>(registerData[6]) << 8) | (static_cast<uint32_t>(registerData[7])));
+    rawDataBarometricPressure = ((static_cast<uint32_t>(registerData[0]) << 12) | (static_cast<uint32_t>(registerData[1]) << 4) | (static_cast<uint32_t>(registerData[2]) >> 4));
+}
+
+float bme680::calculateTemperature() {
+    float var1                         = ((((float)rawDataTemperature / 16384.0f) - (calibrationCoefficientTemperature1 / 1024.0f)) * (calibrationCoefficientTemperature2));
+    float var2                         = (((((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f)) * (((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f))) * (calibrationCoefficientTemperature3 * 16.0f));
+    calibrationCoefficientTemperature4 = var1 + var2;
+    return (calibrationCoefficientTemperature4 / 5120.0f);
+}
+
+float bme680::calculateRelativeHumidity() {
+    float calc_hum;
+
+    float temp_comp = ((calibrationCoefficientTemperature4) / 5120.0f);
+    float var1      = static_cast<float>(rawDataRelativeHumidity) - (calibrationCoefficientHumidity1 * 16.0f) + ((calibrationCoefficientHumidity3 / 2.0f) * temp_comp);
+    float var2      = var1 * (calibrationCoefficientHumidity2 / 262144.0f) * (1.0f + ((calibrationCoefficientHumidity4 / 16384.0f) * temp_comp) + ((calibrationCoefficientHumidity5 / 1048576.0f) * temp_comp * temp_comp));
+    float var3      = calibrationCoefficientHumidity6 / 16384.0f;
+    float var4      = calibrationCoefficientHumidity7 / 2097152.0f;
+    calc_hum        = var2 + ((var3 + (var4 * temp_comp)) * var2 * var2);
+    if (calc_hum > 100.0f) {
+        calc_hum = 100.0f;
+    } else if (calc_hum < 0.0f) {
+        calc_hum = 0.0f;
     }
 
-    bool bme680::samplingIsReady() {
-        uint8_t status    = readRegister(bme680::registers::meas_status);
-        uint8_t statusBit = status & 0x80;
-        bool noNewData    = statusBit == 0;
-        return !noNewData;
+    return calc_hum;
+}
+
+float bme680::calculateBarometricPressure() {
+    float var1   = ((calibrationCoefficientTemperature4 / 2.0f) - 64000.0f);
+    float var2   = var1 * var1 * ((calibrationCoefficientPressure6) / (131072.0f));
+    var2         = var2 + (var1 * (calibrationCoefficientPressure5) * 2.0f);
+    var2         = (var2 / 4.0f) + ((calibrationCoefficientPressure4) * 65536.0f);
+    var1         = ((((calibrationCoefficientPressure3 * var1 * var1) / 16384.0f) + (calibrationCoefficientPressure2 * var1)) / 524288.0f);
+    var1         = ((1.0f + (var1 / 32768.0f)) * ((float)calibrationCoefficientPressure1));
+    float result = (1048576.0f - ((float)rawDataBarometricPressure));
+
+    if ((int)var1 != 0) {
+        result     = (((result - (var2 / 4096.0f)) * 6250.0f) / var1);
+        var1       = ((calibrationCoefficientPressure9)*result * result) / 2147483648.0f;
+        var2       = result * ((calibrationCoefficientPressure8) / 32768.0f);
+        float var3 = ((result / 256.0f) * (result / 256.0f) * (result / 256.0f) * (calibrationCoefficientPressure10 / 131072.0f));
+        result     = (result + (var1 + var2 + var3 + (calibrationCoefficientPressure7 * 128.0f)) / 16.0f);
+    } else {
+        result = 0;
     }
 
-    void bme680::readSample() {
-        constexpr uint32_t nmbrRegisters{8};
-        uint8_t registerData[nmbrRegisters];
-        readRegisters(0x1F, nmbrRegisters, registerData);        // reads 8 registers, from 0x1F up to 0x26, they contain the raw ADC results for temperature, relativeHumidity and pressure
-        rawDataTemperature        = ((static_cast<uint32_t>(registerData[3]) << 12) | (static_cast<uint32_t>(registerData[4]) << 4) | (static_cast<uint32_t>(registerData[5]) >> 4));
-        rawDataRelativeHumidity   = ((static_cast<uint32_t>(registerData[6]) << 8) | (static_cast<uint32_t>(registerData[7])));
-        rawDataBarometricPressure = ((static_cast<uint32_t>(registerData[0]) << 12) | (static_cast<uint32_t>(registerData[1]) << 4) | (static_cast<uint32_t>(registerData[2]) >> 4));
-    }
+    result = result / 100.0F;        // use hPa as unit
 
-    float bme680::calculateTemperature() {
-        float var1                         = ((((float)rawDataTemperature / 16384.0f) - (calibrationCoefficientTemperature1 / 1024.0f)) * (calibrationCoefficientTemperature2));
-        float var2                         = (((((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f)) * (((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f))) * (calibrationCoefficientTemperature3 * 16.0f));
-        calibrationCoefficientTemperature4 = var1 + var2;
-        return (calibrationCoefficientTemperature4 / 5120.0f);
-    }
+    return result;
+}
 
-    float bme680::calculateRelativeHumidity() {
-        float calc_hum;
+bool bme680::testI2cAddress(uint8_t addressToTest) {
+#ifndef generic
+    return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
+#else
+    return true;
+#endif
+}
 
-        float temp_comp = ((calibrationCoefficientTemperature4) / 5120.0f);
-        float var1      = static_cast<float>(rawDataRelativeHumidity) - (calibrationCoefficientHumidity1 * 16.0f) + ((calibrationCoefficientHumidity3 / 2.0f) * temp_comp);
-        float var2      = var1 * (calibrationCoefficientHumidity2 / 262144.0f) * (1.0f + ((calibrationCoefficientHumidity4 / 16384.0f) * temp_comp) + ((calibrationCoefficientHumidity5 / 1048576.0f) * temp_comp * temp_comp));
-        float var3      = calibrationCoefficientHumidity6 / 16384.0f;
-        float var4      = calibrationCoefficientHumidity7 / 2097152.0f;
-        calc_hum        = var2 + ((var3 + (var4 * temp_comp)) * var2 * var2);
-        if (calc_hum > 100.0f) {
-            calc_hum = 100.0f;
-        } else if (calc_hum < 0.0f) {
-            calc_hum = 0.0f;
+uint8_t bme680::readRegister(registers registerAddress) {
+    uint8_t result;
+#ifndef generic
+    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &result, 1, halTimeout);
+#else
+    result = mockBME680Registers[static_cast<uint8_t>(registerAddress)];
+#endif
+    return result;
+}
+
+void bme680::writeRegister(registers registerAddress, uint8_t value) {
+#ifndef generic
+    HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
+#else
+    mockBME680Registers[static_cast<uint8_t>(registerAddress)] = value;
+#endif
+}
+
+void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* destination) {
+#ifndef generic
+    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_8BIT, destination, length, halTimeout);
+#else
+    (void)memcpy(destination, mockBME680Registers + startAddress, length);
+#endif
+}
+
+void bme680::log() {
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            float value       = valueAsFloat(channelIndex);
+            uint32_t decimals = channelFormats[channelIndex].decimals;
+            uint32_t intPart  = integerPart(value, decimals);
+            uint32_t fracPart = fractionalPart(value, decimals);
+            logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
         }
-
-        return calc_hum;
     }
+}
 
-    float bme680::calculateBarometricPressure() {
-        float var1   = ((calibrationCoefficientTemperature4 / 2.0f) - 64000.0f);
-        float var2   = var1 * var1 * ((calibrationCoefficientPressure6) / (131072.0f));
-        var2         = var2 + (var1 * (calibrationCoefficientPressure5) * 2.0f);
-        var2         = (var2 / 4.0f) + ((calibrationCoefficientPressure4) * 65536.0f);
-        var1         = ((((calibrationCoefficientPressure3 * var1 * var1) / 16384.0f) + (calibrationCoefficientPressure2 * var1)) / 524288.0f);
-        var1         = ((1.0f + (var1 / 32768.0f)) * ((float)calibrationCoefficientPressure1));
-        float result = (1048576.0f - ((float)rawDataBarometricPressure));
-
-        if ((int)var1 != 0) {
-            result     = (((result - (var2 / 4096.0f)) * 6250.0f) / var1);
-            var1       = ((calibrationCoefficientPressure9)*result * result) / 2147483648.0f;
-            var2       = result * ((calibrationCoefficientPressure8) / 32768.0f);
-            float var3 = ((result / 256.0f) * (result / 256.0f) * (result / 256.0f) * (calibrationCoefficientPressure10 / 131072.0f));
-            result     = (result + (var1 + var2 + var3 + (calibrationCoefficientPressure7 * 128.0f)) / 16.0f);
-        } else {
-            result = 0;
+void bme680::addNewMeasurements() {
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::bme680), channelIndex, channels[channelIndex].getOutput());
         }
-
-        result = result / 100.0F;        // use hPa as unit
-
-        return result;
     }
-
-    bool bme680::testI2cAddress(uint8_t addressToTest) {
-#ifndef generic
-        return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
-#else
-        return true;
-#endif
-    }
-
-    uint8_t bme680::readRegister(registers registerAddress) {
-        uint8_t result;
-#ifndef generic
-        HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &result, 1, halTimeout);
-#else
-        result = mockBME680Registers[static_cast<uint8_t>(registerAddress)];
-#endif
-        return result;
-    }
-
-    void bme680::writeRegister(registers registerAddress, uint8_t value) {
-#ifndef generic
-        HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
-#else
-        mockBME680Registers[static_cast<uint8_t>(registerAddress)] = value;
-#endif
-    }
-
-    void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t * destination) {
-#ifndef generic
-        HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_8BIT, destination, length, halTimeout);
-#else
-        (void)memcpy(destination, mockBME680Registers + startAddress, length);
-#endif
-    }
-
-    void bme680::log() {
-        // if (channels[temperature].hasNewValue) {
-        //     float value       = valueAsFloat(temperature);
-        //     uint32_t decimals = channelFormats[temperature].decimals;
-        //     uint32_t intPart  = integerPart(value, decimals);
-        //     uint32_t fracPart = fractionalPart(value, decimals);
-        //     logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[temperature].name, intPart, fracPart, channelFormats[temperature].unit);
-        // }
-        // if (channels[relativeHumidity].hasNewValue) {
-        //     float value       = valueAsFloat(relativeHumidity);
-        //     uint32_t decimals = channelFormats[relativeHumidity].decimals;
-        //     uint32_t intPart  = integerPart(value, decimals);
-        //     uint32_t fracPart = fractionalPart(value, decimals);
-        //     logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[relativeHumidity].name, intPart, fracPart, channelFormats[relativeHumidity].unit);
-        // }
-        // if (channels[barometricPressure].hasNewValue) {
-        //     // logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[barometricPressure].name, channels[barometricPressure].getOutput(), channelFormats[barometricPressure].unit);
-        //     logging::snprintf(logging::source::sensorData, "%s = ... %s\n", channelFormats[barometricPressure].name, channelFormats[barometricPressure].unit);
-        // }
-    }
-
-
-void bme680::saveNewMeasurementsToEeprom() {
 }

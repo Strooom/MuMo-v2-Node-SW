@@ -6,6 +6,8 @@
 #ifndef generic
 #include "main.h"
 extern RTC_HandleTypeDef hrtc;
+#else
+#include <ctime>
 #endif
 
 time_t realTimeClock::unixTimeFromGpsTime(uint32_t gpsTime) {
@@ -15,6 +17,7 @@ time_t realTimeClock::unixTimeFromGpsTime(uint32_t gpsTime) {
 }
 
 void realTimeClock::initialize() {
+#ifndef generic
     time_t nowEpoch = get();
     tm brokenDownTime;
     (void)gmtime_r(&nowEpoch, &brokenDownTime);
@@ -25,15 +28,19 @@ void realTimeClock::initialize() {
     }
     time_t now = get();
     logging::snprintf("UTC = %s", ctime(&now));
+#endif
 }
 
 void realTimeClock::set(time_t unixTime) {
+    #ifndef generic
     tm brokenDownTime;
     (void)gmtime_r(&unixTime, &brokenDownTime);
     set(brokenDownTime);
+    #endif
 }
 
 void realTimeClock::set(tm brokenDownTime) {
+    #ifndef generic
     RTC_TimeTypeDef stm32Time;
     RTC_DateTypeDef stm32Date;
 
@@ -57,9 +64,12 @@ void realTimeClock::set(tm brokenDownTime) {
     HAL_RTC_SetTime(&hrtc, &stm32Time, RTC_FORMAT_BIN);
     HAL_RTC_SetDate(&hrtc, &stm32Date, RTC_FORMAT_BIN);
     // HAL_PWR_DisableBkUpAccess(); This created a bug where the RTC would be set but not running - for further investigation
+#endif
+
 }
 
 time_t realTimeClock::get() {
+    #ifndef generic
     RTC_TimeTypeDef stm32Time;
     RTC_DateTypeDef stm32Date;
 
@@ -78,4 +88,7 @@ time_t realTimeClock::get() {
     now                    = mktime(&brokenDownTime);
 
     return now;
+    #else
+    return time(nullptr);
+    #endif
 }
