@@ -20,6 +20,7 @@ class sht40 {
 
     static bool hasNewMeasurement();
     static bool hasNewMeasurement(uint32_t channelIndex);
+    static void saveNewMeasurementsToEeprom();
 
     static float valueAsFloat(uint32_t channelIndex);
     static const char* channelName(uint32_t channelIndex);

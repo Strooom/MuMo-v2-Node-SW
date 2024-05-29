@@ -152,6 +152,9 @@ float battery::voltageFromRaw(uint32_t rawADC) {
 #endif
 }
 
+void battery::saveNewMeasurementsToEeprom() {
+}
+
 void battery::log() {
     // if (channels[voltage].hasNewValue) {
     //     float value       = valueAsFloat(voltage);

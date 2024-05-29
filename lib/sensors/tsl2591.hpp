@@ -18,6 +18,8 @@ class tsl2591 {
 
     static bool hasNewMeasurement();
     static bool hasNewMeasurement(uint32_t channelIndex);
+        static void saveNewMeasurementsToEeprom();
+
     static float valueAsFloat(uint32_t channelIndex);
 
     static void tick();

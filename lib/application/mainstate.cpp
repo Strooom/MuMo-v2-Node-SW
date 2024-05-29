@@ -25,9 +25,6 @@ const char *toString(mainState aState) {
         case mainState::logging:
             return "logging";
             break;
-        case mainState::storing:
-            return "storing";
-            break;
         case mainState::displaying:
             return "displaying";
             break;

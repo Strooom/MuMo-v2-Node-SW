@@ -201,3 +201,6 @@ void sht40::log() {
         logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[relativeHumidity].name, channels[relativeHumidity].getOutput(), channelFormats[relativeHumidity].unit);
     }
 }
+
+void sht40::saveNewMeasurementsToEeprom() {
+}

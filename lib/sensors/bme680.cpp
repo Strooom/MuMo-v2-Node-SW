@@ -314,3 +314,7 @@ void bme680::adjustAllCounters() {
         //     logging::snprintf(logging::source::sensorData, "%s = ... %s\n", channelFormats[barometricPressure].name, channelFormats[barometricPressure].unit);
         // }
     }
+
+
+void bme680::saveNewMeasurementsToEeprom() {
+}

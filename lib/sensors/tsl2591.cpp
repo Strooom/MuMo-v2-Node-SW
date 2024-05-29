@@ -54,7 +54,6 @@ uint32_t tsl2591::nmbrOfNewMeasurements() {
     return count;
 }
 
-
 float tsl2591::valueAsFloat(uint32_t index) {
     return channels[index].getOutput();
 }
@@ -180,4 +179,7 @@ void tsl2591::log() {
         //        logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", channelFormats[visibleLight].name, channels[visibleLight].getOutput(), channelFormats[visibleLight].unit);
         logging::snprintf(logging::source::sensorData, "%s = ... %s\n", channelFormats[visibleLight].name, channelFormats[visibleLight].unit);
     }
+}
+
+void tsl2591::saveNewMeasurementsToEeprom() {
 }
