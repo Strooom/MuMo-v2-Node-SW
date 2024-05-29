@@ -30,6 +30,8 @@ void battery::initalize() {
     }
     type  = static_cast<batteryType>(typeIndex);
     state = sensorDeviceState::sleeping;
+
+    logging::snprintf(logging::source::settings, "batteryType : %s\n", toString(type));
 }
 
 uint32_t battery::nmbrOfNewMeasurements() {

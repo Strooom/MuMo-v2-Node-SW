@@ -16,7 +16,7 @@ void test_initialize() {
     TEST_ASSERT_EQUAL(buildEnvironment::unknown, version::theBuildEnvironment);
     TEST_ASSERT_EQUAL_STRING("", version::isVersionString);
 
-    version::setIsVersion();
+    version::initialize();
     // After initialization values...
     TEST_ASSERT_EQUAL_UINT8(buildInfo::mainVersionDigit, version::isVersionMajor);
     TEST_ASSERT_EQUAL_UINT8(buildInfo::minorVersionDigit, version::isVersionMinor);

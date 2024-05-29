@@ -69,6 +69,18 @@ void test_channelUnits() {
     TEST_ASSERT_EQUAL_STRING("lux", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
 }
 
+void test_tickAndRun() {
+    sensorDeviceCollection::discover();
+    bme680::channels[bme680::temperature].set(0, 1, 0, 0);
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isSleeping());
+    sensorDeviceCollection::tick();
+    TEST_ASSERT_FALSE(sensorDeviceCollection::isSleeping());
+    TEST_ASSERT_EQUAL(sensorDeviceState::sampling, bme680::state);
+    sensorDeviceCollection::run();
+    TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements());
+    TEST_ASSERT_EQUAL(2, sensorDeviceCollection::nmbrOfNewMeasurements());
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initalize);
@@ -78,5 +90,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_channelDecimals);
     RUN_TEST(test_channelName);
     RUN_TEST(test_channelUnits);
+    RUN_TEST(test_tickAndRun);
     UNITY_END();
 }

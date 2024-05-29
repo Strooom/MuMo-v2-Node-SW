@@ -49,6 +49,8 @@ void logging::initialize() {
 
     gpio::enableGpio(gpio::group::i2cEeprom);
     logging::setActiveSources(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));
+
+    dump();
 }
 
 uint32_t logging::snprintf(const char *format, ...) {

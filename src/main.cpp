@@ -37,6 +37,7 @@
 #include <lorawan.hpp>
 #include <realtimeclock.hpp>
 #include <uniqueid.hpp>
+#include <settingscollection.hpp>
 
 /* USER CODE END Includes */
 
@@ -142,15 +143,12 @@ int main(void) {
     /* USER CODE BEGIN 2 */
     gpio ::enableGpio(gpio::group::uart1);        // check if this is needed on top of MX_USART1_UART_Init();
 
-    HAL_Delay(3000);
-    version::setIsVersion();
+    HAL_Delay(1000);
     logging::initialize();
-    logging::enable(logging::source::applicationEvents);
+    version::initialize();
     uniqueId::dump();
     realTimeClock::initialize();
-    mainController ::initialize();
-
-    logging::dump();
+    mainController::initialize();
     LoRaWAN::dumpConfig();
     LoRaWAN::dumpState();
     LoRaWAN::dumpChannels();

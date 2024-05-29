@@ -15,3 +15,5 @@ enum class batteryType : uint8_t {
 };
 
 constexpr uint32_t nmbrBatteryTypes{5};
+
+const char* toString(batteryType type);

@@ -49,10 +49,6 @@ void mainController::initialize() {
     LoRaWAN::initialize();
     // goTo(mainState::waitingForNetwork);
     goTo(mainState::idle);
-
-    logging::snprintf("https://github.com/Strooom - %s\n", version::getIsVersionAsString());
-    logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
-    logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
 }
 
 void mainController::handleEvents() {
