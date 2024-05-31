@@ -8,39 +8,39 @@
 extern RTC_HandleTypeDef hrtc;
 #else
 #include <ctime>
+time_t mockRealTimeClock;
 #endif
 
-time_t realTimeClock::unixTimeFromGpsTime(uint32_t gpsTime) {
+union realTimeClock::convert realTimeClock::convertor;
+
+time_t realTimeClock::gpsTimeToUnixTime(uint32_t gpsTime) {
     static constexpr uint32_t unixToGpsOffset{315964800};
     static constexpr uint32_t leapSecondsOffset{18};
     return (gpsTime + unixToGpsOffset - leapSecondsOffset);
 }
 
 void realTimeClock::initialize() {
-#ifndef generic
-    time_t nowEpoch = get();
-    tm brokenDownTime;
-    (void)gmtime_r(&nowEpoch, &brokenDownTime);
-
-    if (brokenDownTime.tm_year == 100U) {
+    time_t localTime = get();
+    if (localTime < buildInfo::buildEpoch) {
         set();
         logging::snprintf("RTC initialized to buildTime\n");
     }
-    time_t now = get();
-    logging::snprintf("UTC = %s", ctime(&now));
-#endif
+    localTime = get();
+    logging::snprintf("UTC = %s", ctime(&localTime));
 }
 
 void realTimeClock::set(time_t unixTime) {
-    #ifndef generic
+#ifndef generic
     tm brokenDownTime;
     (void)gmtime_r(&unixTime, &brokenDownTime);
     set(brokenDownTime);
-    #endif
+#else
+    mockRealTimeClock = unixTime;
+#endif
 }
 
 void realTimeClock::set(tm brokenDownTime) {
-    #ifndef generic
+#ifndef generic
     RTC_TimeTypeDef stm32Time;
     RTC_DateTypeDef stm32Date;
 
@@ -65,11 +65,10 @@ void realTimeClock::set(tm brokenDownTime) {
     HAL_RTC_SetDate(&hrtc, &stm32Date, RTC_FORMAT_BIN);
     // HAL_PWR_DisableBkUpAccess(); This created a bug where the RTC would be set but not running - for further investigation
 #endif
-
 }
 
 time_t realTimeClock::get() {
-    #ifndef generic
+#ifndef generic
     RTC_TimeTypeDef stm32Time;
     RTC_DateTypeDef stm32Date;
 
@@ -88,7 +87,20 @@ time_t realTimeClock::get() {
     now                    = mktime(&brokenDownTime);
 
     return now;
-    #else
-    return time(nullptr);
-    #endif
+#else
+    return mockRealTimeClock;
+#endif
+}
+
+uint8_t* realTimeClock::time_tToBytes(time_t input) {
+    convertor.asUint32 = static_cast<uint32_t>(input);
+    return convertor.asBytes;
+}
+
+time_t realTimeClock::bytesToTime_t(uint8_t* input) {
+    convertor.asBytes[0] = input[0];
+    convertor.asBytes[1] = input[1];
+    convertor.asBytes[2] = input[2];
+    convertor.asBytes[3] = input[3];
+    return static_cast<time_t>(convertor.asUint32);
 }

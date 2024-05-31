@@ -41,11 +41,34 @@ void test_factorInt() {
 }
 
 
+void test_floatFromBytes() {
+    // https://www.h-schmidt.net/FloatConverter/IEEE754.html
+    uint8_t testBytes[4]{0x00, 0x00, 0xf7, 0x42};
+    TEST_ASSERT_EQUAL_FLOAT(123.5F, bytesToFloat(testBytes));
+
+    uint8_t testBytes2[4]{0x4E, 0x61, 0x3C, 0x4B};
+    TEST_ASSERT_EQUAL_FLOAT(12345678.0F, bytesToFloat(testBytes2));
+}
+
+void test_bytesFromFloat() {
+    TEST_ASSERT_EQUAL_FLOAT(0x00, floatToBytes(123.5F)[0]);
+    TEST_ASSERT_EQUAL_FLOAT(0x00, floatToBytes(123.5F)[1]);
+    TEST_ASSERT_EQUAL_FLOAT(0xf7, floatToBytes(123.5F)[2]);
+    TEST_ASSERT_EQUAL_FLOAT(0x42, floatToBytes(123.5F)[3]);
+
+    TEST_ASSERT_EQUAL_FLOAT(0x4E, floatToBytes(12345678.0F)[0]);
+    TEST_ASSERT_EQUAL_FLOAT(0x61, floatToBytes(12345678.0F)[1]);
+    TEST_ASSERT_EQUAL_FLOAT(0x3C, floatToBytes(12345678.0F)[2]);
+    TEST_ASSERT_EQUAL_FLOAT(0x4B, floatToBytes(12345678.0F)[3]);
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_integerPart);
     RUN_TEST(test_fractionalPart);
     RUN_TEST(test_factorFloat);
     RUN_TEST(test_factorInt);
+    RUN_TEST(test_floatFromBytes);
+    RUN_TEST(test_bytesFromFloat);
     UNITY_END();
 }

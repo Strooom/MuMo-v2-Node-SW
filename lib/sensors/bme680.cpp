@@ -16,7 +16,6 @@ extern I2C_HandleTypeDef hi2c2;
 #else
 uint8_t mockBME680Registers[256];
 #include <cstring>
-
 #endif
 
 sensorDeviceState bme680::state{sensorDeviceState::unknown};
@@ -68,7 +67,7 @@ bool bme680::isPresent() {
 void bme680::initialize() {
     // TODO : need to read the sensorChannel settins from EEPROM and restore them
     channels[temperature].set(0, 1, 0, 1);
-    channels[relativeHumidity].set(0, 2, 0, 2);
+    channels[relativeHumidity].set(0, 0, 0, 0);
     channels[barometricPressure].set(0, 0, 0, 0);
 
     uint8_t registerData[42]{};
@@ -301,8 +300,12 @@ void bme680::log() {
             float value       = valueAsFloat(channelIndex);
             uint32_t decimals = channelFormats[channelIndex].decimals;
             uint32_t intPart  = integerPart(value, decimals);
-            uint32_t fracPart = fractionalPart(value, decimals);
-            logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
+            if (decimals > 0) {
+                uint32_t fracPart = fractionalPart(value, decimals);
+                logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
+            } else {
+                logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelFormats[channelIndex].name, intPart, channelFormats[channelIndex].unit);
+            }
         }
     }
 }

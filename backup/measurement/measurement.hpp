@@ -12,12 +12,12 @@ class measurement {
     uint8_t channelAndFlags;        // channel is 4 bits of SensorChannel on the sensorDevice, flags is 4bits to indicate if the measurement has been transmitted to the cloud, and if it has been acknowledged by the cloud, etc..
 
     union {
-        uint32_t asDoubleWord;        // using UNIX time : seconds elapsed since 1970 Jan 01 00:00:00 UTC
+        uint32_t asUint32;        // using UNIX time : seconds elapsed since 1970 Jan 01 00:00:00 UTC
         uint8_t asBytes[4];           //
     } timestamp;
     union {
         float asFloat;                // value can be of any data type, but I assume it always fits in 4 bytes..
-        uint32_t asDoubleWord;        //
+        uint32_t asUint32;        //
         uint8_t asBytes[4];           //
     } value;
 

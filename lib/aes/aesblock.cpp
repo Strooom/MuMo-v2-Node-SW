@@ -16,7 +16,7 @@ void aesBlock::setFromByteArray(const uint8_t bytesIn[lengthInBytes]) {
 
 void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
     for (uint32_t wordIndex = 0; wordIndex < 4; wordIndex++) {
-        state.asWord[wordIndex] = wordsIn[wordIndex];
+        state.asUint32[wordIndex] = wordsIn[wordIndex];
     }
 }
 
@@ -44,7 +44,7 @@ uint8_t *aesBlock::asBytes() {
 }
 
 uint32_t *aesBlock::asWords() {
-    return state.asWord;
+    return state.asUint32;
 }
 
 uint32_t aesBlock::nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes) {

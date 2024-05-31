@@ -1,12 +1,15 @@
 #include <unity.h>
 #include <nvs.hpp>
 #include <measurementcollection.hpp>
+#include <realtimeclock.hpp>
+#include <float.hpp>
 #include <ctime>
 
 void setUp(void) {}
 void tearDown(void) {}
 
 extern uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
+extern time_t mockRealTimeClock;
 
 void test_addressFromOffset() {
     static constexpr uint32_t blockSize{128};
@@ -76,7 +79,7 @@ void test_add() {
     TEST_ASSERT_EQUAL(0, measurementCollection::oldestMeasurementOffset);
 
     union {
-        float asUint32;
+        uint32_t asUint32;
         uint8_t asBytes[4];
     } now;
     now.asUint32 = time(nullptr);
@@ -89,69 +92,51 @@ void test_add() {
     value.asFloat = 1.0;
 
     measurementCollection::addMeasurement(0, 0, value.asFloat);
-    TEST_ASSERT_EQUAL(9, measurementCollection::newMeasurements.getLevel());
-    TEST_ASSERT_EQUAL(128, measurementCollection::newMeasurements[0]);
-    TEST_ASSERT_EQUAL_UINT8(now.asBytes[0], measurementCollection::newMeasurements[1]);
-    TEST_ASSERT_EQUAL_UINT8(now.asBytes[1], measurementCollection::newMeasurements[2]);
-    TEST_ASSERT_EQUAL_UINT8(now.asBytes[2], measurementCollection::newMeasurements[3]);
-    TEST_ASSERT_EQUAL_UINT8(now.asBytes[3], measurementCollection::newMeasurements[4]);
-    TEST_ASSERT_EQUAL_UINT8(value.asBytes[0], measurementCollection::newMeasurements[5]);
-    TEST_ASSERT_EQUAL_UINT8(value.asBytes[1], measurementCollection::newMeasurements[6]);
-    TEST_ASSERT_EQUAL_UINT8(value.asBytes[2], measurementCollection::newMeasurements[7]);
-    TEST_ASSERT_EQUAL_UINT8(value.asBytes[3], measurementCollection::newMeasurements[8]);
+    TEST_ASSERT_EQUAL(5, measurementCollection::newMeasurements.getLevel());
+    TEST_ASSERT_EQUAL(0, measurementCollection::newMeasurements[0]);
+    TEST_ASSERT_EQUAL_UINT8(value.asBytes[0], measurementCollection::newMeasurements[1]);
+    TEST_ASSERT_EQUAL_UINT8(value.asBytes[1], measurementCollection::newMeasurements[2]);
+    TEST_ASSERT_EQUAL_UINT8(value.asBytes[2], measurementCollection::newMeasurements[3]);
+    TEST_ASSERT_EQUAL_UINT8(value.asBytes[3], measurementCollection::newMeasurements[4]);
 
-    measurementCollection::addMeasurement(1, 1, 2.0);
-    TEST_ASSERT_EQUAL(18, measurementCollection::newMeasurements.getLevel());
-    TEST_ASSERT_EQUAL(133, measurementCollection::newMeasurements[9]);
+    value.asFloat = 1.0;
+    measurementCollection::addMeasurement(1, 1, value.asFloat);
+    TEST_ASSERT_EQUAL(10, measurementCollection::newMeasurements.getLevel());
+    TEST_ASSERT_EQUAL(0b00001001, measurementCollection::newMeasurements[5]);
+    TEST_ASSERT_EQUAL_UINT8(value.asBytes[0], measurementCollection::newMeasurements[6]);
+    TEST_ASSERT_EQUAL_UINT8(value.asBytes[1], measurementCollection::newMeasurements[7]);
+    TEST_ASSERT_EQUAL_UINT8(value.asBytes[2], measurementCollection::newMeasurements[8]);
+    TEST_ASSERT_EQUAL_UINT8(value.asBytes[3], measurementCollection::newMeasurements[9]);
 }
-
 
 void test_save() {
     measurementCollection::erase();
     measurementCollection::initialize();
-    measurementCollection::findStartEndOffsets();
-
-    union {
-        float asUint32;
-        uint8_t asBytes[4];
-    } now;
-    now.asUint32 = time(nullptr);
-
-    union {
-        float asFloat;
-        uint8_t asBytes[4];
-    } value;
-    value.asFloat = 1.0;
-
-    TEST_ASSERT_EQUAL(0, measurementCollection::nmbrOfBytesToTransmit());
-
-    measurementCollection::addMeasurement(0, 0, value.asFloat);
-    measurementCollection::addMeasurement(1, 1, value.asFloat);
+    measurementCollection::addMeasurement(1, 1, 10.0F);
+    measurementCollection::addMeasurement(2, 2, 20.0F);
     measurementCollection::saveNewMeasurementsToEeprom();
 
-    TEST_ASSERT_EQUAL(128, mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 0]);
-    TEST_ASSERT_EQUAL_UINT8(now.asBytes[0],  mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 1]);
-    TEST_ASSERT_EQUAL_UINT8(now.asBytes[1],  mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 2]);
-    TEST_ASSERT_EQUAL_UINT8(now.asBytes[2],  mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 3]);
-    TEST_ASSERT_EQUAL_UINT8(now.asBytes[3],  mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 4]);
+    TEST_ASSERT_EQUAL(2, mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 0]);
+    time_t now = realTimeClock::get();
 
-    TEST_ASSERT_EQUAL_UINT8(value.asBytes[0], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 5]);
-    TEST_ASSERT_EQUAL_UINT8(value.asBytes[1], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 6]);
-    TEST_ASSERT_EQUAL_UINT8(value.asBytes[2], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 7]);
-    TEST_ASSERT_EQUAL_UINT8(value.asBytes[3], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 8]);
+    TEST_ASSERT_EQUAL_UINT8(realTimeClock::time_tToBytes(now)[0], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 1]);
+    TEST_ASSERT_EQUAL_UINT8(realTimeClock::time_tToBytes(now)[1], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 2]);
+    TEST_ASSERT_EQUAL_UINT8(realTimeClock::time_tToBytes(now)[2], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 3]);
+    TEST_ASSERT_EQUAL_UINT8(realTimeClock::time_tToBytes(now)[3], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 4]);
 
-    TEST_ASSERT_EQUAL(133, mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 9]);
-    TEST_ASSERT_EQUAL_UINT8(now.asBytes[0],  mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 10]);
-    TEST_ASSERT_EQUAL_UINT8(now.asBytes[1],  mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 11]);
-    TEST_ASSERT_EQUAL_UINT8(now.asBytes[2],  mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 12]);
-    TEST_ASSERT_EQUAL_UINT8(now.asBytes[3],  mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 13]);
+    TEST_ASSERT_EQUAL_UINT8(0b00001001, mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 5]);
 
-    TEST_ASSERT_EQUAL_UINT8(value.asBytes[0], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 14]);
-    TEST_ASSERT_EQUAL_UINT8(value.asBytes[1], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 15]);
-    TEST_ASSERT_EQUAL_UINT8(value.asBytes[2], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 16]);
-    TEST_ASSERT_EQUAL_UINT8(value.asBytes[3], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 17]);
+    TEST_ASSERT_EQUAL_UINT8(floatToBytes(10.0F)[0], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 6]);
+    TEST_ASSERT_EQUAL_UINT8(floatToBytes(10.0F)[1], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 7]);
+    TEST_ASSERT_EQUAL_UINT8(floatToBytes(10.0F)[2], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 8]);
+    TEST_ASSERT_EQUAL_UINT8(floatToBytes(10.0F)[3], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 9]);
 
-    TEST_ASSERT_EQUAL(18, measurementCollection::nmbrOfBytesToTransmit());
+    TEST_ASSERT_EQUAL_UINT8(0b00010010, mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 10]);
+
+    TEST_ASSERT_EQUAL_UINT8(floatToBytes(20.0F)[0], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 11]);
+    TEST_ASSERT_EQUAL_UINT8(floatToBytes(20.0F)[1], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 12]);
+    TEST_ASSERT_EQUAL_UINT8(floatToBytes(20.0F)[2], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 13]);
+    TEST_ASSERT_EQUAL_UINT8(floatToBytes(20.0F)[3], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 14]);
 }
 
 void test_nmbrOfBytesToTransmit() {
@@ -160,7 +145,7 @@ void test_nmbrOfBytesToTransmit() {
     measurementCollection::findStartEndOffsets();
 
     union {
-        float asUint32;
+        uint32_t asUint32;
         uint8_t asBytes[4];
     } now;
     now.asUint32 = time(nullptr);
@@ -176,7 +161,7 @@ void test_nmbrOfBytesToTransmit() {
     measurementCollection::addMeasurement(1, 1, value.asFloat);
     TEST_ASSERT_EQUAL(0, measurementCollection::nmbrOfBytesToTransmit());
     measurementCollection::saveNewMeasurementsToEeprom();
-    TEST_ASSERT_EQUAL(18, measurementCollection::nmbrOfBytesToTransmit());
+    TEST_ASSERT_EQUAL(15, measurementCollection::nmbrOfBytesToTransmit());
 
     static constexpr uint32_t uplinkFrameCount{123};
     measurementCollection::setTransmitted(uplinkFrameCount, measurementCollection::nmbrOfBytesToTransmit());
@@ -185,10 +170,9 @@ void test_nmbrOfBytesToTransmit() {
 
     measurementCollection::initialize();
     measurementCollection::findStartEndOffsets();
-    TEST_ASSERT_EQUAL(18, measurementCollection::newMeasurementsOffset);
+    TEST_ASSERT_EQUAL(15, measurementCollection::newMeasurementsOffset);
     TEST_ASSERT_EQUAL(0, measurementCollection::oldestMeasurementOffset);
 }
-
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();

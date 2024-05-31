@@ -14,6 +14,9 @@
 #ifndef generic
 #include <main.h>
 extern ADC_HandleTypeDef hadc;
+#else
+uint32_t mockBatteryRawADC;
+float mockBatteryVoltage;
 #endif
 
 // ### initialize static members ###
@@ -26,6 +29,9 @@ sensorChannelFormat battery::channelFormats[nmbrChannels] = {
 };
 
 void battery::initalize() {
+    channels[voltage].set(0, 1, 0, 1);
+    channels[percentCharged].set(0, 1, 0, 1);
+
     uint8_t typeIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType);
     if (typeIndex >= nmbrBatteryTypes) {
         typeIndex = 0;
@@ -142,7 +148,7 @@ uint32_t battery::readSample() {
 #ifndef generic
     return HAL_ADC_GetValue(&hadc);
 #else
-    return 1234;        // MOCK value
+    return mockBatteryRawADC;
 #endif
 }
 
@@ -150,7 +156,7 @@ float battery::voltageFromRaw(uint32_t rawADC) {
 #ifndef generic
     return static_cast<float>(__HAL_ADC_CALC_VREFANALOG_VOLTAGE((rawADC), ADC_RESOLUTION_12B)) / 1000.0f;
 #else
-    return 3.2F;        // MOCK value
+    return mockBatteryVoltage;
 #endif
 }
 
@@ -168,8 +174,12 @@ void battery::log() {
             float value       = valueAsFloat(channelIndex);
             uint32_t decimals = channelFormats[channelIndex].decimals;
             uint32_t intPart  = integerPart(value, decimals);
-            uint32_t fracPart = fractionalPart(value, decimals);
-            logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
+            if (decimals > 0) {
+                uint32_t fracPart = fractionalPart(value, decimals);
+                logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
+            } else {
+                logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelFormats[channelIndex].name, intPart, channelFormats[channelIndex].unit);
+            }
         }
     }
 }

@@ -2,7 +2,9 @@
 #include <nvs.hpp>
 #include <logging.hpp>
 #include <sensordevicetype.hpp>
+#include <sensordevicecollection.hpp>
 #include <realtimeclock.hpp>
+#include <float.hpp>
 
 extern uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
 
@@ -11,6 +13,7 @@ uint32_t measurementCollection::newMeasurementsOffset{0};
 uint32_t measurementCollection::uplinkHistoryIndex{0};
 measurementCollection::uplinkMeasurement measurementCollection::uplinkHistory[uplinkHistoryLength]{};
 linearBuffer<measurementCollection::newMeasurementsLength> measurementCollection::newMeasurements;
+uint32_t measurementCollection::nmbrOfNewMeasurements{0};
 
 void measurementCollection::initialize() {
     measurementCollection::oldestMeasurementOffset = 0;
@@ -21,7 +24,7 @@ void measurementCollection::initialize() {
         measurementCollection::uplinkHistory[i].startOffset = 0;
     }
     newMeasurements.initialize();
-    //findStartEndOffsets();
+    nmbrOfNewMeasurements = 0;
 }
 
 void measurementCollection::erase() {
@@ -39,12 +42,15 @@ uint32_t measurementCollection::nmbrOfBytesToTransmit() {
 }
 
 void measurementCollection::saveNewMeasurementsToEeprom() {
+    newMeasurements.prefix(realTimeClock::time_tToBytes(realTimeClock::get()), 4);
+    newMeasurements.prefix(nmbrOfNewMeasurements);
     uint32_t level           = newMeasurements.getLevel();
-    uint8_t trailingBytes[4] = {0xFF, 0xFF, 0xFF, 0xFF};
+    uint8_t trailingBytes[4] = {0xFF, 0xFF, 0xFF, 0xFF};        // TODO : check if we need to erase old measurements and add more 0xFF padding
     newMeasurements.append(trailingBytes, 4);
     nonVolatileStorage::write(addressFromOffset(newMeasurementsOffset), newMeasurements.asUint8Ptr(), newMeasurements.getLevel());
     newMeasurementsOffset = (newMeasurementsOffset + level) % nonVolatileStorage::measurementsSize;
     newMeasurements.initialize();
+    nmbrOfNewMeasurements = 0;
 }
 
 void measurementCollection::setTransmitted(uint32_t frameCount, uint32_t length) {
@@ -59,7 +65,7 @@ void measurementCollection::findStartEndOffsets() {
     // If the bytes after that are not 0xFF, older measurements are overwritten and the start of measurements is after the 0xFF, 0xFF, 0xFF, 0xFF
     // If the bytes are 0xFF, 0xFF, 0xFF, 0xFF, the start of measurements is at 4096
     union {
-        uint32_t dword;
+        uint32_t asUint32;
         uint8_t bytes[4];
     } data;
     oldestMeasurementOffset = 0;
@@ -68,10 +74,10 @@ void measurementCollection::findStartEndOffsets() {
         nonVolatileStorage::read(addressFromOffset(offset), data.bytes, 1);
         if (data.bytes[0] == 0xFF) {
             nonVolatileStorage::read(addressFromOffset(offset), data.bytes, 4);
-            if (data.dword == 0xFFFFFFFF) {
+            if (data.asUint32 == 0xFFFFFFFF) {
                 newMeasurementsOffset = offset;
                 nonVolatileStorage::read(addressFromOffset(offset + 4), data.bytes, 4);
-                if (data.dword == 0xFFFFFFFF) {
+                if (data.asUint32 == 0xFFFFFFFF) {
                     oldestMeasurementOffset = 0;
                 } else {
                     oldestMeasurementOffset = (offset + 4) % nonVolatileStorage::measurementsSize;
@@ -82,72 +88,52 @@ void measurementCollection::findStartEndOffsets() {
     }
 }
 
-void measurementCollection::dump() {
-    if (newMeasurementsOffset == oldestMeasurementOffset) {
-        logging::snprintf("No measurements found");
-        return;
-    }
-    uint32_t offset = oldestMeasurementOffset;
-    uint8_t byteZero;
-    union {
-        uint32_t asUint32;
-        uint8_t asBytes[4];
-    } timestamp;
-    union {
-        uint32_t asFloat;
-        uint32_t asUint32;
-        uint8_t asBytes[4];
-    } value;
+void measurementCollection::dumpMeasurement(uint32_t addressOffset) {
+    uint8_t measurementHeader;
+    nonVolatileStorage::read(addressFromOffset(addressOffset), &measurementHeader, 1);
+    uint32_t deviceIndex  = (measurementHeader & 0b11111000) >> 3;
+    uint32_t channelIndex = measurementHeader & 0b00000111;
 
-    while (offset < newMeasurementsOffset) {
-        nonVolatileStorage::read(addressFromOffset(offset), &byteZero, 1);
-        bool hasTimestamp                    = byteZero & 0x80;
-        sensorDeviceType theSensorDeviceType = static_cast<sensorDeviceType>((byteZero & 0x7C) >> 2);
-        uint8_t channelId                    = (byteZero & 0x03);
-        if (hasTimestamp) {
-            nonVolatileStorage::read(addressFromOffset(offset + 1), timestamp.asBytes, 4);
-            nonVolatileStorage::read(addressFromOffset(offset + 5), value.asBytes, 4);
-            logging::snprintf("date:time %u:%u value", theSensorDeviceType, channelId);
-            offset = (offset + 9) % nonVolatileStorage::measurementsSize;
-        } else {
-            nonVolatileStorage::read(addressFromOffset(offset + 1), value.asBytes, 4);
-            logging::snprintf("????:???? %u:%u value", theSensorDeviceType, channelId);
-            offset = (offset + 5) % nonVolatileStorage::measurementsSize;
-        }
+    uint8_t measurementValueAsBytes[4];
+    nonVolatileStorage::read(addressFromOffset(addressOffset + 1), measurementValueAsBytes, 4);
+    float measurementValue = bytesToFloat(measurementValueAsBytes);
+
+    uint32_t decimals     = sensorDeviceCollection::channelDecimals(deviceIndex, channelIndex);
+    uint32_t intPart      = integerPart(measurementValue, decimals);
+    if (decimals > 0) {
+        uint32_t fracPart = fractionalPart(measurementValue, decimals);
+        logging::snprintf(logging::source::sensorData, "  %s - %s : %d.%d %s\n", sensorDeviceCollection::name(deviceIndex), sensorDeviceCollection::channelName(deviceIndex, channelIndex), intPart, fracPart, sensorDeviceCollection::channelUnits(deviceIndex, channelIndex));
+    } else {
+        logging::snprintf(logging::source::sensorData, "  %s - %s : %d %s\n", sensorDeviceCollection::name(deviceIndex), sensorDeviceCollection::channelName(deviceIndex, channelIndex), intPart, sensorDeviceCollection::channelUnits(deviceIndex, channelIndex));
     }
 }
 
-void measurementCollection::addMeasurement(measurement &newMeasurement) {
-    newMeasurements.append(&newMeasurement.id, 1);
-    newMeasurementsOffset = (newMeasurementsOffset + 1) % nonVolatileStorage::measurementsSize;
-    if (newMeasurement.id & measurement::hasTimestampMask) {
-        newMeasurements.append(newMeasurement.timestamp.asBytes, 4);
-        newMeasurementsOffset = (newMeasurementsOffset + 4) % nonVolatileStorage::measurementsSize;
+void measurementCollection::dumpMeasurementGroup(uint32_t groupAddressOffset) {
+    uint8_t nmbrOfMeasurements;
+    nonVolatileStorage::read(addressFromOffset(groupAddressOffset), &nmbrOfMeasurements, 1);
+    uint8_t timeStampAsBytes[4];
+    nonVolatileStorage::read(addressFromOffset(groupAddressOffset + 1), timeStampAsBytes, 4);
+    time_t timestamp = realTimeClock::bytesToTime_t(timeStampAsBytes);
+        logging::snprintf("%s : %d", ctime(&timestamp), nmbrOfMeasurements);
+    for (uint32_t index = 0; index < nmbrOfMeasurements; index++) {
+        uint32_t addressOffset = (groupAddressOffset + (index * 5U)) % nonVolatileStorage::measurementsSize;
+        dumpMeasurement(addressOffset);
     }
-    newMeasurements.append(newMeasurement.value.asBytes, 4);
-    newMeasurementsOffset = (newMeasurementsOffset + 4) % nonVolatileStorage::measurementsSize;
 }
 
-void measurementCollection::addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float measurementValue) {
-    uint8_t header;
-    header = measurement::hasTimestampMask;
-    header = header | ((static_cast<uint8_t>(deviceIndex) << 2) & 0b01111100);
-    header = header | (static_cast<uint8_t>(channelIndex) & 0b00000011);
-    newMeasurements.append(&header, 1);
-
-    if (measurement::hasTimestampMask) {
-        union {
-            float asUint32;
-            uint8_t asBytes[4];
-        } now;
-        now.asUint32 = realTimeClock::get();
-        newMeasurements.append(now.asBytes, 4);
+void measurementCollection::dumpAll() {
+    int32_t nmbrOfMeasurementBytes = static_cast<int32_t>(newMeasurementsOffset) - static_cast<int32_t>(oldestMeasurementOffset);
+    if (nmbrOfMeasurementBytes < 0) {
+        nmbrOfMeasurementBytes += nonVolatileStorage::measurementsSize;
     }
+    logging::snprintf("%d bytes of measurements found\n", nmbrOfMeasurementBytes);
+}
 
-    union {
-        float asFloat;
-        uint8_t asBytes[4];
-    } value;
-    value.asFloat = measurementValue;
-    newMeasurements.append(value.asBytes, 4);
+void measurementCollection::addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float aValue) {
+    uint8_t measurementHeader{0};
+    measurementHeader = measurementHeader | ((static_cast<uint8_t>(deviceIndex) << 3) & 0b11111000);
+    measurementHeader = measurementHeader | (static_cast<uint8_t>(channelIndex) & 0b00000111);
+    newMeasurements.append(&measurementHeader, 1);
+    newMeasurements.append(floatToBytes(aValue), 4);
+    nmbrOfNewMeasurements++;
 }

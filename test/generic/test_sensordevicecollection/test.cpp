@@ -78,7 +78,7 @@ void test_tickAndRun() {
     TEST_ASSERT_EQUAL(sensorDeviceState::sampling, bme680::state);
     sensorDeviceCollection::run();
     TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements());
-    TEST_ASSERT_EQUAL(2, sensorDeviceCollection::nmbrOfNewMeasurements());
+    TEST_ASSERT_EQUAL(4, sensorDeviceCollection::nmbrOfNewMeasurements());
 }
 
 int main(int argc, char **argv) {

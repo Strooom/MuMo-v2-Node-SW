@@ -25,3 +25,25 @@ uint32_t factorInt(uint32_t decimals) {
     }
     return result;
 }
+
+float bytesToFloat(uint8_t bytes[4]) {
+    static union {
+        float asFloat;
+        uint8_t asBytes[4];
+    } convertor;
+
+    for (uint32_t n = 0; n < 4; n++) {
+        convertor.asBytes[n] = bytes[n];
+    }
+    return convertor.asFloat;
+}
+
+uint8_t* floatToBytes(float value) {
+    static union {
+        float asFloat;
+        uint8_t asBytes[4];
+    } convertor;
+
+    convertor.asFloat = value;
+    return convertor.asBytes;
+}

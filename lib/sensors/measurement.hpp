@@ -15,13 +15,13 @@ class measurement {
     static constexpr uint8_t channelMask = 0x03;
 
     union {
-        uint32_t asDoubleWord;        // using UNIX time : seconds elapsed since 1970 Jan 01 00:00:00 UTC
+        uint32_t asUint32;        // using UNIX time : seconds elapsed since 1970 Jan 01 00:00:00 UTC
         uint8_t asBytes[4];
     } timestamp;
 
     union {
         float asFloat;                // value can be of any data type, but I assume it always fits in 4 bytes..
-        uint32_t asDoubleWord;
+        uint32_t asUint32;
         uint8_t asBytes[4];
     } value;
 

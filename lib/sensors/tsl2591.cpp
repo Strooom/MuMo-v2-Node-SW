@@ -183,8 +183,12 @@ void tsl2591::log() {
             float value       = valueAsFloat(channelIndex);
             uint32_t decimals = channelFormats[channelIndex].decimals;
             uint32_t intPart  = integerPart(value, decimals);
-            uint32_t fracPart = fractionalPart(value, decimals);
-            logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
+            if (decimals > 0) {
+                uint32_t fracPart = fractionalPart(value, decimals);
+                logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
+            } else {
+                logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelFormats[channelIndex].name, intPart, channelFormats[channelIndex].unit);
+            }
         }
     }
 }

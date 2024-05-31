@@ -38,6 +38,7 @@
 #include <realtimeclock.hpp>
 #include <uniqueid.hpp>
 #include <settingscollection.hpp>
+#include <measurementcollection.hpp>
 
 /* USER CODE END Includes */
 
@@ -149,7 +150,10 @@ int main(void) {
     version::initialize();
     uniqueId::dump();
     realTimeClock::initialize();
+    HAL_Delay(5000);
     mainController::initialize();
+    //measurementCollection::erase();
+    measurementCollection::dumpAll();
     LoRaWAN::dumpConfig();
     //LoRaWAN::dumpState();
     //LoRaWAN::dumpChannels();

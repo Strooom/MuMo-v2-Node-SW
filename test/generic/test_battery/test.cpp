@@ -74,6 +74,15 @@ void test_findNewMeasurements() {
     TEST_ASSERT_EQUAL(1, battery::nextNewMeasurementChannel(1));
 }
 
+void test_toString() {
+    toString(batteryType::liFePO4_700mAh);
+    toString(batteryType::liFePO4_1500mAh);
+    toString(batteryType::alkaline_1200mAh);
+    toString(batteryType::saft_ls_14250);
+    toString(batteryType::saft_ls_14500);
+    TEST_IGNORE_MESSAGE("Dummy test for coverage");
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialization);

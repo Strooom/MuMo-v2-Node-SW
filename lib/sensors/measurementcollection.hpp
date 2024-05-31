@@ -31,22 +31,23 @@
 
 class measurementCollection {
   public:
-    void dump();
+    static void dumpMeasurement(uint32_t addressOffset);
+    static void dumpMeasurementGroup(uint32_t addressOffset);
+    static void dumpAll();
     static void initialize();
+    static void findStartEndOffsets();
     static void erase();
     static uint32_t nmbrOfBytesToTransmit();
 
     static void saveNewMeasurementsToEeprom();
     static void setTransmitted(uint32_t frameCount, uint32_t length);
 
-    static void addMeasurement(measurement &newMeasurement);
-    static void addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float value);
+      static void addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float value);
 
 #ifndef unitTesting
 
   private:
 #endif
-    static void findStartEndOffsets();
 
     struct uplinkMeasurement {
         uint32_t frameCount;
@@ -60,6 +61,7 @@ class measurementCollection {
 
     static constexpr uint32_t newMeasurementsLength{260};
     static linearBuffer<newMeasurementsLength> newMeasurements;        // this collects measurements before writing them to EEPROM
+    static uint32_t nmbrOfNewMeasurements;
 
     static uint32_t oldestMeasurementOffset;
     static uint32_t newMeasurementsOffset;

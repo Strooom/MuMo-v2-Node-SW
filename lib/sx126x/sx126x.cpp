@@ -39,12 +39,12 @@ float sx126x::getPacketSnr() {
     sx126x::executeGetCommand(sx126x::command::getPacketStatus, response, 3);
 
     union {
-        uint8_t dataIn;
-        int8_t dataOut;
+        uint8_t asUint8;
+        int8_t asInt8;
     } converter;
 
-    converter.dataIn = response[1];
-    return static_cast<float>(converter.dataOut) / 4.0f;
+    converter.asUint8 = response[1];
+    return static_cast<float>(converter.asInt8) / 4.0f;
 }
 
 void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t* payload, uint32_t payloadLength) {
