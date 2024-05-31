@@ -2,9 +2,8 @@
 #include <settingscollection.hpp>
 #include <battery.hpp>
 
-void setUp(void) {
-}
-void tearDown(void) {}        // after test
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_initialization() {
     TEST_ASSERT_EQUAL(sensorDeviceState::unknown, battery::getState());
