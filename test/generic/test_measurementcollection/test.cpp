@@ -174,6 +174,17 @@ void test_nmbrOfBytesToTransmit() {
     TEST_ASSERT_EQUAL(0, measurementCollection::oldestMeasurementOffset);
 }
 
+void test_dump() {
+    measurementCollection::erase();
+    measurementCollection::initialize();
+    measurementCollection::findStartEndOffsets();
+    measurementCollection::addMeasurement(0, 0, 0.0F);
+    measurementCollection::addMeasurement(1, 1, 1.0F);
+    measurementCollection::saveNewMeasurementsToEeprom();
+    measurementCollection::dumpMeasurementGroup(0);
+    measurementCollection::dumpAll();
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_addressFromOffset);
@@ -183,5 +194,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_findStartEndOffsets);
     RUN_TEST(test_save);
     RUN_TEST(test_nmbrOfBytesToTransmit);
+    RUN_TEST(test_dump);
     UNITY_END();
 }

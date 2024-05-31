@@ -88,5 +88,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_initialization);
     RUN_TEST(test_tickAndRun);
     RUN_TEST(test_findNewMeasurements);
+    RUN_TEST(test_toString);
     UNITY_END();
 }
