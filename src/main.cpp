@@ -145,14 +145,18 @@ int main(void) {
     gpio ::enableGpio(gpio::group::uart1);        // check if this is needed on top of MX_USART1_UART_Init();
 
     HAL_Delay(5000);
+
+    gpio::enableGpio(gpio::group::i2cEeprom);
+    // measurementCollection::erase();
+
+
     logging::initialize();
     logging::enable(logging::source::sensorData);
     version::initialize();
     uniqueId::dump();
     realTimeClock::initialize();
-    HAL_Delay(5000);
     mainController::initialize();
-    //measurementCollection::erase();
+    measurementCollection::dumpRaw(0, 128);
     measurementCollection::dumpAll();
     LoRaWAN::dumpConfig();
     //LoRaWAN::dumpState();

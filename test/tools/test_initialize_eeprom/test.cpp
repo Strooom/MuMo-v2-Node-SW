@@ -22,12 +22,11 @@ eepromType selectedEepromType{eepromType::BR24G512};
 uint8_t selectedDisplayType{0};
 batteryType selectedBatteryType{batteryType::alkaline_1200mAh};
 
-bool overwriteExistingLoRaWANConfig{true};
+bool overwriteExistingLoRaWANConfig{false};
 uint32_t toBeDevAddr            = 0x260BC71B;
 const char toBeApplicationKey[] = "ECF61A5B18BFBF81EF4FA7DBA764CE8B";
 const char toBeNetworkKey[]     = "34CE07A8DDE81F4C29A0AED7B4F1D7BB";
-
-bool resetLoRaWANStateAndChannels{true};
+bool resetLoRaWANStateAndChannels{false};
 bool eraseMeasurements{true};
 
 // #######################################################

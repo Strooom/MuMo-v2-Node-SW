@@ -31,18 +31,27 @@
 
 class measurementCollection {
   public:
-    static void dumpMeasurement(uint32_t addressOffset);
-    static void dumpMeasurementGroup(uint32_t addressOffset);
-    static void dumpAll();
     static void initialize();
     static void findStartEndOffsets();
     static void erase();
-    static uint32_t nmbrOfBytesToTransmit();
 
+    static void addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float value);
     static void saveNewMeasurementsToEeprom();
+    static uint32_t nmbrOfBytesToTransmit();
     static void setTransmitted(uint32_t frameCount, uint32_t length);
 
-      static void addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float value);
+    static uint32_t nmbrOfMeasurementBytes();
+    static uint32_t nmbrOfMeasurementsInGroup(uint32_t measurementGroupOffset);
+    static time_t timestampOfMeasurementsGroup(uint32_t measurementGroupOffset);
+    static uint8_t measurementHeader(uint32_t measurementOffset);
+    static uint32_t measurementDeviceIndex(uint32_t measurementOffset);
+    static uint32_t measurementChannelIndex(uint32_t measurementOffset);
+    static float measurementValue(uint32_t measurementOffset);
+
+    static void dumpMeasurement(uint32_t addressOffset);
+    static uint32_t dumpMeasurementGroup(uint32_t addressOffset);
+    static void dumpAll();
+    static void dumpRaw(uint32_t offset, uint32_t nmbrOfBytes);
 
 #ifndef unitTesting
 

@@ -110,33 +110,36 @@ void test_add() {
 }
 
 void test_save() {
+    mockRealTimeClock = 100;
+    measurementCollection::erase();
+    measurementCollection::initialize();
+    measurementCollection::addMeasurement(1, 1, 10.0F);
+    measurementCollection::addMeasurement(2, 2, 20.0F);
+
+    TEST_ASSERT_EQUAL_UINT32(0, measurementCollection::nmbrOfMeasurementBytes());
+    time_t now = realTimeClock::get();
+    measurementCollection::saveNewMeasurementsToEeprom();
+    TEST_ASSERT_EQUAL_UINT32(15, measurementCollection::nmbrOfMeasurementBytes());
+    TEST_ASSERT_EQUAL(2, measurementCollection::nmbrOfMeasurementsInGroup(0));
+    TEST_ASSERT_EQUAL(now, measurementCollection::timestampOfMeasurementsGroup(0));
+    TEST_ASSERT_EQUAL(0b00001001, measurementCollection::measurementHeader(0 + 5));
+    TEST_ASSERT_EQUAL(1, measurementCollection::measurementDeviceIndex(0 + 5));
+    TEST_ASSERT_EQUAL(1, measurementCollection::measurementChannelIndex(0 + 5));
+    TEST_ASSERT_EQUAL(10.0F, measurementCollection::measurementValue(0 + 5));
+    TEST_ASSERT_EQUAL(0b00010010, measurementCollection::measurementHeader(0 + 10));
+    TEST_ASSERT_EQUAL(2, measurementCollection::measurementDeviceIndex(0 + 10));
+    TEST_ASSERT_EQUAL(2, measurementCollection::measurementChannelIndex(0 + 10));
+    TEST_ASSERT_EQUAL(20.0F, measurementCollection::measurementValue(0 + 10));
+}
+
+void test_bytesConsumed() {
     measurementCollection::erase();
     measurementCollection::initialize();
     measurementCollection::addMeasurement(1, 1, 10.0F);
     measurementCollection::addMeasurement(2, 2, 20.0F);
     measurementCollection::saveNewMeasurementsToEeprom();
 
-    TEST_ASSERT_EQUAL(2, mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 0]);
-    time_t now = realTimeClock::get();
-
-    TEST_ASSERT_EQUAL_UINT8(realTimeClock::time_tToBytes(now)[0], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 1]);
-    TEST_ASSERT_EQUAL_UINT8(realTimeClock::time_tToBytes(now)[1], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 2]);
-    TEST_ASSERT_EQUAL_UINT8(realTimeClock::time_tToBytes(now)[2], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 3]);
-    TEST_ASSERT_EQUAL_UINT8(realTimeClock::time_tToBytes(now)[3], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 4]);
-
-    TEST_ASSERT_EQUAL_UINT8(0b00001001, mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 5]);
-
-    TEST_ASSERT_EQUAL_UINT8(floatToBytes(10.0F)[0], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 6]);
-    TEST_ASSERT_EQUAL_UINT8(floatToBytes(10.0F)[1], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 7]);
-    TEST_ASSERT_EQUAL_UINT8(floatToBytes(10.0F)[2], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 8]);
-    TEST_ASSERT_EQUAL_UINT8(floatToBytes(10.0F)[3], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 9]);
-
-    TEST_ASSERT_EQUAL_UINT8(0b00010010, mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 10]);
-
-    TEST_ASSERT_EQUAL_UINT8(floatToBytes(20.0F)[0], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 11]);
-    TEST_ASSERT_EQUAL_UINT8(floatToBytes(20.0F)[1], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 12]);
-    TEST_ASSERT_EQUAL_UINT8(floatToBytes(20.0F)[2], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 13]);
-    TEST_ASSERT_EQUAL_UINT8(floatToBytes(20.0F)[3], mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 14]);
+    TEST_ASSERT_EQUAL_UINT32(15, measurementCollection::dumpMeasurementGroup(0));
 }
 
 void test_nmbrOfBytesToTransmit() {
@@ -193,6 +196,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_add);
     RUN_TEST(test_findStartEndOffsets);
     RUN_TEST(test_save);
+    RUN_TEST(test_bytesConsumed);
     RUN_TEST(test_nmbrOfBytesToTransmit);
     RUN_TEST(test_dump);
     UNITY_END();

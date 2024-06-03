@@ -196,7 +196,7 @@ void tsl2591::log() {
 void tsl2591::addNewMeasurements() {
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
         if (channels[channelIndex].hasNewValue) {
-            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::battery), channelIndex, channels[channelIndex].getOutput());
+            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::tsl2591), channelIndex, channels[channelIndex].getOutput());
         }
     }
 }
