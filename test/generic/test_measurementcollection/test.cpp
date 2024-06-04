@@ -118,6 +118,36 @@ void test_findMeasurementsInEeprom() {
         uint32_t expectedEnd = end;
         TEST_ASSERT_EQUAL(expectedEnd, measurementCollection::newMeasurementsOffset);
     }
+
+    // Opposite scenario, with all eeprom full of data and only the minimyum gap somewhere
+
+    for (uint32_t testRun = 0; testRun <= ((measurementCollection::measurementsGap * 4) + nmbrNonEmptyBytes); testRun++) {
+        memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0x00, nonVolatileStorage::measurementsSize);
+        uint32_t start = testRun + nonVolatileStorage::measurementsSize - ((2 * measurementCollection::measurementsGap) + measurementCollection::measurementsGap);
+        uint32_t end   = start + measurementCollection::measurementsGap;
+
+        if ((start < nonVolatileStorage::measurementsSize) && (end > nonVolatileStorage::measurementsSize)) {
+            uint32_t length1 = nonVolatileStorage::measurementsSize - start;
+            memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress + start, 0xFF, length1);
+            end              = end % nonVolatileStorage::measurementsSize;
+            uint32_t length2 = end;
+            memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0xFF, length2);
+        } else {
+            if (start >= nonVolatileStorage::measurementsSize) {
+                start = start % nonVolatileStorage::measurementsSize;
+            }
+            if (end >= nonVolatileStorage::measurementsSize) {
+                end = end % nonVolatileStorage::measurementsSize;
+            }
+            memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress + start, 0xFF, measurementCollection::measurementsGap);
+        }
+
+        measurementCollection::findMeasurementsInEeprom();
+        uint32_t expectedStart = start;
+        uint32_t expectedEnd = end;
+        TEST_ASSERT_EQUAL(expectedEnd, measurementCollection::oldestMeasurementOffset);
+        TEST_ASSERT_EQUAL(expectedStart, measurementCollection::newMeasurementsOffset);
+    }
 }
 
 void test_initialize() {
@@ -254,7 +284,7 @@ void test_dump() {
     measurementCollection::saveNewMeasurementsToEeprom();
     measurementCollection::dumpMeasurementGroup(0);
     measurementCollection::dumpAll();
-    measurementCollection::dumpRaw(0, 32); // For coverage only
+    measurementCollection::dumpRaw(0, 32);        // For coverage only
 }
 
 int main(int argc, char **argv) {
