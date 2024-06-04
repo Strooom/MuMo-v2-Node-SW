@@ -33,7 +33,7 @@ void measurementCollection::erase() {
     memset(defaultData, 0xFF, blockSize);
     uint32_t nmbrOfBlocks = nonVolatileStorage::measurementsSize / blockSize;
     for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
-        nonVolatileStorage::write(addressFromOffset(blockIndex * blockSize), defaultData, blockSize);
+        nonVolatileStorage::write(offsetToAddress(blockIndex * blockSize), defaultData, blockSize);
     }
 }
 
@@ -47,7 +47,7 @@ void measurementCollection::saveNewMeasurementsToEeprom() {
     uint32_t level           = newMeasurements.getLevel();
     uint8_t trailingBytes[4] = {0xFF, 0xFF, 0xFF, 0xFF};        // TODO : check if we need to erase old measurements and add more 0xFF padding
     newMeasurements.append(trailingBytes, 4);
-    nonVolatileStorage::write(addressFromOffset(newMeasurementsOffset), newMeasurements.asUint8Ptr(), newMeasurements.getLevel());
+    nonVolatileStorage::write(offsetToAddress(newMeasurementsOffset), newMeasurements.asUint8Ptr(), newMeasurements.getLevel());
     newMeasurementsOffset = (newMeasurementsOffset + level) % nonVolatileStorage::measurementsSize;
     newMeasurements.initialize();
     nmbrOfNewMeasurements = 0;
@@ -60,32 +60,101 @@ void measurementCollection::setTransmitted(uint32_t frameCount, uint32_t length)
     uplinkHistory[uplinkHistoryIndex].startOffset = (offset + length) % nonVolatileStorage::measurementsSize;
 }
 
-void measurementCollection::findStartEndOffsets() {
-    // search the end of measurements by searching for 0xFF, 0xFF, 0xFF, 0xFF
-    // If the bytes after that are not 0xFF, older measurements are overwritten and the start of measurements is after the 0xFF, 0xFF, 0xFF, 0xFF
-    // If the bytes are 0xFF, 0xFF, 0xFF, 0xFF, the start of measurements is at 4096
-    union {
-        uint32_t asUint32;
-        uint8_t bytes[4];
-    } data;
-    oldestMeasurementOffset = 0;
-    newMeasurementsOffset   = 0;
+void measurementCollection::findMeasurementsInEeprom() {
+    int32_t offsetDataBackward = findDataByteBackward();
+    if (offsetDataBackward == -1) {
+        oldestMeasurementOffset = 0;
+        newMeasurementsOffset   = 0;
+        return;
+    }
+    int32_t offsetGapBackward = findGapBackward(offsetDataBackward);
+    if (offsetGapBackward == -1) {
+        oldestMeasurementOffset = 0;
+        newMeasurementsOffset   = 0;
+        return;
+    }
+    int32_t offsetDataForward = findDataByteForward();
+    if (offsetDataForward == -1) {
+        oldestMeasurementOffset = 0;
+        newMeasurementsOffset   = 0;
+        return;
+    }
+    int32_t offsetGapForward = findGapForward(offsetDataBackward);
+    if (offsetGapForward == -1) {
+        oldestMeasurementOffset = 0;
+        newMeasurementsOffset   = 0;
+        return;
+    }
+    oldestMeasurementOffset = (offsetGapBackward + 1) % nonVolatileStorage::measurementsSize;
+    newMeasurementsOffset   = offsetGapForward;
+}
+
+int32_t measurementCollection::findDataByteForward() {
     for (uint32_t offset = 0; offset < nonVolatileStorage::measurementsSize; offset++) {
-        nonVolatileStorage::read(addressFromOffset(offset), data.bytes, 1);
-        if (data.bytes[0] == 0xFF) {
-            nonVolatileStorage::read(addressFromOffset(offset), data.bytes, 4);
-            if (data.asUint32 == 0xFFFFFFFF) {
-                newMeasurementsOffset = offset;
-                nonVolatileStorage::read(addressFromOffset(offset + 4), data.bytes, 4);
-                if (data.asUint32 == 0xFFFFFFFF) {
-                    oldestMeasurementOffset = 0;
-                } else {
-                    oldestMeasurementOffset = (offset + 4) % nonVolatileStorage::measurementsSize;
-                }
-                break;
-            }
+        if (!is0xFF(offset)) {
+            return offset;
         }
     }
+    return -1;
+}
+
+int32_t measurementCollection::findDataByteBackward() {
+    for (int32_t offset = (nonVolatileStorage::measurementsSize - 1); offset >= 0; offset--) {
+        if (!is0xFF(offset)) {
+            return static_cast<uint32_t>(offset);
+        }
+    }
+    return -1;
+}
+
+bool measurementCollection::is0xFF(uint32_t offset) {
+    uint8_t rawByte;
+    nonVolatileStorage::read(offsetToAddress(offset), &rawByte, 1);
+    return (rawByte == 0xFF);
+}
+
+int32_t measurementCollection::findGapForward(uint32_t startOffset) {
+    for (uint32_t offset = 0; offset < nonVolatileStorage::measurementsSize; offset++) {
+        uint32_t wrappingOffset = (startOffset + offset) % nonVolatileStorage::measurementsSize;
+        if (isGapForward(wrappingOffset)) {
+            return wrappingOffset;
+        }
+    }
+    return -1;
+}
+
+int32_t measurementCollection::findGapBackward(uint32_t startOffset) {
+    for (uint32_t offset = 0; offset < nonVolatileStorage::measurementsSize; offset++) {
+        uint32_t wrappingOffset = (startOffset + nonVolatileStorage::measurementsSize - offset) % nonVolatileStorage::measurementsSize;
+        if (isGapBackward(wrappingOffset)) {
+            return wrappingOffset;
+        }
+    }
+    return -1;
+}
+
+bool measurementCollection::isGapForward(uint32_t offset) {
+    uint8_t rawByte;
+    for (uint32_t index = 0; index < measurementsGap; index++) {
+        uint32_t wrappingoffset = (offset + index) % nonVolatileStorage::measurementsSize;
+        nonVolatileStorage::read(offsetToAddress(wrappingoffset), &rawByte, 1);
+        if (rawByte != 0xFF) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool measurementCollection::isGapBackward(uint32_t offset) {
+    uint8_t rawByte;
+    for (uint32_t index = 0; index < measurementsGap; index++) {
+        uint32_t wrappingOffset = (offset + nonVolatileStorage::measurementsSize - index) % nonVolatileStorage::measurementsSize;
+        nonVolatileStorage::read(offsetToAddress(wrappingOffset), &rawByte, 1);
+        if (rawByte != 0xFF) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void measurementCollection::addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float aValue) {
@@ -99,28 +168,27 @@ void measurementCollection::addMeasurement(uint32_t deviceIndex, uint32_t channe
 
 uint32_t measurementCollection::nmbrOfMeasurementsInGroup(uint32_t measurementGroupOffset) {
     uint8_t nmbrOfMeasurements;
-    nonVolatileStorage::read(addressFromOffset(measurementGroupOffset), &nmbrOfMeasurements, 1);
+    nonVolatileStorage::read(offsetToAddress(measurementGroupOffset), &nmbrOfMeasurements, 1);
     return nmbrOfMeasurements;
 }
 
 uint32_t measurementCollection::nmbrOfMeasurementBytes() {
-    int32_t nmbrOfMeasurementBytes = static_cast<int32_t>(newMeasurementsOffset) - static_cast<int32_t>(oldestMeasurementOffset);
-    if (nmbrOfMeasurementBytes < 0) {
-        nmbrOfMeasurementBytes += nonVolatileStorage::measurementsSize;
-    }
-    return static_cast<uint32_t>(nmbrOfMeasurementBytes);
+    return (nonVolatileStorage::measurementsSize + newMeasurementsOffset - oldestMeasurementOffset) % nonVolatileStorage::measurementsSize;
 }
 
 time_t measurementCollection::timestampOfMeasurementsGroup(uint32_t measurementGroupOffset) {
     uint8_t timeStampAsBytes[4];
-    nonVolatileStorage::read(addressFromOffset(measurementGroupOffset + 1), timeStampAsBytes, 4);
+    nonVolatileStorage::read(offsetToAddress(measurementGroupOffset + 1), timeStampAsBytes, 1);        // cannot read 4 bytes at once, because of address wrapping
+    nonVolatileStorage::read(offsetToAddress(measurementGroupOffset + 2), timeStampAsBytes + 1, 1);
+    nonVolatileStorage::read(offsetToAddress(measurementGroupOffset + 3), timeStampAsBytes + 2, 1);
+    nonVolatileStorage::read(offsetToAddress(measurementGroupOffset + 4), timeStampAsBytes + 3, 1);
     time_t timestamp = realTimeClock::bytesToTime_t(timeStampAsBytes);
     return timestamp;
 }
 
 uint8_t measurementCollection::measurementHeader(uint32_t measurementOffset) {
     uint8_t measurementHeader;
-    nonVolatileStorage::read(addressFromOffset(measurementOffset), &measurementHeader, 1);
+    nonVolatileStorage::read(offsetToAddress(measurementOffset), &measurementHeader, 1);
     return measurementHeader;
 }
 
@@ -138,7 +206,10 @@ uint32_t measurementCollection::measurementChannelIndex(uint32_t measurementOffs
 
 float measurementCollection::measurementValue(uint32_t measurementOffset) {
     uint8_t measurementValueAsBytes[4];
-    nonVolatileStorage::read(addressFromOffset(measurementOffset + 1), measurementValueAsBytes, 4);
+    nonVolatileStorage::read(offsetToAddress(measurementOffset + 1), measurementValueAsBytes, 1);        // cannot read 4 bytes at once, because of address wrapping
+    nonVolatileStorage::read(offsetToAddress(measurementOffset + 2), measurementValueAsBytes + 1, 1);
+    nonVolatileStorage::read(offsetToAddress(measurementOffset + 3), measurementValueAsBytes + 2, 1);
+    nonVolatileStorage::read(offsetToAddress(measurementOffset + 4), measurementValueAsBytes + 3, 1);
     float measurementValue = bytesToFloat(measurementValueAsBytes);
     return measurementValue;
 }
@@ -163,8 +234,8 @@ uint32_t measurementCollection::dumpMeasurementGroup(uint32_t measurementGroupOf
     time_t timestamp           = timestampOfMeasurementsGroup(measurementGroupOffset);
     logging::snprintf("%s", ctime(&timestamp));        // ctime appends a newline by itself..
 
-    uint32_t measurementOffset = measurementGroupOffset + 5;
-    uint32_t nmbrOfBytesConsumed = + 5;
+    uint32_t measurementOffset   = measurementGroupOffset + 5;
+    uint32_t nmbrOfBytesConsumed = +5;
     for (uint32_t index = 0; index < nmbrOfMeasurements; index++) {
         dumpMeasurement(measurementOffset);
         measurementOffset += 5;
@@ -184,11 +255,15 @@ void measurementCollection::dumpAll() {
 }
 
 void measurementCollection::dumpRaw(uint32_t offset, uint32_t nmbrOfBytes) {
-    uint8_t rawBytes[16];
+    uint8_t rawByte;
     uint32_t nmbrOfRows = (nmbrOfBytes / 16);
 
     for (uint32_t row = 0; row < nmbrOfRows; row++) {
-        nonVolatileStorage::read(addressFromOffset(offset + (16 * row)), rawBytes, 16);
-        logging::snprintf("[%d] : %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x \n", (offset + row), rawBytes[0], rawBytes[1], rawBytes[2], rawBytes[3], rawBytes[4], rawBytes[5], rawBytes[6], rawBytes[7], rawBytes[8], rawBytes[9], rawBytes[10], rawBytes[11], rawBytes[12], rawBytes[13], rawBytes[14], rawBytes[15]);
+        logging::snprintf("[%d] : ", (offset + row));
+        for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+            nonVolatileStorage::read(offsetToAddress(offset + (16 * row) + byteIndex), &rawByte, 1);
+            logging::snprintf("%02x ", rawByte);
+        }
+        logging::snprintf("\n");
     }
 }

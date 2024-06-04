@@ -147,8 +147,6 @@ int main(void) {
     HAL_Delay(5000);
 
     gpio::enableGpio(gpio::group::i2cEeprom);
-    // measurementCollection::erase();
-
 
     logging::initialize();
     logging::enable(logging::source::sensorData);

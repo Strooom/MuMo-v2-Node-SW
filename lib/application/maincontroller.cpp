@@ -41,7 +41,7 @@ void mainController::initialize() {
 
     sensorDeviceCollection::discover();
     measurementCollection::initialize();
-    measurementCollection::findStartEndOffsets();
+    measurementCollection::findMeasurementsInEeprom();
 
     gpio::enableGpio(gpio::group::spiDisplay);
     gpio::enableGpio(gpio::group::uart1);

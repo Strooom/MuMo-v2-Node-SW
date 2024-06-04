@@ -25,6 +25,7 @@ class nonVolatileStorage {
     static constexpr uint32_t settingsSize{4 * 1024};
     static constexpr uint32_t measurementsStartAddress{settingStartAddress + settingsSize};
     static constexpr uint32_t measurementsSize{60 * 1024};
+    
 
 #ifndef unitTesting
 

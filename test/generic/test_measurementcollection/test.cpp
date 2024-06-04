@@ -15,7 +15,108 @@ void test_addressFromOffset() {
     static constexpr uint32_t blockSize{128};
     uint32_t nmbrOfBlocks = nonVolatileStorage::measurementsSize / blockSize;
     for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
-        TEST_ASSERT_EQUAL(4096 + (blockIndex * 128), measurementCollection::addressFromOffset(blockIndex * blockSize));
+        TEST_ASSERT_EQUAL(4096 + (blockIndex * 128), measurementCollection::offsetToAddress(blockIndex * blockSize));
+    }
+
+    TEST_ASSERT_EQUAL(4096, measurementCollection::offsetToAddress(0));
+    TEST_ASSERT_EQUAL(4196, measurementCollection::offsetToAddress(100));
+    TEST_ASSERT_EQUAL(4096, measurementCollection::offsetToAddress(60 * 1024));        // TODO : these are all for 64K eeprom and need to be adapted for 128K eeprom
+    TEST_ASSERT_EQUAL(5120, measurementCollection::offsetToAddress(61 * 1024));
+    TEST_ASSERT_EQUAL(8192, measurementCollection::offsetToAddress(64 * 1024));
+}
+
+void test_findDataByteForwardAndBackward() {
+    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0xFF, nonVolatileStorage::measurementsSize);
+    TEST_ASSERT_EQUAL(-1, measurementCollection::findDataByteForward());
+    TEST_ASSERT_EQUAL(-1, measurementCollection::findDataByteBackward());
+
+    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0xFF, nonVolatileStorage::measurementsSize);
+    mockEepromMemory[nonVolatileStorage::measurementsStartAddress] = 0x00;
+    TEST_ASSERT_EQUAL(0, measurementCollection::findDataByteForward());
+    TEST_ASSERT_EQUAL(0, measurementCollection::findDataByteBackward());
+
+    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0xFF, nonVolatileStorage::measurementsSize);
+    mockEepromMemory[nonVolatileStorage::measurementsStartAddress + 123] = 0x00;
+    TEST_ASSERT_EQUAL(123, measurementCollection::findDataByteForward());
+    TEST_ASSERT_EQUAL(123, measurementCollection::findDataByteBackward());
+
+    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0xFF, nonVolatileStorage::measurementsSize);
+    mockEepromMemory[nonVolatileStorage::measurementsStartAddress + nonVolatileStorage::measurementsSize - 1] = 0x00;
+    TEST_ASSERT_EQUAL(nonVolatileStorage::measurementsSize - 1, measurementCollection::findDataByteForward());
+    TEST_ASSERT_EQUAL(nonVolatileStorage::measurementsSize - 1, measurementCollection::findDataByteBackward());
+}
+
+void test_gapForwardAndBackward() {
+    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0x00, nonVolatileStorage::measurementsSize);
+    TEST_ASSERT_EQUAL(-1, measurementCollection::findGapForward(0));
+    TEST_ASSERT_EQUAL(-1, measurementCollection::findGapBackward(nonVolatileStorage::measurementsSize - 1));
+
+    static constexpr uint32_t offset{8};
+    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0x00, nonVolatileStorage::measurementsSize);
+    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress + offset, 0xFF, measurementCollection::measurementsGap);
+
+    TEST_ASSERT_FALSE(measurementCollection::isGapForward(offset - 1));
+    TEST_ASSERT_TRUE(measurementCollection::isGapForward(offset));
+    TEST_ASSERT_FALSE(measurementCollection::isGapForward(offset + 1));
+    TEST_ASSERT_FALSE(measurementCollection::isGapBackward(offset + measurementCollection::measurementsGap));
+    TEST_ASSERT_TRUE(measurementCollection::isGapBackward(offset + measurementCollection::measurementsGap - 1));
+    TEST_ASSERT_FALSE(measurementCollection::isGapBackward(offset + measurementCollection::measurementsGap - 2));
+
+    TEST_ASSERT_EQUAL(offset, measurementCollection::findGapForward(0));
+    TEST_ASSERT_EQUAL(offset + measurementCollection::measurementsGap - 1, measurementCollection::findGapBackward(nonVolatileStorage::measurementsSize - 1));
+
+    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0x00, nonVolatileStorage::measurementsSize);
+    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0xFF, measurementCollection::measurementsGap / 2);
+    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress + nonVolatileStorage::measurementsSize - (measurementCollection::measurementsGap / 2), 0xFF, measurementCollection::measurementsGap / 2);
+
+    TEST_ASSERT_FALSE(measurementCollection::isGapForward(nonVolatileStorage::measurementsSize - (measurementCollection::measurementsGap / 2) - 1));
+    TEST_ASSERT_TRUE(measurementCollection::isGapForward(nonVolatileStorage::measurementsSize - (measurementCollection::measurementsGap / 2)));
+    TEST_ASSERT_FALSE(measurementCollection::isGapForward(nonVolatileStorage::measurementsSize - (measurementCollection::measurementsGap / 2) + 1));
+
+    TEST_ASSERT_FALSE(measurementCollection::isGapBackward((measurementCollection::measurementsGap / 2)));
+    TEST_ASSERT_TRUE(measurementCollection::isGapBackward((measurementCollection::measurementsGap / 2) - 1));
+    TEST_ASSERT_FALSE(measurementCollection::isGapBackward((measurementCollection::measurementsGap / 2) - 2));
+
+    TEST_ASSERT_EQUAL(nonVolatileStorage::measurementsSize - (measurementCollection::measurementsGap / 2), measurementCollection::findGapForward(0));
+    TEST_ASSERT_EQUAL((measurementCollection::measurementsGap / 2) - 1, measurementCollection::findGapBackward(nonVolatileStorage::measurementsSize - 1));
+}
+
+void test_findMeasurementsInEeprom() {
+    // blank EEPROM section case
+    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0xFF, nonVolatileStorage::measurementsSize);
+    measurementCollection::findMeasurementsInEeprom();
+    TEST_ASSERT_EQUAL(0, measurementCollection::newMeasurementsOffset);
+    TEST_ASSERT_EQUAL(0, measurementCollection::oldestMeasurementOffset);
+
+    // Some data in the EEPROM, in different locations, to test the proper wraparound of the findEnd() function
+    static constexpr uint32_t nmbrNonEmptyBytes{4};
+
+    for (uint32_t testRun = 0; testRun <= ((measurementCollection::measurementsGap * 4) + nmbrNonEmptyBytes); testRun++) {
+        memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0xFF, nonVolatileStorage::measurementsSize);
+        uint32_t start = testRun + nonVolatileStorage::measurementsSize - ((2 * measurementCollection::measurementsGap) + nmbrNonEmptyBytes);
+        uint32_t end   = start + nmbrNonEmptyBytes;
+
+        if ((start < nonVolatileStorage::measurementsSize) && (end > nonVolatileStorage::measurementsSize)) {
+            uint32_t length1 = nonVolatileStorage::measurementsSize - start;
+            memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress + start, 0x00, length1);
+            end              = end % nonVolatileStorage::measurementsSize;
+            uint32_t length2 = end;
+            memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0x00, length2);
+        } else {
+            if (start >= nonVolatileStorage::measurementsSize) {
+                start = start % nonVolatileStorage::measurementsSize;
+            }
+            if (end >= nonVolatileStorage::measurementsSize) {
+                end = end % nonVolatileStorage::measurementsSize;
+            }
+            memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress + start, 0x00, nmbrNonEmptyBytes);
+        }
+
+        measurementCollection::findMeasurementsInEeprom();
+        uint32_t expectedStart = start;
+        TEST_ASSERT_EQUAL(expectedStart, measurementCollection::oldestMeasurementOffset);
+        uint32_t expectedEnd = end;
+        TEST_ASSERT_EQUAL(expectedEnd, measurementCollection::newMeasurementsOffset);
     }
 }
 
@@ -38,43 +139,10 @@ void test_erase() {
     TEST_ASSERT_EACH_EQUAL_UINT8(0xFF, mockEepromMemory + nonVolatileStorage::measurementsStartAddress, nonVolatileStorage::measurementsSize);
 }
 
-void test_findStartEndOffsets() {
-    measurementCollection::findStartEndOffsets();
-    TEST_ASSERT_EQUAL(0, measurementCollection::newMeasurementsOffset);
-    TEST_ASSERT_EQUAL(0, measurementCollection::oldestMeasurementOffset);
-
-    static constexpr uint32_t offset{123};
-    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0x00, nonVolatileStorage::measurementsSize);
-    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress + offset, 0xFF, 8);
-    measurementCollection::findStartEndOffsets();
-    TEST_ASSERT_EQUAL(offset, measurementCollection::newMeasurementsOffset);
-    TEST_ASSERT_EQUAL(0, measurementCollection::oldestMeasurementOffset);
-
-    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0x00, nonVolatileStorage::measurementsSize);
-    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress + offset, 0xFF, 4);
-    measurementCollection::findStartEndOffsets();
-    TEST_ASSERT_EQUAL(offset, measurementCollection::newMeasurementsOffset);
-    TEST_ASSERT_EQUAL(offset + 4, measurementCollection::oldestMeasurementOffset);
-
-    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0x00, nonVolatileStorage::measurementsSize);
-    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress + offset, 0xFF, 3);
-    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress + (2 * offset), 0xFF, 8);
-    measurementCollection::findStartEndOffsets();
-    TEST_ASSERT_EQUAL((2 * offset), measurementCollection::newMeasurementsOffset);
-    TEST_ASSERT_EQUAL(0, measurementCollection::oldestMeasurementOffset);
-
-    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0x00, nonVolatileStorage::measurementsSize);
-    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress + offset, 0xFF, 3);
-    memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress + (2 * offset), 0xFF, 4);
-    measurementCollection::findStartEndOffsets();
-    TEST_ASSERT_EQUAL((2 * offset), measurementCollection::newMeasurementsOffset);
-    TEST_ASSERT_EQUAL((2 * offset) + 4, measurementCollection::oldestMeasurementOffset);
-}
-
 void test_add() {
     measurementCollection::erase();
     measurementCollection::initialize();
-    measurementCollection::findStartEndOffsets();
+    // measurementCollection::findStartEndOffsets();
     TEST_ASSERT_EQUAL(0, measurementCollection::newMeasurementsOffset);
     TEST_ASSERT_EQUAL(0, measurementCollection::oldestMeasurementOffset);
 
@@ -145,7 +213,7 @@ void test_bytesConsumed() {
 void test_nmbrOfBytesToTransmit() {
     measurementCollection::erase();
     measurementCollection::initialize();
-    measurementCollection::findStartEndOffsets();
+    // measurementCollection::findStartEndOffsets();
 
     union {
         uint32_t asUint32;
@@ -172,7 +240,7 @@ void test_nmbrOfBytesToTransmit() {
     TEST_ASSERT_EQUAL(0, measurementCollection::nmbrOfBytesToTransmit());
 
     measurementCollection::initialize();
-    measurementCollection::findStartEndOffsets();
+    measurementCollection::findMeasurementsInEeprom();
     TEST_ASSERT_EQUAL(15, measurementCollection::newMeasurementsOffset);
     TEST_ASSERT_EQUAL(0, measurementCollection::oldestMeasurementOffset);
 }
@@ -180,21 +248,24 @@ void test_nmbrOfBytesToTransmit() {
 void test_dump() {
     measurementCollection::erase();
     measurementCollection::initialize();
-    measurementCollection::findStartEndOffsets();
+    // measurementCollection::findStartEndOffsets();
     measurementCollection::addMeasurement(0, 0, 0.0F);
     measurementCollection::addMeasurement(1, 1, 1.0F);
     measurementCollection::saveNewMeasurementsToEeprom();
     measurementCollection::dumpMeasurementGroup(0);
     measurementCollection::dumpAll();
+    measurementCollection::dumpRaw(0, 32); // For coverage only
 }
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_addressFromOffset);
+    RUN_TEST(test_findDataByteForwardAndBackward);
+    RUN_TEST(test_gapForwardAndBackward);
+    RUN_TEST(test_findMeasurementsInEeprom);
     RUN_TEST(test_initialize);
     RUN_TEST(test_erase);
     RUN_TEST(test_add);
-    RUN_TEST(test_findStartEndOffsets);
     RUN_TEST(test_save);
     RUN_TEST(test_bytesConsumed);
     RUN_TEST(test_nmbrOfBytesToTransmit);

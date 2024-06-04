@@ -32,7 +32,7 @@
 class measurementCollection {
   public:
     static void initialize();
-    static void findStartEndOffsets();
+    static void findMeasurementsInEeprom();
     static void erase();
 
     static void addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float value);
@@ -66,7 +66,16 @@ class measurementCollection {
     static uint32_t uplinkHistoryIndex;
     static uplinkMeasurement uplinkHistory[uplinkHistoryLength];
 
-    static uint32_t addressFromOffset(uint32_t offset) { return (nonVolatileStorage::measurementsStartAddress + offset); };
+    static bool is0xFF(uint32_t offset);
+    static int32_t findDataByteForward();
+    static int32_t findDataByteBackward();
+    static int32_t findGapForward(uint32_t startOffset);
+    static int32_t findGapBackward(uint32_t startOffset);
+
+    static bool isGapForward(uint32_t offset);
+    static bool isGapBackward(uint32_t offset);
+
+    static uint32_t offsetToAddress(uint32_t offset) { return (nonVolatileStorage::measurementsStartAddress + (offset % nonVolatileStorage::measurementsSize)); };
 
     static constexpr uint32_t newMeasurementsLength{260};
     static linearBuffer<newMeasurementsLength> newMeasurements;        // this collects measurements before writing them to EEPROM
@@ -74,5 +83,6 @@ class measurementCollection {
 
     static uint32_t oldestMeasurementOffset;
     static uint32_t newMeasurementsOffset;
+    static constexpr uint32_t measurementsGap{4};        // number of 0xFF bytes between the last measurement and the first new measurement
     static uint32_t lastMeasurementWithTimestampOffset;
 };
