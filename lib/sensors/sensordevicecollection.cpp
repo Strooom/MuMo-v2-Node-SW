@@ -301,7 +301,7 @@ uint32_t sensorDeviceCollection::nmbrOfNewMeasurements() {
     return result;
 }
 
-void sensorDeviceCollection::saveNewMeasurementsToEeprom() {
+void sensorDeviceCollection::collectNewMeasurements() {
     for (uint32_t index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
         if (isPresent[index]) {
             switch (static_cast<sensorDeviceType>(index)) {
@@ -331,5 +331,4 @@ void sensorDeviceCollection::saveNewMeasurementsToEeprom() {
             }
         }
     }
-    measurementCollection::saveNewMeasurementsToEeprom();
 }

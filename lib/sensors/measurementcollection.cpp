@@ -16,18 +16,18 @@ linearBuffer<measurementCollection::newMeasurementsLength> measurementCollection
 uint32_t measurementCollection::nmbrOfNewMeasurements{0};
 
 void measurementCollection::initialize() {
-    measurementCollection::oldestMeasurementOffset = 0;
-    measurementCollection::newMeasurementsOffset   = 0;
-    measurementCollection::uplinkHistoryIndex      = 0;
+    oldestMeasurementOffset = 0;
+    newMeasurementsOffset   = 0;
+    uplinkHistoryIndex      = 0;
     for (uint32_t i = 0; i < uplinkHistoryLength; i++) {
-        measurementCollection::uplinkHistory[i].frameCount  = 0;
-        measurementCollection::uplinkHistory[i].startOffset = 0;
+        uplinkHistory[i].frameCount = 0;
+        uplinkHistory[i].offset     = 0;
     }
-    newMeasurements.initialize();
     nmbrOfNewMeasurements = 0;
+    newMeasurements.initialize();
 }
 
-void measurementCollection::erase() {
+void measurementCollection::eraseAll() {
     static constexpr uint32_t blockSize{128};
     uint8_t defaultData[blockSize];
     memset(defaultData, 0xFF, blockSize);
@@ -37,28 +37,7 @@ void measurementCollection::erase() {
     }
 }
 
-uint32_t measurementCollection::nmbrOfBytesToTransmit() {
-    return (newMeasurementsOffset - uplinkHistory[uplinkHistoryIndex].startOffset);
-}
-
-void measurementCollection::saveNewMeasurementsToEeprom() {
-    newMeasurements.prefix(realTimeClock::time_tToBytes(realTimeClock::get()), 4);
-    newMeasurements.prefix(nmbrOfNewMeasurements);
-    uint32_t level           = newMeasurements.getLevel();
-    uint8_t trailingBytes[4] = {0xFF, 0xFF, 0xFF, 0xFF};        // TODO : check if we need to erase old measurements and add more 0xFF padding
-    newMeasurements.append(trailingBytes, 4);
-    nonVolatileStorage::write(offsetToAddress(newMeasurementsOffset), newMeasurements.asUint8Ptr(), newMeasurements.getLevel());
-    newMeasurementsOffset = (newMeasurementsOffset + level) % nonVolatileStorage::measurementsSize;
-    newMeasurements.initialize();
-    nmbrOfNewMeasurements = 0;
-}
-
-void measurementCollection::setTransmitted(uint32_t frameCount, uint32_t length) {
-    uplinkHistory[uplinkHistoryIndex].frameCount  = frameCount;
-    uint32_t offset                               = uplinkHistory[uplinkHistoryIndex].startOffset;
-    uplinkHistoryIndex                            = (uplinkHistoryIndex + 1) % uplinkHistoryLength;
-    uplinkHistory[uplinkHistoryIndex].startOffset = (offset + length) % nonVolatileStorage::measurementsSize;
-}
+// void measurementCollection::eraseOne(uint32_t offset) {}
 
 void measurementCollection::findMeasurementsInEeprom() {
     int32_t offsetDataBackward = findDataByteBackward();
@@ -85,8 +64,54 @@ void measurementCollection::findMeasurementsInEeprom() {
         newMeasurementsOffset   = 0;
         return;
     }
-    oldestMeasurementOffset = (offsetGapBackward + 1) % nonVolatileStorage::measurementsSize;
-    newMeasurementsOffset   = offsetGapForward;
+    oldestMeasurementOffset                  = (offsetGapBackward + 1) % nonVolatileStorage::measurementsSize;
+    newMeasurementsOffset                    = offsetGapForward;
+    uplinkHistory[uplinkHistoryIndex].offset = offsetGapForward;
+}
+
+void measurementCollection::addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float aValue) {
+    uint8_t measurementHeader{0};
+    measurementHeader = measurementHeader | ((static_cast<uint8_t>(deviceIndex) << 3) & 0b11111000);
+    measurementHeader = measurementHeader | (static_cast<uint8_t>(channelIndex) & 0b00000111);
+    newMeasurements.append(&measurementHeader, 1);
+    newMeasurements.append(floatToBytes(aValue), 4);
+    nmbrOfNewMeasurements++;
+}
+
+void measurementCollection::saveNewMeasurementsToEeprom() {
+    newMeasurements.prefix(realTimeClock::time_tToBytes(realTimeClock::get()), 4);
+    newMeasurements.prefix(nmbrOfNewMeasurements);
+    uint32_t level           = newMeasurements.getLevel();
+    uint8_t trailingBytes[4] = {0xFF, 0xFF, 0xFF, 0xFF};        // TODO : check if we need to erase old measurements and add more 0xFF padding
+    newMeasurements.append(trailingBytes, 4);
+    nonVolatileStorage::write(offsetToAddress(newMeasurementsOffset), newMeasurements.asUint8Ptr(), newMeasurements.getLevel());        // TODO : this also needs to wrap around
+    newMeasurementsOffset = (newMeasurementsOffset + level) % nonVolatileStorage::measurementsSize;
+    // newMeasurements.initialize();
+    nmbrOfNewMeasurements = 0;
+}
+
+uint32_t measurementCollection::nmbrOfBytesToTransmit() {
+    return (nonVolatileStorage::measurementsSize + newMeasurementsOffset - uplinkHistory[uplinkHistoryIndex].offset) % nonVolatileStorage::measurementsSize;
+}
+
+const uint8_t* measurementCollection::getTransmitBuffer() {
+    return newMeasurements.asUint8Ptr();
+}
+
+void measurementCollection::setTransmitted(uint32_t frameCount, uint32_t length) {
+    uplinkHistory[uplinkHistoryIndex].frameCount = frameCount;
+    uint32_t offset                              = uplinkHistory[uplinkHistoryIndex].offset;
+    uplinkHistoryIndex                           = (uplinkHistoryIndex + 1) % uplinkHistoryLength;
+    uplinkHistory[uplinkHistoryIndex].offset     = (offset + length) % nonVolatileStorage::measurementsSize;
+    newMeasurements.initialize();
+}
+
+#pragma region eepromSearchFunctions
+
+bool measurementCollection::is0xFF(uint32_t offset) {
+    uint8_t rawByte;
+    nonVolatileStorage::read(offsetToAddress(offset), &rawByte, 1);
+    return (rawByte == 0xFF);
 }
 
 int32_t measurementCollection::findDataByteForward() {
@@ -105,12 +130,6 @@ int32_t measurementCollection::findDataByteBackward() {
         }
     }
     return -1;
-}
-
-bool measurementCollection::is0xFF(uint32_t offset) {
-    uint8_t rawByte;
-    nonVolatileStorage::read(offsetToAddress(offset), &rawByte, 1);
-    return (rawByte == 0xFF);
 }
 
 int32_t measurementCollection::findGapForward(uint32_t startOffset) {
@@ -157,14 +176,8 @@ bool measurementCollection::isGapBackward(uint32_t offset) {
     return true;
 }
 
-void measurementCollection::addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float aValue) {
-    uint8_t measurementHeader{0};
-    measurementHeader = measurementHeader | ((static_cast<uint8_t>(deviceIndex) << 3) & 0b11111000);
-    measurementHeader = measurementHeader | (static_cast<uint8_t>(channelIndex) & 0b00000111);
-    newMeasurements.append(&measurementHeader, 1);
-    newMeasurements.append(floatToBytes(aValue), 4);
-    nmbrOfNewMeasurements++;
-}
+#pragma endregion
+#pragma region measurementMembers
 
 uint32_t measurementCollection::nmbrOfMeasurementsInGroup(uint32_t measurementGroupOffset) {
     uint8_t nmbrOfMeasurements;
@@ -213,6 +226,8 @@ float measurementCollection::measurementValue(uint32_t measurementOffset) {
     float measurementValue = bytesToFloat(measurementValueAsBytes);
     return measurementValue;
 }
+
+#pragma endregion
 
 void measurementCollection::dumpMeasurement(uint32_t measurementOffset) {
     uint32_t deviceIndex  = measurementDeviceIndex(measurementOffset);

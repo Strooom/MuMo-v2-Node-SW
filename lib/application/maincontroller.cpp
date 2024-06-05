@@ -3,25 +3,26 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
-
 #include <maincontroller.hpp>
-#include <circularbuffer.hpp>
-#include <linearbuffer.hpp>
 #include <applicationevent.hpp>
-#include <version.hpp>
-#include <buildinfo.hpp>
-#include <logging.hpp>
+#include <circularbuffer.hpp>
+#include <power.hpp>
+#include <gpio.hpp>
 #include <sensordevicecollection.hpp>
+#include <lorawan.hpp>
 #include <display.hpp>
 #include <screen.hpp>
-#include <gpio.hpp>
-#include <power.hpp>
+
+// #include <linearbuffer.hpp>
+// #include <version.hpp>
+// #include <buildinfo.hpp>
 #include <settingscollection.hpp>
 #include <measurementcollection.hpp>
-#include <aeskey.hpp>
-#include <datarate.hpp>
-#include <lorawan.hpp>
-#include <maccommand.hpp>
+// #include <aeskey.hpp>
+// #include <datarate.hpp>
+// #include <maccommand.hpp>
+
+#include <logging.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -135,9 +136,17 @@ void mainController::run() {
                 if (logging::isActive(logging::source::sensorData)) {
                     sensorDeviceCollection::log();
                 }
-                sensorDeviceCollection::saveNewMeasurementsToEeprom();
+                sensorDeviceCollection::collectNewMeasurements();
+                measurementCollection::saveNewMeasurementsToEeprom();
+                uint32_t payloadLength = measurementCollection::nmbrOfBytesToTransmit();
+                const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
+                logging::snprintf("--> %d bytes to transmit\n", payloadLength);
+                LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
+                measurementCollection::setTransmitted(0, payloadLength); // TODO : get correct frame counter *before* call to sendUplink
+                goTo(mainState::networking);
+            } else {
+                goTo(mainState::idle);
             }
-            goTo(mainState::networking);
             break;
 
         case mainState::networking:
@@ -152,10 +161,7 @@ void mainController::run() {
             break;
 
         case mainState::displaying:
-            // display::run();
-            // if (display::isReady()) {
             goTo(mainState::idle);
-            // }
             break;
 
         case mainState::idle:

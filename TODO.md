@@ -1,5 +1,7 @@
 # Plan / ToDo
 
+* eerste LUX meting na power on is fout 16700 lux ???
+
 * make unit tests for each sensor
 * make unit tests for a sensorCollection which enables all sensors.
 *. make EEPROM work for 128 K io 64K

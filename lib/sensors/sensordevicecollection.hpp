@@ -24,7 +24,7 @@ class sensorDeviceCollection {
 
     static uint32_t nmbrOfNewMeasurements();
     static bool hasNewMeasurements();
-    static void saveNewMeasurementsToEeprom();
+    static void collectNewMeasurements();
 
 #ifndef unitTesting
 

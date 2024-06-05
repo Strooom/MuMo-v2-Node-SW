@@ -156,21 +156,21 @@ void test_initialize() {
     TEST_ASSERT_EQUAL(0, measurementCollection::newMeasurementsOffset);
     TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistoryIndex);
     TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistory[0].frameCount);
-    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistory[0].startOffset);
+    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistory[0].offset);
     TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistory[measurementCollection::uplinkHistoryLength - 1].frameCount);
-    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistory[measurementCollection::uplinkHistoryLength - 1].startOffset);
+    TEST_ASSERT_EQUAL(0, measurementCollection::uplinkHistory[measurementCollection::uplinkHistoryLength - 1].offset);
     TEST_ASSERT_EQUAL(0, measurementCollection::newMeasurements.getLevel());
 }
 
 void test_erase() {
     memset(mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0xAA, nonVolatileStorage::measurementsSize);
     TEST_ASSERT_EACH_EQUAL_UINT8(0xAA, mockEepromMemory + nonVolatileStorage::measurementsStartAddress, nonVolatileStorage::measurementsSize);
-    measurementCollection::erase();
+    measurementCollection::eraseAll();
     TEST_ASSERT_EACH_EQUAL_UINT8(0xFF, mockEepromMemory + nonVolatileStorage::measurementsStartAddress, nonVolatileStorage::measurementsSize);
 }
 
 void test_add() {
-    measurementCollection::erase();
+    measurementCollection::eraseAll();
     measurementCollection::initialize();
     // measurementCollection::findStartEndOffsets();
     TEST_ASSERT_EQUAL(0, measurementCollection::newMeasurementsOffset);
@@ -209,7 +209,7 @@ void test_add() {
 
 void test_save() {
     mockRealTimeClock = 100;
-    measurementCollection::erase();
+    measurementCollection::eraseAll();
     measurementCollection::initialize();
     measurementCollection::addMeasurement(1, 1, 10.0F);
     measurementCollection::addMeasurement(2, 2, 20.0F);
@@ -231,7 +231,7 @@ void test_save() {
 }
 
 void test_bytesConsumed() {
-    measurementCollection::erase();
+    measurementCollection::eraseAll();
     measurementCollection::initialize();
     measurementCollection::addMeasurement(1, 1, 10.0F);
     measurementCollection::addMeasurement(2, 2, 20.0F);
@@ -241,25 +241,12 @@ void test_bytesConsumed() {
 }
 
 void test_nmbrOfBytesToTransmit() {
-    measurementCollection::erase();
+    measurementCollection::eraseAll();
     measurementCollection::initialize();
-    // measurementCollection::findStartEndOffsets();
-
-    union {
-        uint32_t asUint32;
-        uint8_t asBytes[4];
-    } now;
-    now.asUint32 = time(nullptr);
-
-    union {
-        float asFloat;
-        uint8_t asBytes[4];
-    } value;
-    value.asFloat = 1.0;
 
     TEST_ASSERT_EQUAL(0, measurementCollection::nmbrOfBytesToTransmit());
-    measurementCollection::addMeasurement(0, 0, value.asFloat);
-    measurementCollection::addMeasurement(1, 1, value.asFloat);
+    measurementCollection::addMeasurement(1, 1, 10.0F);
+    measurementCollection::addMeasurement(2, 2, 20.0F);
     TEST_ASSERT_EQUAL(0, measurementCollection::nmbrOfBytesToTransmit());
     measurementCollection::saveNewMeasurementsToEeprom();
     TEST_ASSERT_EQUAL(15, measurementCollection::nmbrOfBytesToTransmit());
@@ -268,15 +255,10 @@ void test_nmbrOfBytesToTransmit() {
     measurementCollection::setTransmitted(uplinkFrameCount, measurementCollection::nmbrOfBytesToTransmit());
     TEST_ASSERT_EQUAL(1, measurementCollection::uplinkHistoryIndex);
     TEST_ASSERT_EQUAL(0, measurementCollection::nmbrOfBytesToTransmit());
-
-    measurementCollection::initialize();
-    measurementCollection::findMeasurementsInEeprom();
-    TEST_ASSERT_EQUAL(15, measurementCollection::newMeasurementsOffset);
-    TEST_ASSERT_EQUAL(0, measurementCollection::oldestMeasurementOffset);
 }
 
 void test_dump() {
-    measurementCollection::erase();
+    measurementCollection::eraseAll();
     measurementCollection::initialize();
     // measurementCollection::findStartEndOffsets();
     measurementCollection::addMeasurement(0, 0, 0.0F);

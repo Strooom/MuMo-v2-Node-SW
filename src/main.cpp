@@ -149,13 +149,14 @@ int main(void) {
     gpio::enableGpio(gpio::group::i2cEeprom);
 
     logging::initialize();
-    logging::enable(logging::source::sensorData);
+    logging::enable(logging::source::lorawanEvents);
+    logging::dump();
     version::initialize();
     uniqueId::dump();
     realTimeClock::initialize();
     mainController::initialize();
-    measurementCollection::dumpRaw(0, 128);
-    measurementCollection::dumpAll();
+    // measurementCollection::dumpRaw(0, 128);
+    // measurementCollection::dumpAll();
     LoRaWAN::dumpConfig();
     //LoRaWAN::dumpState();
     //LoRaWAN::dumpChannels();
