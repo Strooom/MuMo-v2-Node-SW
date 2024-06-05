@@ -137,7 +137,7 @@ void sps30::startSampling() {
 
 bool sps30::samplingIsReady() {
     static constexpr uint32_t responseLength{3};
-    uint8_t response[responseLength];
+    uint8_t response[responseLength]{};
     uint8_t expectedResponse[responseLength] = {0, 1, 246};
     read(command::readProductType, response, responseLength);
     return (memcmp(expectedResponse, response, responseLength) == 0);
@@ -150,7 +150,7 @@ void sps30::stopSampling() {
 
 void sps30::readSample() {
     static constexpr uint32_t responseLength{60};
-    uint8_t response[responseLength];
+    uint8_t response[responseLength]{};
     read(command::readProductType, response, responseLength);
     if (sensirion::checkCrc(response, responseLength)) {
         // crc ok

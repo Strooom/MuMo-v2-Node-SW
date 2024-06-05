@@ -170,7 +170,7 @@ void LoRaWAN::setOffsetsAndLengthsRx(uint32_t theLoRaPayloadLength) {
 }
 
 void LoRaWAN::insertPayload(const uint8_t data[], const uint32_t length) {
-    memcpy(rawMessage + framePayloadOffset, data, length);
+    (void)memcpy(rawMessage + framePayloadOffset, data, length);
 }
 
 void LoRaWAN::insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort) {
@@ -393,7 +393,7 @@ uint32_t LoRaWAN::calculateMic() {
             outputBlock.setFromByteArray(rawMessage + (blockIndex * 16));        //  Copy data into block
             outputBlock.XOR(Old_Data);
             outputBlock.encrypt(networkKey);
-            memcpy(outputAsBytes, outputBlock.asBytes(), 16);
+            (void)memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
             for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
                 Old_Data[byteIndex] = outputAsBytes[byteIndex];

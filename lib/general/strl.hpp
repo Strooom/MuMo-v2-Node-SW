@@ -16,9 +16,9 @@ size_t
 strlcpy(char* dst, const char* src, size_t maxlen) {
     const size_t srclen = strlen(src);
     if (srclen + 1 < maxlen) {
-        memcpy(dst, src, srclen + 1);
+        (void)memcpy(dst, src, srclen + 1);
     } else if (maxlen != 0) {
-        memcpy(dst, src, maxlen - 1);
+        (void)memcpy(dst, src, maxlen - 1);
         dst[maxlen - 1] = '\0';
     }
     return srclen;
@@ -33,9 +33,9 @@ strlcat(char* dst, const char* src, size_t maxlen) {
     const size_t dstlen = strnlen(dst, maxlen);
     if (dstlen == maxlen) return maxlen + srclen;
     if (srclen < maxlen - dstlen) {
-        memcpy(dst + dstlen, src, srclen + 1);
+        (void)memcpy(dst + dstlen, src, srclen + 1);
     } else {
-        memcpy(dst + dstlen, src, maxlen - 1);
+        (void)memcpy(dst + dstlen, src, maxlen - 1);
         dst[dstlen + maxlen - 1] = '\0';
     }
     return dstlen + srclen;

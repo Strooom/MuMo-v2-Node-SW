@@ -30,17 +30,7 @@ void test_isPresent() {
 }
 
 int main(int argc, char **argv) {
-    // gcov_init();
-    void (**p)(void);
-    extern uint32_t __init_array_start, __init_array_end; /* linker defined symbols, array of function pointers */
-    uint32_t beg = (uint32_t)&__init_array_start;
-    uint32_t end = (uint32_t)&__init_array_end;
-
-    while (beg < end) {
-        p = (void (**)(void))beg; /* get function pointer */
-        (*p)();                   /* call constructor */
-        beg += sizeof(p);         /* next pointer */
-    }
+    gcov_init();
 
     initialise_monitor_handles();
     HAL_Init();
@@ -56,6 +46,6 @@ int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_isPresent);
     UNITY_END();
-    //gcov_write();
-      __gcov_flush();
+    gcov_write();
+
 }

@@ -1,5 +1,15 @@
 # Plan / ToDo
 
+* eerste LUX meting na power on is fout 16700 lux ???
+
+* make unit tests for each sensor
+* make unit tests for a sensorCollection which enables all sensors.
+*. make EEPROM work for 128 K io 64K
+*. take channel-initialization out of the device initialization and into sensorDeviceCollection
+*. probleem bij het zoeken van measurementOffsets.. wanneer de nieuwe de oude data overschrijven, is mogelijk slechts een stuk ve measurement overschreven.. en kan uitlezen dus corrupt worden, dus bij overschrijven van metingen zou ineens de hele meting moeten overschreven worden..
+
+* make generic unit tests also run on target
+
 1. get LowPower working again
 2. make display show non-blocking
 3. get cli working

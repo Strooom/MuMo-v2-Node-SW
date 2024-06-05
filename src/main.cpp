@@ -35,6 +35,11 @@
 #include <sensordevicecollection.hpp>
 #include <buildinfo.hpp>
 #include <lorawan.hpp>
+#include <realtimeclock.hpp>
+#include <uniqueid.hpp>
+#include <settingscollection.hpp>
+#include <measurementcollection.hpp>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,7 +97,6 @@ static void MX_LPTIM1_Init(void);
 static void MX_SUBGHZ_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -138,40 +142,24 @@ int main(void) {
     MX_SUBGHZ_Init();
     MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
-    gpio ::enableGpio(gpio::group::uart1);
-    HAL_Delay(3000);
-    version::setIsVersion();
+    gpio ::enableGpio(gpio::group::uart1);        // check if this is needed on top of MX_USART1_UART_Init();
+
+    HAL_Delay(5000);
+
+    gpio::enableGpio(gpio::group::i2cEeprom);
+
     logging::initialize();
-    mainController ::initialize();
-    // logging::enable(logging::destination::uart1);
-    logging::enable(logging::source::lorawanData);
-    logging::enable(logging::source::lorawanMac);
     logging::enable(logging::source::lorawanEvents);
-    logging::disable(logging::source::applicationEvents);
-
-    logging::snprintf("https://github.com/Strooom - %s\n", version::getIsVersionAsString());
-    logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
-    logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
-
-    typedef struct
-    {
-        __IO uint32_t W0;
-        __IO uint32_t W1;
-
-    } UID_typeDef;
-
-#define UID ((UID_typeDef *)UID64_BASE)
-
-    uint32_t lsword = UID->W0;
-    uint32_t msword = UID->W1;
-
-    logging::snprintf("Device UID: %08X%08X\n", msword, lsword);
-
     logging::dump();
+    version::initialize();
+    uniqueId::dump();
+    realTimeClock::initialize();
+    mainController::initialize();
+    // measurementCollection::dumpRaw(0, 128);
+    // measurementCollection::dumpAll();
     LoRaWAN::dumpConfig();
-    LoRaWAN::dumpState();
-    LoRaWAN::dumpChannels();
-
+    //LoRaWAN::dumpState();
+    //LoRaWAN::dumpChannels();
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -181,6 +169,7 @@ int main(void) {
         mainController ::handleEvents();
         mainController ::run();
         /* USER CODE END WHILE */
+
         /* USER CODE BEGIN 3 */
     }
     /* USER CODE END 3 */
@@ -205,13 +194,11 @@ void SystemClock_Config(void) {
 
     /** Initializes the CPU, AHB and APB buses clocks
      */
-    RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_LSI | RCC_OSCILLATORTYPE_LSE | RCC_OSCILLATORTYPE_MSI;
+    RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_LSE | RCC_OSCILLATORTYPE_MSI;
     RCC_OscInitStruct.LSEState            = RCC_LSE_ON;
     RCC_OscInitStruct.MSIState            = RCC_MSI_ON;
     RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
     RCC_OscInitStruct.MSIClockRange       = RCC_MSIRANGE_8;
-    RCC_OscInitStruct.LSIDiv              = RCC_LSI_DIV1;
-    RCC_OscInitStruct.LSIState            = RCC_LSI_ON;
     RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_NONE;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
         Error_Handler();
@@ -429,6 +416,29 @@ static void MX_RTC_Init(void) {
         Error_Handler();
     }
 
+    /* USER CODE BEGIN Check_RTC_BKUP */
+
+    /* USER CODE END Check_RTC_BKUP */
+
+    /** Initialize RTC and set the Time and Date
+     */
+    // sTime.Hours          = 0x0;
+    // sTime.Minutes        = 0x0;
+    // sTime.Seconds        = 0x0;
+    // sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+    // sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+    // if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
+    //     Error_Handler();
+    // }
+    // sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+    // sDate.Month   = RTC_MONTH_JANUARY;
+    // sDate.Date    = 0x1;
+    // sDate.Year    = 0x0;
+
+    // if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
+    //     Error_Handler();
+    // }
+
     /** Enable the WakeUp
      */
     if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
@@ -598,7 +608,17 @@ static void MX_GPIO_Init(void) {
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    applicationEventBuffer.push(applicationEvent::sx126xTxComplete);
+}
 
+void HAL_SUBGHZ_RxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    applicationEventBuffer.push(applicationEvent::sx126xRxComplete);
+}
+
+void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    applicationEventBuffer.push(applicationEvent::sx126xTimeout);
+}
 /* USER CODE END 4 */
 
 /**
@@ -629,15 +649,3 @@ void assert_failed(uint8_t *file, uint32_t line) {
     /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
-    applicationEventBuffer.push(applicationEvent::sx126xTxComplete);
-}
-
-void HAL_SUBGHZ_RxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
-    applicationEventBuffer.push(applicationEvent::sx126xRxComplete);
-}
-
-void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
-    applicationEventBuffer.push(applicationEvent::sx126xTimeout);
-}

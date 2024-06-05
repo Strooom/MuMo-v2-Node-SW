@@ -5,6 +5,7 @@
 #include <sht40.hpp>
 #include <tsl2591.hpp>
 // All known sensordevices' include files are to be added here
+#include <measurementcollection.hpp>
 
 bool sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)]{false};
 uint32_t sensorDeviceCollection::actualNumberOfDevices{0};
@@ -264,6 +265,64 @@ void sensorDeviceCollection::log() {
                 case sensorDeviceType::tsl2591:
                     if (tsl2591::hasNewMeasurement()) {
                         tsl2591::log();
+                    }
+                    break;
+                // Add more types of sensors here
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+uint32_t sensorDeviceCollection::nmbrOfNewMeasurements() {
+    uint32_t result{0};
+    for (uint32_t index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
+        if (isPresent[index]) {
+            switch (static_cast<sensorDeviceType>(index)) {
+                case sensorDeviceType::battery:
+                    result += battery::nmbrOfNewMeasurements();
+                    break;
+                case sensorDeviceType::bme680:
+                    result += bme680::nmbrOfNewMeasurements();
+                    break;
+                case sensorDeviceType::sht40:
+                    result += sht40::nmbrOfNewMeasurements();
+                    break;
+                case sensorDeviceType::tsl2591:
+                    result += tsl2591::nmbrOfNewMeasurements();
+                    break;
+                // Add more types of sensors here
+                default:
+                    break;
+            }
+        }
+    }
+    return result;
+}
+
+void sensorDeviceCollection::collectNewMeasurements() {
+    for (uint32_t index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
+        if (isPresent[index]) {
+            switch (static_cast<sensorDeviceType>(index)) {
+                case sensorDeviceType::battery:
+                    if (battery::hasNewMeasurement()) {
+                        battery::addNewMeasurements();
+                    }
+                    break;
+                case sensorDeviceType::bme680:
+                    if (bme680::hasNewMeasurement()) {
+                        bme680::addNewMeasurements();
+                    }
+                    break;
+                case sensorDeviceType::sht40:
+                    if (sht40::hasNewMeasurement()) {
+                        sht40::addNewMeasurements();
+                    }
+                    break;
+                case sensorDeviceType::tsl2591:
+                    if (tsl2591::hasNewMeasurement()) {
+                        tsl2591::addNewMeasurements();
                     }
                     break;
                 // Add more types of sensors here

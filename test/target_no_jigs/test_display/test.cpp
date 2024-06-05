@@ -8,6 +8,11 @@
 #include <display.hpp>
 #include <graphics.hpp>
 #include <gpio.hpp>
+#include <version.hpp>
+
+extern font roboto36bold;
+extern font tahoma24bold;
+extern font lucidaConsole12;
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -36,6 +41,22 @@ void test_displayPresent() {
     display::update();
 }
 
+void test_displayFonts() {
+    display::initialize();
+    display::clearAllPixels();
+
+    version::setIsVersion();
+    graphics::drawText(4, 180, lucidaConsole12, version::getIsVersionAsString());
+    graphics::drawText(4, 160, lucidaConsole12, "0080E11505474CAC");
+    graphics::drawText(4, 140, lucidaConsole12, "2024-04-19  16:38");
+
+    graphics::drawText(4, 40, tahoma24bold, "Tahoma 24 bold");
+    graphics::drawText(4, 4, roboto36bold, "012345");
+
+    display::update();
+    HAL_Delay(5000);
+}
+
 void test_displayNotPresent() {
     TEST_IGNORE_MESSAGE("No display detected");
 }
@@ -50,7 +71,8 @@ int main(int argc, char **argv) {
 
     UNITY_BEGIN();
     if (display::isPresent()) {
-        RUN_TEST(test_displayPresent);
+        RUN_TEST(test_displayFonts);
+        // RUN_TEST(test_displayPresent);
     } else {
         RUN_TEST(test_displayNotPresent);
     }

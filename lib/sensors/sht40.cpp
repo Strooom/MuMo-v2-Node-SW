@@ -2,10 +2,12 @@
 // ### Author : Pascal Roobrouck - https://github.com/Strooom                         ###
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
-
+#include <sensordevicetype.hpp>
 #include <sht40.hpp>
 #include <settingscollection.hpp>
+#include <float.hpp>
 #include <logging.hpp>
+#include <measurementcollection.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -46,8 +48,22 @@ void sht40::initialize() {
     state = sensorDeviceState::sleeping;
 }
 
+uint32_t sht40::nmbrOfNewMeasurements() {
+    uint32_t count{0};
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            count++;
+        }
+    }
+    return count;
+}
+
 bool sht40::hasNewMeasurement() {
     return (channels[temperature].hasNewValue || channels[relativeHumidity].hasNewValue);
+}
+
+bool sht40::hasNewMeasurement(uint32_t channelIndex) {
+    return channels[channelIndex].hasNewValue;
 }
 
 void sht40::clearNewMeasurements() {
@@ -122,7 +138,7 @@ bool sht40::samplingIsReady() {
 #ifndef generic
     return (HAL_GetTick() - measurementStartTick) > measurementDurationInTicks;
 #else
-
+    return true;
 #endif
 }
 
@@ -173,15 +189,30 @@ void sht40::read(uint8_t* response, uint32_t responseLength) {
 #ifndef generic
     HAL_I2C_Master_Receive(&hi2c2, i2cAddress << 1, response, responseLength, halTimeout);
 #else
-    memcpy(response, mockSHT40Registers, responseLength);
+    (void)memcpy(response, mockSHT40Registers, responseLength);
 #endif
 }
 
 void sht40::log() {
-    if (channels[temperature].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.2f *C\n", channelFormats[temperature].name, channels[temperature].getOutput());
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            float value       = valueAsFloat(channelIndex);
+            uint32_t decimals = channelFormats[channelIndex].decimals;
+            uint32_t intPart  = integerPart(value, decimals);
+            if (decimals > 0) {
+                uint32_t fracPart = fractionalPart(value, decimals);
+                logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
+            } else {
+                logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelFormats[channelIndex].name, intPart, channelFormats[channelIndex].unit);
+            }
+        }
     }
-    if (channels[relativeHumidity].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[relativeHumidity].name, channels[relativeHumidity].getOutput(), channelFormats[relativeHumidity].unit);
+}
+
+void sht40::addNewMeasurements() {
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::sht40), channelIndex, channels[channelIndex].getOutput());
+        }
     }
 }

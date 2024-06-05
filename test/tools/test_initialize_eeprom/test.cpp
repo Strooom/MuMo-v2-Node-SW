@@ -12,6 +12,7 @@
 #include <logging.hpp>
 #include <batterytype.hpp>
 #include <eepromtype.hpp>
+#include <measurementcollection.hpp>
 
 // #######################################################
 // ###  Non-Volatile settings to be written to EEPROM  ###
@@ -19,14 +20,14 @@
 
 eepromType selectedEepromType{eepromType::BR24G512};
 uint8_t selectedDisplayType{0};
-batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
+batteryType selectedBatteryType{batteryType::alkaline_1200mAh};
 
 bool overwriteExistingLoRaWANConfig{false};
-uint32_t toBeDevAddr            = 0x260BB2ED;
-const char toBeApplicationKey[] = "CC15EE97462D9C58ABF8530EB0B9BD06";
-const char toBeNetworkKey[]     = "CE872B9471751FD5B0D826353A15A6F5";
-
+uint32_t toBeDevAddr            = 0x260BC71B;
+const char toBeApplicationKey[] = "ECF61A5B18BFBF81EF4FA7DBA764CE8B";
+const char toBeNetworkKey[]     = "34CE07A8DDE81F4C29A0AED7B4F1D7BB";
 bool resetLoRaWANStateAndChannels{false};
+bool eraseMeasurements{true};
 
 // #######################################################
 
@@ -119,6 +120,12 @@ void initializeLorawanChannels() {
     TEST_ASSERT_EQUAL(869525000U, LoRaWAN::rx2FrequencyInHz);
 }
 
+void eraseMeasurementsInEeprom() {
+    if (eraseMeasurements) {
+        measurementCollection::erase();
+    }
+}
+
 int main(int argc, char **argv) {
     HAL_Init();
     HAL_Delay(2000);
@@ -135,5 +142,6 @@ int main(int argc, char **argv) {
     RUN_TEST(initializeLorawanConfig);
     RUN_TEST(initializeLorawanState);
     RUN_TEST(initializeLorawanChannels);
+    RUN_TEST(eraseMeasurementsInEeprom);
     UNITY_END();
 }

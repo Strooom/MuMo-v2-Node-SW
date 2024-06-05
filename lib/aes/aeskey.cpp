@@ -9,24 +9,24 @@
 }
 
  uint32_t* aesKey::asWords() {
-    return key.asWord;
+    return key.asUin32;
 }
 
 void aesKey::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
-    memcpy(key.asByte, bytes, lengthInBytes);
+    (void)memcpy(key.asByte, bytes, lengthInBytes);
     expandKey();
 }
 
 void aesKey::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
     for (uint32_t wordIndex = 0; wordIndex < 4; wordIndex++) {
-        key.asWord[wordIndex] = wordsIn[wordIndex];
+        key.asUin32[wordIndex] = wordsIn[wordIndex];
     }
 }
 
 void aesKey::setFromHexString(const char* string) {
     uint8_t tmpBytes[lengthInBytes];
     hexAscii::hexStringToByteArray(tmpBytes, string);
-    memcpy(key.asByte, tmpBytes, lengthInBytes);
+    (void)memcpy(key.asByte, tmpBytes, lengthInBytes);
     expandKey();
 }
 
@@ -38,9 +38,9 @@ uint32_t aesKey::swapLittleBigEndian( uint32_t wordIn) {
 }
 
 void aesKey::expandKey() {
-    memcpy(expandedKey, key.asByte, 16);
+    (void)memcpy(expandedKey, key.asByte, 16);
     for (auto round = 1; round <= 10; round++) {
-        memcpy(expandedKey + (round * 16), expandedKey + ((round - 1) * 16), 16);
+        (void)memcpy(expandedKey + (round * 16), expandedKey + ((round - 1) * 16), 16);
         calculateRoundKey(round);
     }
 }

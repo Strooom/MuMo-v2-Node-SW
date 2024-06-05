@@ -15,15 +15,19 @@ class bme680 {
     static bool isPresent();
     static void initialize();
     static sensorDeviceState getState() { return state; };
+        static uint32_t nmbrOfNewMeasurements();
+
     static bool hasNewMeasurement();
+    static bool hasNewMeasurement(uint32_t channelIndex);
+    static void addNewMeasurements();
+
     static float valueAsFloat(uint32_t channelIndex);
     static const char* channelName(uint32_t channelIndex);
     static const char* channelUnit(uint32_t channelIndex);
-    
+
     static void tick();
     static void run();
     static void log();
-
 
     static constexpr uint32_t nmbrChannels{3};
     static constexpr uint32_t temperature{0};

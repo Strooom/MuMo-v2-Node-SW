@@ -85,7 +85,7 @@ class linearBuffer {
     // Prefix an array of bytes to the buffer
     void prefix(const uint8_t* newData, uint32_t newDataLength) {
         if ((level + newDataLength) <= bufferLength) {
-            (void)memcpy(theBuffer + newDataLength, theBuffer, level);
+            (void)memmove(theBuffer + newDataLength, theBuffer, level);
             (void)memcpy(theBuffer, newData, newDataLength);
             level += newDataLength;
         }
@@ -101,7 +101,7 @@ class linearBuffer {
 #endif
     void shiftLeft(uint32_t shiftAmount) {
         if (shiftAmount < level) {
-            (void)memcpy(theBuffer, theBuffer + shiftAmount, level - shiftAmount);
+            (void)memmove(theBuffer, theBuffer + shiftAmount, level - shiftAmount);
             level -= shiftAmount;
         } else {
             level = 0;
@@ -110,7 +110,7 @@ class linearBuffer {
 
     void shiftRight(uint32_t shiftAmount) {
         if ((level + shiftAmount) <= bufferLength) {
-            (void)memcpy(theBuffer + shiftAmount, theBuffer, level);
+            (void)memmove(theBuffer + shiftAmount, theBuffer, level);
             level += shiftAmount;
         } else {
             level = bufferLength;

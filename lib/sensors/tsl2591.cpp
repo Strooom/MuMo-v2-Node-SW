@@ -3,9 +3,12 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
+#include <sensordevicetype.hpp>
 #include <tsl2591.hpp>
 #include <settingscollection.hpp>
 #include <logging.hpp>
+#include <float.hpp>
+#include <measurementcollection.hpp>
 
 #ifndef generic
 #include <main.h>
@@ -44,6 +47,16 @@ void tsl2591::initialize() {
     goSleep();
 }
 
+uint32_t tsl2591::nmbrOfNewMeasurements() {
+    uint32_t count{0};
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            count++;
+        }
+    }
+    return count;
+}
+
 float tsl2591::valueAsFloat(uint32_t index) {
     return channels[index].getOutput();
 }
@@ -52,10 +65,13 @@ bool tsl2591::hasNewMeasurement() {
     return (channels[visibleLight].hasNewValue);
 }
 
-void tsl2591::clearNewMeasurements() {
-    channels[visibleLight].hasNewValue        = false;
+bool tsl2591::hasNewMeasurement(uint32_t channelIndex) {
+    return channels[channelIndex].hasNewValue;
 }
 
+void tsl2591::clearNewMeasurements() {
+    channels[visibleLight].hasNewValue = false;
+}
 
 void tsl2591::goSleep() {
     writeRegister(registers::enable, powerOff);
@@ -162,8 +178,25 @@ void tsl2591::run() {
 }
 
 void tsl2591::log() {
-    if (channels[visibleLight].hasNewValue) {
-//        logging::snprintf(logging::source::sensorData, "%s = %.2f %s\n", channelFormats[visibleLight].name, channels[visibleLight].getOutput(), channelFormats[visibleLight].unit);
-        logging::snprintf(logging::source::sensorData, "%s = ... %s\n", channelFormats[visibleLight].name, channelFormats[visibleLight].unit);
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            float value       = valueAsFloat(channelIndex);
+            uint32_t decimals = channelFormats[channelIndex].decimals;
+            uint32_t intPart  = integerPart(value, decimals);
+            if (decimals > 0) {
+                uint32_t fracPart = fractionalPart(value, decimals);
+                logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
+            } else {
+                logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelFormats[channelIndex].name, intPart, channelFormats[channelIndex].unit);
+            }
+        }
+    }
+}
+
+void tsl2591::addNewMeasurements() {
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::tsl2591), channelIndex, channels[channelIndex].getOutput());
+        }
     }
 }

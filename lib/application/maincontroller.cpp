@@ -1,28 +1,28 @@
-// #############################################################################
-// ### This file is part of the source code for the Moovr CNC Controller     ###
-// ### https://github.com/Strooom/Moovr                                      ###
-// ### Author(s) : Pascal Roobrouck - @strooom                               ###
-// ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
-// #############################################################################
+// ######################################################################################
+// ### Author : Pascal Roobrouck - https://github.com/Strooom                         ###
+// ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
+// ######################################################################################
 
 #include <maincontroller.hpp>
-#include <circularbuffer.hpp>
-#include <linearbuffer.hpp>
 #include <applicationevent.hpp>
-#include <version.hpp>
-#include <buildinfo.hpp>
-#include <logging.hpp>
+#include <circularbuffer.hpp>
+#include <power.hpp>
+#include <gpio.hpp>
 #include <sensordevicecollection.hpp>
+#include <lorawan.hpp>
 #include <display.hpp>
 #include <screen.hpp>
-#include <gpio.hpp>
-#include <power.hpp>
+
+// #include <linearbuffer.hpp>
+// #include <version.hpp>
+// #include <buildinfo.hpp>
 #include <settingscollection.hpp>
 #include <measurementcollection.hpp>
-#include <aeskey.hpp>
-#include <datarate.hpp>
-#include <lorawan.hpp>
-#include <maccommand.hpp>
+// #include <aeskey.hpp>
+// #include <datarate.hpp>
+// #include <maccommand.hpp>
+
+#include <logging.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -41,13 +41,16 @@ void mainController::initialize() {
     }
 
     sensorDeviceCollection::discover();
+    measurementCollection::initialize();
+    measurementCollection::findMeasurementsInEeprom();
 
     gpio::enableGpio(gpio::group::spiDisplay);
     gpio::enableGpio(gpio::group::uart1);
     gpio::enableGpio(gpio::group::rfControl);
 
     LoRaWAN::initialize();
-    goTo(mainState::waitingForNetwork);
+    // goTo(mainState::waitingForNetwork);
+    goTo(mainState::idle);
 }
 
 void mainController::handleEvents() {
@@ -72,13 +75,13 @@ void mainController::handleEvents() {
                 {
                     switch (state) {
                         case mainState::waitingForNetwork: {
-                            //LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::linkCheckRequest));
-                            //LoRaWAN::sendUplink(1, nullptr, 0);
+                            // LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::linkCheckRequest));
+                            // LoRaWAN::sendUplink(1, nullptr, 0);
                         } break;
 
                         case mainState::waitingForTime: {
-                            //LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::deviceTimeRequest));
-                            //LoRaWAN::sendUplink(1, nullptr, 0);
+                            // LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::deviceTimeRequest));
+                            // LoRaWAN::sendUplink(1, nullptr, 0);
                         } break;
 
                         case mainState::idle:
@@ -133,15 +136,17 @@ void mainController::run() {
                 if (logging::isActive(logging::source::sensorData)) {
                     sensorDeviceCollection::log();
                 }
+                sensorDeviceCollection::collectNewMeasurements();
+                measurementCollection::saveNewMeasurementsToEeprom();
+                uint32_t payloadLength = measurementCollection::nmbrOfBytesToTransmit();
+                const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
+                logging::snprintf("--> %d bytes to transmit\n", payloadLength);
+                LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
+                measurementCollection::setTransmitted(0, payloadLength); // TODO : get correct frame counter *before* call to sendUplink
+                goTo(mainState::networking);
+            } else {
+                goTo(mainState::idle);
             }
-            goTo(mainState::storing);
-            break;
-
-        case mainState::storing:
-            // measurementCollection::run();
-            // if (measurementCollection::isReady()) {
-                 goTo(mainState::networking);
-            // }
             break;
 
         case mainState::networking:
@@ -156,14 +161,12 @@ void mainController::run() {
             break;
 
         case mainState::displaying:
-            display::run();
-            if (display::isReady()) {
-                goTo(mainState::idle);
-            }
+            goTo(mainState::idle);
             break;
 
         case mainState::idle:
-            if (!power::hasUsbPower()) {
+            if (false) {
+                //             if (!power::hasUsbPower()) {
                 gpio::disableGpio(gpio::group::spiDisplay);
                 gpio::disableGpio(gpio::group::writeProtect);
                 gpio::disableGpio(gpio::group::uart1);
@@ -190,7 +193,7 @@ void mainController::run() {
                 gpio::enableGpio(gpio::group::writeProtect);
                 gpio::enableGpio(gpio::group::spiDisplay);
 
-                goTo(mainState::idle);
+                goTo(mainState::idle);        // ??
             }
             break;
 

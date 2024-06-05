@@ -10,7 +10,7 @@ class version {
     static uint8_t getIsVersionPatch() { return isVersionPatch; }
     static buildType getBuildType() { return theBuildType; }
     static buildEnvironment getBuildEnvironment() { return theBuildEnvironment; }
-    static void setIsVersion();
+    static void initialize();
     static const char* getIsVersionAsString() { return isVersionString; }
 
 #ifndef unitTesting

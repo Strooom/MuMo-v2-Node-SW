@@ -3,10 +3,12 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
+#include <sensordevicetype.hpp>
 #include <bme680.hpp>
 #include <settingscollection.hpp>
 #include <logging.hpp>
 #include <float.hpp>
+#include <measurementcollection.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -14,7 +16,6 @@ extern I2C_HandleTypeDef hi2c2;
 #else
 uint8_t mockBME680Registers[256];
 #include <cstring>
-
 #endif
 
 sensorDeviceState bme680::state{sensorDeviceState::unknown};
@@ -66,7 +67,8 @@ bool bme680::isPresent() {
 void bme680::initialize() {
     // TODO : need to read the sensorChannel settins from EEPROM and restore them
     channels[temperature].set(0, 1, 0, 1);
-    channels[relativeHumidity].set(0, 1, 0, 1);
+    channels[relativeHumidity].set(0, 0, 0, 0);
+    channels[barometricPressure].set(0, 0, 0, 0);
 
     uint8_t registerData[42]{};
     readRegisters(0x8A, 23, registerData);             // read all calibration data from the sensorChannel and convert to proper coefficients
@@ -99,26 +101,35 @@ void bme680::initialize() {
     state = sensorDeviceState::sleeping;
 }
 
+uint32_t bme680::nmbrOfNewMeasurements() {
+    uint32_t count{0};
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            count++;
+        }
+    }
+    return count;
+}
+
 bool bme680::hasNewMeasurement() {
-    return (channels[temperature].hasNewValue || channels[relativeHumidity].hasNewValue || channels[barometricPressure].hasNewValue);
+    return (nmbrOfNewMeasurements() > 0);
+}
+
+bool bme680::hasNewMeasurement(uint32_t channelIndex) {
+    return channels[channelIndex].hasNewValue;
 }
 
 void bme680::clearNewMeasurements() {
-    channels[temperature].hasNewValue        = false;
-    channels[relativeHumidity].hasNewValue   = false;
-    channels[barometricPressure].hasNewValue = false;
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        channels[channelIndex].hasNewValue = false;
+    }
 }
 
-float bme680::valueAsFloat(uint32_t index) {
-    return channels[index].getOutput();
+float bme680::valueAsFloat(uint32_t channelIndex) {
+    return channels[channelIndex].getOutput();
 }
 
 void bme680::tick() {
-    if (state != sensorDeviceState::sleeping) {
-        adjustAllCounters();
-        return;
-    }
-
     if (anyChannelNeedsSampling()) {
         clearNewMeasurements();
         startSampling();
@@ -162,15 +173,18 @@ void bme680::run() {
 }
 
 bool bme680::anyChannelNeedsSampling() {
-    return (channels[temperature].needsSampling() ||
-            channels[relativeHumidity].needsSampling() ||
-            channels[barometricPressure].needsSampling());
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].needsSampling()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void bme680::adjustAllCounters() {
-    channels[temperature].adjustCounters();
-    channels[relativeHumidity].adjustCounters();
-    channels[barometricPressure].adjustCounters();
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        channels[channelIndex].adjustCounters();
+    }
 }
 
 void bme680::startSampling() {
@@ -276,27 +290,30 @@ void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* dest
 #ifndef generic
     HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_8BIT, destination, length, halTimeout);
 #else
-    memcpy(destination, mockBME680Registers + startAddress, length);
+    (void)memcpy(destination, mockBME680Registers + startAddress, length);
 #endif
 }
 
 void bme680::log() {
-    if (channels[temperature].hasNewValue) {
-        float value       = valueAsFloat(temperature);
-        uint32_t decimals = channelFormats[temperature].decimals;
-        uint32_t intPart  = integerPart(value, decimals);
-        uint32_t fracPart = fractionalPart(value, decimals);
-        logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[temperature].name, intPart, fracPart, channelFormats[temperature].unit);
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            float value       = valueAsFloat(channelIndex);
+            uint32_t decimals = channelFormats[channelIndex].decimals;
+            uint32_t intPart  = integerPart(value, decimals);
+            if (decimals > 0) {
+                uint32_t fracPart = fractionalPart(value, decimals);
+                logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
+            } else {
+                logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelFormats[channelIndex].name, intPart, channelFormats[channelIndex].unit);
+            }
+        }
     }
-    if (channels[relativeHumidity].hasNewValue) {
-        float value       = valueAsFloat(relativeHumidity);
-        uint32_t decimals = channelFormats[relativeHumidity].decimals;
-        uint32_t intPart  = integerPart(value, decimals);
-        uint32_t fracPart = fractionalPart(value, decimals);
-        logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[relativeHumidity].name, intPart, fracPart, channelFormats[relativeHumidity].unit);
-    }
-    if (channels[barometricPressure].hasNewValue) {
-        // logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[barometricPressure].name, channels[barometricPressure].getOutput(), channelFormats[barometricPressure].unit);
-        logging::snprintf(logging::source::sensorData, "%s = ... %s\n", channelFormats[barometricPressure].name, channelFormats[barometricPressure].unit);
+}
+
+void bme680::addNewMeasurements() {
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        if (channels[channelIndex].hasNewValue) {
+            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::bme680), channelIndex, channels[channelIndex].getOutput());
+        }
     }
 }
