@@ -29,7 +29,7 @@ class scd40 {
     static constexpr uint32_t relativeHumidity{1};
     static constexpr uint32_t co2{2};
     static sensorChannel channels[nmbrChannels];
-    static sensorChannelFormat channelFormats[nmbrChannels];
+    
 
 #ifndef unitTesting
 

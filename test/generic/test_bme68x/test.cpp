@@ -33,36 +33,6 @@ void test_initialize() {
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, bme680::state);
 }
 
-void test_nmbrOfNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < bme680::nmbrChannels; channelIndex++) {
-        bme680::channels[channelIndex].hasNewValue = false;
-    }
-    TEST_ASSERT_EQUAL_UINT32(0, bme680::nmbrOfNewMeasurements());
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement());
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::temperature));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::relativeHumidity));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::barometricPressure));
-    bme680::channels[bme680::temperature].hasNewValue = true;
-    TEST_ASSERT_EQUAL_UINT32(1, bme680::nmbrOfNewMeasurements());
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement());
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement(bme680::temperature));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::relativeHumidity));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::barometricPressure));
-    bme680::channels[bme680::relativeHumidity].hasNewValue = true;
-    TEST_ASSERT_EQUAL_UINT32(2, bme680::nmbrOfNewMeasurements());
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement());
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement(bme680::temperature));
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement(bme680::relativeHumidity));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::barometricPressure));
-    bme680::channels[bme680::barometricPressure].hasNewValue = true;
-    TEST_ASSERT_EQUAL_UINT32(3, bme680::nmbrOfNewMeasurements());
-    bme680::clearNewMeasurements();
-    TEST_ASSERT_EQUAL_UINT32(0, bme680::nmbrOfNewMeasurements());
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement());
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::temperature));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::relativeHumidity));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::barometricPressure));
-}
 
 void test_tickAndRun() {
     power::mockUsbPower = false;
@@ -76,12 +46,7 @@ void test_tickAndRun() {
     TEST_ASSERT_TRUE(bme680::anyChannelNeedsSampling());
     bme680::tick();
     TEST_ASSERT_EQUAL(sensorDeviceState::sampling, bme680::state);
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement());
     bme680::run();
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement());
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement(bme680::temperature));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::relativeHumidity));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::barometricPressure));
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, bme680::state);
 
     bme680::channels[bme680::temperature].set(0, 0, 0, 0);
@@ -93,12 +58,7 @@ void test_tickAndRun() {
     TEST_ASSERT_TRUE(bme680::anyChannelNeedsSampling());
     bme680::tick();
     TEST_ASSERT_EQUAL(sensorDeviceState::sampling, bme680::state);
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement());
     bme680::run();
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement());
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::temperature));
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement(bme680::relativeHumidity));
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement(bme680::barometricPressure));
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, bme680::state);
 }
 
@@ -106,7 +66,6 @@ int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_isPresent);
     RUN_TEST(test_initialize);
-    RUN_TEST(test_nmbrOfNewMeasurements);
     RUN_TEST(test_tickAndRun);
     UNITY_END();
 }

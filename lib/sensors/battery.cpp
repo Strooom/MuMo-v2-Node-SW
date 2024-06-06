@@ -22,10 +22,9 @@ float mockBatteryVoltage;
 // ### initialize static members ###
 batteryType battery::type{batteryType::liFePO4_700mAh};
 sensorDeviceState battery::state{sensorDeviceState::unknown};
-sensorChannel battery::channels[nmbrChannels];
-sensorChannelFormat battery::channelFormats[nmbrChannels] = {
-    {"voltage", "V", 2},
-    {"percentCharged", "%", 0},
+sensorChannel battery::channels[nmbrChannels] = {
+    {2, "voltage", "V"},
+    {0, "percentCharged", "%"},
 };
 
 void battery::initalize() {
@@ -40,20 +39,6 @@ void battery::initalize() {
     state = sensorDeviceState::sleeping;
 
     logging::snprintf(logging::source::settings, "batteryType : %s\n", toString(type));
-}
-
-uint32_t battery::nmbrOfNewMeasurements() {
-    uint32_t count{0};
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            count++;
-        }
-    }
-    return count;
-}
-
-bool battery::hasNewMeasurement(uint32_t channelIndex) {
-    return channels[channelIndex].hasNewValue;
 }
 
 void battery::clearNewMeasurement(uint32_t channelIndex) {
@@ -168,18 +153,3 @@ void battery::addNewMeasurements() {
     }
 }
 
-void battery::log() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            float value       = valueAsFloat(channelIndex);
-            uint32_t decimals = channelFormats[channelIndex].decimals;
-            uint32_t intPart  = integerPart(value, decimals);
-            if (decimals > 0) {
-                uint32_t fracPart = fractionalPart(value, decimals);
-                logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
-            } else {
-                logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelFormats[channelIndex].name, intPart, channelFormats[channelIndex].unit);
-            }
-        }
-    }
-}

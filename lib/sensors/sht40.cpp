@@ -20,10 +20,9 @@ uint8_t mockSHT40Registers[256];
 
 uint8_t sht40::i2cAddress;
 sensorDeviceState sht40::state{sensorDeviceState::unknown};
-sensorChannel sht40::channels[nmbrChannels];
-sensorChannelFormat sht40::channelFormats[nmbrChannels] = {
-    {"temperature", "~C", 1},
-    {"relativeHumidity", "%RH", 0},
+sensorChannel sht40::channels[nmbrChannels] = {
+    {1, "temperature", "~C"},
+    {0, "relativeHumidity", "%RH"},
 };
 
 uint32_t sht40::rawDataTemperature;
@@ -48,28 +47,7 @@ void sht40::initialize() {
     state = sensorDeviceState::sleeping;
 }
 
-uint32_t sht40::nmbrOfNewMeasurements() {
-    uint32_t count{0};
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            count++;
-        }
-    }
-    return count;
-}
 
-bool sht40::hasNewMeasurement() {
-    return (channels[temperature].hasNewValue || channels[relativeHumidity].hasNewValue);
-}
-
-bool sht40::hasNewMeasurement(uint32_t channelIndex) {
-    return channels[channelIndex].hasNewValue;
-}
-
-void sht40::clearNewMeasurements() {
-    channels[temperature].hasNewValue      = false;
-    channels[relativeHumidity].hasNewValue = false;
-}
 
 float sht40::valueAsFloat(uint32_t index) {
     return channels[index].getOutput();
@@ -82,7 +60,7 @@ void sht40::tick() {
     }
 
     if (anyChannelNeedsSampling()) {
-        clearNewMeasurements();
+        // clearNewMeasurements(); TODO : do we need this ?
         startSampling();
         state = sensorDeviceState::sampling;
     } else {
@@ -193,21 +171,6 @@ void sht40::read(uint8_t* response, uint32_t responseLength) {
 #endif
 }
 
-void sht40::log() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            float value       = valueAsFloat(channelIndex);
-            uint32_t decimals = channelFormats[channelIndex].decimals;
-            uint32_t intPart  = integerPart(value, decimals);
-            if (decimals > 0) {
-                uint32_t fracPart = fractionalPart(value, decimals);
-                logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
-            } else {
-                logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelFormats[channelIndex].name, intPart, channelFormats[channelIndex].unit);
-            }
-        }
-    }
-}
 
 void sht40::addNewMeasurements() {
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {

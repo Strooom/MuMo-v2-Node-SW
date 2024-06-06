@@ -1,9 +1,10 @@
 #include "sensorchannel.hpp"
 #include "power.hpp"
 
-sensorChannel::sensorChannel() : oversamplingLowPower{0}, prescalerLowPower{0}, oversamplingHighPower{0}, prescalerHighPower{0} {
+sensorChannel::sensorChannel(uint32_t decimals, const char *name, const char* unit) : oversamplingLowPower{0}, prescalerLowPower{0}, oversamplingHighPower{0}, prescalerHighPower{0}, decimals{decimals}, name{name}, unit{unit} {
     limitOversamplingAndPrescaler();
 }
+
 
 void sensorChannel::set(uint32_t newOversamplingLowPower, uint32_t newPrescalerLowPower, uint32_t newOversamplingHighPower, uint32_t newPrescalerHighPower) {
     oversamplingLowPower  = newOversamplingLowPower;

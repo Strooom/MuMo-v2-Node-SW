@@ -49,10 +49,6 @@ void test_calculateRelativeHumidity() {
     TEST_ASSERT_EQUAL(100.0F, sht40::calculateRelativeHumidity());
 }
 
-void test_log() {
-    sht40::log();
-}
-
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_isPresent);
@@ -60,6 +56,5 @@ int main(int argc, char **argv) {
     RUN_TEST(test_sampling);
     RUN_TEST(test_calculateTemperature);
     RUN_TEST(test_calculateRelativeHumidity);
-    RUN_TEST(test_log);
     UNITY_END();
 }

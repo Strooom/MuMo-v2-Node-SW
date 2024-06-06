@@ -8,7 +8,7 @@
 
 class sensorChannel {
   public:
-    sensorChannel();
+    sensorChannel(uint32_t decimals, const char *name, const char *unit);
     void set(uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower);
     enum class action : uint32_t {
         none,
@@ -24,7 +24,6 @@ class sensorChannel {
 
     void addSample(float theSample);
     float getOutput();
-    
 
 #ifndef unitTesting
 
@@ -52,9 +51,17 @@ class sensorChannel {
     void limitOversamplingCounter(uint32_t oversampling);
     bool isActive() const;
 
+    const uint32_t decimals;
+    // static constexpr uint32_t maxNameLength{24};
+    // static constexpr uint32_t maxUnitLength{4};
+    const char* name;
+    const char* unit;
+
+
     friend class battery;
     friend class bme680;
     friend class tsl2591;
     friend class sht40;
     friend class sps30;
+    friend class sensorDeviceCollection;
 };

@@ -16,25 +16,17 @@ class sht40 {
     static bool isPresent();
     static void initialize();
     static sensorDeviceState getState() { return state; };
-        static uint32_t nmbrOfNewMeasurements();
-
-    static bool hasNewMeasurement();
-    static bool hasNewMeasurement(uint32_t channelIndex);
     static void addNewMeasurements();
 
     static float valueAsFloat(uint32_t channelIndex);
-    static const char* channelName(uint32_t channelIndex);
-    static const char* channelUnit(uint32_t channelIndex);
 
     static void tick();
     static void run();
-    static void log();
 
     static constexpr uint32_t nmbrChannels{2};
     static constexpr uint32_t temperature{0};
     static constexpr uint32_t relativeHumidity{1};
     static sensorChannel channels[nmbrChannels];
-    static sensorChannelFormat channelFormats[nmbrChannels];
 
 #ifndef unitTesting
 
@@ -49,8 +41,6 @@ class sht40 {
 
     static float calculateTemperature();
     static float calculateRelativeHumidity();
-
-    static void clearNewMeasurements();
 
     static uint8_t i2cAddress;        // SHT40 can have 0x44 or 0x45 as address
     static constexpr uint8_t halTrials{0x03};

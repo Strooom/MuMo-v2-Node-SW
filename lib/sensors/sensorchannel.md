@@ -25,4 +25,5 @@ We need an additional setting on each sensorChannel what to do with the measurem
 * store into EEPROM
 * transmit over LoRaWAN
 
-Showing on the display is controlled at the display itself, where we define up to four sensorChannelTypes to be shown on each of the 4 lines of the screen
+Showing on the display is controlled at the display itself, where we define up to three sensorChannelTypes to be shown on the top 3 lines of the screen. Battery SOC and network is always shown at bottom line
+

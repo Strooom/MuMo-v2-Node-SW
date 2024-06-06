@@ -33,24 +33,15 @@ void test_tickAndRun() {
     TEST_ASSERT_FALSE(battery::channels[battery::percentCharged].needsSampling());
     battery::tick();
     TEST_ASSERT_EQUAL(sensorDeviceState::sampling, battery::getState());
-    TEST_ASSERT_FALSE(battery::hasNewMeasurement());
-    TEST_ASSERT_EQUAL(0, battery::nmbrOfNewMeasurements());
     battery::run();
-    TEST_ASSERT_TRUE(battery::hasNewMeasurement());
-    TEST_ASSERT_TRUE(battery::hasNewMeasurement(battery::voltage));
-    TEST_ASSERT_FALSE(battery::hasNewMeasurement(battery::percentCharged));
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::getState());
-    TEST_ASSERT_EQUAL(1, battery::nmbrOfNewMeasurements());
 
     battery::channels[battery::percentCharged].set(0, 1, 0, 0);
     TEST_ASSERT_TRUE(battery::channels[battery::percentCharged].needsSampling());
     battery::tick();
     battery::run();
-    TEST_ASSERT_EQUAL(2, battery::nmbrOfNewMeasurements());
     battery::clearNewMeasurement(battery::voltage);
-    TEST_ASSERT_EQUAL(1, battery::nmbrOfNewMeasurements());
     battery::clearAllNewMeasurements();
-    TEST_ASSERT_EQUAL(0, battery::nmbrOfNewMeasurements());
 }
 
 void test_findNewMeasurements() {

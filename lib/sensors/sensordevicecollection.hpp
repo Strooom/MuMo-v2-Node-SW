@@ -6,14 +6,17 @@
 #pragma once
 #include <stdint.h>
 #include <sensordevicetype.hpp>
+#include <sensorchannel.hpp>
 
 class sensorDeviceCollection {
   public:
     sensorDeviceCollection() = delete;
-    static void discover();                   // discover all sensor devices that are present by scanning the I2C addresses and checking register-values
-    static void tick();                       // service all sensor devices after a RTC tick
-    static void run();                        // service all sensor devices until they are back to sleep
+    static void discover();
+    static void tick();
+    static void run();
     static void log();
+    static void log(uint32_t deviceIndex);
+    static void log(uint32_t deviceIndex, uint32_t channelIndex);
     static bool isSleeping();
     static const char* name(uint32_t index);
 
@@ -22,15 +25,24 @@ class sensorDeviceCollection {
     static const char* channelName(uint32_t deviceIndex, uint32_t channelIndex);
     static const char* channelUnits(uint32_t deviceIndex, uint32_t channelIndex);
 
-    static uint32_t nmbrOfNewMeasurements();
+    static uint32_t nmbrOfChannels(uint32_t deviceIndex);
+    static sensorChannel& channel(uint32_t deviceIndex, uint32_t channelIndex);
+
     static bool hasNewMeasurements();
+    static bool hasNewMeasurements(uint32_t deviceIndex);
+    static uint32_t nmbrOfNewMeasurements();
+    static uint32_t nmbrOfNewMeasurements(uint32_t deviceIndex);
     static void collectNewMeasurements();
+    static void clearNewMeasurements();
+    static void clearNewMeasurements(uint32_t deviceIndex);
+
 
 #ifndef unitTesting
 
   private:
 #endif
 
-    static bool isPresent[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)];        // an array of bools, with true for each known device that is present
-    static uint32_t actualNumberOfDevices;
+    static bool isPresent[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)];
+    static uint32_t actualNumberOfDevices;        // TODO : it seems I am not using this at all and could as well calculate it on the fly
+    static sensorChannel dummy;                   // dummy, so we can return a valid reference to a channel in edge cases
 };

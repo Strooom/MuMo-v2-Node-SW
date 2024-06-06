@@ -6,7 +6,7 @@ void setUp(void) {}           // before test
 void tearDown(void) {}        // after test
 
 void test_initalize() {
-    sensorChannel testChannel;
+    sensorChannel testChannel = {0, "", ""};
     TEST_ASSERT_EQUAL_UINT32(0, testChannel.oversamplingLowPower);
     TEST_ASSERT_EQUAL_UINT32(0, testChannel.prescalerLowPower);
     TEST_ASSERT_EQUAL_UINT32(0, testChannel.oversamplingHighPower);
@@ -20,7 +20,7 @@ void test_initalize() {
 }
 
 void test_set() {
-    sensorChannel testChannel;
+    sensorChannel testChannel = {0, "", ""};
     power::mockUsbPower = false;
     testChannel.set(1, 2, 3, 4);
     TEST_ASSERT_EQUAL_UINT32(1, testChannel.oversamplingLowPower);
@@ -41,7 +41,7 @@ void test_set() {
 }
 
 void test_setAndRestrict() {
-    sensorChannel testChannel;
+    sensorChannel testChannel = {0, "", ""};
     power::mockUsbPower = false;
     testChannel.set(testChannel.maxOversampling + 1, testChannel.maxPrescaler + 1, testChannel.maxOversampling + 1, testChannel.maxPrescaler + 1);
     TEST_ASSERT_EQUAL_UINT32(testChannel.maxOversampling, testChannel.oversamplingLowPower);
@@ -62,7 +62,7 @@ void test_setAndRestrict() {
 }
 
 void test_getCurrentPrescaler() {
-    sensorChannel testChannel;
+    sensorChannel testChannel = {0, "", ""};
     testChannel.set(1, 2, 3, 4);
 
     power::mockUsbPower = false;
@@ -72,7 +72,7 @@ void test_getCurrentPrescaler() {
 }
 
 void test_getCurrentOversampling() {
-    sensorChannel testChannel;
+    sensorChannel testChannel = {0, "", ""};
     testChannel.set(1, 2, 3, 4);
 
     power::mockUsbPower = false;
@@ -82,7 +82,7 @@ void test_getCurrentOversampling() {
 }
 
 void test_getNextAction() {
-    sensorChannel testChannel;
+    sensorChannel testChannel = {0, "", ""};
     TEST_ASSERT_EQUAL(sensorChannel::action::none, testChannel.getNextAction());
 
     testChannel.set(2, 2, 0, 0);
@@ -115,7 +115,7 @@ void test_getNextAction() {
 
 void test_adjustCounters() {
     power::mockUsbPower = false;
-    sensorChannel testChannel;
+    sensorChannel testChannel = {0, "", ""};
     testChannel.set(1, 4, 0, 0);        // = oversampling = 1 -> average 2 samples into a measurement, prescaling = 4 -> take a sample every 4th RTC tick
 
     TEST_ASSERT_EQUAL_UINT32(1, testChannel.oversamplingCounter);
@@ -156,7 +156,7 @@ void test_adjustCounters() {
 
 void test_addSample() {
     power::mockUsbPower = false;
-    sensorChannel testChannel;        // = oversampling = 3 + 1 = 4, prescaling = 1 (= no prescaling)
+    sensorChannel testChannel = {0, "", ""};        // = oversampling = 3 + 1 = 4, prescaling = 1 (= no prescaling)
     testChannel.set(3, 1, 0, 0);
     testChannel.addSample(13.3F);
     TEST_ASSERT_EQUAL_FLOAT(13.3F, testChannel.samples[3]);
@@ -187,7 +187,7 @@ void test_addSample() {
 }
 
 void test_getOutput() {
-    sensorChannel testChannel;        // = oversampling = 3 + 1 = 4, prescaling = 1 (= no prescaling)
+    sensorChannel testChannel = {0, "", ""};        // = oversampling = 3 + 1 = 4, prescaling = 1 (= no prescaling)
     testChannel.set(3, 1, 0, 0);
     testChannel.adjustCounters();
     testChannel.addSample(1.0F);
@@ -214,7 +214,7 @@ void test_getOutput() {
 
 void test_sensor_transition_high_low_power() {
     power::mockUsbPower = true;
-    sensorChannel testChannel;
+    sensorChannel testChannel = {0, "", ""};
     testChannel.set(3, 4, 7, 8);
     TEST_ASSERT_EQUAL_UINT32(7, testChannel.oversamplingCounter);
     TEST_ASSERT_EQUAL_UINT32(7, testChannel.prescaleCounter);
@@ -238,7 +238,7 @@ void test_sensor_transition_high_low_power() {
 }
 
 void test_average() {
-    sensorChannel testChannel;
+    sensorChannel testChannel = {0, "", ""};
     testChannel.set(4, 360, 8, 15);
 
     for (auto index = 0; index < sensorChannel::maxOversampling + 1; index++) {

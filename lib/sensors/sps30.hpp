@@ -18,21 +18,17 @@ class sps30 {
     static void goSleep();
 
     static sensorDeviceState getState() { return state; };
-    static bool hasNewMeasurement();
     static float valueAsFloat(uint32_t channelIndex);
-    static const char* channelName(uint32_t channelIndex);
-    static const char* channelUnit(uint32_t channelIndex);
 
     static void tick();
     static void run();
-    static void log();
 
     static constexpr uint32_t nmbrChannels{3};
     static constexpr uint32_t pme2dot5{0};
     static constexpr uint32_t pme4{0};
     static constexpr uint32_t pme10{0};
     static sensorChannel channels[nmbrChannels];
-    static sensorChannelFormat channelFormats[nmbrChannels];
+
 
 #ifndef unitTesting
 
@@ -46,7 +42,6 @@ class sps30 {
     static void stopSampling();
     static void readSample();
 
-    static void clearNewMeasurements();
 
     static constexpr uint8_t i2cAddress{0x69};
     static constexpr uint8_t halTrials{0x03};

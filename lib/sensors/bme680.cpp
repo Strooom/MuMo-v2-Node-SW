@@ -19,11 +19,10 @@ uint8_t mockBME680Registers[256];
 #endif
 
 sensorDeviceState bme680::state{sensorDeviceState::unknown};
-sensorChannel bme680::channels[nmbrChannels];
-sensorChannelFormat bme680::channelFormats[nmbrChannels] = {
-    {"temperature", "~C", 1},
-    {"relativeHumidity", "%RH", 0},
-    {"barometricPressure", "hPa", 0},
+sensorChannel bme680::channels[nmbrChannels]= {
+    {1, "temperature", "~C"},
+    {0, "relativeHumidity", "%RH"},
+    {0, "barometricPressure", "hPa"},
 };
 
 uint32_t bme680::rawDataTemperature;
@@ -101,29 +100,6 @@ void bme680::initialize() {
     state = sensorDeviceState::sleeping;
 }
 
-uint32_t bme680::nmbrOfNewMeasurements() {
-    uint32_t count{0};
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            count++;
-        }
-    }
-    return count;
-}
-
-bool bme680::hasNewMeasurement() {
-    return (nmbrOfNewMeasurements() > 0);
-}
-
-bool bme680::hasNewMeasurement(uint32_t channelIndex) {
-    return channels[channelIndex].hasNewValue;
-}
-
-void bme680::clearNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        channels[channelIndex].hasNewValue = false;
-    }
-}
 
 float bme680::valueAsFloat(uint32_t channelIndex) {
     return channels[channelIndex].getOutput();
@@ -131,7 +107,7 @@ float bme680::valueAsFloat(uint32_t channelIndex) {
 
 void bme680::tick() {
     if (anyChannelNeedsSampling()) {
-        clearNewMeasurements();
+        //clearNewMeasurements(); TODO : does a sensor need this ? or will it be done by the sensorDeviceCollection ?
         startSampling();
         state = sensorDeviceState::sampling;
     } else {
@@ -294,21 +270,6 @@ void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* dest
 #endif
 }
 
-void bme680::log() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            float value       = valueAsFloat(channelIndex);
-            uint32_t decimals = channelFormats[channelIndex].decimals;
-            uint32_t intPart  = integerPart(value, decimals);
-            if (decimals > 0) {
-                uint32_t fracPart = fractionalPart(value, decimals);
-                logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
-            } else {
-                logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelFormats[channelIndex].name, intPart, channelFormats[channelIndex].unit);
-            }
-        }
-    }
-}
 
 void bme680::addNewMeasurements() {
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {

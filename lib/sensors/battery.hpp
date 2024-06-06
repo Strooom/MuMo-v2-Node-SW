@@ -15,22 +15,19 @@ class battery {
   public:
     static void initalize();
     static sensorDeviceState getState() { return state; };
-    static uint32_t nmbrOfNewMeasurements();
-    static bool hasNewMeasurement(uint32_t startSearchIndex = 0);
     static void addNewMeasurements();
     static uint32_t nextNewMeasurementChannel(uint32_t startSearchIndex = 0);
     static float valueAsFloat(uint32_t channelIndex);
 
     static void tick();
     static void run();
-    static void log();
+    
 
     static constexpr uint32_t nmbrChannels{2};
     static constexpr uint32_t voltage{0};
     static constexpr uint32_t percentCharged{1};
     static constexpr uint32_t notFound{999U};
     static sensorChannel channels[nmbrChannels];
-    static sensorChannelFormat channelFormats[nmbrChannels];
 
 #ifndef unitTesting
 

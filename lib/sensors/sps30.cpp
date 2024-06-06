@@ -17,11 +17,10 @@ uint8_t mockSPS30Registers[14][60];
 #endif
 
 sensorDeviceState sps30::state{sensorDeviceState::unknown};
-sensorChannel sps30::channels[nmbrChannels];
-sensorChannelFormat sps30::channelFormats[nmbrChannels] = {
-    {"pme 2.5", "uG", 0},
-    {"pme 4", "uG", 0},
-    {"pme 10", "uG", 0},
+sensorChannel sps30::channels[nmbrChannels] = {
+    {0, "pme 2.5", "uG"},
+    {0, "pme 4", "uG"},
+    {0, "pme 10", "uG"},
 };
 
 void sps30::wakeUp() {
@@ -52,14 +51,6 @@ void sps30::initialize() {
     state = sensorDeviceState::sleeping;
 }
 
-bool sps30::hasNewMeasurement() {
-    return (channels[pme2dot5].hasNewValue || channels[pme4].hasNewValue || channels[pme10].hasNewValue);
-}
-
-void sps30::clearNewMeasurements() {
-    channels[pme2dot5].hasNewValue = false;
-    channels[pme4].hasNewValue     = false;
-}
 
 float sps30::valueAsFloat(uint32_t index) {
     return channels[index].getOutput();
@@ -72,7 +63,7 @@ void sps30::tick() {
     }
 
     if (anyChannelNeedsSampling()) {
-        clearNewMeasurements();
+        // clearNewMeasurements();
         startSampling();
         state = sensorDeviceState::sampling;
     } else {
@@ -207,7 +198,7 @@ bool sps30::testI2cAddress(uint8_t addressToTest) {
 
 void sps30::read(command theCommand, uint8_t* destination, uint16_t length) {
 #ifndef generic
-    //HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_8BIT, destination, length, halTimeout);
+    // HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_8BIT, destination, length, halTimeout);
 #else
     // memcpy(destination, mockSPS30Registers + theCommand, length);
 #endif
@@ -215,7 +206,7 @@ void sps30::read(command theCommand, uint8_t* destination, uint16_t length) {
 
 void sps30::write(command startAddress) {
 #ifndef generic
-    //HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
+    // HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
 #else
     // mockSPS30Registers[static_cast<uint8_t>(registerAddress)] = value;
 #endif
@@ -223,7 +214,7 @@ void sps30::write(command startAddress) {
 
 void sps30::write(command startAddress, uint8_t value) {
 #ifndef generic
-    //HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
+    // HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
 #else
     // mockSPS30Registers[static_cast<uint8_t>(registerAddress)] = value;
 #endif
@@ -231,21 +222,9 @@ void sps30::write(command startAddress, uint8_t value) {
 
 void sps30::write(command startAddress, uint8_t* destination, uint16_t length) {
 #ifndef generic
-    //HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
+    // HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
 #else
     // mockSPS30Registers[static_cast<uint8_t>(registerAddress)] = value;
 #endif
 }
 
-
-void sps30::log() {
-    // if (channels[temperature].hasNewValue) {
-    //     logging::snprintf(logging::source::sensorData, "%s = %.2f *C\n", channelFormats[temperature].name, channels[temperature].getOutput());
-    // }
-    // if (channels[pme4].hasNewValue) {
-    //     logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[pme4].name, channels[pme4].getOutput(), channelFormats[pme4].unit);
-    // }
-    // if (channels[pme10].hasNewValue) {
-    //     logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[pme10].name, channels[pme10].getOutput(), channelFormats[pme10].unit);
-    // }
-}
