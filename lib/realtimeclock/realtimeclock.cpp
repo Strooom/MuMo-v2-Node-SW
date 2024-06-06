@@ -44,8 +44,6 @@ void realTimeClock::set(tm brokenDownTime) {
     RTC_TimeTypeDef stm32Time;
     RTC_DateTypeDef stm32Date;
 
-    // TODO : I could check if the members of brokenDownTime are within the correct ranges for the STM32WLE5
-
     stm32Time.Hours          = brokenDownTime.tm_hour;
     stm32Time.Minutes        = brokenDownTime.tm_min;
     stm32Time.Seconds        = brokenDownTime.tm_sec;
