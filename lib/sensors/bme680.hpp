@@ -14,13 +14,10 @@ class bme680 {
   public:
     static bool isPresent();
     static void initialize();
-    static sensorDeviceState getState() { return state; };
-    static void addNewMeasurements();
-
-    static float valueAsFloat(uint32_t channelIndex);
-
     static void tick();
     static void run();
+    
+    static sensorDeviceState getState() { return state; };
 
     static constexpr uint32_t nmbrChannels{3};
     static constexpr uint32_t temperature{0};

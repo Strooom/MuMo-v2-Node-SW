@@ -198,7 +198,7 @@ void test_getOutput() {
     testChannel.adjustCounters();
     testChannel.addSample(4.0F);
 
-    TEST_ASSERT_EQUAL_FLOAT(2.5F, testChannel.getOutput());
+    TEST_ASSERT_EQUAL_FLOAT(2.5F, testChannel.value());
 
     testChannel.adjustCounters();
     testChannel.addSample(10.0F);
@@ -209,7 +209,7 @@ void test_getOutput() {
     testChannel.adjustCounters();
     testChannel.addSample(40.0F);
 
-    TEST_ASSERT_EQUAL_FLOAT(25.0F, testChannel.getOutput());
+    TEST_ASSERT_EQUAL_FLOAT(25.0F, testChannel.value());
 }
 
 void test_sensor_transition_high_low_power() {

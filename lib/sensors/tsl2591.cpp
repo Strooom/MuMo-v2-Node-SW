@@ -46,12 +46,6 @@ void tsl2591::initialize() {
     goSleep();
 }
 
-
-float tsl2591::valueAsFloat(uint32_t index) {
-    return channels[index].getOutput();
-}
-
-
 void tsl2591::goSleep() {
     writeRegister(registers::enable, powerOff);
     state = sensorDeviceState::sleeping;
@@ -156,11 +150,3 @@ void tsl2591::run() {
     }
 }
 
-
-void tsl2591::addNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::tsl2591), channelIndex, channels[channelIndex].getOutput());
-        }
-    }
-}

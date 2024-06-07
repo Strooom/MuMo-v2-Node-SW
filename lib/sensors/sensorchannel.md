@@ -27,3 +27,6 @@ We need an additional setting on each sensorChannel what to do with the measurem
 
 Showing on the display is controlled at the display itself, where we define up to three sensorChannelTypes to be shown on the top 3 lines of the screen. Battery SOC and network is always shown at bottom line
 
+*# TODO
+At startup, as not all samples in the array are written, the averaging won't work. Could solve this by doing a first sample and set all values to this value
+Warning : Lux sensor does something wrong on first sample after power up

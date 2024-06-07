@@ -185,90 +185,38 @@ const char* sensorDeviceCollection::name(uint32_t index) {
     }
 }
 
-float sensorDeviceCollection::valueAsFloat(uint32_t deviceIndex, uint32_t channelIndex) {
-    switch (static_cast<sensorDeviceType>(deviceIndex)) {
-        case sensorDeviceType::battery:
-            return battery::valueAsFloat(channelIndex);
-            break;
-        case sensorDeviceType::bme680:
-            return bme680::valueAsFloat(channelIndex);
-            break;
-        case sensorDeviceType::sht40:
-            return sht40::valueAsFloat(channelIndex);
-            break;
-        case sensorDeviceType::tsl2591:
-            return tsl2591::valueAsFloat(channelIndex);
-            break;
-        // Add more types of sensors here
-        default:
-            return 0.0F;
+float sensorDeviceCollection::channelValue(uint32_t deviceIndex, uint32_t channelIndex) {
+    if (!isValidChannelIndex(deviceIndex, channelIndex)) {
+        return channel(deviceIndex, channelIndex).value();
     }
+    return 0.0F;
 }
+
 uint32_t sensorDeviceCollection::channelDecimals(uint32_t deviceIndex, uint32_t channelIndex) {
-    switch (static_cast<sensorDeviceType>(deviceIndex)) {
-        case sensorDeviceType::battery:
-            return battery::channels[channelIndex].decimals;
-            break;
-        case sensorDeviceType::bme680:
-            return bme680::channels[channelIndex].decimals;
-            break;
-        case sensorDeviceType::sht40:
-            return sht40::channels[channelIndex].decimals;
-            break;
-        case sensorDeviceType::tsl2591:
-            return tsl2591::channels[channelIndex].decimals;
-            break;
-        // Add more types of sensors here
-        default:
-            return 0;
+    if (isValidChannelIndex(deviceIndex, channelIndex)) {
+        return channel(deviceIndex, channelIndex).decimals;
     }
+    return 0;
 }
 
 const char* sensorDeviceCollection::channelName(uint32_t deviceIndex, uint32_t channelIndex) {
-    switch (static_cast<sensorDeviceType>(deviceIndex)) {
-        case sensorDeviceType::battery:
-            return battery::channels[channelIndex].name;
-            break;
-        case sensorDeviceType::bme680:
-            return bme680::channels[channelIndex].name;
-            break;
-        case sensorDeviceType::sht40:
-            return sht40::channels[channelIndex].name;
-            break;
-        case sensorDeviceType::tsl2591:
-            return tsl2591::channels[channelIndex].name;
-            break;
-
-        // Add more types of sensors here
-        default:
-            return "invalid deviceIndex";
+    if (isValidChannelIndex(deviceIndex, channelIndex)) {
+        return channel(deviceIndex, channelIndex).name;
     }
+    return "invalid index";
 }
 
 const char* sensorDeviceCollection::channelUnits(uint32_t deviceIndex, uint32_t channelIndex) {
-    switch (static_cast<sensorDeviceType>(deviceIndex)) {
-        case sensorDeviceType::battery:
-            return battery::channels[channelIndex].unit;
-            break;
-        case sensorDeviceType::bme680:
-            return bme680::channels[channelIndex].unit;
-            break;
-        case sensorDeviceType::sht40:
-            return sht40::channels[channelIndex].unit;
-            break;
-        case sensorDeviceType::tsl2591:
-            return tsl2591::channels[channelIndex].unit;
-            break;
-        // Add more types of sensors here
-        default:
-            return "invalid deviceIndex";
+    if (isValidChannelIndex(deviceIndex, channelIndex)) {
+        return channel(deviceIndex, channelIndex).unit;
     }
+    return "invalid index";
 }
 
 void sensorDeviceCollection::log(uint32_t deviceIndex, uint32_t channelIndex) {
     uint32_t maxNmbrChannels = nmbrOfChannels(deviceIndex);
     if (channelIndex < maxNmbrChannels) {
-        float value       = valueAsFloat(deviceIndex, channelIndex);
+        float value       = channelValue(deviceIndex, channelIndex);
         uint32_t decimals = channelDecimals(deviceIndex, channelIndex);
         uint32_t intPart  = integerPart(value, decimals);
         if (decimals > 0) {
@@ -281,7 +229,7 @@ void sensorDeviceCollection::log(uint32_t deviceIndex, uint32_t channelIndex) {
 }
 
 void sensorDeviceCollection::log(uint32_t deviceIndex) {
-    if (isPresent[deviceIndex]) {
+    if (isValidDeviceIndex(deviceIndex)) {
         for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
             log(deviceIndex, channelIndex);
         }
@@ -296,7 +244,7 @@ void sensorDeviceCollection::log() {
 
 uint32_t sensorDeviceCollection::nmbrOfNewMeasurements(uint32_t deviceIndex) {
     uint32_t result{0};
-    if (isPresent[deviceIndex]) {
+    if (isValidDeviceIndex(deviceIndex)) {
         switch (static_cast<sensorDeviceType>(deviceIndex)) {
             case sensorDeviceType::battery:
                 for (uint32_t channelIndex = 0U; channelIndex < battery::nmbrChannels; channelIndex++) {
@@ -343,28 +291,18 @@ uint32_t sensorDeviceCollection::nmbrOfNewMeasurements() {
 }
 
 void sensorDeviceCollection::collectNewMeasurements() {
-    for (uint32_t index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
-        if (isPresent[index]) {
-            switch (static_cast<sensorDeviceType>(index)) {
-                case sensorDeviceType::battery:
-                    battery::addNewMeasurements();
+    for (uint32_t deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
+        collectNewMeasurements(deviceIndex);
+    }
+}
 
-                    break;
-                case sensorDeviceType::bme680:
-                    bme680::addNewMeasurements();
-
-                    break;
-                case sensorDeviceType::sht40:
-                    sht40::addNewMeasurements();
-
-                    break;
-                case sensorDeviceType::tsl2591:
-                    tsl2591::addNewMeasurements();
-
-                    break;
-                // Add more types of sensors here
-                default:
-                    break;
+void sensorDeviceCollection::collectNewMeasurements(uint32_t deviceIndex) {
+    if (isValidDeviceIndex(deviceIndex)) {
+        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
+            if (isValidChannelIndex(deviceIndex, channelIndex)) {
+                if (channel(deviceIndex, channelIndex).hasNewValue) {
+                    measurementCollection::addMeasurement(deviceIndex, channelIndex, channel(deviceIndex, channelIndex).value());
+                };
             }
         }
     }
@@ -377,7 +315,7 @@ void sensorDeviceCollection::clearNewMeasurements() {
 }
 
 void sensorDeviceCollection::clearNewMeasurements(uint32_t deviceIndex) {
-    if (isPresent[deviceIndex]) {
+    if (isValidDeviceIndex(deviceIndex)) {
         switch (static_cast<sensorDeviceType>(deviceIndex)) {
             case sensorDeviceType::battery:
                 for (uint32_t channelIndex = 0U; channelIndex < battery::nmbrChannels; channelIndex++) {
@@ -407,42 +345,61 @@ void sensorDeviceCollection::clearNewMeasurements(uint32_t deviceIndex) {
 }
 
 uint32_t sensorDeviceCollection::nmbrOfChannels(uint32_t deviceIndex) {
-    switch (static_cast<sensorDeviceType>(deviceIndex)) {
-        case sensorDeviceType::battery:
-            return battery::nmbrChannels;
-            break;
-        case sensorDeviceType::bme680:
-            return bme680::nmbrChannels;
-            break;
-        case sensorDeviceType::sht40:
-            return sht40::nmbrChannels;
-            break;
-        case sensorDeviceType::tsl2591:
-            return tsl2591::nmbrChannels;
-            break;
-        // Add more types of sensors here
-        default:
-            return 0;
+    if (isValidDeviceIndex(deviceIndex)) {
+        switch (static_cast<sensorDeviceType>(deviceIndex)) {
+            case sensorDeviceType::battery:
+                return battery::nmbrChannels;
+                break;
+            case sensorDeviceType::bme680:
+                return bme680::nmbrChannels;
+                break;
+            case sensorDeviceType::sht40:
+                return sht40::nmbrChannels;
+                break;
+            case sensorDeviceType::tsl2591:
+                return tsl2591::nmbrChannels;
+                break;
+            // Add more types of sensors here
+            default:
+                return 0;
+        }
     }
+    return 0;
 }
 
 sensorChannel& sensorDeviceCollection::channel(uint32_t deviceIndex, uint32_t channelIndex) {
-    switch (static_cast<sensorDeviceType>(deviceIndex)) {
-        case sensorDeviceType::battery:
-            // test if channelIndex is within bounds, else return dummy
-            return battery::channels[channelIndex];
-            break;
-        case sensorDeviceType::bme680:
-            return bme680::channels[channelIndex];
-            break;
-        case sensorDeviceType::sht40:
-            return sht40::channels[channelIndex];
-            break;
-        case sensorDeviceType::tsl2591:
-            return tsl2591::channels[channelIndex];
-            break;
-        // Add more types of sensors here
-        default:
-            return dummy;        // in case of an invalid index, we return this dummy channel
+    if (isValidChannelIndex(deviceIndex, channelIndex)) {
+        switch (static_cast<sensorDeviceType>(deviceIndex)) {
+            case sensorDeviceType::battery:
+                return battery::channels[channelIndex];
+                break;
+            case sensorDeviceType::bme680:
+                return bme680::channels[channelIndex];
+                break;
+            case sensorDeviceType::sht40:
+                return sht40::channels[channelIndex];
+                break;
+            case sensorDeviceType::tsl2591:
+                return tsl2591::channels[channelIndex];
+                break;
+            // Add more types of sensors here
+            default:
+                return dummy;        // in case of an invalid index, we return this dummy channel
+        }
     }
+    return dummy;        // in case of an invalid index, we return this dummy channel
+}
+
+bool sensorDeviceCollection::isValidDeviceIndex(uint32_t deviceIndex) {
+    if (deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)) {
+        return isPresent[deviceIndex];
+    }
+    return false;
+}
+
+bool sensorDeviceCollection::isValidChannelIndex(uint32_t deviceIndex, uint32_t channelIndex) {
+    if (isValidDeviceIndex(deviceIndex)) {
+        return channelIndex < nmbrOfChannels(deviceIndex);
+    }
+    return false;
 }

@@ -46,7 +46,7 @@ void screen::showMessage(const char* line1, const char* line2) {
 void screen::getContents() {
     isModified = false;
     for (uint32_t lineIndex = 1; lineIndex < numberOfLines; lineIndex++) {
-        float value       = sensorDeviceCollection::valueAsFloat(deviceIndex[lineIndex], channelIndex[lineIndex]);
+        float value       = sensorDeviceCollection::channelValue(deviceIndex[lineIndex], channelIndex[lineIndex]);
         uint32_t decimals = sensorDeviceCollection::channelDecimals(deviceIndex[lineIndex], channelIndex[lineIndex]);
 
         buildBigTextString(integerPart(value, decimals), lineIndex);
@@ -67,7 +67,7 @@ void screen::drawContents() {
         graphics::drawText(ux::mid + tahoma24bold.properties.spaceBetweenCharactersInPixels, ux::marginBottomSmall + (lineIndex * 50), tahoma24bold, smallText[lineIndex]);
     }
 
-    uint32_t batteryLevel = static_cast<uint32_t>(sensorDeviceCollection::valueAsFloat(1, 1) * 100.0F);
+    uint32_t batteryLevel = static_cast<uint32_t>(sensorDeviceCollection::channelValue(1, 1) * 100.0F);
     graphics::drawBatteryIcon(display::widthInPixels - (1 + ux::marginLeft + ux::batteryIconWidth), 2, batteryLevel);
     graphics::drawNetworkSignalStrengthIcon(display::widthInPixels - (1 + ux::marginLeft + ux::marginLeft + ux::batteryIconWidth + ux::netwerkSignalStrengthWidth), 2, 50);
 

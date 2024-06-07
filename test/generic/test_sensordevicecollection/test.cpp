@@ -92,7 +92,7 @@ void test_channelName() {
     TEST_ASSERT_EQUAL_STRING("temperature", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature));
     TEST_ASSERT_EQUAL_STRING("relativeHumidity", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
 
-    TEST_ASSERT_EQUAL_STRING("invalid deviceIndex", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices), 0));
+    TEST_ASSERT_EQUAL_STRING("invalid index", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices), 0));
 }
 
 void test_channelUnits() {
@@ -108,7 +108,7 @@ void test_channelUnits() {
     TEST_ASSERT_EQUAL_STRING("~C", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature));
     TEST_ASSERT_EQUAL_STRING("%RH", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
 
-    TEST_ASSERT_EQUAL_STRING("invalid deviceIndex", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices), 0));
+    TEST_ASSERT_EQUAL_STRING("invalid index", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices), 0));
 }
 
 void test_hasNewMeasurements() {
@@ -153,6 +153,31 @@ void test_hasNewMeasurements() {
     TEST_ASSERT_EQUAL(0, sensorDeviceCollection::nmbrOfNewMeasurements());
 }
 
+void test_validDeviceAndChannelIndex() {
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidDeviceIndex(static_cast<uint32_t>(sensorDeviceType::battery)));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidDeviceIndex(static_cast<uint32_t>(sensorDeviceType::bme680)));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidDeviceIndex(static_cast<uint32_t>(sensorDeviceType::tsl2591)));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidDeviceIndex(static_cast<uint32_t>(sensorDeviceType::sht40)));
+    TEST_ASSERT_FALSE(sensorDeviceCollection::isValidDeviceIndex(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)));
+
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
+    TEST_ASSERT_FALSE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::battery), 2));
+
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
+    TEST_ASSERT_FALSE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::bme680), 3));
+
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
+    TEST_ASSERT_FALSE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::tsl2591), 1));
+
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
+    TEST_ASSERT_FALSE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::sht40), 2));
+}
+
+
 void test_tickAndRun() {
     TEST_IGNORE_MESSAGE("Implement me!");
 }
@@ -178,6 +203,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_channelName);
     RUN_TEST(test_channelUnits);
     RUN_TEST(test_hasNewMeasurements);
+    RUN_TEST(test_validDeviceAndChannelIndex);
     RUN_TEST(test_tickAndRun);
     RUN_TEST(test_log);
 

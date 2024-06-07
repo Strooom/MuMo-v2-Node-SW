@@ -19,7 +19,6 @@ uint32_t mockBatteryRawADC;
 float mockBatteryVoltage;
 #endif
 
-// ### initialize static members ###
 batteryType battery::type{batteryType::liFePO4_700mAh};
 sensorDeviceState battery::state{sensorDeviceState::unknown};
 sensorChannel battery::channels[nmbrChannels] = {
@@ -41,32 +40,10 @@ void battery::initalize() {
     logging::snprintf(logging::source::settings, "batteryType : %s\n", toString(type));
 }
 
-void battery::clearNewMeasurement(uint32_t channelIndex) {
-    channels[channelIndex].hasNewValue = false;
-}
-
-void battery::clearAllNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        channels[channelIndex].hasNewValue = false;
-    }
-}
-
-uint32_t battery::nextNewMeasurementChannel(uint32_t startIndex) {
-    for (uint32_t channelIndex = startIndex; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            return channelIndex;
-        }
-    }
-    return notFound;
-}
-
-float battery::valueAsFloat(uint32_t index) {
-    return channels[index].getOutput();
-}
 
 void battery::tick() {
     if (anyChannelNeedsSampling()) {
-        clearAllNewMeasurements();
+        // clearAllNewMeasurements();
         startSampling();
         state = sensorDeviceState::sampling;
     } else {
@@ -144,12 +121,3 @@ float battery::voltageFromRaw(uint32_t rawADC) {
     return mockBatteryVoltage;
 #endif
 }
-
-void battery::addNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::battery), channelIndex, channels[channelIndex].getOutput());
-        }
-    }
-}
-

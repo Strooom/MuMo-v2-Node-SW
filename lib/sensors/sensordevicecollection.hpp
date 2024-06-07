@@ -20,7 +20,7 @@ class sensorDeviceCollection {
     static bool isSleeping();
     static const char* name(uint32_t index);
 
-    static float valueAsFloat(uint32_t deviceIndex, uint32_t channelIndex);
+    static float channelValue(uint32_t deviceIndex, uint32_t channelIndex);
     static uint32_t channelDecimals(uint32_t deviceIndex, uint32_t channelIndex);
     static const char* channelName(uint32_t deviceIndex, uint32_t channelIndex);
     static const char* channelUnits(uint32_t deviceIndex, uint32_t channelIndex);
@@ -33,9 +33,12 @@ class sensorDeviceCollection {
     static uint32_t nmbrOfNewMeasurements();
     static uint32_t nmbrOfNewMeasurements(uint32_t deviceIndex);
     static void collectNewMeasurements();
+    static void collectNewMeasurements(uint32_t deviceIndex);
     static void clearNewMeasurements();
     static void clearNewMeasurements(uint32_t deviceIndex);
 
+    static bool isValidDeviceIndex(uint32_t deviceIndex);
+    static bool isValidChannelIndex(uint32_t deviceIndex, uint32_t channelIndex);
 
 #ifndef unitTesting
 

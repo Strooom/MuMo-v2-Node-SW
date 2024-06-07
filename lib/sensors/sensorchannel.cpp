@@ -91,7 +91,7 @@ void sensorChannel::addSample(float theSample) {
     samples[oversamplingCounter] = theSample;
 }
 
-float sensorChannel::getOutput() {
+float sensorChannel::value() {
     return average(getCurrentOversampling() + 1);
 }
 

@@ -40,8 +40,6 @@ void test_tickAndRun() {
     TEST_ASSERT_TRUE(battery::channels[battery::percentCharged].needsSampling());
     battery::tick();
     battery::run();
-    battery::clearNewMeasurement(battery::voltage);
-    battery::clearAllNewMeasurements();
 }
 
 void test_findNewMeasurements() {
@@ -52,16 +50,12 @@ void test_findNewMeasurements() {
     battery::channels[battery::percentCharged].set(0, 0, 0, 0);
     battery::tick();
     battery::run();
-    TEST_ASSERT_EQUAL(0, battery::nextNewMeasurementChannel(0));
-    TEST_ASSERT_EQUAL(battery::notFound, battery::nextNewMeasurementChannel(1));
 
     battery::initalize();
     battery::channels[battery::voltage].set(0, 0, 0, 0);
     battery::channels[battery::percentCharged].set(0, 1, 0, 0);
     battery::tick();
     battery::run();
-    TEST_ASSERT_EQUAL(1, battery::nextNewMeasurementChannel(0));
-    TEST_ASSERT_EQUAL(1, battery::nextNewMeasurementChannel(1));
 }
 
 void test_toString() {
@@ -70,6 +64,7 @@ void test_toString() {
     toString(batteryType::alkaline_1200mAh);
     toString(batteryType::saft_ls_14250);
     toString(batteryType::saft_ls_14500);
+    toString(static_cast<batteryType>(999));
     TEST_IGNORE_MESSAGE("Dummy test for coverage");
 }
 

@@ -101,10 +101,6 @@ void bme680::initialize() {
 }
 
 
-float bme680::valueAsFloat(uint32_t channelIndex) {
-    return channels[channelIndex].getOutput();
-}
-
 void bme680::tick() {
     if (anyChannelNeedsSampling()) {
         //clearNewMeasurements(); TODO : does a sensor need this ? or will it be done by the sensorDeviceCollection ?
@@ -270,11 +266,3 @@ void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* dest
 #endif
 }
 
-
-void bme680::addNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::bme680), channelIndex, channels[channelIndex].getOutput());
-        }
-    }
-}

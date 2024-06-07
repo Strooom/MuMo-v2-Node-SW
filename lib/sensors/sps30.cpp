@@ -53,7 +53,7 @@ void sps30::initialize() {
 
 
 float sps30::valueAsFloat(uint32_t index) {
-    return channels[index].getOutput();
+    return channels[index].value();
 }
 
 void sps30::tick() {

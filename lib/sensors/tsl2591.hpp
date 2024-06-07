@@ -13,19 +13,13 @@ class tsl2591 {
   public:
     static bool isPresent();        // detect if there is an TSL2591 on the I2C bus
     static void initialize();
-    static sensorDeviceState getState() { return state; };
-
-        static void addNewMeasurements();
-
-    static float valueAsFloat(uint32_t channelIndex);
-
     static void tick();
     static void run();
+    static sensorDeviceState getState() { return state; };
 
     static constexpr uint32_t nmbrChannels{1};
     static constexpr uint32_t visibleLight{0};
     static sensorChannel channels[nmbrChannels];
-    
 
 #ifndef unitTesting
 
@@ -39,7 +33,6 @@ class tsl2591 {
     static void readSample();
     static float calculateLux();
     static void goSleep();
-
 
     static constexpr uint8_t i2cAddress{0x29};        // default I2C address for this sensor
     static constexpr uint8_t halTrials{0x03};         // ST HAL requires a 'retry' parameters

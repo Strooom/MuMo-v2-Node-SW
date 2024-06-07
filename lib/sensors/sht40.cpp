@@ -47,12 +47,6 @@ void sht40::initialize() {
     state = sensorDeviceState::sleeping;
 }
 
-
-
-float sht40::valueAsFloat(uint32_t index) {
-    return channels[index].getOutput();
-}
-
 void sht40::tick() {
     if (state != sensorDeviceState::sleeping) {
         adjustAllCounters();
@@ -171,11 +165,3 @@ void sht40::read(uint8_t* response, uint32_t responseLength) {
 #endif
 }
 
-
-void sht40::addNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::sht40), channelIndex, channels[channelIndex].getOutput());
-        }
-    }
-}

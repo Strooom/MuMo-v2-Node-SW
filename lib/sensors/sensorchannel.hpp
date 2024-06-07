@@ -23,7 +23,7 @@ class sensorChannel {
     void adjustCounters();
 
     void addSample(float theSample);
-    float getOutput();
+    float value();
 
 #ifndef unitTesting
 
@@ -52,8 +52,6 @@ class sensorChannel {
     bool isActive() const;
 
     const uint32_t decimals;
-    // static constexpr uint32_t maxNameLength{24};
-    // static constexpr uint32_t maxUnitLength{4};
     const char* name;
     const char* unit;
 
