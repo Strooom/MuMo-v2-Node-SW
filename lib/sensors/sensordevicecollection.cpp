@@ -117,44 +117,13 @@ bool sensorDeviceCollection::isSleeping() {
 }
 
 bool sensorDeviceCollection::hasNewMeasurements(uint32_t deviceIndex) {
-    if (isPresent[deviceIndex]) {
-        switch (static_cast<sensorDeviceType>(deviceIndex)) {
-            case sensorDeviceType::battery:
-                for (uint32_t channelIndex = 0U; channelIndex < battery::nmbrChannels; channelIndex++) {
-                    if (battery::channels[channelIndex].hasNewValue) {
-                        return true;
-                    }
-                }
-                return false;
-                break;
-            case sensorDeviceType::bme680:
-                for (uint32_t channelIndex = 0U; channelIndex < bme680::nmbrChannels; channelIndex++) {
-                    if (bme680::channels[channelIndex].hasNewValue) {
-                        return true;
-                    }
-                }
-                return false;
-                break;
-            case sensorDeviceType::sht40:
-                for (uint32_t channelIndex = 0U; channelIndex < sht40::nmbrChannels; channelIndex++) {
-                    if (sht40::channels[channelIndex].hasNewValue) {
-                        return true;
-                    }
-                }
-                return false;
-                break;
-            case sensorDeviceType::tsl2591:
-                for (uint32_t channelIndex = 0U; channelIndex < tsl2591::nmbrChannels; channelIndex++) {
-                    if (tsl2591::channels[channelIndex].hasNewValue) {
-                        return true;
-                    }
-                }
-                return false;
-                break;
-            // Add more types of sensors here
-            default:
-                return false;
-                break;
+    if (isValidDeviceIndex(deviceIndex)) {
+        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
+            if (isValidChannelIndex(deviceIndex, channelIndex)) {
+                if (channel(deviceIndex, channelIndex).hasNewValue) {
+                    return true;
+                };
+            }
         }
     }
     return false;
@@ -242,50 +211,24 @@ void sensorDeviceCollection::log() {
     }
 }
 
-uint32_t sensorDeviceCollection::nmbrOfNewMeasurements(uint32_t deviceIndex) {
-    uint32_t result{0};
-    if (isValidDeviceIndex(deviceIndex)) {
-        switch (static_cast<sensorDeviceType>(deviceIndex)) {
-            case sensorDeviceType::battery:
-                for (uint32_t channelIndex = 0U; channelIndex < battery::nmbrChannels; channelIndex++) {
-                    if (battery::channels[channelIndex].hasNewValue) {
-                        result++;
-                    }
-                }
-                break;
-            case sensorDeviceType::bme680:
-                for (uint32_t channelIndex = 0U; channelIndex < bme680::nmbrChannels; channelIndex++) {
-                    if (bme680::channels[channelIndex].hasNewValue) {
-                        result++;
-                    }
-                }
-                break;
-            case sensorDeviceType::sht40:
-                for (uint32_t channelIndex = 0U; channelIndex < sht40::nmbrChannels; channelIndex++) {
-                    if (sht40::channels[channelIndex].hasNewValue) {
-                        result++;
-                    }
-                }
-                break;
-            case sensorDeviceType::tsl2591:
-                for (uint32_t channelIndex = 0U; channelIndex < tsl2591::nmbrChannels; channelIndex++) {
-                    if (tsl2591::channels[channelIndex].hasNewValue) {
-                        result++;
-                    }
-                }
-                break;
-            // Add more types of sensors here
-            default:
-                break;
-        }
-    }
-    return result;
-}
-
 uint32_t sensorDeviceCollection::nmbrOfNewMeasurements() {
     uint32_t result{0};
     for (uint32_t deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
         result += nmbrOfNewMeasurements(deviceIndex);
+    }
+    return result;
+}
+
+uint32_t sensorDeviceCollection::nmbrOfNewMeasurements(uint32_t deviceIndex) {
+    uint32_t result{0};
+    if (isValidDeviceIndex(deviceIndex)) {
+        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
+            if (isValidChannelIndex(deviceIndex, channelIndex)) {
+                if (channel(deviceIndex, channelIndex).hasNewValue) {
+                    result++;
+                };
+            }
+        }
     }
     return result;
 }
@@ -316,30 +259,10 @@ void sensorDeviceCollection::clearNewMeasurements() {
 
 void sensorDeviceCollection::clearNewMeasurements(uint32_t deviceIndex) {
     if (isValidDeviceIndex(deviceIndex)) {
-        switch (static_cast<sensorDeviceType>(deviceIndex)) {
-            case sensorDeviceType::battery:
-                for (uint32_t channelIndex = 0U; channelIndex < battery::nmbrChannels; channelIndex++) {
-                    battery::channels[channelIndex].hasNewValue = false;
-                }
-                break;
-            case sensorDeviceType::bme680:
-                for (uint32_t channelIndex = 0U; channelIndex < bme680::nmbrChannels; channelIndex++) {
-                    bme680::channels[channelIndex].hasNewValue = false;
-                }
-                break;
-            case sensorDeviceType::sht40:
-                for (uint32_t channelIndex = 0U; channelIndex < sht40::nmbrChannels; channelIndex++) {
-                    sht40::channels[channelIndex].hasNewValue = false;
-                }
-                break;
-            case sensorDeviceType::tsl2591:
-                for (uint32_t channelIndex = 0U; channelIndex < tsl2591::nmbrChannels; channelIndex++) {
-                    tsl2591::channels[channelIndex].hasNewValue = false;
-                }
-                break;
-            // Add more types of sensors here
-            default:
-                break;
+        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
+            if (isValidChannelIndex(deviceIndex, channelIndex)) {
+                channel(deviceIndex, channelIndex).hasNewValue = false;
+            };
         }
     }
 }
