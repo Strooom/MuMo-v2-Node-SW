@@ -29,12 +29,11 @@ enum class displayPresence : uint32_t {
 class display {
   public:
     display() = delete;
-    static bool isPresent();         // return displayPresent
-    static void initialize();        // wakeup through HW reset, then configure display
-    static void run();               //
-    static bool isReady();           //
-    static void goSleep();           //
-    static void update();            // refresh display
+    static bool isPresent();          // return displayPresent
+    static void initialize();         // wakeup through HW reset, then configure display
+    static bool isReady();
+    static void startUpdate();
+    static void goSleep();
 
     static void setPixel(uint32_t x, uint32_t y);
     static void clearPixel(uint32_t x, uint32_t y);

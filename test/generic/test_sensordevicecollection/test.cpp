@@ -63,52 +63,52 @@ void test_getChannel() {
     TEST_ASSERT_TRUE(&sensorDeviceCollection::dummy == &sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices), 0));
 }
 
-void test_channelDecimals() {
-    TEST_ASSERT_EQUAL(2, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
-    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
+void test_decimals() {
+    TEST_ASSERT_EQUAL(2, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
 
-    TEST_ASSERT_EQUAL(1, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
-    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
-    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
+    TEST_ASSERT_EQUAL(1, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
 
-    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
 
-    TEST_ASSERT_EQUAL(1, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature));
-    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
+    TEST_ASSERT_EQUAL(1, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
 
-    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::channelDecimals(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices), 0));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices), 0));
 }
 
 void test_channelName() {
-    TEST_ASSERT_EQUAL_STRING("voltage", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
-    TEST_ASSERT_EQUAL_STRING("percentCharged", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
+    TEST_ASSERT_EQUAL_STRING("voltage", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_EQUAL_STRING("percentCharged", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
 
-    TEST_ASSERT_EQUAL_STRING("temperature", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
-    TEST_ASSERT_EQUAL_STRING("relativeHumidity", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
-    TEST_ASSERT_EQUAL_STRING("barometricPressure", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
+    TEST_ASSERT_EQUAL_STRING("temperature", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
+    TEST_ASSERT_EQUAL_STRING("relativeHumidity", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
+    TEST_ASSERT_EQUAL_STRING("barometricPressure", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
 
-    TEST_ASSERT_EQUAL_STRING("visibleLight", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
+    TEST_ASSERT_EQUAL_STRING("visibleLight", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
 
-    TEST_ASSERT_EQUAL_STRING("temperature", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature));
-    TEST_ASSERT_EQUAL_STRING("relativeHumidity", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
+    TEST_ASSERT_EQUAL_STRING("temperature", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature));
+    TEST_ASSERT_EQUAL_STRING("relativeHumidity", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
 
-    TEST_ASSERT_EQUAL_STRING("invalid index", sensorDeviceCollection::channelName(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices), 0));
+    TEST_ASSERT_EQUAL_STRING("invalid index", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices), 0));
 }
 
-void test_channelUnits() {
-    TEST_ASSERT_EQUAL_STRING("V", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
-    TEST_ASSERT_EQUAL_STRING("%", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
+void test_units() {
+    TEST_ASSERT_EQUAL_STRING("V", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_EQUAL_STRING("%", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
 
-    TEST_ASSERT_EQUAL_STRING("~C", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
-    TEST_ASSERT_EQUAL_STRING("%RH", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
-    TEST_ASSERT_EQUAL_STRING("hPa", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
+    TEST_ASSERT_EQUAL_STRING("~C", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
+    TEST_ASSERT_EQUAL_STRING("%RH", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
+    TEST_ASSERT_EQUAL_STRING("hPa", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
 
-    TEST_ASSERT_EQUAL_STRING("lux", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
+    TEST_ASSERT_EQUAL_STRING("lux", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
 
-    TEST_ASSERT_EQUAL_STRING("~C", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature));
-    TEST_ASSERT_EQUAL_STRING("%RH", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
+    TEST_ASSERT_EQUAL_STRING("~C", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature));
+    TEST_ASSERT_EQUAL_STRING("%RH", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
 
-    TEST_ASSERT_EQUAL_STRING("invalid index", sensorDeviceCollection::channelUnits(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices), 0));
+    TEST_ASSERT_EQUAL_STRING("invalid index", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices), 0));
 }
 
 void test_hasNewMeasurements() {
@@ -199,9 +199,9 @@ int main(int argc, char **argv) {
     RUN_TEST(test_nmbrOfChannels);
     RUN_TEST(test_getChannel);
     RUN_TEST(test_valueAsFloat);
-    RUN_TEST(test_channelDecimals);
-    RUN_TEST(test_channelName);
-    RUN_TEST(test_channelUnits);
+    RUN_TEST(test_decimals);
+    RUN_TEST(test_name);
+    RUN_TEST(test_units);
     RUN_TEST(test_hasNewMeasurements);
     RUN_TEST(test_validDeviceAndChannelIndex);
     RUN_TEST(test_tickAndRun);

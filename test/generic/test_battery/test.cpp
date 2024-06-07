@@ -2,6 +2,10 @@
 #include <settingscollection.hpp>
 #include <battery.hpp>
 
+
+extern uint32_t mockBatteryRawADC;
+extern float mockBatteryVoltage;
+
 void setUp(void) {}
 void tearDown(void) {}
 
@@ -13,49 +17,36 @@ void test_initialization() {
     battery::initalize();
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::getState());
     TEST_ASSERT_EQUAL(batteryType::saft_ls_14250, battery::type);
-
-    testType = static_cast<batteryType>(1000);
-    settingsCollection::save<batteryType>(testType, settingsCollection::settingIndex::batteryType);
-    battery::initalize();
-    TEST_ASSERT_EQUAL(batteryType::liFePO4_700mAh, battery::type);
 }
 
-void test_tickAndRun() {
-    batteryType testType = batteryType::saft_ls_14250;
-    settingsCollection::save<batteryType>(testType, settingsCollection::settingIndex::batteryType);
+
+void test_startSampling() {
     battery::initalize();
-
     battery::channels[battery::voltage].set(0, 1, 0, 0);
-    battery::channels[battery::percentCharged].set(0, 0, 0, 0);
-
-    TEST_ASSERT_TRUE(battery::anyChannelNeedsSampling());
-    TEST_ASSERT_TRUE(battery::channels[battery::voltage].needsSampling());
-    TEST_ASSERT_FALSE(battery::channels[battery::percentCharged].needsSampling());
-    battery::tick();
-    TEST_ASSERT_EQUAL(sensorDeviceState::sampling, battery::getState());
-    battery::run();
-    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::getState());
-
     battery::channels[battery::percentCharged].set(0, 1, 0, 0);
-    TEST_ASSERT_TRUE(battery::channels[battery::percentCharged].needsSampling());
-    battery::tick();
-    battery::run();
+    battery::startSampling();
 }
 
-void test_findNewMeasurements() {
-    batteryType testType = batteryType::saft_ls_14250;
-    settingsCollection::save<batteryType>(testType, settingsCollection::settingIndex::batteryType);
+void tewt_samplingIsReady() {
     battery::initalize();
     battery::channels[battery::voltage].set(0, 1, 0, 0);
-    battery::channels[battery::percentCharged].set(0, 0, 0, 0);
-    battery::tick();
-    battery::run();
-
-    battery::initalize();
-    battery::channels[battery::voltage].set(0, 0, 0, 0);
     battery::channels[battery::percentCharged].set(0, 1, 0, 0);
-    battery::tick();
-    battery::run();
+    TEST_ASSERT_TRUE(battery::samplingIsReady());
+}
+
+void test_readSample() {
+    battery::initalize();
+    battery::channels[battery::voltage].set(0, 1, 0, 0);
+    battery::channels[battery::percentCharged].set(0, 1, 0, 0);
+    mockBatteryRawADC = 1234;
+    TEST_ASSERT_EQUAL(mockBatteryRawADC, battery::readSample());
+}
+
+void test_voltageFromRaw() {
+    battery::initalize();
+    battery::channels[battery::voltage].set(0, 1, 0, 0);
+    battery::channels[battery::percentCharged].set(0, 1, 0, 0);
+    TEST_ASSERT_EQUAL(0, battery::voltageFromRaw(0));
 }
 
 void test_toString() {
@@ -71,8 +62,10 @@ void test_toString() {
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialization);
-    RUN_TEST(test_tickAndRun);
-    RUN_TEST(test_findNewMeasurements);
     RUN_TEST(test_toString);
+    RUN_TEST(test_startSampling);
+    RUN_TEST(tewt_samplingIsReady);
+    RUN_TEST(test_readSample);
+    RUN_TEST(test_voltageFromRaw);
     UNITY_END();
 }

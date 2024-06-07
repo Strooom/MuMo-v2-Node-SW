@@ -19,7 +19,7 @@ uint8_t mockBME680Registers[256];
 #endif
 
 sensorDeviceState bme680::state{sensorDeviceState::unknown};
-sensorChannel bme680::channels[nmbrChannels]= {
+sensorChannel bme680::channels[nmbrChannels] = {
     {1, "temperature", "~C"},
     {0, "relativeHumidity", "%RH"},
     {0, "barometricPressure", "hPa"},
@@ -64,11 +64,7 @@ bool bme680::isPresent() {
 }
 
 void bme680::initialize() {
-    // TODO : need to read the sensorChannel settins from EEPROM and restore them
-    channels[temperature].set(0, 1, 0, 1);
-    channels[relativeHumidity].set(0, 0, 0, 0);
-    channels[barometricPressure].set(0, 0, 0, 0);
-
+#ifndef generic
     uint8_t registerData[42]{};
     readRegisters(0x8A, 23, registerData);             // read all calibration data from the sensorChannel and convert to proper coefficients
     readRegisters(0xE1, 14, registerData + 23);        //
@@ -96,19 +92,17 @@ void bme680::initialize() {
     calibrationCoefficientPressure8  = static_cast<float>(static_cast<int16_t>(static_cast<uint16_t>(registerData[19]) << 8) | static_cast<uint16_t>(registerData[18]));
     calibrationCoefficientPressure9  = static_cast<float>(static_cast<int16_t>(static_cast<uint16_t>(registerData[21]) << 8) | static_cast<uint16_t>(registerData[20]));
     calibrationCoefficientPressure10 = static_cast<float>(static_cast<uint8_t>(registerData[22]));
-
+#else
+    mockBME680Registers[static_cast<uint8_t>(bme680::registers::chipId)]      = bme680::chipIdValue;
+    mockBME680Registers[static_cast<uint8_t>(bme680::registers::meas_status)] = 0x80;
+    uint8_t calibrationDataPart1[23]                                          = {0x62, 0x67, 0x03, 0x10, 0x8F, 0x90, 0x68, 0xD7, 0x58, 0x00, 0x38, 0x22, 0x62, 0xFF, 0x2C, 0x1E, 0x00, 0x00, 0x71, 0xF4, 0x5B, 0xF6, 0x1E};
+    uint8_t calibrationDataPart2[14]                                          = {0x3D, 0xBD, 0x37, 0x00, 0x2D, 0x14, 0x78, 0x9C, 0xB6, 0x65, 0xAB, 0xDC, 0xFB, 0x12};
+    uint8_t calibrationDataPart3[5]                                           = {0x28, 0xAA, 0x16, 0x4C, 0x03};
+    memcpy(mockBME680Registers + 0x8A, calibrationDataPart1, 23);
+    memcpy(mockBME680Registers + 0xE1, calibrationDataPart2, 14);
+    memcpy(mockBME680Registers + 0xF0, calibrationDataPart3, 5);
+#endif
     state = sensorDeviceState::sleeping;
-}
-
-
-void bme680::tick() {
-    if (anyChannelNeedsSampling()) {
-        //clearNewMeasurements(); TODO : does a sensor need this ? or will it be done by the sensorDeviceCollection ?
-        startSampling();
-        state = sensorDeviceState::sampling;
-    } else {
-        adjustAllCounters();
-    }
 }
 
 void bme680::run() {
@@ -140,22 +134,6 @@ void bme680::run() {
         }
 
         state = sensorDeviceState::sleeping;
-        adjustAllCounters();
-    }
-}
-
-bool bme680::anyChannelNeedsSampling() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].needsSampling()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void bme680::adjustAllCounters() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        channels[channelIndex].adjustCounters();
     }
 }
 
@@ -265,4 +243,3 @@ void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* dest
     (void)memcpy(destination, mockBME680Registers + startAddress, length);
 #endif
 }
-

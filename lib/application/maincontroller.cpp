@@ -138,11 +138,11 @@ void mainController::run() {
                 }
                 sensorDeviceCollection::collectNewMeasurements();
                 measurementCollection::saveNewMeasurementsToEeprom();
-                uint32_t payloadLength = measurementCollection::nmbrOfBytesToTransmit();
+                uint32_t payloadLength        = measurementCollection::nmbrOfBytesToTransmit();
                 const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
                 logging::snprintf("--> %d bytes to transmit\n", payloadLength);
                 LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
-                measurementCollection::setTransmitted(0, payloadLength); // TODO : get correct frame counter *before* call to sendUplink
+                measurementCollection::setTransmitted(0, payloadLength);        // TODO : get correct frame counter *before* call to sendUplink
                 goTo(mainState::networking);
             } else {
                 goTo(mainState::idle);
@@ -161,7 +161,9 @@ void mainController::run() {
             break;
 
         case mainState::displaying:
-            goTo(mainState::idle);
+            if (display::isReady()) {
+                goTo(mainState::idle);
+            }
             break;
 
         case mainState::idle:

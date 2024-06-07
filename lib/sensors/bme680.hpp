@@ -8,15 +8,13 @@
 #include <stdint.h>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
-#include <sensorchannelformat.hpp>
 
 class bme680 {
   public:
     static bool isPresent();
     static void initialize();
-    static void tick();
     static void run();
-    
+
     static sensorDeviceState getState() { return state; };
 
     static constexpr uint32_t nmbrChannels{3};
@@ -25,14 +23,11 @@ class bme680 {
     static constexpr uint32_t barometricPressure{2};
     static sensorChannel channels[nmbrChannels];
 
-
 #ifndef unitTesting
 
   private:
 #endif
     static sensorDeviceState state;
-    static bool anyChannelNeedsSampling();
-    static void adjustAllCounters();
     static void startSampling();
     static bool samplingIsReady();
     static void readSample();
@@ -115,6 +110,8 @@ class bme680 {
     static float calibrationCoefficientHumidity5;
     static float calibrationCoefficientHumidity6;
     static float calibrationCoefficientHumidity7;
+
+    friend class sensorDeviceCollection;
 };
 
 /*

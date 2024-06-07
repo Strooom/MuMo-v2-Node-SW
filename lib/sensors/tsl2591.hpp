@@ -7,13 +7,11 @@
 #include <stdint.h>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
-#include <sensorchannelformat.hpp>
 
 class tsl2591 {
   public:
     static bool isPresent();        // detect if there is an TSL2591 on the I2C bus
     static void initialize();
-    static void tick();
     static void run();
     static sensorDeviceState getState() { return state; };
 
@@ -26,8 +24,6 @@ class tsl2591 {
   private:
 #endif
     static sensorDeviceState state;
-    static bool anyChannelNeedsSampling();
-    static void adjustAllCounters();
     static void startSampling();
     static bool samplingIsReady();
     static void readSample();
@@ -76,4 +72,6 @@ class tsl2591 {
     static bool testI2cAddress(uint8_t addressToTest);
     static uint8_t readRegister(registers aRegister);
     static void writeRegister(registers aRegister, const uint8_t value);
+
+    friend class sensorDeviceCollection;
 };

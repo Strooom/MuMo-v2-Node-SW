@@ -9,13 +9,11 @@
 #include <sensirion.hpp>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
-#include <sensorchannelformat.hpp>
 
 class sht40 {
   public:
     static bool isPresent();
     static void initialize();
-    static void tick();
     static void run();
     static sensorDeviceState getState() { return state; };
 
@@ -29,8 +27,6 @@ class sht40 {
   private:
 #endif
     static sensorDeviceState state;
-    static bool anyChannelNeedsSampling();
-    static void adjustAllCounters();
     static void startSampling();
     static bool samplingIsReady();
     static void readSample();
@@ -57,5 +53,5 @@ class sht40 {
     static uint32_t rawDataRelativeHumidity;
     static uint32_t measurementStartTick;
 
-    static bool awake;
+    friend class sensorDeviceCollection;
 };

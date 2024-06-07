@@ -20,7 +20,7 @@ class sensorChannel {
     action getNextAction();
     bool needsSampling();
     bool hasOutput();
-    void adjustCounters();
+    void updateCounters();
 
     void addSample(float theSample);
     float value();

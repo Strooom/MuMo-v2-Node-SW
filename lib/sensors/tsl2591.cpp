@@ -37,9 +37,6 @@ bool tsl2591::isPresent() {
 }
 
 void tsl2591::initialize() {
-    channels[visibleLight].set(0, 1, 0, 1);
-    // TODO : need to read the sensorChannel settins from EEPROM and restore them
-
     writeRegister(registers::enable, powerOn);
     writeRegister(registers::config, 0x01);        // gain 1x, integration time 200 ms. I found out these fixed settings are more than sufficient for my use case
 
@@ -64,14 +61,6 @@ void tsl2591::readSample() {
     // CHAN0 must be read before CHAN1 See: https://forums.adafruit.com/viewtopic.php?f=19&t=124176
     rawChannel0 = (readRegister(registers::c0datah) << 8) + readRegister(registers::c0datal);
     rawChannel1 = (readRegister(registers::c1datah) << 8) + readRegister(registers::c1datal);
-}
-
-bool tsl2591::anyChannelNeedsSampling() {
-    return (channels[visibleLight].needsSampling());
-}
-
-void tsl2591::adjustAllCounters() {
-    channels[visibleLight].adjustCounters();
 }
 
 float tsl2591::calculateLux() {
@@ -119,24 +108,9 @@ void tsl2591::writeRegister(registers registerAddress, uint8_t value) {
 #endif
 }
 
-void tsl2591::tick() {
-    if (state != sensorDeviceState::sleeping) {
-        adjustAllCounters();
-        return;
-    }
-
-    if (anyChannelNeedsSampling()) {
-        startSampling();
-        state = sensorDeviceState::sampling;
-    } else {
-        adjustAllCounters();
-    }
-}
-
 void tsl2591::run() {
     if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
         readSample();
-
         if (channels[visibleLight].needsSampling()) {
             float tsl2591visible = calculateLux();
             channels[visibleLight].addSample(tsl2591visible);
@@ -144,9 +118,6 @@ void tsl2591::run() {
                 channels[visibleLight].hasNewValue = true;
             }
         }
-
         state = sensorDeviceState::sleeping;
-        adjustAllCounters();
     }
 }
-

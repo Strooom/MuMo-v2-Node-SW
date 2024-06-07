@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>
-#include <sensorchannelformat.hpp>
 
 class sps30 {
   public:

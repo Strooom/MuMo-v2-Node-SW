@@ -82,9 +82,6 @@ void display::initialize() {
     clearAllPixels();
 }
 
-void display::run() {
-}
-
 
 void display::goSleep() {
     uint8_t commandData[1]{0x03};        // Deep Sleep Mode 2 - SSD1681 Datasheet Rev 0l.13 Page 23
@@ -275,14 +272,13 @@ void display::waitWhileBusy() {
     }
 }
 
-void display::update() {
+void display::startUpdate() {
     uint8_t commandData[4]{0};
     writeCommand(SSD1681Commands::WRITE_RAM, nullptr, 0);
     writeData(displayBuffer, bufferSize);
     commandData[0] = 0xF7;        // SSD1681 Datasheet Rev 0l.13 - Full update Display Mode 1
     writeCommand(SSD1681Commands::DISPLAY_UPDATE_CONTROL_2, commandData, 1);
     writeCommand(SSD1681Commands::MASTER_ACTIVATION, nullptr, 0);
-    waitWhileBusy();
 }
 
 void display::dump() {

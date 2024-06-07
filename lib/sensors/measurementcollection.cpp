@@ -234,13 +234,13 @@ void measurementCollection::dumpMeasurement(uint32_t measurementOffset) {
     uint32_t channelIndex = measurementChannelIndex(measurementOffset);
     float value           = measurementValue(measurementOffset);
 
-    uint32_t decimals = sensorDeviceCollection::channelDecimals(deviceIndex, channelIndex);
+    uint32_t decimals = sensorDeviceCollection::decimals(deviceIndex, channelIndex);
     uint32_t intPart  = integerPart(value, decimals);
     if (decimals > 0) {
         uint32_t fracPart = fractionalPart(value, decimals);
-        logging::snprintf(logging::source::sensorData, "  %s - %s : %d.%d %s\n", sensorDeviceCollection::name(deviceIndex), sensorDeviceCollection::channelName(deviceIndex, channelIndex), intPart, fracPart, sensorDeviceCollection::channelUnits(deviceIndex, channelIndex));
+        logging::snprintf(logging::source::sensorData, "  %s - %s : %d.%d %s\n", sensorDeviceCollection::name(deviceIndex), sensorDeviceCollection::name(deviceIndex, channelIndex), intPart, fracPart, sensorDeviceCollection::units(deviceIndex, channelIndex));
     } else {
-        logging::snprintf(logging::source::sensorData, "  %s - %s : %d %s\n", sensorDeviceCollection::name(deviceIndex), sensorDeviceCollection::channelName(deviceIndex, channelIndex), intPart, sensorDeviceCollection::channelUnits(deviceIndex, channelIndex));
+        logging::snprintf(logging::source::sensorData, "  %s - %s : %d %s\n", sensorDeviceCollection::name(deviceIndex), sensorDeviceCollection::name(deviceIndex, channelIndex), intPart, sensorDeviceCollection::units(deviceIndex, channelIndex));
     }
 }
 

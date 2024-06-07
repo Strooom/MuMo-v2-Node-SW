@@ -37,23 +37,26 @@ void sensorDeviceCollection::discover() {
 
 void sensorDeviceCollection::tick() {
     for (auto index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
-        if (isPresent[index]) {
-            switch (static_cast<sensorDeviceType>(index)) {
-                case sensorDeviceType::battery:
-                    battery::tick();
-                    break;
-                case sensorDeviceType::bme680:
-                    bme680::tick();
-                    break;
-                case sensorDeviceType::sht40:
-                    sht40::tick();
-                    break;
-                case sensorDeviceType::tsl2591:
-                    tsl2591::tick();
-                    break;
-                // Add more types of sensors here
-                default:
-                    break;
+        if (isValidDeviceIndex(index)) {
+            updateCounters(index);
+            if (needsSampling(index)) {
+                switch (static_cast<sensorDeviceType>(index)) {
+                    case sensorDeviceType::battery:
+                        battery::startSampling();
+                        break;
+                    case sensorDeviceType::bme680:
+                        bme680::startSampling();
+                        break;
+                    case sensorDeviceType::sht40:
+                        sht40::startSampling();
+                        break;
+                    case sensorDeviceType::tsl2591:
+                        tsl2591::startSampling();
+                        break;
+                    // Add more types of sensors here
+                    default:
+                        break;
+                }
             }
         }
     }
@@ -116,6 +119,42 @@ bool sensorDeviceCollection::isSleeping() {
     return true;
 }
 
+bool sensorDeviceCollection::needsSampling(uint32_t deviceIndex, uint32_t channelIndex) {
+    if (!isValidChannelIndex(deviceIndex, channelIndex)) {
+        return channel(deviceIndex, channelIndex).needsSampling();
+    }
+    return false;
+}
+
+bool sensorDeviceCollection::needsSampling(uint32_t deviceIndex) {
+    if (isValidDeviceIndex(deviceIndex)) {
+        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
+            if (isValidChannelIndex(deviceIndex, channelIndex)) {
+                if (channel(deviceIndex, channelIndex).needsSampling()) {
+                    return true;
+                };
+            }
+        }
+    }
+    return false;
+}
+
+void sensorDeviceCollection::updateCounters(uint32_t deviceIndex, uint32_t channelIndex) {
+    if (isValidChannelIndex(deviceIndex, channelIndex)) {
+        channel(deviceIndex, channelIndex).updateCounters();
+    }
+}
+
+void sensorDeviceCollection::updateCounters(uint32_t deviceIndex) {
+    if (isValidDeviceIndex(deviceIndex)) {
+        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
+            if (isValidChannelIndex(deviceIndex, channelIndex)) {
+                channel(deviceIndex, channelIndex).updateCounters();
+            }
+        }
+    }
+}
+
 bool sensorDeviceCollection::hasNewMeasurements(uint32_t deviceIndex) {
     if (isValidDeviceIndex(deviceIndex)) {
         for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
@@ -154,28 +193,28 @@ const char* sensorDeviceCollection::name(uint32_t index) {
     }
 }
 
-float sensorDeviceCollection::channelValue(uint32_t deviceIndex, uint32_t channelIndex) {
+float sensorDeviceCollection::value(uint32_t deviceIndex, uint32_t channelIndex) {
     if (!isValidChannelIndex(deviceIndex, channelIndex)) {
         return channel(deviceIndex, channelIndex).value();
     }
     return 0.0F;
 }
 
-uint32_t sensorDeviceCollection::channelDecimals(uint32_t deviceIndex, uint32_t channelIndex) {
+uint32_t sensorDeviceCollection::decimals(uint32_t deviceIndex, uint32_t channelIndex) {
     if (isValidChannelIndex(deviceIndex, channelIndex)) {
         return channel(deviceIndex, channelIndex).decimals;
     }
     return 0;
 }
 
-const char* sensorDeviceCollection::channelName(uint32_t deviceIndex, uint32_t channelIndex) {
+const char* sensorDeviceCollection::name(uint32_t deviceIndex, uint32_t channelIndex) {
     if (isValidChannelIndex(deviceIndex, channelIndex)) {
         return channel(deviceIndex, channelIndex).name;
     }
     return "invalid index";
 }
 
-const char* sensorDeviceCollection::channelUnits(uint32_t deviceIndex, uint32_t channelIndex) {
+const char* sensorDeviceCollection::units(uint32_t deviceIndex, uint32_t channelIndex) {
     if (isValidChannelIndex(deviceIndex, channelIndex)) {
         return channel(deviceIndex, channelIndex).unit;
     }
@@ -185,14 +224,14 @@ const char* sensorDeviceCollection::channelUnits(uint32_t deviceIndex, uint32_t 
 void sensorDeviceCollection::log(uint32_t deviceIndex, uint32_t channelIndex) {
     uint32_t maxNmbrChannels = nmbrOfChannels(deviceIndex);
     if (channelIndex < maxNmbrChannels) {
-        float value       = channelValue(deviceIndex, channelIndex);
-        uint32_t decimals = channelDecimals(deviceIndex, channelIndex);
-        uint32_t intPart  = integerPart(value, decimals);
-        if (decimals > 0) {
-            uint32_t fracPart = fractionalPart(value, decimals);
-            logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelName(deviceIndex, channelIndex), intPart, fracPart, channelUnits(deviceIndex, channelIndex));
+        float fvalue       = value(deviceIndex, channelIndex);
+        uint32_t ddecimals = decimals(deviceIndex, channelIndex);
+        uint32_t intPart  = integerPart(fvalue, ddecimals);
+        if (ddecimals > 0) {
+            uint32_t fracPart = fractionalPart(fvalue, ddecimals);
+            logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", name(deviceIndex, channelIndex), intPart, fracPart, units(deviceIndex, channelIndex));
         } else {
-            logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelName(deviceIndex, channelIndex), intPart, channelUnits(deviceIndex, channelIndex));
+            logging::snprintf(logging::source::sensorData, "%s = %d %s\n", name(deviceIndex, channelIndex), intPart, units(deviceIndex, channelIndex));
         }
     }
 }

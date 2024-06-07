@@ -65,7 +65,7 @@ sensorChannel::action sensorChannel::getNextAction() {
     }
 }
 
-void sensorChannel::adjustCounters() {
+void sensorChannel::updateCounters() {
     if (isActive()) {
         uint32_t prescaler    = getCurrentPrescaler();
         uint32_t oversampling = getCurrentOversampling();

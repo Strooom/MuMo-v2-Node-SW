@@ -27,28 +27,14 @@ sensorChannel battery::channels[nmbrChannels] = {
 };
 
 void battery::initalize() {
-    channels[voltage].set(0, 1, 0, 1);
-    channels[percentCharged].set(0, 1, 0, 1);
-
     uint8_t typeIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType);
     if (typeIndex >= nmbrBatteryTypes) {
+        logging::snprintf(logging::source::error, "invalid settingsCollection::settingIndex::batteryType : %d\n", typeIndex);
         typeIndex = 0;
     }
     type  = static_cast<batteryType>(typeIndex);
     state = sensorDeviceState::sleeping;
-
     logging::snprintf(logging::source::settings, "batteryType : %s\n", toString(type));
-}
-
-
-void battery::tick() {
-    if (anyChannelNeedsSampling()) {
-        // clearAllNewMeasurements();
-        startSampling();
-        state = sensorDeviceState::sampling;
-    } else {
-        adjustAllCounters();
-    }
 }
 
 void battery::run() {
@@ -62,7 +48,6 @@ void battery::run() {
                 channels[voltage].hasNewValue = true;
             }
         }
-
         if (channels[percentCharged].needsSampling()) {
             float batteryVoltage        = voltageFromRaw(rawADC);
             float batteryPercentCharged = chargeFromVoltage::calculateChargeLevel(batteryVoltage, type);
@@ -71,22 +56,12 @@ void battery::run() {
                 channels[percentCharged].hasNewValue = true;
             }
         }
-
         state = sensorDeviceState::sleeping;
-        adjustAllCounters();
     }
 }
 
-bool battery::anyChannelNeedsSampling() {
-    return (channels[voltage].needsSampling() || channels[percentCharged].needsSampling());
-}
-
-void battery::adjustAllCounters() {
-    channels[voltage].adjustCounters();
-    channels[percentCharged].adjustCounters();
-}
-
 void battery::startSampling() {
+    state = sensorDeviceState::sampling;
 #ifndef generic
     ADC_ChannelConfTypeDef theAdcConfig;
     theAdcConfig.Channel      = ADC_CHANNEL_VREFINT;

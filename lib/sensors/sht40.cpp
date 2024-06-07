@@ -42,30 +42,13 @@ bool sht40::isPresent() {
 }
 
 void sht40::initialize() {
-    channels[temperature].set(0, 1, 0, 1);
-    channels[relativeHumidity].set(0, 1, 0, 1);
     state = sensorDeviceState::sleeping;
 }
 
-void sht40::tick() {
-    if (state != sensorDeviceState::sleeping) {
-        adjustAllCounters();
-        return;
-    }
-
-    if (anyChannelNeedsSampling()) {
-        // clearNewMeasurements(); TODO : do we need this ?
-        startSampling();
-        state = sensorDeviceState::sampling;
-    } else {
-        adjustAllCounters();
-    }
-}
 
 void sht40::run() {
     if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
         readSample();
-
         if (channels[temperature].needsSampling()) {
             float sht40Temperature = calculateTemperature();
             channels[temperature].addSample(sht40Temperature);
@@ -73,7 +56,6 @@ void sht40::run() {
                 channels[temperature].hasNewValue = true;
             }
         }
-
         if (channels[relativeHumidity].needsSampling()) {
             float sht40RelativeHumidity = calculateRelativeHumidity();
             channels[relativeHumidity].addSample(sht40RelativeHumidity);
@@ -81,20 +63,10 @@ void sht40::run() {
                 channels[relativeHumidity].hasNewValue = true;
             }
         }
-
         state = sensorDeviceState::sleeping;
-        adjustAllCounters();
     }
 }
 
-bool sht40::anyChannelNeedsSampling() {
-    return (channels[temperature].needsSampling() || channels[relativeHumidity].needsSampling());
-}
-
-void sht40::adjustAllCounters() {
-    channels[temperature].adjustCounters();
-    channels[relativeHumidity].adjustCounters();
-}
 
 void sht40::startSampling() {
     write(command::getMeasurementHighPrecision);

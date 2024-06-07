@@ -109,8 +109,8 @@ bool sps30::anyChannelNeedsSampling() {
 }
 
 void sps30::adjustAllCounters() {
-    channels[pme2dot5].adjustCounters();
-    channels[pme4].adjustCounters();
+    channels[pme2dot5].updateCounters();
+    channels[pme4].updateCounters();
 }
 
 void sps30::startSampling() {

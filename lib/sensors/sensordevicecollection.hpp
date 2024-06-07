@@ -18,16 +18,20 @@ class sensorDeviceCollection {
     static void log(uint32_t deviceIndex);
     static void log(uint32_t deviceIndex, uint32_t channelIndex);
     static bool isSleeping();
-    static const char* name(uint32_t index);
 
-    static float channelValue(uint32_t deviceIndex, uint32_t channelIndex);
-    static uint32_t channelDecimals(uint32_t deviceIndex, uint32_t channelIndex);
-    static const char* channelName(uint32_t deviceIndex, uint32_t channelIndex);
-    static const char* channelUnits(uint32_t deviceIndex, uint32_t channelIndex);
+    static float value(uint32_t deviceIndex, uint32_t channelIndex);
+    static uint32_t decimals(uint32_t deviceIndex, uint32_t channelIndex);
+    static const char* name(uint32_t deviceIndex);
+    static const char* name(uint32_t deviceIndex, uint32_t channelIndex);
+    static const char* units(uint32_t deviceIndex, uint32_t channelIndex);
 
     static uint32_t nmbrOfChannels(uint32_t deviceIndex);
     static sensorChannel& channel(uint32_t deviceIndex, uint32_t channelIndex);
 
+    static bool needsSampling(uint32_t deviceIndex, uint32_t channelIndex);
+    static bool needsSampling(uint32_t deviceIndex);
+    static void updateCounters(uint32_t deviceIndex, uint32_t channelIndex);
+    static void updateCounters(uint32_t deviceIndex);
     static bool hasNewMeasurements();
     static bool hasNewMeasurements(uint32_t deviceIndex);
     static uint32_t nmbrOfNewMeasurements();
