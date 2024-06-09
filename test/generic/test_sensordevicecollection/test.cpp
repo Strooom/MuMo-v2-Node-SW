@@ -124,20 +124,17 @@ void test_hasNewMeasurements() {
     TEST_ASSERT_EQUAL(1, sensorDeviceCollection::nmbrOfNewMeasurements());
     sensorDeviceCollection::clearNewMeasurements(static_cast<uint32_t>(sensorDeviceType::battery));
 
-
     bme680::channels[bme680::temperature].hasNewValue = true;
     TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements());
     TEST_ASSERT_EQUAL(1, sensorDeviceCollection::nmbrOfNewMeasurements());
     sensorDeviceCollection::clearNewMeasurements(static_cast<uint32_t>(sensorDeviceType::bme680));
-
 
     tsl2591::channels[tsl2591::visibleLight].hasNewValue = true;
     TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements());
     TEST_ASSERT_EQUAL(1, sensorDeviceCollection::nmbrOfNewMeasurements());
     sensorDeviceCollection::clearNewMeasurements(static_cast<uint32_t>(sensorDeviceType::tsl2591));
 
-
-    sht40::channels[sht40::temperature].hasNewValue      = true;
+    sht40::channels[sht40::temperature].hasNewValue = true;
     TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements());
     TEST_ASSERT_EQUAL(1, sensorDeviceCollection::nmbrOfNewMeasurements());
 
@@ -177,9 +174,10 @@ void test_validDeviceAndChannelIndex() {
     TEST_ASSERT_FALSE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::sht40), 2));
 }
 
-
 void test_tickAndRun() {
-    TEST_IGNORE_MESSAGE("Implement me!");
+    sensorDeviceCollection::tick();
+    sensorDeviceCollection::run();
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isSleeping());
 }
 
 void test_valueAsFloat() {
@@ -190,6 +188,7 @@ void test_log() {
     sensorDeviceCollection::log();
     TEST_IGNORE_MESSAGE("For Coverage Only");
 }
+
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
@@ -206,6 +205,5 @@ int main(int argc, char **argv) {
     RUN_TEST(test_validDeviceAndChannelIndex);
     RUN_TEST(test_tickAndRun);
     RUN_TEST(test_log);
-
     UNITY_END();
 }
