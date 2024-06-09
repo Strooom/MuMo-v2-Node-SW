@@ -1,6 +1,7 @@
 #include <unity.h>
 #include <sht40.hpp>
 #include <cstring>
+#include <sensordevicecollection.hpp>
 
 extern uint8_t mockSHT40Registers[6];
 
@@ -49,6 +50,17 @@ void test_calculateRelativeHumidity() {
     TEST_ASSERT_EQUAL(100.0F, sht40::calculateRelativeHumidity());
 }
 
+void test_run() {
+    sht40::initialize();
+    sht40::channels[sht40::temperature].set(1, 1, 1, 1);
+    sht40::channels[sht40::relativeHumidity].set(1, 1, 1, 1);
+    sensorDeviceCollection::discover();
+    sensorDeviceCollection::updateCounters(static_cast<uint32_t>(sensorDeviceType::tsl2591));
+    sht40::startSampling();
+    sht40::run();
+}
+
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_isPresent);
@@ -56,5 +68,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_sampling);
     RUN_TEST(test_calculateTemperature);
     RUN_TEST(test_calculateRelativeHumidity);
+    RUN_TEST(test_run);
     UNITY_END();
 }
