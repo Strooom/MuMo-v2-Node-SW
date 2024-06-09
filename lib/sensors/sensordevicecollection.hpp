@@ -32,6 +32,7 @@ class sensorDeviceCollection {
     static bool needsSampling(uint32_t deviceIndex);
     static void updateCounters(uint32_t deviceIndex, uint32_t channelIndex);
     static void updateCounters(uint32_t deviceIndex);
+    static void updateCounters();
     static bool hasNewMeasurements();
     static bool hasNewMeasurements(uint32_t deviceIndex);
     static uint32_t nmbrOfNewMeasurements();

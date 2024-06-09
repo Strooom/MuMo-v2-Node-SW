@@ -155,6 +155,12 @@ void sensorDeviceCollection::updateCounters(uint32_t deviceIndex) {
     }
 }
 
+void sensorDeviceCollection::updateCounters() {
+    for (auto deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
+        updateCounters(deviceIndex);
+    }
+}
+
 bool sensorDeviceCollection::hasNewMeasurements(uint32_t deviceIndex) {
     if (isValidDeviceIndex(deviceIndex)) {
         for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
@@ -226,7 +232,7 @@ void sensorDeviceCollection::log(uint32_t deviceIndex, uint32_t channelIndex) {
     if (channelIndex < maxNmbrChannels) {
         float fvalue       = value(deviceIndex, channelIndex);
         uint32_t ddecimals = decimals(deviceIndex, channelIndex);
-        uint32_t intPart  = integerPart(fvalue, ddecimals);
+        uint32_t intPart   = integerPart(fvalue, ddecimals);
         if (ddecimals > 0) {
             uint32_t fracPart = fractionalPart(fvalue, ddecimals);
             logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", name(deviceIndex, channelIndex), intPart, fracPart, units(deviceIndex, channelIndex));

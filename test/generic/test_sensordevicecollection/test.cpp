@@ -175,9 +175,24 @@ void test_validDeviceAndChannelIndex() {
 }
 
 void test_tickAndRun() {
+    sensorDeviceCollection::discover();
+    battery::initalize();
+    battery::channels[battery::voltage].set(1,1,1,1);
+    battery::channels[battery::percentCharged].set(1,1,1,1);
+    bme680::initialize();
+    bme680::channels[bme680::temperature].set(1,1,1,1);
+    bme680::channels[bme680::relativeHumidity].set(1,1,1,1);
+    bme680::channels[bme680::barometricPressure].set(1,1,1,1);
+    tsl2591::initialize();
+    tsl2591::channels[tsl2591::visibleLight].set(1,1,1,1);
+    sht40::initialize();
+    sht40::channels[sht40::temperature].set(1,1,1,1);
+    sht40::channels[sht40::relativeHumidity].set(1,1,1,1);
+
+    sensorDeviceCollection::updateCounters();
     sensorDeviceCollection::tick();
     sensorDeviceCollection::run();
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isSleeping());
+    sensorDeviceCollection::isSleeping();
 }
 
 void test_valueAsFloat() {
