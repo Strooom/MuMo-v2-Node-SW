@@ -13,6 +13,9 @@ const char *toString(mainState aState) {
         case mainState::waitForBootScreen:
             return "waitForBootScreen";
             break;
+        case mainState::waitForNetworkRequest:
+            return "waitForNetworkRequest";
+            break;
         case mainState::waitForNetworkResponse:
             return "waitForNetworkResponse";
             break;
@@ -33,6 +36,9 @@ const char *toString(mainState aState) {
             break;
         case mainState::sleeping:
             return "sleeping";
+            break;
+        case mainState::networkError:
+            return "networkError";
             break;
         case mainState::test:
             return "test";

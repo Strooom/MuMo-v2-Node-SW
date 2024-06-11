@@ -45,9 +45,9 @@ bool sps30::isPresent() {
 
 void sps30::initialize() {
     // TODO : need to read the sensorChannel settins from EEPROM and restore them
-    channels[pme2dot5].set(0, 1, 0, 1);
-    channels[pme4].set(0, 1, 0, 1);
-    channels[pme10].set(0, 1, 0, 1);
+    // channels[pme2dot5].set(0, 1, 0, 1);
+    // channels[pme4].set(0, 1, 0, 1);
+    // channels[pme10].set(0, 1, 0, 1);
     state = sensorDeviceState::sleeping;
 }
 

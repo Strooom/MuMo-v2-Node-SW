@@ -288,6 +288,8 @@ void display::startUpdate() {
     commandData[0] = 0xF7;        // SSD1681 Datasheet Rev 0l.13 - Full update Display Mode 1
     writeCommand(SSD1681Commands::DISPLAY_UPDATE_CONTROL_2, commandData, 1);
     writeCommand(SSD1681Commands::MASTER_ACTIVATION, nullptr, 0);
+    waitWhileBusy();
+    goSleep();
 }
 
 void display::dump() {

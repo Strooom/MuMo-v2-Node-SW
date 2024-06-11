@@ -11,17 +11,18 @@
 #include <sensordevicecollection.hpp>
 #include <lorawan.hpp>
 #include <display.hpp>
+#include <graphics.hpp>
 #include <screen.hpp>
 
 // #include <linearbuffer.hpp>
-// #include <version.hpp>
+#include <version.hpp>
 // #include <buildinfo.hpp>
+
 #include <settingscollection.hpp>
 #include <measurementcollection.hpp>
 // #include <aeskey.hpp>
 // #include <datarate.hpp>
 #include <maccommand.hpp>
-
 #include <logging.hpp>
 
 #ifndef generic
@@ -32,6 +33,9 @@ void MX_I2C2_Init(void);
 
 mainState mainController::state{mainState::boot};
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
+extern font roboto36bold;
+extern font tahoma24bold;
+extern font lucidaConsole12;
 
 void mainController::initialize() {
     if (nonVolatileStorage::isPresent()) {
@@ -49,8 +53,12 @@ void mainController::initialize() {
     gpio::enableGpio(gpio::group::rfControl);
 
     LoRaWAN::initialize();
-    // Show all device info on the display..
-    // Start lptimer for x seconds
+
+    display::initialize();
+    display::clearAllPixels();
+    graphics::drawText(4, 160, tahoma24bold, version::getIsVersionAsString());
+    display::startUpdate();
+
     goTo(mainState::waitForBootScreen);
 }
 
@@ -62,7 +70,7 @@ void mainController::handleEvents() {
         switch (state) {
             case mainState::waitForBootScreen:
                 switch (theEvent) {
-                    case applicationEvent::lowPowerTimerExpired:
+                    case applicationEvent::realTimeClockTick:
                         goTo(mainState::waitForNetworkResponse);
                         break;
 
@@ -71,15 +79,39 @@ void mainController::handleEvents() {
                 }
                 break;
 
-            case mainState::waitForNetworkResponse:
+            case mainState::waitForNetworkRequest:
                 switch (theEvent) {
                     case applicationEvent::realTimeClockTick:
                         LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
                         LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
+                        LoRaWAN::sendUplink(0, nullptr, 0);
+                        goTo(mainState::waitForNetworkResponse);
+                        break;
+                }
+                break;
+
+            case mainState::waitForNetworkResponse:
+                switch (theEvent) {
+                    case applicationEvent::downlinkMacCommandReceived:
+                        display::initialize();
+                        display::clearAllPixels();
+                        graphics::drawText(4, 160, tahoma24bold, "network OK");
+                        display::startUpdate();
+                        goTo(mainState::idle);
                         break;
 
-                    case applicationEvent::downlinkMacCommandReceived:
-                        goTo(mainState::idle);
+                    case applicationEvent::realTimeClockTick:
+                        // decrease DataRate and try again
+                        LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
+                        LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
+                        LoRaWAN::sendUplink(0, nullptr, 0);
+                        break;
+
+                    case applicationEvent::lowPowerTimerExpired:
+                    case applicationEvent::sx126xTxComplete:
+                    case applicationEvent::sx126xRxComplete:
+                    case applicationEvent::sx126xTimeout:
+                        LoRaWAN::handleEvents(theEvent);
                         break;
 
                     default:
@@ -168,8 +200,9 @@ void mainController::run() {
         case mainState::networking:
             if (LoRaWAN::isIdle()) {
                 if (display::isPresent()) {
-                    goTo(mainState::displaying);
+                    // goTo(mainState::displaying);
                     screen::showMeasurements();
+                    goTo(mainState::idle);
                 } else {
                     goTo(mainState::idle);
                 }

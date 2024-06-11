@@ -22,7 +22,7 @@ void test_transitions_boot() {
 
     mainController::initialize();
     TEST_ASSERT_EQUAL(mainState::waitForBootScreen, mainController::state);
-    applicationEventBuffer.push(applicationEvent::lowPowerTimerExpired);
+    applicationEventBuffer.push(applicationEvent::realTimeClockTick);
     mainController::handleEvents();
     TEST_ASSERT_EQUAL(mainState::waitForNetworkResponse, mainController::state);
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
@@ -76,7 +76,6 @@ void test_transitions_1() {
     mainController::handleEvents();
     mainController::run();
     TEST_ASSERT_EQUAL(txRxCycleState::idle, LoRaWAN::state);
-    TEST_ASSERT_EQUAL(mainState::displaying, mainController::state);
     mainController::run();
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
 }

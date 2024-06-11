@@ -20,6 +20,7 @@ void sensorDeviceCollection::discover() {
     if (bme680::isPresent()) {
         isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)] = true;
         bme680::initialize();
+        bme680::channels[bme680::temperature].set(3, 1, 3, 1);
         actualNumberOfDevices++;
     }
     if (sht40::isPresent()) {

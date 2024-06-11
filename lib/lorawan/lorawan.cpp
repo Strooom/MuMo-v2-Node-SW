@@ -11,6 +11,7 @@
 #include <hexascii.hpp>
 #include <swaplittleandbigendian.hpp>
 #include <ctime>
+#include <realtimeclock.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -544,15 +545,16 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                     messageType receivedMessageType = decodeMessage();
                     switch (receivedMessageType) {
                         case messageType::application:
-                            stopTimer();
+                            // stopTimer(); I don't think this timer is needed, as we use the timer of the SX126x
                             processMacContents();
                             applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                             goTo(txRxCycleState::waitForRxMessageReadout);
                             return;
                             break;
                         case messageType::lorawanMac:
-                            stopTimer();
+                            // stopTimer();
                             processMacContents();
+                            applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
                             goTo(txRxCycleState::idle);
                             return;
                             break;
@@ -601,6 +603,7 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                             break;
                         case messageType::lorawanMac:
                             processMacContents();
+                            applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
                             goTo(txRxCycleState::idle);
                             return;
                             break;
@@ -958,15 +961,11 @@ void LoRaWAN::processDownlinkChannelRequest() {
 
 void LoRaWAN::processDeviceTimeAnswer() {
     uint32_t gpsTime = static_cast<uint32_t>(macIn[1]) + (static_cast<uint32_t>(macIn[2]) << 8U) + (static_cast<uint32_t>(macIn[3]) << 16U) + (static_cast<uint32_t>(macIn[4]) << 24U);        // macIn[5] contains subsecond time, but we don't use it for the time being
-    static constexpr uint32_t unixToGpsOffset{315964800};
-    static constexpr uint32_t leapSecondsOffset{18};        // TODO : get this from nvs setting, so we can update it when needed
-    // NOTE : this time is the time at the end of the uplink -> we need to add the rx1Delay and optionally the rx2Delay  + if possible the duration of the RxMessage to get accurate time..
-    // I need a mock for the RTC, so I can test this code
-    time_t unixTime = gpsTime + unixToGpsOffset - leapSecondsOffset;
-    struct tm* timeInfo;
-    timeInfo = gmtime(&unixTime);
-    logging::snprintf(logging::source::lorawanMac, "DeviceTimeAnswer : %s", asctime(timeInfo));
-
+    time_t unixTime  = realTimeClock::gpsTimeToUnixTime(gpsTime);
+    realTimeClock::set(unixTime);
+    logging::snprintf(logging::source::lorawanMac, "received UTC = %s", ctime(&unixTime));
+    time_t localTime = realTimeClock::get();
+    logging::snprintf(logging::source::lorawanMac, "RTC set to %s", ctime(&localTime));
     macIn.consume(6);
 }
 
@@ -1082,7 +1081,7 @@ messageType LoRaWAN::decodeMessage() {
         macIn.append(rawMessage + frameOptionsOffset, frameOptionsLength);
     }
 
-    // 8. If there is any framePayload, decrypt if
+    // 8. If there is any framePayload, decrypt it
     if (framePayloadLength > 0) {
         if (rawMessage[framePortOffset] == 0) {
             encryptDecryptPayload(networkKey, linkDirection::downlink);
@@ -1282,4 +1281,3 @@ void LoRaWAN::dumpDeviceTimeAnswer() {}
 void LoRaWAN::appendMacCommand(macCommand theMacCommand) {
     LoRaWAN::macOut.append(static_cast<uint8_t>(theMacCommand));
 }
-

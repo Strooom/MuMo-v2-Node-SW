@@ -15,7 +15,7 @@ union realTimeClock::convert realTimeClock::convertor;
 
 time_t realTimeClock::gpsTimeToUnixTime(uint32_t gpsTime) {
     static constexpr uint32_t unixToGpsOffset{315964800};
-    static constexpr uint32_t leapSecondsOffset{18};
+    static constexpr uint32_t leapSecondsOffset{18};        // TODO : get this from nvs setting, so we can update it when needed
     return (gpsTime + unixToGpsOffset - leapSecondsOffset);
 }
 
@@ -30,13 +30,15 @@ void realTimeClock::initialize() {
 }
 
 void realTimeClock::set(time_t unixTime) {
+    if (unixTime >= buildInfo::buildEpoch) {
 #ifndef generic
-    tm brokenDownTime;
-    (void)gmtime_r(&unixTime, &brokenDownTime);
-    set(brokenDownTime);
+        tm brokenDownTime;
+        (void)gmtime_r(&unixTime, &brokenDownTime);
+        set(brokenDownTime);
 #else
-    mockRealTimeClock = unixTime;
+        mockRealTimeClock = unixTime;
 #endif
+    }
 }
 
 void realTimeClock::set(tm brokenDownTime) {

@@ -9,6 +9,7 @@
 enum class mainState : uint32_t {
     boot,
     waitForBootScreen,
+    waitForNetworkRequest,
     waitForNetworkResponse,
     idle,
     measuring,
@@ -16,6 +17,7 @@ enum class mainState : uint32_t {
     displaying, 
     networking,
     sleeping,
+    networkError,
     test
 };
 

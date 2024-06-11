@@ -20,15 +20,11 @@ uint32_t screen::channelIndex[numberOfLines]{0, 0, 1, 0};
 extern font roboto36bold;
 extern font tahoma24bold;
 
-void screen::initialize() {
-}
-
 void screen::showMeasurements() {
     getContents();
-
-    if (isModified) {
+//    if (isModified) {
         drawContents();
-    }
+//    }
 }
 
 void screen::showMessage(const char* line1, const char* line2) {

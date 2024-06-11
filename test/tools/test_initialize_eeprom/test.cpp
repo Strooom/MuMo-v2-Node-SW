@@ -26,7 +26,7 @@ bool overwriteExistingLoRaWANConfig{false};
 uint32_t toBeDevAddr            = 0x260BC71B;
 const char toBeApplicationKey[] = "ECF61A5B18BFBF81EF4FA7DBA764CE8B";
 const char toBeNetworkKey[]     = "34CE07A8DDE81F4C29A0AED7B4F1D7BB";
-bool resetLoRaWANStateAndChannels{false};
+bool resetLoRaWANStateAndChannels{true};
 bool eraseMeasurements{true};
 
 // #######################################################
@@ -122,7 +122,7 @@ void initializeLorawanChannels() {
 
 void eraseMeasurementsInEeprom() {
     if (eraseMeasurements) {
-        measurementCollection::erase();
+        measurementCollection::eraseAll();
     }
 }
 
