@@ -29,9 +29,11 @@ loRaChannel loRaTxChannelCollection::channel[maxNmbrChannels]{
 uint32_t loRaTxChannelCollection::currentChannelIndex{0};
 
 void loRaTxChannelCollection::selectNextActiveChannelIndex() {
+    uint32_t loopCount{0}; // this will prevent an infinite loop if no active channel is found... there should always be at least 3 active channels
     currentChannelIndex = (currentChannelIndex + 1) % maxNmbrChannels;
-    while (channel[currentChannelIndex].frequencyInHz == 0) {
+    while ((channel[currentChannelIndex].frequencyInHz == 0) && loopCount < maxNmbrChannels) {
         currentChannelIndex = (currentChannelIndex + 1) % maxNmbrChannels;
+        loopCount++;
     }
 }
 
@@ -51,7 +53,7 @@ uint32_t loRaTxChannelCollection::getRandomNumber() {
 #ifndef generic
     HAL_RNG_GenerateRandomNumber(&hrng, &result);
 #else
-    result = rand();
+    result = rand()%32U;
 #endif
     return result;
 }

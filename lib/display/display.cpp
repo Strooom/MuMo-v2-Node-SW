@@ -9,6 +9,8 @@
 #ifndef generic
 #include "main.h"
 extern SPI_HandleTypeDef hspi2;
+#else
+bool mockDisplayPresent{true};
 #endif
 
 displayPresence display::displayPresent{displayPresence::unknown};
@@ -17,6 +19,15 @@ displayMirroring display::mirroring{displayMirroring::none};
 uint8_t display::displayBuffer[display::bufferSize];
 
 bool display::isPresent() {
+#ifdef generic
+    if (mockDisplayPresent) {
+        displayPresent = displayPresence::present;
+        return true;
+    } else {
+        displayPresent = displayPresence::notPresent;
+        return false;
+    }
+#endif
     if (displayPresent == displayPresence::unknown) {
         hardwareReset();
         goSleep();
@@ -81,7 +92,6 @@ void display::initialize() {
 
     clearAllPixels();
 }
-
 
 void display::goSleep() {
     uint8_t commandData[1]{0x03};        // Deep Sleep Mode 2 - SSD1681 Datasheet Rev 0l.13 Page 23
@@ -217,7 +227,6 @@ void display::selectChip(bool active) {
 bool display::isReady() {
     return !isBusy();
 }
-
 
 bool display::isBusy() {
 #ifndef generic

@@ -267,9 +267,9 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
         theBlock[11] = downlinkFrameCount[1];           //
         theBlock[12] = downlinkFrameCount[2];           //
         theBlock[13] = downlinkFrameCount[3];           // MSByte
-    }                                                   //
-    theBlock[14] = 0x00;                                //
-    theBlock[15] = blockIndex;                          // Blocks Ai are indexed from 1..k, where k is the number of blocks
+    }        //
+    theBlock[14] = 0x00;              //
+    theBlock[15] = blockIndex;        // Blocks Ai are indexed from 1..k, where k is the number of blocks
 }
 
 void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirection) {
@@ -985,7 +985,6 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
     sx126x::initializeInterface();
     sx126x::initializeRadio();
 
-
     if (theFramePort == 0) {
         setOffsetsAndLengthsTx(macOut.getLevel());
         insertHeaders(nullptr, 0, macOut.getLevel(), 0);
@@ -1279,3 +1278,8 @@ void LoRaWAN::dumpDeviceTimeAnswer() {}
 //     }
 //     logging::snprintf("\n");
 // }
+
+void LoRaWAN::appendMacCommand(macCommand theMacCommand) {
+    LoRaWAN::macOut.append(static_cast<uint8_t>(theMacCommand));
+}
+

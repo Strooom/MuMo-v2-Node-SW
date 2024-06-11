@@ -21,6 +21,7 @@
 #include <spreadingfactor.hpp>
 #include <linearbuffer.hpp>
 #include <payloadencoder.hpp>
+#include <maccommand.hpp>
 
 class LoRaWAN {
   public:
@@ -37,6 +38,7 @@ class LoRaWAN {
     static void handleEvents(applicationEvent theEvent);
     static uint32_t getMaxApplicationPayloadLength();
     static void sendUplink(uint8_t framePort, const uint8_t payload[], uint32_t payloadLength);
+    static void appendMacCommand(macCommand theMacCommand);
     static void getReceivedDownlinkMessage();
     static txRxCycleState getState();
     static bool isIdle();
@@ -173,7 +175,7 @@ class LoRaWAN {
     static uint32_t receivedMic();
     static bool isValidDownlinkFrameCount(frameCount testFrameCount);
     static messageType decodeMessage();
-    
+
     // #############################################################
     // ### Other Helper functions                                ###
     // #############################################################
@@ -187,5 +189,4 @@ class LoRaWAN {
     static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);
 
     static uint32_t calculateMaxTransmitTimeout(uint32_t currentDataRateIndex, uint32_t loRaPayloadLength);
-
 };

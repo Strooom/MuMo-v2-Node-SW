@@ -3,14 +3,14 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 
-#include "power.hpp"
+#include <power.hpp>
 
 bool power::usbPower{false};
 
 #ifndef generic
 #include "main.h"
 #else
-bool power::mockUsbPower{false};
+bool mockUsbPower{false};
 #endif
 
 bool power::hasUsbPower() {

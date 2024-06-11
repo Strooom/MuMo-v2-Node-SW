@@ -20,7 +20,7 @@
 #include <measurementcollection.hpp>
 // #include <aeskey.hpp>
 // #include <datarate.hpp>
-// #include <maccommand.hpp>
+#include <maccommand.hpp>
 
 #include <logging.hpp>
 
@@ -49,14 +49,73 @@ void mainController::initialize() {
     gpio::enableGpio(gpio::group::rfControl);
 
     LoRaWAN::initialize();
-    // goTo(mainState::waitingForNetwork);
-    goTo(mainState::idle);
+    // Show all device info on the display..
+    // Start lptimer for x seconds
+    goTo(mainState::waitForBootScreen);
 }
 
 void mainController::handleEvents() {
     while (applicationEventBuffer.hasEvents()) {
         applicationEvent theEvent = applicationEventBuffer.pop();
-        logging::snprintf(logging::source::applicationEvents, "Application event : %s[%u]\n", toString(theEvent), static_cast<uint8_t>(theEvent));
+        logging::snprintf(logging::source::applicationEvents, "%s[%u] in %s[%u]\n", toString(theEvent), static_cast<uint8_t>(theEvent), toString(state), static_cast<uint32_t>(state));
+
+        switch (state) {
+            case mainState::waitForBootScreen:
+                switch (theEvent) {
+                    case applicationEvent::lowPowerTimerExpired:
+                        goTo(mainState::waitForNetworkResponse);
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+
+            case mainState::waitForNetworkResponse:
+                switch (theEvent) {
+                    case applicationEvent::realTimeClockTick:
+                        LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
+                        LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
+                        break;
+
+                    case applicationEvent::downlinkMacCommandReceived:
+                        goTo(mainState::idle);
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+
+            case mainState::idle:
+                switch (theEvent) {
+                    case applicationEvent::realTimeClockTick:
+                        sensorDeviceCollection::tick();
+                        goTo(mainState::measuring);
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+
+            case mainState::networking:
+                switch (theEvent) {
+                    case applicationEvent::lowPowerTimerExpired:
+                    case applicationEvent::sx126xTxComplete:
+                    case applicationEvent::sx126xRxComplete:
+                    case applicationEvent::sx126xTimeout:
+                        LoRaWAN::handleEvents(theEvent);
+                        break;
+
+                    default:
+                        break;
+                }
+
+            default:
+                break;
+        }
+
         switch (theEvent) {
             case applicationEvent::usbConnected:
                 // MX_USART2_UART_Init();
@@ -64,43 +123,6 @@ void mainController::handleEvents() {
 
             case applicationEvent::usbRemoved:
                 // MX_USART2_UART_DeInit();
-                break;
-
-            case applicationEvent::downlinkApplicationPayloadReceived: {
-                // byteBuffer receivedData;
-                // LoRaWAN::getReceivedDownlinkMessage(receivedData);
-            } break;
-
-            case applicationEvent::realTimeClockTick: {
-                {
-                    switch (state) {
-                        case mainState::waitingForNetwork: {
-                            // LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::linkCheckRequest));
-                            // LoRaWAN::sendUplink(1, nullptr, 0);
-                        } break;
-
-                        case mainState::waitingForTime: {
-                            // LoRaWAN::macOut.append(static_cast<uint8_t>(macCommand::deviceTimeRequest));
-                            // LoRaWAN::sendUplink(1, nullptr, 0);
-                        } break;
-
-                        case mainState::idle:
-                            sensorDeviceCollection::tick();
-                            goTo(mainState::measuring);
-                            break;
-
-                        default:
-                            logging::snprintf(logging::source::error, "RealTimeClockTick event received in state %s[%d] - Ignored\n", toString(state), static_cast<uint32_t>(state));
-                            break;
-                    }
-                }
-            } break;
-
-            case applicationEvent::lowPowerTimerExpired:
-            case applicationEvent::sx126xTxComplete:
-            case applicationEvent::sx126xRxComplete:
-            case applicationEvent::sx126xTimeout:
-                LoRaWAN::handleEvents(theEvent);
                 break;
 
             default:
@@ -118,12 +140,6 @@ void mainController::run() {
     }
 
     switch (state) {
-        case mainState::waitingForNetwork:
-            break;
-
-        case mainState::waitingForTime:
-            break;
-
         case mainState::measuring:
             sensorDeviceCollection::run();
             if (sensorDeviceCollection::isSleeping()) {
@@ -167,8 +183,8 @@ void mainController::run() {
             break;
 
         case mainState::idle:
-            if (false) {
-                //             if (!power::hasUsbPower()) {
+
+            if (!power::hasUsbPower()) {
                 gpio::disableGpio(gpio::group::spiDisplay);
                 gpio::disableGpio(gpio::group::writeProtect);
                 gpio::disableGpio(gpio::group::uart1);
@@ -178,14 +194,9 @@ void mainController::run() {
                 gpio::disableGpio(gpio::group::usbPresent);
                 gpio::disableGpio(gpio::group::rfControl);
                 goTo(mainState::sleeping);
-#ifndef generic
-                uint32_t currentPriMaskState = __get_PRIMASK();
-                __disable_irq();
-                HAL_SuspendTick();
-                HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
-                HAL_ResumeTick();
-                __set_PRIMASK(currentPriMaskState);
-#endif
+
+                sleep();
+
                 gpio::disableGpio(gpio::group::rfControl);
                 gpio::enableGpio(gpio::group::usbPresent);
 #ifndef generic
@@ -195,15 +206,11 @@ void mainController::run() {
                 gpio::enableGpio(gpio::group::writeProtect);
                 gpio::enableGpio(gpio::group::spiDisplay);
 
-                goTo(mainState::idle);        // ??
+                goTo(mainState::idle);
             }
             break;
 
-        case mainState::test:
-            break;
-
         default:
-            // Error : we are in an unknown state
             break;
     }
 }
@@ -211,4 +218,15 @@ void mainController::run() {
 void mainController::goTo(mainState newState) {
     logging::snprintf(logging::source::applicationEvents, "MainController stateChange : %s[%u] -> %s[%u]\n", toString(state), static_cast<uint32_t>(state), toString(newState), static_cast<uint32_t>(newState));
     state = newState;
+}
+
+void mainController::sleep() {
+#ifndef generic
+    uint32_t currentPriMaskState = __get_PRIMASK();
+    __disable_irq();
+    HAL_SuspendTick();
+    HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
+    HAL_ResumeTick();
+    __set_PRIMASK(currentPriMaskState);
+#endif
 }

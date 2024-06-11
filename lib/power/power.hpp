@@ -17,7 +17,4 @@ class power {
   private:
 #endif
     static bool usbPower;
-#ifdef generic
-    static bool mockUsbPower;
-#endif
 };

@@ -7,14 +7,14 @@
 
 const char *toString(mainState aState) {
     switch (aState) {
-        case mainState::boot: 
+        case mainState::boot:
             return "boot";
             break;
-        case mainState::waitingForNetwork:
-            return "waitingForNetwork";
+        case mainState::waitForBootScreen:
+            return "waitForBootScreen";
             break;
-        case mainState::waitingForTime:
-            return "waitingForTime";
+        case mainState::waitForNetworkResponse:
+            return "waitForNetworkResponse";
             break;
         case mainState::idle:
             return "idle";
