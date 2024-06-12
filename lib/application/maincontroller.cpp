@@ -89,6 +89,8 @@ void mainController::handleEvents() {
                         LoRaWAN::sendUplink(0, nullptr, 0);
                         goTo(mainState::waitForNetworkResponse);
                         break;
+                    default:
+                        break;
                 }
                 break;
 
