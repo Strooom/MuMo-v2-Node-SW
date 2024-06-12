@@ -15,6 +15,7 @@
 extern I2C_HandleTypeDef hi2c2;
 #else
 uint8_t mockBME680Registers[256];
+bool mockBME680Present{false};
 #include <cstring>
 #endif
 
@@ -102,6 +103,10 @@ void bme680::initialize() {
     memcpy(mockBME680Registers + 0xE1, calibrationDataPart2, 14);
     memcpy(mockBME680Registers + 0xF0, calibrationDataPart3, 5);
 #endif
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        channels[channelIndex].set(0, 0);
+        channels[channelIndex].hasNewValue = false;
+    }
     state = sensorDeviceState::sleeping;
 }
 
@@ -214,7 +219,7 @@ bool bme680::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
     return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
 #else
-    return true;
+    return mockBME680Present;
 #endif
 }
 

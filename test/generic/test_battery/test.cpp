@@ -17,6 +17,10 @@ void test_initialization() {
     battery::initalize();
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::getState());
     TEST_ASSERT_EQUAL(batteryType::saft_ls_14250, battery::type);
+    for (uint32_t channelIndex = 0; channelIndex < battery::nmbrChannels; channelIndex++) {
+        TEST_ASSERT_EQUAL(0, battery::channels[channelIndex].oversampling);
+        TEST_ASSERT_EQUAL(0, battery::channels[channelIndex].prescaling);
+    }
 }
 
 void test_sampling() {

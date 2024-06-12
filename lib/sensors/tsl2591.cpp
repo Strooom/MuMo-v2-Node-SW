@@ -16,6 +16,7 @@ extern I2C_HandleTypeDef hi2c2;
 #else
 #include <cstring>
 uint8_t mockTSL2591Registers[256];
+bool mockTSL2591Present{false};
 #endif
 
 sensorDeviceState tsl2591::state{sensorDeviceState::unknown};
@@ -39,7 +40,21 @@ bool tsl2591::isPresent() {
 void tsl2591::initialize() {
     writeRegister(registers::enable, powerOn);
     writeRegister(registers::config, 0x01);        // gain 1x, integration time 200 ms. I found out these fixed settings are more than sufficient for my use case
-
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        channels[channelIndex].set(0, 0);
+        channels[channelIndex].hasNewValue = false;
+    }
+    // The first measurements after power on are not reliable. So we do a few dummy measurements
+    static constexpr uint32_t nmbrOfCleaningSamples{4};
+    for (uint32_t sampleIndex = 0; sampleIndex < nmbrOfCleaningSamples; sampleIndex++) {
+        startSampling();
+        while (!samplingIsReady()) {
+#ifndef generic
+            asm("NOP");
+#endif
+        }
+        readSample();
+    }
     goSleep();
 }
 
@@ -54,7 +69,11 @@ void tsl2591::startSampling() {
 }
 
 bool tsl2591::samplingIsReady() {
+    #ifndef generic
     return (readRegister(registers::status) & 0x01) == 0x01;
+    #else
+    return true;
+    #endif
 }
 
 void tsl2591::readSample() {
@@ -75,7 +94,6 @@ float tsl2591::calculateLux() {
     if (Lux2 > Lux) {
         Lux = Lux2;
     }
-
     return Lux;
 }
 
@@ -83,7 +101,7 @@ bool tsl2591::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
     return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
 #else
-    return true;
+    return mockTSL2591Present;
 #endif
 }
 

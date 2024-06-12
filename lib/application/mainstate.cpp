@@ -7,12 +7,6 @@
 
 const char *toString(mainState aState) {
     switch (aState) {
-        case mainState::boot:
-            return "boot";
-            break;
-        case mainState::waitForBootScreen:
-            return "waitForBootScreen";
-            break;
         case mainState::waitForNetworkRequest:
             return "waitForNetworkRequest";
             break;
@@ -33,9 +27,6 @@ const char *toString(mainState aState) {
             break;
         case mainState::networking:
             return "networking";
-            break;
-        case mainState::sleeping:
-            return "sleeping";
             break;
         case mainState::networkError:
             return "networkError";

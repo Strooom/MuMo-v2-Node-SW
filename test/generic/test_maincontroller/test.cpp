@@ -15,13 +15,13 @@ void setUp(void) {}
 void tearDown(void) {}
 
 void test_transitions_boot() {
-    TEST_ASSERT_EQUAL(mainState::boot, mainController::state);
+    TEST_ASSERT_EQUAL(mainState::waitForNetworkRequest, mainController::state);
     mainController::handleEvents();
     mainController::run();
-    TEST_ASSERT_EQUAL(mainState::boot, mainController::state);
+    TEST_ASSERT_EQUAL(mainState::waitForNetworkRequest, mainController::state);
 
     mainController::initialize();
-    TEST_ASSERT_EQUAL(mainState::waitForBootScreen, mainController::state);
+    TEST_ASSERT_EQUAL(mainState::waitForNetworkRequest, mainController::state);
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
     mainController::handleEvents();
     TEST_ASSERT_EQUAL(mainState::waitForNetworkResponse, mainController::state);
@@ -37,7 +37,7 @@ void test_transitions_boot() {
 }
 
 void test_transitions_tick() {
-    sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), static_cast<uint32_t>(battery::voltage)).set(1, 1,  3.2F);
+    sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), static_cast<uint32_t>(battery::voltage)).set(1, 1, 3.2F);
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
     mainController::handleEvents();
@@ -89,16 +89,14 @@ void test_usb_detection() {
 
 void test_toString() {
     // for test coverage only
-    TEST_ASSERT_EQUAL_STRING("boot", toString(mainState::boot));
+
     TEST_ASSERT_EQUAL_STRING("idle", toString(mainState::idle));
     TEST_ASSERT_EQUAL_STRING("measuring", toString(mainState::measuring));
     TEST_ASSERT_EQUAL_STRING("logging", toString(mainState::logging));
     TEST_ASSERT_EQUAL_STRING("displaying", toString(mainState::displaying));
     TEST_ASSERT_EQUAL_STRING("networking", toString(mainState::networking));
-    TEST_ASSERT_EQUAL_STRING("sleeping", toString(mainState::sleeping));
     TEST_ASSERT_EQUAL_STRING("waitForNetworkRequest", toString(mainState::waitForNetworkRequest));
     TEST_ASSERT_EQUAL_STRING("waitForNetworkResponse", toString(mainState::waitForNetworkResponse));
-    TEST_ASSERT_EQUAL_STRING("waitForBootScreen", toString(mainState::waitForBootScreen));
     TEST_ASSERT_EQUAL_STRING("test", toString(mainState::test));
 }
 

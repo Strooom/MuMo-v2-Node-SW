@@ -4,7 +4,8 @@
 // ######################################################################################
 
 #define noTransmit
-#include <stdio.h>        // snprintf
+#include <stdio.h>           // snprintf
+#include <inttypes.h>        // for PRIu32
 #include <maincontroller.hpp>
 #include <applicationevent.hpp>
 #include <circularbuffer.hpp>
@@ -20,6 +21,8 @@
 #include <version.hpp>
 #include <buildinfo.hpp>
 #include <battery.hpp>
+#include <bme680.hpp>
+#include <tsl2591.hpp>
 #include <settingscollection.hpp>
 #include <measurementcollection.hpp>
 // #include <aeskey.hpp>
@@ -33,7 +36,7 @@ extern I2C_HandleTypeDef hi2c2;
 void MX_I2C2_Init(void);
 #endif
 
-mainState mainController::state{mainState::boot};
+mainState mainController::state{mainState::waitForNetworkRequest};
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 extern font roboto36bold;
 extern font tahoma24bold;
@@ -47,17 +50,19 @@ void mainController::initialize() {
     }
 
     sensorDeviceCollection::discover();
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 4);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 4);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 4);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 4);
+
+    gpio::enableGpio(gpio::group::spiDisplay);
+    showBootScreen1();
+
     measurementCollection::initialize();
     measurementCollection::findMeasurementsInEeprom();
 
-    gpio::enableGpio(gpio::group::spiDisplay);
-    gpio::enableGpio(gpio::group::uart1);
     gpio::enableGpio(gpio::group::rfControl);
-
     LoRaWAN::initialize();
-
-    showBootScreen1();
-    goTo(mainState::waitForBootScreen);
 }
 
 void mainController::handleEvents() {
@@ -66,17 +71,6 @@ void mainController::handleEvents() {
         logging::snprintf(logging::source::applicationEvents, "%s[%u] in %s[%u]\n", toString(theEvent), static_cast<uint8_t>(theEvent), toString(state), static_cast<uint32_t>(state));
 
         switch (state) {
-            case mainState::waitForBootScreen:
-                switch (theEvent) {
-                    case applicationEvent::realTimeClockTick:
-                        goTo(mainState::waitForNetworkResponse);
-                        break;
-
-                    default:
-                        break;
-                }
-                break;
-
             case mainState::waitForNetworkRequest:
                 switch (theEvent) {
                     case applicationEvent::realTimeClockTick:
@@ -122,6 +116,8 @@ void mainController::handleEvents() {
                         if (sensorDeviceCollection::needsSampling()) {
                             sensorDeviceCollection::startSampling();
                             goTo(mainState::measuring);
+                        } else {
+                            sensorDeviceCollection::updateCounters();
                         }
                         break;
 
@@ -214,6 +210,7 @@ void mainController::run() {
 
         case mainState::idle:
             if (!power::hasUsbPower()) {
+                logging::snprintf("goSleep...\n");
                 gpio::disableGpio(gpio::group::spiDisplay);
                 gpio::disableGpio(gpio::group::writeProtect);
                 gpio::disableGpio(gpio::group::uart1);
@@ -222,7 +219,6 @@ void mainController::run() {
 #endif
                 gpio::disableGpio(gpio::group::usbPresent);
                 gpio::disableGpio(gpio::group::rfControl);
-                goTo(mainState::sleeping);
 
                 sleep();
 
@@ -234,8 +230,7 @@ void mainController::run() {
                 gpio::enableGpio(gpio::group::uart1);
                 gpio::enableGpio(gpio::group::writeProtect);
                 gpio::enableGpio(gpio::group::spiDisplay);
-
-                goTo(mainState::idle);
+                logging::snprintf("...wakeUp\n");
             }
             break;
 
@@ -270,7 +265,7 @@ void mainController::showBootScreen1() {
     screen::setText(3, toString(battery::type));
 
     for (uint32_t sensorDeviceIndex = 2; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
-        if (sensorDeviceCollection::isValidDeviceIndex(sensorDeviceIndex)) {
+        if (sensorDeviceCollection::isValid(sensorDeviceIndex)) {
             screen::setText(2U + sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
         }
     }
@@ -284,11 +279,11 @@ void mainController::showBootScreen2() {
     // snprintf(tmpString, screen::maxTextLength2, "MuMo %s", version::getIsVersionAsString());
     screen::clearAllTexts();
     screen::setText(0, "network OK");
-    snprintf(tmpString, screen::maxTextLength2, "DataRate %u", LoRaWAN::currentDataRateIndex);
+    snprintf(tmpString, screen::maxTextLength2, "DataRate : %" PRIu32, LoRaWAN::currentDataRateIndex);
     screen::setText(1, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "Margin %u", LoRaWAN::margin);
+    snprintf(tmpString, screen::maxTextLength2, "Margin : %" PRIu32, LoRaWAN::margin);
     screen::setText(2, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "Gateways %u", LoRaWAN::gatewayCount);
+    snprintf(tmpString, screen::maxTextLength2, "Gateways : %" PRIu32, LoRaWAN::gatewayCount);
     screen::setText(3, tmpString);
     time_t localTime = realTimeClock::get();
     screen::setText(4, ctime(&localTime));

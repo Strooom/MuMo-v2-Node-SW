@@ -3,6 +3,7 @@
 #include <sensordevicecollection.hpp>
 
 extern uint8_t mockTSL2591Registers[256];
+extern bool mockTSL2591Present;
 
 void setUp(void) {
     mockTSL2591Registers[static_cast<uint8_t>(tsl2591::registers::id)]      = tsl2591::chipIdValue;
@@ -11,6 +12,9 @@ void setUp(void) {
 void tearDown(void) {}        // after test
 
 void test_isPresent() {
+    mockTSL2591Present = false;
+    TEST_ASSERT_FALSE(tsl2591::isPresent());
+    mockTSL2591Present = true;
     TEST_ASSERT_TRUE(tsl2591::isPresent());
 }
 

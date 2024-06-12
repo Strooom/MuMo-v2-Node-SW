@@ -7,47 +7,47 @@ const char* toString(applicationEvent anEvent) {
             break;
 
         case applicationEvent::usbConnected:
-            return "usb Connected";
+            return "usbConnected";
             break;
 
         case applicationEvent::usbRemoved:
-            return "usb Removed";
+            return "usbRemoved";
             break;
 
         case applicationEvent::realTimeClockTick:
-            return "realTimeClock Tick";
+            return "realTimeClockTick";
             break;
 
         case applicationEvent::lowPowerTimerExpired:
-            return "lowPower Timer Expired";
+            return "lowPowerTimerExpired";
             break;
 
         case applicationEvent::downlinkApplicationPayloadReceived:
-            return "downlink Application Payload Received";
+            return "downlinkApplicationPayloadReceived";
             break;
 
         case applicationEvent::downlinkMacCommandReceived:
-            return "downlink MAC command Received";
+            return "downlinkMACReceived";
             break;
 
         case applicationEvent::sx126xCadEnd:
-            return "sx126x Cad End";
+            return "sx126xCadEnd";
             break;
 
         case applicationEvent::sx126xTxComplete:
-            return "sx126x Tx Complete";
+            return "sx126xTxComplete";
             break;
 
         case applicationEvent::sx126xRxComplete:
-            return "sx126x Rx Complete";
+            return "sx126xRxComplete";
             break;
 
         case applicationEvent::sx126xTimeout:
-            return "sx126x Timeout";
+            return "sx126xTimeout";
             break;
 
         default:
-            return "unknown application event";
+            return "unknownApplicationEvent";
             break;
     }
 }

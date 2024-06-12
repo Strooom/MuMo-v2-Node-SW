@@ -5,12 +5,15 @@
 #include <sensordevicecollection.hpp>
 
 extern uint8_t mockBME680Registers[256];
+extern bool mockBME680Present;
 
 void setUp(void) {}
 void tearDown(void) {}
 
 void test_isPresent() {
     mockBME680Registers[static_cast<uint8_t>(bme680::registers::chipId)] = bme680::chipIdValue;
+    TEST_ASSERT_FALSE(bme680::isPresent());
+    mockBME680Present = true;
     TEST_ASSERT_TRUE(bme680::isPresent());
 }
 
@@ -41,6 +44,7 @@ void test_run() {
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
+    RUN_TEST(test_isPresent);
     RUN_TEST(test_initialize);
     RUN_TEST(test_sampling);
     RUN_TEST(test_run);

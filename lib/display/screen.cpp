@@ -7,7 +7,7 @@
 #include <sensordevicecollection.hpp>        //
 #include <cstring>                           // strncmp, strncpy
 #include <cmath>
-#include <inttypes.h>
+#include <inttypes.h>        // for PRIu32
 #include <float.hpp>
 
 bool screen::isModified{false};

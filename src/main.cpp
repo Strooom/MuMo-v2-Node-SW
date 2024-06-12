@@ -144,7 +144,7 @@ int main(void) {
     /* USER CODE BEGIN 2 */
     gpio ::enableGpio(gpio::group::uart1);        // check if this is needed on top of MX_USART1_UART_Init();
 
-    HAL_Delay(5000);
+    // HAL_Delay(5000);
 
     gpio::enableGpio(gpio::group::i2cEeprom);
 

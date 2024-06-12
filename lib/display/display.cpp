@@ -276,9 +276,11 @@ void display::writeCommand(SSD1681Commands theCommand, uint8_t* theData, uint32_
 
 void display::waitWhileBusy() {
     // TODO : this is potentially and endless loop -> add a timeout
+    #ifndef generic
     while (isBusy()) {
         asm("NOP");
     }
+    #endif
 }
 
 void display::update() {

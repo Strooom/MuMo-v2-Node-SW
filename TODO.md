@@ -3,6 +3,7 @@
 * get LowPower working again
 * extend SX126x code to the 14dBm veriant of the Wio-E5
 * extend stateMachine : if no LoRaWAN config found -> show msg asking for config
+* OTAA
 
 * make EEPROM work for multiples of 64K : 
   - I2C address = 0x50 + address/64K
@@ -19,8 +20,8 @@
 * report number of measurements on bootscreen
 
 # TODO Bugs / Issues
-* eerste LUX meting na power on is fout 16700 lux ???
-* batteryVoltage seems incorrect ??
+
+* batteryVoltage seems incorrect ?? also shown with 1 decimal io 2 ??
 * get networkStatus for showing on display and reporting to LNS
 * wrapping of measurementsCollection : writing and reading measurements
 * erase old measurements when space needed for new ones

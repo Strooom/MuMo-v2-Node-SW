@@ -12,6 +12,7 @@ class sensorDeviceCollection {
   public:
     sensorDeviceCollection() = delete;
     static void discover();
+    static void set(uint32_t deviceIndex, uint32_t channelIndex, uint32_t oversampling, uint32_t prescaler);
     static void startSampling();
     static void run();
     static void log();
@@ -28,14 +29,15 @@ class sensorDeviceCollection {
     static uint32_t nmbrOfChannels(uint32_t deviceIndex);
     static sensorChannel& channel(uint32_t deviceIndex, uint32_t channelIndex);
 
-    static bool needsSampling(uint32_t deviceIndex, uint32_t channelIndex);
-    static bool needsSampling(uint32_t deviceIndex);
     static bool needsSampling();
-    static void updateCounters(uint32_t deviceIndex, uint32_t channelIndex);
-    static void updateCounters(uint32_t deviceIndex);
+    static bool needsSampling(uint32_t deviceIndex);
+    static bool needsSampling(uint32_t deviceIndex, uint32_t channelIndex);
     static void updateCounters();
+    static void updateCounters(uint32_t deviceIndex);
+    static void updateCounters(uint32_t deviceIndex, uint32_t channelIndex);
     static bool hasNewMeasurements();
     static bool hasNewMeasurements(uint32_t deviceIndex);
+    static bool hasNewMeasurement(uint32_t deviceIndex, uint32_t channelIndex);
     static uint32_t nmbrOfNewMeasurements();
     static uint32_t nmbrOfNewMeasurements(uint32_t deviceIndex);
     static void collectNewMeasurements();
@@ -43,8 +45,8 @@ class sensorDeviceCollection {
     static void clearNewMeasurements();
     static void clearNewMeasurements(uint32_t deviceIndex);
 
-    static bool isValidDeviceIndex(uint32_t deviceIndex);
-    static bool isValidChannelIndex(uint32_t deviceIndex, uint32_t channelIndex);
+    static bool isValid(uint32_t deviceIndex);
+    static bool isValid(uint32_t deviceIndex, uint32_t channelIndex);
 
 #ifndef unitTesting
 
@@ -52,5 +54,5 @@ class sensorDeviceCollection {
 #endif
 
     static bool isPresent[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)];
-    static sensorChannel dummy;                   // dummy, so we can return a valid reference to a channel in edge cases
+    static sensorChannel dummy;        // dummy, so we can return a valid reference to a channel in edge cases
 };

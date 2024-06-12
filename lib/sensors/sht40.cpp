@@ -14,6 +14,7 @@
 extern I2C_HandleTypeDef hi2c2;
 #else
 uint8_t mockSHT40Registers[256];
+bool mockSHT40Present{false};
 #include <cstring>
 
 #endif
@@ -42,9 +43,12 @@ bool sht40::isPresent() {
 }
 
 void sht40::initialize() {
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        channels[channelIndex].set(0, 0);
+        channels[channelIndex].hasNewValue = false;
+    }
     state = sensorDeviceState::sleeping;
 }
-
 
 void sht40::run() {
     if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
@@ -66,7 +70,6 @@ void sht40::run() {
         state = sensorDeviceState::sleeping;
     }
 }
-
 
 void sht40::startSampling() {
     write(command::getMeasurementHighPrecision);
@@ -116,7 +119,7 @@ bool sht40::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
     return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
 #else
-    return true;
+    return mockSHT40Present;
 #endif
 }
 
@@ -136,4 +139,3 @@ void sht40::read(uint8_t* response, uint32_t responseLength) {
     (void)memcpy(response, mockSHT40Registers, responseLength);
 #endif
 }
-

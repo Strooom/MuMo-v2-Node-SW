@@ -9,12 +9,15 @@
 extern uint8_t mockBME680Registers[256];
 extern uint8_t mockTSL2591Registers[256];
 extern float mockBatteryVoltage;
+extern bool mockBME680Present;
+extern bool mockTSL2591Present;
+extern bool mockSHT40Present;
 
 void setUp(void) {
     mockBME680Registers[static_cast<uint8_t>(bme680::registers::chipId)] = bme680::chipIdValue;
     mockTSL2591Registers[static_cast<uint8_t>(tsl2591::registers::id)]   = tsl2591::chipIdValue;
 }
-void tearDown(void) {}        // after test
+void tearDown(void) {}
 
 void test_initalize() {
     for (auto index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
@@ -23,11 +26,62 @@ void test_initalize() {
 }
 
 void test_discover() {
+    mockBME680Present  = false;
+    mockTSL2591Present = false;
+    mockSHT40Present   = false;
     sensorDeviceCollection::discover();
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::battery)]);
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)]);
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::tsl2591)]);
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::sht40)]);
+    for (auto sensorDeviceIndex = 0U; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
+        if (sensorDeviceIndex == static_cast<uint32_t>(sensorDeviceType::battery)) {
+            TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[sensorDeviceIndex]);
+            TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(sensorDeviceIndex));
+        } else {
+            TEST_ASSERT_FALSE(sensorDeviceCollection::isPresent[sensorDeviceIndex]);
+            TEST_ASSERT_FALSE(sensorDeviceCollection::isValid(sensorDeviceIndex));
+        }
+    }
+    for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(static_cast<uint32_t>(sensorDeviceType::battery)); channelIndex++) {
+        TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), channelIndex).isActive());
+    }
+
+    mockBME680Present  = true;
+    mockTSL2591Present = true;
+    mockSHT40Present   = true;
+    sensorDeviceCollection::discover();
+    for (auto sensorDeviceIndex = static_cast<uint32_t>(sensorDeviceType::battery); sensorDeviceIndex <= static_cast<uint32_t>(sensorDeviceType::sht40); sensorDeviceIndex++) {
+        TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[sensorDeviceIndex]);
+        TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(sensorDeviceIndex));
+    }
+}
+
+void test_isValidChannel() {
+    mockBME680Present  = false;
+    mockTSL2591Present = false;
+    mockSHT40Present   = false;
+    sensorDeviceCollection::discover();
+    for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(static_cast<uint32_t>(sensorDeviceType::battery)); channelIndex++) {
+        TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::battery), channelIndex));
+    }
+
+    mockBME680Present  = true;
+    mockTSL2591Present = true;
+    mockSHT40Present   = true;
+    sensorDeviceCollection::discover();
+
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
+    TEST_ASSERT_FALSE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::battery), 2));
+
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
+    TEST_ASSERT_FALSE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::bme680), 3));
+
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
+    TEST_ASSERT_FALSE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::tsl2591), 1));
+
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
+    TEST_ASSERT_FALSE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::sht40), 2));
 }
 
 void test_name() {
@@ -39,11 +93,23 @@ void test_name() {
 }
 
 void test_nmbrOfChannels() {
+    mockBME680Present  = false;
+    mockTSL2591Present = false;
+    mockSHT40Present   = false;
+    sensorDeviceCollection::discover();
+
     TEST_ASSERT_EQUAL(2, sensorDeviceCollection::nmbrOfChannels(static_cast<uint32_t>(sensorDeviceType::battery)));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::nmbrOfChannels(static_cast<uint32_t>(sensorDeviceType::bme680)));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::nmbrOfChannels(static_cast<uint32_t>(sensorDeviceType::tsl2591)));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::nmbrOfChannels(static_cast<uint32_t>(sensorDeviceType::sht40)));
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::nmbrOfChannels(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)));
+    mockBME680Present  = true;
+    mockTSL2591Present = true;
+    mockSHT40Present   = true;
+    sensorDeviceCollection::discover();
     TEST_ASSERT_EQUAL(3, sensorDeviceCollection::nmbrOfChannels(static_cast<uint32_t>(sensorDeviceType::bme680)));
     TEST_ASSERT_EQUAL(1, sensorDeviceCollection::nmbrOfChannels(static_cast<uint32_t>(sensorDeviceType::tsl2591)));
     TEST_ASSERT_EQUAL(2, sensorDeviceCollection::nmbrOfChannels(static_cast<uint32_t>(sensorDeviceType::sht40)));
-    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::nmbrOfChannels(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)));
 }
 
 void test_getChannel() {
@@ -111,92 +177,69 @@ void test_units() {
 }
 
 void test_hasNewMeasurements() {
-    battery::initalize();
-    bme680::initialize();
-    tsl2591::initialize();
-    sht40::initialize();
-    TEST_ASSERT_FALSE(sensorDeviceCollection::hasNewMeasurements());
-    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::nmbrOfNewMeasurements());
-
-    battery::channels[battery::voltage].hasNewValue = true;
-    TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements());
-    TEST_ASSERT_EQUAL(1, sensorDeviceCollection::nmbrOfNewMeasurements());
-    sensorDeviceCollection::clearNewMeasurements(static_cast<uint32_t>(sensorDeviceType::battery));
-
-    bme680::channels[bme680::temperature].hasNewValue = true;
-    TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements());
-    TEST_ASSERT_EQUAL(1, sensorDeviceCollection::nmbrOfNewMeasurements());
-    sensorDeviceCollection::clearNewMeasurements(static_cast<uint32_t>(sensorDeviceType::bme680));
-
-    tsl2591::channels[tsl2591::visibleLight].hasNewValue = true;
-    TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements());
-    TEST_ASSERT_EQUAL(1, sensorDeviceCollection::nmbrOfNewMeasurements());
-    sensorDeviceCollection::clearNewMeasurements(static_cast<uint32_t>(sensorDeviceType::tsl2591));
-
-    sht40::channels[sht40::temperature].hasNewValue = true;
-    TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements());
-    TEST_ASSERT_EQUAL(1, sensorDeviceCollection::nmbrOfNewMeasurements());
-
-    battery::channels[battery::voltage].hasNewValue      = true;
-    bme680::channels[bme680::temperature].hasNewValue    = true;
-    tsl2591::channels[tsl2591::visibleLight].hasNewValue = true;
-    sht40::channels[sht40::temperature].hasNewValue      = true;
-
-    TEST_ASSERT_EQUAL(4, sensorDeviceCollection::nmbrOfNewMeasurements());
-
-    sensorDeviceCollection::clearNewMeasurements();
-    TEST_ASSERT_FALSE(sensorDeviceCollection::hasNewMeasurements());
-    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::nmbrOfNewMeasurements());
-}
-
-void test_validDeviceAndChannelIndex() {
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidDeviceIndex(static_cast<uint32_t>(sensorDeviceType::battery)));
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidDeviceIndex(static_cast<uint32_t>(sensorDeviceType::bme680)));
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidDeviceIndex(static_cast<uint32_t>(sensorDeviceType::tsl2591)));
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidDeviceIndex(static_cast<uint32_t>(sensorDeviceType::sht40)));
-    TEST_ASSERT_FALSE(sensorDeviceCollection::isValidDeviceIndex(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)));
-
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
-    TEST_ASSERT_FALSE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::battery), 2));
-
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
-    TEST_ASSERT_FALSE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::bme680), 3));
-
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
-    TEST_ASSERT_FALSE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::tsl2591), 1));
-
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature));
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
-    TEST_ASSERT_FALSE(sensorDeviceCollection::isValidChannelIndex(static_cast<uint32_t>(sensorDeviceType::sht40), 2));
-}
-
-void test_tickAndRun() {
+    mockBME680Present  = false;
+    mockTSL2591Present = false;
+    mockSHT40Present   = false;
     sensorDeviceCollection::discover();
-    battery::initalize();
-    battery::channels[battery::voltage].set(1, 1,  1.0F);
-    battery::channels[battery::percentCharged].set(1, 1, 1.0F);
-    bme680::initialize();
-    bme680::channels[bme680::temperature].set(1, 1, 1.0F);
-    bme680::channels[bme680::relativeHumidity].set(1, 1, 1.0F);
-    bme680::channels[bme680::barometricPressure].set(1, 1, 1.0F);
-    tsl2591::initialize();
-    tsl2591::channels[tsl2591::visibleLight].set(1, 1, 1.0F);
-    sht40::initialize();
-    sht40::channels[sht40::temperature].set(1, 1,  1.0F);
-    sht40::channels[sht40::relativeHumidity].set(1, 1, 1.0F);
 
-    sensorDeviceCollection::updateCounters();
+    TEST_ASSERT_FALSE(sensorDeviceCollection::hasNewMeasurements());
+    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::nmbrOfNewMeasurements());
+    TEST_ASSERT_FALSE(sensorDeviceCollection::needsSampling());
+    TEST_ASSERT_FALSE(sensorDeviceCollection::needsSampling(static_cast<uint32_t>(sensorDeviceType::battery)));
+
+    mockBatteryVoltage = 3.2F;
+    battery::channels[battery::voltage].set(0, 1);
+    TEST_ASSERT_TRUE(sensorDeviceCollection::needsSampling());
+    TEST_ASSERT_TRUE(sensorDeviceCollection::needsSampling(static_cast<uint32_t>(sensorDeviceType::battery)));
+
     sensorDeviceCollection::startSampling();
     sensorDeviceCollection::run();
-    sensorDeviceCollection::isSleeping();
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isSleeping());
+    TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements());
+    TEST_ASSERT_EQUAL(1, sensorDeviceCollection::nmbrOfNewMeasurements());
+    TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements(static_cast<uint32_t>(sensorDeviceType::battery)));
+    TEST_ASSERT_EQUAL(1, sensorDeviceCollection::nmbrOfNewMeasurements(static_cast<uint32_t>(sensorDeviceType::battery)));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurement(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+
+    TEST_ASSERT_EQUAL_FLOAT(mockBatteryVoltage, sensorDeviceCollection::value(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    sensorDeviceCollection::clearNewMeasurements();
+    TEST_ASSERT_FALSE(sensorDeviceCollection::hasNewMeasurements());
 }
 
-void test_value() {
+void test_hasNewMeasurements2() {
+    mockBME680Present  = false;
+    mockTSL2591Present = false;
+    mockSHT40Present   = false;
     sensorDeviceCollection::discover();
     mockBatteryVoltage = 3.2F;
+    TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage).isActive());
+    TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged).isActive());
+    battery::channels[battery::voltage].set(1, 1);
+    TEST_ASSERT_TRUE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage).isActive());
+    TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged).isActive());
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, sensorDeviceCollection::value(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::needsSampling());
+    sensorDeviceCollection::startSampling();
+    sensorDeviceCollection::run();
+    TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurement(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_EQUAL_FLOAT(mockBatteryVoltage / 2.0F, sensorDeviceCollection::value(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+
+    sensorDeviceCollection::clearNewMeasurements();
+    sensorDeviceCollection::updateCounters();
+
+    TEST_ASSERT_TRUE(sensorDeviceCollection::needsSampling());
+    sensorDeviceCollection::startSampling();
+    sensorDeviceCollection::run();
+    TEST_ASSERT_FALSE(sensorDeviceCollection::hasNewMeasurement(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_EQUAL_FLOAT(mockBatteryVoltage, sensorDeviceCollection::value(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+
+    sensorDeviceCollection::clearNewMeasurements();
+    sensorDeviceCollection::updateCounters();
+
+    TEST_ASSERT_TRUE(sensorDeviceCollection::needsSampling());
+    sensorDeviceCollection::startSampling();
+    sensorDeviceCollection::run();
+    TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurement(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
     TEST_ASSERT_EQUAL_FLOAT(mockBatteryVoltage, sensorDeviceCollection::value(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
 }
 
@@ -209,16 +252,15 @@ int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initalize);
     RUN_TEST(test_discover);
+    RUN_TEST(test_isValidChannel);
     RUN_TEST(test_name);
     RUN_TEST(test_nmbrOfChannels);
     RUN_TEST(test_getChannel);
-    RUN_TEST(test_value);
     RUN_TEST(test_decimals);
     RUN_TEST(test_name);
     RUN_TEST(test_units);
     RUN_TEST(test_hasNewMeasurements);
-    RUN_TEST(test_validDeviceAndChannelIndex);
-    RUN_TEST(test_tickAndRun);
+    RUN_TEST(test_hasNewMeasurements2);
     RUN_TEST(test_log);
     UNITY_END();
 }

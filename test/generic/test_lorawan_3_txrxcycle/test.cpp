@@ -26,12 +26,12 @@ void test_messageTypeToString() {
 
 void test_lorawanEventToString() {
     TEST_ASSERT_EQUAL_STRING("none", toString(applicationEvent ::none));
-    TEST_ASSERT_EQUAL_STRING("sx126x Cad End", toString(applicationEvent ::sx126xCadEnd));
-    TEST_ASSERT_EQUAL_STRING("sx126x Tx Complete", toString(applicationEvent ::sx126xTxComplete));
-    TEST_ASSERT_EQUAL_STRING("sx126x Rx Complete", toString(applicationEvent ::sx126xRxComplete));
-    TEST_ASSERT_EQUAL_STRING("sx126x Timeout", toString(applicationEvent ::sx126xTimeout));
-    TEST_ASSERT_EQUAL_STRING("lowPower Timer Expired", toString(applicationEvent ::lowPowerTimerExpired));
-    TEST_ASSERT_EQUAL_STRING("unknown application event", toString(static_cast<applicationEvent>(0xFF)));
+    TEST_ASSERT_EQUAL_STRING("sx126xCadEnd", toString(applicationEvent ::sx126xCadEnd));
+    TEST_ASSERT_EQUAL_STRING("sx126xTxComplete", toString(applicationEvent ::sx126xTxComplete));
+    TEST_ASSERT_EQUAL_STRING("sx126xRxComplete", toString(applicationEvent ::sx126xRxComplete));
+    TEST_ASSERT_EQUAL_STRING("sx126xTimeout", toString(applicationEvent ::sx126xTimeout));
+    TEST_ASSERT_EQUAL_STRING("lowPowerTimerExpired", toString(applicationEvent ::lowPowerTimerExpired));
+    TEST_ASSERT_EQUAL_STRING("unknownApplicationEvent", toString(static_cast<applicationEvent>(0xFF)));
 }
 
 void test_txRxCycleStateToString() {

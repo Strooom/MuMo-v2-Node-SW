@@ -15,8 +15,8 @@
 #include <main.h>
 extern ADC_HandleTypeDef hadc;
 #else
-uint32_t mockBatteryRawADC;
-float mockBatteryVoltage;
+uint32_t mockBatteryRawADC{0};
+float mockBatteryVoltage{0};
 #endif
 
 batteryType battery::type{batteryType::liFePO4_700mAh};
@@ -35,6 +35,10 @@ void battery::initalize() {
     type  = static_cast<batteryType>(typeIndex);
     state = sensorDeviceState::sleeping;
     logging::snprintf(logging::source::settings, "batteryType : %s\n", toString(type));
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        channels[channelIndex].set(0, 0);
+        channels[channelIndex].hasNewValue = false;
+    }
 }
 
 void battery::run() {

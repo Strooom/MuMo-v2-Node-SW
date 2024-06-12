@@ -7,8 +7,6 @@
 #include <stdint.h>
 
 enum class mainState : uint32_t {
-    boot,
-    waitForBootScreen,
     waitForNetworkRequest,
     waitForNetworkResponse,
     idle,
@@ -16,7 +14,6 @@ enum class mainState : uint32_t {
     logging,
     displaying, 
     networking,
-    sleeping,
     networkError,
     test
 };
