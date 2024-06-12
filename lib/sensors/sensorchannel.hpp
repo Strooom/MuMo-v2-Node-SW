@@ -9,7 +9,7 @@
 class sensorChannel {
   public:
     sensorChannel(uint32_t decimals, const char *name, const char *unit);
-    void set(uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower);
+    void set(uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower, float initialSampleValue);
     enum class action : uint32_t {
         none,
         prescale,

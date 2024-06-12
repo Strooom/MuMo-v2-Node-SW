@@ -3,6 +3,8 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
+#define noTransmit
+
 #include <maincontroller.hpp>
 #include <applicationevent.hpp>
 #include <circularbuffer.hpp>
@@ -54,10 +56,10 @@ void mainController::initialize() {
 
     LoRaWAN::initialize();
 
-    display::initialize();
     display::clearAllPixels();
-    graphics::drawText(4, 160, tahoma24bold, version::getIsVersionAsString());
-    display::startUpdate();
+    graphics::drawText(4, 180, lucidaConsole12, version::getIsVersionAsString());
+    display::initialize();
+    display::update();
 
     goTo(mainState::waitForBootScreen);
 }
@@ -96,7 +98,7 @@ void mainController::handleEvents() {
                         display::initialize();
                         display::clearAllPixels();
                         graphics::drawText(4, 160, tahoma24bold, "network OK");
-                        display::startUpdate();
+                        display::update();
                         goTo(mainState::idle);
                         break;
 
@@ -122,8 +124,10 @@ void mainController::handleEvents() {
             case mainState::idle:
                 switch (theEvent) {
                     case applicationEvent::realTimeClockTick:
-                        sensorDeviceCollection::tick();
-                        goTo(mainState::measuring);
+                        if (sensorDeviceCollection::needsSampling()) {
+                            sensorDeviceCollection::startSampling();
+                            goTo(mainState::measuring);
+                        }
                         break;
 
                     default:
@@ -175,6 +179,7 @@ void mainController::run() {
         case mainState::measuring:
             sensorDeviceCollection::run();
             if (sensorDeviceCollection::isSleeping()) {
+                sensorDeviceCollection::updateCounters();
                 goTo(mainState::logging);
             }
             break;
@@ -189,7 +194,9 @@ void mainController::run() {
                 uint32_t payloadLength        = measurementCollection::nmbrOfBytesToTransmit();
                 const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
                 logging::snprintf("--> %d bytes to transmit\n", payloadLength);
+#ifndef noTransmit
                 LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
+#endif
                 measurementCollection::setTransmitted(0, payloadLength);        // TODO : get correct frame counter *before* call to sendUplink
                 goTo(mainState::networking);
             } else {
@@ -200,23 +207,17 @@ void mainController::run() {
         case mainState::networking:
             if (LoRaWAN::isIdle()) {
                 if (display::isPresent()) {
-                    // goTo(mainState::displaying);
                     screen::showMeasurements();
-                    goTo(mainState::idle);
-                } else {
-                    goTo(mainState::idle);
                 }
-            }
-            break;
-
-        case mainState::displaying:
-            if (display::isReady()) {
                 goTo(mainState::idle);
             }
             break;
 
-        case mainState::idle:
+        case mainState::displaying:
+            goTo(mainState::idle);
+            break;
 
+        case mainState::idle:
             if (!power::hasUsbPower()) {
                 gpio::disableGpio(gpio::group::spiDisplay);
                 gpio::disableGpio(gpio::group::writeProtect);

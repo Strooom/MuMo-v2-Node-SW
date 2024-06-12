@@ -34,7 +34,7 @@ class display {
     static bool isPresent();          // return displayPresent
     static void initialize();         // wakeup through HW reset, then configure display
     static bool isReady();
-    static void startUpdate();
+    static void update();
     static void goSleep();
 
     static void setPixel(uint32_t x, uint32_t y);

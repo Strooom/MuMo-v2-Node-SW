@@ -281,7 +281,7 @@ void display::waitWhileBusy() {
     }
 }
 
-void display::startUpdate() {
+void display::update() {
     uint8_t commandData[4]{0};
     writeCommand(SSD1681Commands::WRITE_RAM, nullptr, 0);
     writeData(displayBuffer, bufferSize);

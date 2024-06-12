@@ -10,6 +10,9 @@ class screen {
   public:
     static void showMeasurements();
     static void showMessage(const char* line1, const char* line2);
+    static void setText(uint32_t lineIndex, const char* text);
+    static uint32_t lineBottom(uint32_t lineIndex) { return 180 - (20 * lineIndex); }
+    static uint32_t lineTop(uint32_t lineIndex) { return 180 - (20 * (lineIndex + 1)); }
 
 #ifndef unitTesting
 

@@ -32,8 +32,8 @@ void test_sampling() {
 
 void test_run() {
     battery::initalize();
-    battery::channels[battery::voltage].set(1, 1, 1, 1);
-    battery::channels[battery::percentCharged].set(1, 1, 1, 1);
+    battery::channels[battery::voltage].set(1, 1, 1, 1, 3.2F);
+    battery::channels[battery::percentCharged].set(1, 1, 1, 1, 0.5F);
     sensorDeviceCollection::discover();
     sensorDeviceCollection::updateCounters(static_cast<uint32_t>(sensorDeviceType::battery));
     battery::startSampling();

@@ -38,5 +38,4 @@ class ux {
     static constexpr uint32_t netwerkSignalStrengthStepHeight{9};
     static constexpr uint32_t netwerkSignalStrengthWidth{(netwerkSignalStrengthBarWidth * netwerkSignalStrengthNumberOfBars)};
     static constexpr uint32_t netwerkSignalStrengthHeight{netwerkSignalStrengthBaseHeight + (netwerkSignalStrengthStepHeight * (netwerkSignalStrengthNumberOfBars - 1))};
-
 };

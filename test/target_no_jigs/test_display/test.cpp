@@ -23,22 +23,22 @@ void test_displayPresent() {
     display::initialize();
     display::clearAllPixels();
     graphics::drawFilledRectangle(0, 0, 99, 99, graphics::color::black);
-    display::startUpdate();
+    display::update();
     HAL_Delay(2000);
     display::initialize();
     display::clearAllPixels();
     graphics::drawFilledRectangle(0, 99, 99, 199, graphics::color::black);
-    display::startUpdate();
+    display::update();
     HAL_Delay(2000);
     display::initialize();
     display::clearAllPixels();
     graphics::drawFilledRectangle(99, 99, 199, 199, graphics::color::black);
-    display::startUpdate();
+    display::update();
     HAL_Delay(2000);
     display::initialize();
     display::clearAllPixels();
     graphics::drawFilledRectangle(99, 0, 199, 99, graphics::color::black);
-    display::startUpdate();
+    display::update();
 }
 
 void test_displayFonts() {
@@ -53,7 +53,7 @@ void test_displayFonts() {
     graphics::drawText(4, 40, tahoma24bold, "Tahoma 24 bold");
     graphics::drawText(4, 4, roboto36bold, "012345");
 
-    display::startUpdate();
+    display::update();
     HAL_Delay(5000);
 }
 

@@ -12,7 +12,7 @@ class sensorDeviceCollection {
   public:
     sensorDeviceCollection() = delete;
     static void discover();
-    static void tick();
+    static void startSampling();
     static void run();
     static void log();
     static void log(uint32_t deviceIndex);
@@ -30,6 +30,7 @@ class sensorDeviceCollection {
 
     static bool needsSampling(uint32_t deviceIndex, uint32_t channelIndex);
     static bool needsSampling(uint32_t deviceIndex);
+    static bool needsSampling();
     static void updateCounters(uint32_t deviceIndex, uint32_t channelIndex);
     static void updateCounters(uint32_t deviceIndex);
     static void updateCounters();

@@ -24,48 +24,48 @@ void test_initalize() {
 void test_set() {
     sensorChannel testChannel = {0, "", ""};
     mockUsbPower = false;
-    testChannel.set(1, 2, 3, 4);
+    testChannel.set(1, 2, 3, 4, 5.0F);
     TEST_ASSERT_EQUAL_UINT32(1, testChannel.oversamplingLowPower);
     TEST_ASSERT_EQUAL_UINT32(2, testChannel.prescalerLowPower);
     TEST_ASSERT_EQUAL_UINT32(3, testChannel.oversamplingHighPower);
     TEST_ASSERT_EQUAL_UINT32(4, testChannel.prescalerHighPower);
-    TEST_ASSERT_EQUAL_UINT32(1, testChannel.oversamplingCounter);
-    TEST_ASSERT_EQUAL_UINT32(1, testChannel.prescaleCounter);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.oversamplingCounter);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.prescaleCounter);
 
     mockUsbPower = true;
-    testChannel.set(1, 2, 3, 4);
+    testChannel.set(1, 2, 3, 4, 5.0F);
     TEST_ASSERT_EQUAL_UINT32(1, testChannel.oversamplingLowPower);
     TEST_ASSERT_EQUAL_UINT32(2, testChannel.prescalerLowPower);
     TEST_ASSERT_EQUAL_UINT32(3, testChannel.oversamplingHighPower);
     TEST_ASSERT_EQUAL_UINT32(4, testChannel.prescalerHighPower);
-    TEST_ASSERT_EQUAL_UINT32(3, testChannel.oversamplingCounter);
-    TEST_ASSERT_EQUAL_UINT32(3, testChannel.prescaleCounter);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.oversamplingCounter);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.prescaleCounter);
 }
 
 void test_setAndRestrict() {
     sensorChannel testChannel = {0, "", ""};
     mockUsbPower = false;
-    testChannel.set(testChannel.maxOversampling + 1, testChannel.maxPrescaler + 1, testChannel.maxOversampling + 1, testChannel.maxPrescaler + 1);
+    testChannel.set(testChannel.maxOversampling + 1, testChannel.maxPrescaler + 1, testChannel.maxOversampling + 1, testChannel.maxPrescaler + 1, 5.0F);
     TEST_ASSERT_EQUAL_UINT32(testChannel.maxOversampling, testChannel.oversamplingLowPower);
     TEST_ASSERT_EQUAL_UINT32(testChannel.maxPrescaler, testChannel.prescalerLowPower);
     TEST_ASSERT_EQUAL_UINT32(testChannel.maxOversampling, testChannel.oversamplingHighPower);
     TEST_ASSERT_EQUAL_UINT32(testChannel.maxPrescaler, testChannel.prescalerHighPower);
-    TEST_ASSERT_EQUAL_UINT32(testChannel.maxOversampling, testChannel.oversamplingCounter);
-    TEST_ASSERT_EQUAL_UINT32(testChannel.maxPrescaler - 1, testChannel.prescaleCounter);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.oversamplingCounter);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.prescaleCounter);
 
     mockUsbPower = true;
-    testChannel.set(testChannel.maxOversampling + 1, testChannel.maxPrescaler + 1, testChannel.maxOversampling + 1, testChannel.maxPrescaler + 1);
+    testChannel.set(testChannel.maxOversampling + 1, testChannel.maxPrescaler + 1, testChannel.maxOversampling + 1, testChannel.maxPrescaler + 1, 5.0F);
     TEST_ASSERT_EQUAL_UINT32(testChannel.maxOversampling, testChannel.oversamplingLowPower);
     TEST_ASSERT_EQUAL_UINT32(testChannel.maxPrescaler, testChannel.prescalerLowPower);
     TEST_ASSERT_EQUAL_UINT32(testChannel.maxOversampling, testChannel.oversamplingHighPower);
     TEST_ASSERT_EQUAL_UINT32(testChannel.maxPrescaler, testChannel.prescalerHighPower);
-    TEST_ASSERT_EQUAL_UINT32(testChannel.maxOversampling, testChannel.oversamplingCounter);
-    TEST_ASSERT_EQUAL_UINT32(testChannel.maxPrescaler - 1, testChannel.prescaleCounter);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.oversamplingCounter);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.prescaleCounter);
 }
 
 void test_getCurrentPrescaler() {
     sensorChannel testChannel = {0, "", ""};
-    testChannel.set(1, 2, 3, 4);
+    testChannel.set(1, 2, 3, 4, 5.0F);
 
     mockUsbPower = false;
     TEST_ASSERT_EQUAL_UINT32(2, testChannel.getCurrentPrescaler());
@@ -75,7 +75,7 @@ void test_getCurrentPrescaler() {
 
 void test_getCurrentOversampling() {
     sensorChannel testChannel = {0, "", ""};
-    testChannel.set(1, 2, 3, 4);
+    testChannel.set(1, 2, 3, 4, 5.0F);
 
     mockUsbPower = false;
     TEST_ASSERT_EQUAL_UINT32(1, testChannel.getCurrentOversampling());
@@ -87,7 +87,7 @@ void test_getNextAction() {
     sensorChannel testChannel = {0, "", ""};
     TEST_ASSERT_EQUAL(sensorChannel::action::none, testChannel.getNextAction());
 
-    testChannel.set(2, 2, 0, 0);
+    testChannel.set(2, 2, 0, 0, 5.0F);
     mockUsbPower = false;
 
     testChannel.prescaleCounter     = 1;
@@ -118,8 +118,12 @@ void test_getNextAction() {
 void test_updateCounters() {
     mockUsbPower = false;
     sensorChannel testChannel = {0, "", ""};
-    testChannel.set(1, 4, 0, 0);        // = oversampling = 1 -> average 2 samples into a measurement, prescaling = 4 -> take a sample every 4th RTC tick
+    testChannel.set(1, 4, 0, 0, 5.0F);        // = oversampling = 1 -> average 2 samples into a measurement, prescaling = 4 -> take a sample every 4th RTC tick
 
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.oversamplingCounter);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.prescaleCounter);
+    TEST_ASSERT_EQUAL(sensorChannel::action::sampleAndOutput, testChannel.getNextAction());
+    testChannel.updateCounters();
     TEST_ASSERT_EQUAL_UINT32(1, testChannel.oversamplingCounter);
     TEST_ASSERT_EQUAL_UINT32(3, testChannel.prescaleCounter);
     TEST_ASSERT_EQUAL(sensorChannel::action::prescale, testChannel.getNextAction());
@@ -159,38 +163,23 @@ void test_updateCounters() {
 void test_addSample() {
     mockUsbPower = false;
     sensorChannel testChannel = {0, "", ""};        // = oversampling = 3 + 1 = 4, prescaling = 1 (= no prescaling)
-    testChannel.set(3, 1, 0, 0);
+    testChannel.set(3, 1, 0, 0, 5.0F);
     testChannel.addSample(13.3F);
-    TEST_ASSERT_EQUAL_FLOAT(13.3F, testChannel.samples[3]);
+    TEST_ASSERT_EQUAL_FLOAT(13.3F, testChannel.samples[0]);
     testChannel.updateCounters();
     testChannel.addSample(12.2F);
-    TEST_ASSERT_EQUAL_FLOAT(12.2F, testChannel.samples[2]);
+    TEST_ASSERT_EQUAL_FLOAT(12.2F, testChannel.samples[3]);
     testChannel.updateCounters();
     testChannel.addSample(11.1F);
-    TEST_ASSERT_EQUAL_FLOAT(11.1F, testChannel.samples[1]);
+    TEST_ASSERT_EQUAL_FLOAT(11.1F, testChannel.samples[2]);
     testChannel.updateCounters();
     testChannel.addSample(10.0F);
-    TEST_ASSERT_EQUAL_FLOAT(10.0F, testChannel.samples[0]);
-    TEST_ASSERT_EQUAL_FLOAT(0.0F, testChannel.samples[4]);
-
-    testChannel.updateCounters();
-    testChannel.addSample(13.3F);
-    testChannel.updateCounters();
-    testChannel.addSample(12.2F);
-    testChannel.updateCounters();
-    testChannel.addSample(11.1F);
-    testChannel.updateCounters();
-    testChannel.addSample(10.0F);
-
-    TEST_ASSERT_EQUAL_FLOAT(13.3F, testChannel.samples[3]);
-    TEST_ASSERT_EQUAL_FLOAT(12.2F, testChannel.samples[2]);
-    TEST_ASSERT_EQUAL_FLOAT(11.1F, testChannel.samples[1]);
-    TEST_ASSERT_EQUAL_FLOAT(10.0F, testChannel.samples[0]);
+    TEST_ASSERT_EQUAL_FLOAT(10.0F, testChannel.samples[1]);
 }
 
 void test_getOutput() {
     sensorChannel testChannel = {0, "", ""};        // = oversampling = 3 + 1 = 4, prescaling = 1 (= no prescaling)
-    testChannel.set(3, 1, 0, 0);
+    testChannel.set(3, 1, 0, 0, 5.0F);
     testChannel.updateCounters();
     testChannel.addSample(1.0F);
     testChannel.updateCounters();
@@ -217,7 +206,10 @@ void test_getOutput() {
 void test_sensor_transition_high_low_power() {
     mockUsbPower = true;
     sensorChannel testChannel = {0, "", ""};
-    testChannel.set(3, 4, 7, 8);
+    testChannel.set(3, 4, 7, 8, 5.0F);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.oversamplingCounter);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.prescaleCounter);
+    testChannel.updateCounters();
     TEST_ASSERT_EQUAL_UINT32(7, testChannel.oversamplingCounter);
     TEST_ASSERT_EQUAL_UINT32(7, testChannel.prescaleCounter);
     testChannel.updateCounters();
@@ -241,7 +233,7 @@ void test_sensor_transition_high_low_power() {
 
 void test_average() {
     sensorChannel testChannel = {0, "", ""};
-    testChannel.set(4, 360, 8, 15);
+    testChannel.set(4, 360, 8, 15, 5.0F);
 
     for (auto index = 0; index < sensorChannel::maxOversampling + 1; index++) {
         testChannel.samples[index] = static_cast<float>(index);
@@ -269,6 +261,5 @@ int main(int argc, char **argv) {
     RUN_TEST(test_getOutput);
     RUN_TEST(test_sensor_transition_high_low_power);
     RUN_TEST(test_average);
-
     UNITY_END();
 }

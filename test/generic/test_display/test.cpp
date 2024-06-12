@@ -200,7 +200,7 @@ void test_dummy() {
     display::isPresent();
     display::initialize();
     display::dump();
-    display::startUpdate();
+    display::update();
     display::goSleep();
 
     TEST_IGNORE_MESSAGE("For testCoverage only");

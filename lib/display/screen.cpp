@@ -19,12 +19,18 @@ uint32_t screen::channelIndex[numberOfLines]{0, 0, 1, 0};
 
 extern font roboto36bold;
 extern font tahoma24bold;
+extern font lucidaConsole12;
 
 void screen::showMeasurements() {
     getContents();
-//    if (isModified) {
+    if (isModified) {
         drawContents();
-//    }
+    }
+}
+
+void screen::setText(uint32_t lineIndex, const char* text) {
+    graphics::drawFilledRectangle(0, (180 - (20 * lineIndex)), display::widthInPixels, 20, graphics::color::white);
+    graphics::drawText(4, (180 - (20 * lineIndex)), lucidaConsole12, text);
 }
 
 void screen::showMessage(const char* line1, const char* line2) {
@@ -35,7 +41,7 @@ void screen::showMessage(const char* line1, const char* line2) {
     uint32_t line2x     = ux::mid - (line2Width / 2);
     graphics::drawText(line1x, 100, tahoma24bold, line1);
     graphics::drawText(line2x, 150, tahoma24bold, line2);
-    display::startUpdate();
+    display::update();
 }
 
 void screen::getContents() {
@@ -65,7 +71,7 @@ void screen::drawContents() {
     uint32_t batteryLevel = static_cast<uint32_t>(sensorDeviceCollection::value(1, 1) * 100.0F);
     graphics::drawBatteryIcon(display::widthInPixels - (1 + ux::marginLeft + ux::batteryIconWidth), 2, batteryLevel);
     graphics::drawNetworkSignalStrengthIcon(display::widthInPixels - (1 + ux::marginLeft + ux::marginLeft + ux::batteryIconWidth + ux::netwerkSignalStrengthWidth), 2, 50);
-    display::startUpdate();
+    display::update();
 }
 
 void screen::buildBigTextString(int32_t value, uint32_t lineIndex) {

@@ -6,17 +6,22 @@ sensorChannel::sensorChannel(uint32_t decimals, const char *name, const char* un
 }
 
 
-void sensorChannel::set(uint32_t newOversamplingLowPower, uint32_t newPrescalerLowPower, uint32_t newOversamplingHighPower, uint32_t newPrescalerHighPower) {
+void sensorChannel::set(uint32_t newOversamplingLowPower, uint32_t newPrescalerLowPower, uint32_t newOversamplingHighPower, uint32_t newPrescalerHighPower, float initialSampleValue) {
     oversamplingLowPower  = newOversamplingLowPower;
     prescalerLowPower     = newPrescalerLowPower;
     oversamplingHighPower = newOversamplingHighPower;
     prescalerHighPower    = newPrescalerHighPower;
     limitOversamplingAndPrescaler();
-    oversamplingCounter = getCurrentOversampling();
+    oversamplingCounter = 0;
+    //oversamplingCounter = getCurrentOversampling();
     if (getCurrentPrescaler() > 0) {
-        prescaleCounter = getCurrentPrescaler()-1;
+        // prescaleCounter = getCurrentPrescaler()-1; // TODO if initialized to zero, it would trigger an immediate sampling
+        prescaleCounter = 0;
     } else {
         prescaleCounter = 0;
+    }
+    for (uint32_t i = 0; i < (maxOversampling + 1); i++) {
+        samples[i] = initialSampleValue;
     }
 }
 

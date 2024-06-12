@@ -29,9 +29,9 @@ void test_sampling() {
 
 void test_run() {
     bme680::initialize();
-    bme680::channels[bme680::temperature].set(1, 1, 1, 1);
-    bme680::channels[bme680::relativeHumidity].set(1, 1, 1, 1);
-    bme680::channels[bme680::barometricPressure].set(1, 1, 1, 1);
+    bme680::channels[bme680::temperature].set(1, 1, 1, 1, 25.0F);
+    bme680::channels[bme680::relativeHumidity].set(1, 1, 1, 1, 50.0F);
+    bme680::channels[bme680::barometricPressure].set(1, 1, 1, 1, 1013.0F);
     sensorDeviceCollection::discover();
     sensorDeviceCollection::updateCounters(static_cast<uint32_t>(sensorDeviceType::bme680));
     bme680::startSampling();

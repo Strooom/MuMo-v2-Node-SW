@@ -11,8 +11,8 @@ circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 extern bool mockUsbPower;
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_transitions_boot() {
     TEST_ASSERT_EQUAL(mainState::boot, mainController::state);
@@ -30,19 +30,14 @@ void test_transitions_boot() {
     applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
     mainController::handleEvents();
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
-    applicationEventBuffer.push(applicationEvent::realTimeClockTick);
-    mainController::handleEvents();
-    TEST_ASSERT_EQUAL(mainState::measuring, mainController::state);
-    mainController::run();
-    TEST_ASSERT_EQUAL(mainState::logging, mainController::state);
     mainController::run();
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
     mainController::run();
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
 }
 
-void test_transitions_1() {
-    sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), static_cast<uint32_t>(battery::voltage)).set(1, 1, 1, 1);
+void test_transitions_tick() {
+    sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), static_cast<uint32_t>(battery::voltage)).set(1, 1, 1, 1, 3.2F);
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
     mainController::handleEvents();
@@ -101,6 +96,7 @@ void test_toString() {
     TEST_ASSERT_EQUAL_STRING("displaying", toString(mainState::displaying));
     TEST_ASSERT_EQUAL_STRING("networking", toString(mainState::networking));
     TEST_ASSERT_EQUAL_STRING("sleeping", toString(mainState::sleeping));
+    TEST_ASSERT_EQUAL_STRING("waitForNetworkRequest", toString(mainState::waitForNetworkRequest));
     TEST_ASSERT_EQUAL_STRING("waitForNetworkResponse", toString(mainState::waitForNetworkResponse));
     TEST_ASSERT_EQUAL_STRING("waitForBootScreen", toString(mainState::waitForBootScreen));
     TEST_ASSERT_EQUAL_STRING("test", toString(mainState::test));
@@ -109,7 +105,7 @@ void test_toString() {
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_transitions_boot);
-    RUN_TEST(test_transitions_1);
+    RUN_TEST(test_transitions_tick);
     RUN_TEST(test_usb_detection);
     RUN_TEST(test_toString);
     UNITY_END();

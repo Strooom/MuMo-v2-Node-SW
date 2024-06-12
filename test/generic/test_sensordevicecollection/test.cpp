@@ -8,6 +8,7 @@
 
 extern uint8_t mockBME680Registers[256];
 extern uint8_t mockTSL2591Registers[256];
+extern float mockBatteryVoltage;
 
 void setUp(void) {
     mockBME680Registers[static_cast<uint8_t>(bme680::registers::chipId)] = bme680::chipIdValue;
@@ -177,33 +178,34 @@ void test_validDeviceAndChannelIndex() {
 void test_tickAndRun() {
     sensorDeviceCollection::discover();
     battery::initalize();
-    battery::channels[battery::voltage].set(1,1,1,1);
-    battery::channels[battery::percentCharged].set(1,1,1,1);
+    battery::channels[battery::voltage].set(1, 1, 1, 1, 1.0F);
+    battery::channels[battery::percentCharged].set(1, 1, 1, 1, 1.0F);
     bme680::initialize();
-    bme680::channels[bme680::temperature].set(1,1,1,1);
-    bme680::channels[bme680::relativeHumidity].set(1,1,1,1);
-    bme680::channels[bme680::barometricPressure].set(1,1,1,1);
+    bme680::channels[bme680::temperature].set(1, 1, 1, 1, 1.0F);
+    bme680::channels[bme680::relativeHumidity].set(1, 1, 1, 1, 1.0F);
+    bme680::channels[bme680::barometricPressure].set(1, 1, 1, 1, 1.0F);
     tsl2591::initialize();
-    tsl2591::channels[tsl2591::visibleLight].set(1,1,1,1);
+    tsl2591::channels[tsl2591::visibleLight].set(1, 1, 1, 1, 1.0F);
     sht40::initialize();
-    sht40::channels[sht40::temperature].set(1,1,1,1);
-    sht40::channels[sht40::relativeHumidity].set(1,1,1,1);
+    sht40::channels[sht40::temperature].set(1, 1, 1, 1, 1.0F);
+    sht40::channels[sht40::relativeHumidity].set(1, 1, 1, 1, 1.0F);
 
     sensorDeviceCollection::updateCounters();
-    sensorDeviceCollection::tick();
+    sensorDeviceCollection::startSampling();
     sensorDeviceCollection::run();
     sensorDeviceCollection::isSleeping();
 }
 
-void test_valueAsFloat() {
-    TEST_IGNORE_MESSAGE("Implement me!");
+void test_value() {
+    sensorDeviceCollection::discover();
+    mockBatteryVoltage = 3.2F;
+    TEST_ASSERT_EQUAL_FLOAT(mockBatteryVoltage, sensorDeviceCollection::value(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
 }
 
 void test_log() {
     sensorDeviceCollection::log();
     TEST_IGNORE_MESSAGE("For Coverage Only");
 }
-
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
@@ -212,7 +214,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_name);
     RUN_TEST(test_nmbrOfChannels);
     RUN_TEST(test_getChannel);
-    RUN_TEST(test_valueAsFloat);
+    RUN_TEST(test_value);
     RUN_TEST(test_decimals);
     RUN_TEST(test_name);
     RUN_TEST(test_units);

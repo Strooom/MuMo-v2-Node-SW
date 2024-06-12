@@ -21,6 +21,7 @@
 * get cli working
 * take channel-initialization out of the device initialization and into sensorDeviceCollection
 * allow firmware upgrade from usb/serial
+* show usb connection on display
 
 
 # TODO Bugs / Issues
@@ -30,6 +31,8 @@
 * wrapping of measurementsCollection : writing and reading measurements
 * erase old measurements when space needed for new ones
 * target unit test for wait time after page write into eeprom
+* batterylevel seems incorrect
+
 
 
 # TODO DevOps
