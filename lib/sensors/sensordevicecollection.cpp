@@ -15,14 +15,14 @@ sensorChannel sensorDeviceCollection::dummy = {0, "", ""};
 void sensorDeviceCollection::discover() {
     isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
     battery::initalize();
-    battery::channels[battery::voltage].set(0, 1, 0, 1, 3.2F);        // TODO I need to do a measurement and initialize the channel with the actual value
+    battery::channels[battery::voltage].set(0, 1, 3.2F);        // TODO I need to do a measurement and initialize the channel with the actual value
     actualNumberOfDevices++;
 
     if (bme680::isPresent()) {
         isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)] = true;
         bme680::initialize();
-        bme680::channels[bme680::temperature].set(3, 1, 3, 1, 20.0F);        // TODO I need to do a measurement and initialize the channel with the actual value
-        bme680::channels[bme680::relativeHumidity].set(3, 1, 3, 1, 50.0F);        // TODO I need to do a measurement and initialize the channel with the actual value
+        bme680::channels[bme680::temperature].set(3, 1, 20.0F);        // TODO I need to do a measurement and initialize the channel with the actual value
+        bme680::channels[bme680::relativeHumidity].set(3, 1, 50.0F);        // TODO I need to do a measurement and initialize the channel with the actual value
         actualNumberOfDevices++;
     }
     if (sht40::isPresent()) {
@@ -33,7 +33,7 @@ void sensorDeviceCollection::discover() {
     if (tsl2591::isPresent()) {
         isPresent[static_cast<uint32_t>(sensorDeviceType::tsl2591)] = true;
         tsl2591::initialize();
-        tsl2591::channels[tsl2591::visibleLight].set(3, 1, 3, 1, 50.0F);        // TODO I need to do a measurement and initialize the channel with the actual value
+        tsl2591::channels[tsl2591::visibleLight].set(3, 1,  50.0F);        // TODO I need to do a measurement and initialize the channel with the actual value
         actualNumberOfDevices++;
     }
     // Add more types of sensors here

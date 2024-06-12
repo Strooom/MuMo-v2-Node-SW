@@ -52,8 +52,8 @@ void test_calculateRelativeHumidity() {
 
 void test_run() {
     sht40::initialize();
-    sht40::channels[sht40::temperature].set(1, 1, 1, 1, 20.0F);
-    sht40::channels[sht40::relativeHumidity].set(1, 1, 1, 1, 50.0F);
+    sht40::channels[sht40::temperature].set(1, 1, 20.0F);
+    sht40::channels[sht40::relativeHumidity].set(1, 1, 50.0F);
     sensorDeviceCollection::discover();
     sensorDeviceCollection::updateCounters(static_cast<uint32_t>(sensorDeviceType::tsl2591));
     sht40::startSampling();

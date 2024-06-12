@@ -178,17 +178,17 @@ void test_validDeviceAndChannelIndex() {
 void test_tickAndRun() {
     sensorDeviceCollection::discover();
     battery::initalize();
-    battery::channels[battery::voltage].set(1, 1, 1, 1, 1.0F);
-    battery::channels[battery::percentCharged].set(1, 1, 1, 1, 1.0F);
+    battery::channels[battery::voltage].set(1, 1,  1.0F);
+    battery::channels[battery::percentCharged].set(1, 1, 1.0F);
     bme680::initialize();
-    bme680::channels[bme680::temperature].set(1, 1, 1, 1, 1.0F);
-    bme680::channels[bme680::relativeHumidity].set(1, 1, 1, 1, 1.0F);
-    bme680::channels[bme680::barometricPressure].set(1, 1, 1, 1, 1.0F);
+    bme680::channels[bme680::temperature].set(1, 1, 1.0F);
+    bme680::channels[bme680::relativeHumidity].set(1, 1, 1.0F);
+    bme680::channels[bme680::barometricPressure].set(1, 1, 1.0F);
     tsl2591::initialize();
-    tsl2591::channels[tsl2591::visibleLight].set(1, 1, 1, 1, 1.0F);
+    tsl2591::channels[tsl2591::visibleLight].set(1, 1, 1.0F);
     sht40::initialize();
-    sht40::channels[sht40::temperature].set(1, 1, 1, 1, 1.0F);
-    sht40::channels[sht40::relativeHumidity].set(1, 1, 1, 1, 1.0F);
+    sht40::channels[sht40::temperature].set(1, 1,  1.0F);
+    sht40::channels[sht40::relativeHumidity].set(1, 1, 1.0F);
 
     sensorDeviceCollection::updateCounters();
     sensorDeviceCollection::startSampling();

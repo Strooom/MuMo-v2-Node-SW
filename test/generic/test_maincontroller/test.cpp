@@ -37,7 +37,7 @@ void test_transitions_boot() {
 }
 
 void test_transitions_tick() {
-    sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), static_cast<uint32_t>(battery::voltage)).set(1, 1, 1, 1, 3.2F);
+    sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), static_cast<uint32_t>(battery::voltage)).set(1, 1,  3.2F);
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
     mainController::handleEvents();

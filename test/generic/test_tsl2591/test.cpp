@@ -32,7 +32,7 @@ void test_sample() {
 
 void test_run() {
     tsl2591::initialize();
-    tsl2591::channels[tsl2591::visibleLight].set(1, 1, 1, 1, 30.0);
+    tsl2591::channels[tsl2591::visibleLight].set(1, 1, 30.0);
     sensorDeviceCollection::discover();
     sensorDeviceCollection::updateCounters(static_cast<uint32_t>(sensorDeviceType::tsl2591));
     tsl2591::startSampling();
