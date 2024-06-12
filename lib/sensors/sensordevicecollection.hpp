@@ -52,6 +52,5 @@ class sensorDeviceCollection {
 #endif
 
     static bool isPresent[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)];
-    static uint32_t actualNumberOfDevices;        // TODO : it seems I am not using this at all and could as well calculate it on the fly
     static sensorChannel dummy;                   // dummy, so we can return a valid reference to a channel in edge cases
 };

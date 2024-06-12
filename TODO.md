@@ -22,7 +22,8 @@
 * take channel-initialization out of the device initialization and into sensorDeviceCollection
 * allow firmware upgrade from usb/serial
 * show usb connection on display
-
+* improve isModified in display refresh : set to false after updating display, set to true when writing different text into screen
+* measurementsScreen only has 3 lines io 4
 
 # TODO Bugs / Issues
 * eerste LUX meting na power on is fout 16700 lux ???
@@ -32,7 +33,9 @@
 * erase old measurements when space needed for new ones
 * target unit test for wait time after page write into eeprom
 * batterylevel seems incorrect
-
+* move lptim out of lorawan and make it available to application
+* high lux value does not show on display
+* add space to characterset / driver
 
 
 # TODO DevOps

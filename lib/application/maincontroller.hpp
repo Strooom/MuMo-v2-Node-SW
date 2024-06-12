@@ -3,7 +3,6 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
-
 #pragma once
 
 #include <stdint.h>
@@ -25,4 +24,7 @@ class mainController {
 #endif
     static void goTo(mainState newState);
     static mainState state;
+
+    static void showBootScreen1();
+    static void showBootScreen2();
 };

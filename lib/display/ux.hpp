@@ -20,6 +20,10 @@ class ux {
     // Spacing for 24px font
     static constexpr uint32_t marginBottomSmall{13};
 
+    // Spacing for 12px font
+    static constexpr uint32_t marginBottomConsole{2};
+
+
     static constexpr uint32_t mid{display::widthInPixels / 2};
 
     // dimensions for battery icon

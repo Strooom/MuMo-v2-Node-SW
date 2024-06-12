@@ -4,7 +4,7 @@
 // ######################################################################################
 
 #define noTransmit
-
+#include <stdio.h>        // snprintf
 #include <maincontroller.hpp>
 #include <applicationevent.hpp>
 #include <circularbuffer.hpp>
@@ -15,11 +15,11 @@
 #include <display.hpp>
 #include <graphics.hpp>
 #include <screen.hpp>
-
+#include <realtimeclock.hpp>
 // #include <linearbuffer.hpp>
 #include <version.hpp>
-// #include <buildinfo.hpp>
-
+#include <buildinfo.hpp>
+#include <battery.hpp>
 #include <settingscollection.hpp>
 #include <measurementcollection.hpp>
 // #include <aeskey.hpp>
@@ -56,11 +56,7 @@ void mainController::initialize() {
 
     LoRaWAN::initialize();
 
-    display::clearAllPixels();
-    graphics::drawText(4, 180, lucidaConsole12, version::getIsVersionAsString());
-    display::initialize();
-    display::update();
-
+    showBootScreen1();
     goTo(mainState::waitForBootScreen);
 }
 
@@ -97,10 +93,7 @@ void mainController::handleEvents() {
             case mainState::waitForNetworkResponse:
                 switch (theEvent) {
                     case applicationEvent::downlinkMacCommandReceived:
-                        display::initialize();
-                        display::clearAllPixels();
-                        graphics::drawText(4, 160, tahoma24bold, "network OK");
-                        display::update();
+                        showBootScreen2();
                         goTo(mainState::idle);
                         break;
 
@@ -209,7 +202,7 @@ void mainController::run() {
         case mainState::networking:
             if (LoRaWAN::isIdle()) {
                 if (display::isPresent()) {
-                    screen::showMeasurements();
+                    screen::show(screenType::measurements);
                 }
                 goTo(mainState::idle);
             }
@@ -265,4 +258,35 @@ void mainController::sleep() {
     HAL_ResumeTick();
     __set_PRIMASK(currentPriMaskState);
 #endif
+}
+
+void mainController::showBootScreen1() {
+    char tmpString[screen::maxTextLength2 + 1];
+    screen::clearAllTexts();
+    snprintf(tmpString, screen::maxTextLength2, "MuMo %s", version::getIsVersionAsString());
+    screen::setText(0, tmpString);
+    screen::setText(1, "CC 4.0 BY-NC-SA");
+    screen::setText(2, buildInfo::buildTimeStamp);
+    screen::setText(3, toString(battery::type));
+
+    for (uint32_t sensorDeviceIndex = 2; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
+        if (sensorDeviceCollection::isValidDeviceIndex(sensorDeviceIndex)) {
+            screen::setText(2U + sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
+        }
+    }
+
+    screen::setText(9, "network check...");
+    screen::show(screenType::message);
+}
+
+void mainController::showBootScreen2() {
+    char tmpString[screen::maxTextLength2 + 1];
+    // snprintf(tmpString, screen::maxTextLength2, "MuMo %s", version::getIsVersionAsString());
+    screen::clearAllTexts();
+    screen::setText(0, "network OK");
+    screen::setText(1, "SF7");
+    screen::setText(2, "SNR : 12.3 dB");
+    time_t localTime = realTimeClock::get();
+    screen::setText(3, ctime(&localTime));
+    screen::show(screenType::message);
 }

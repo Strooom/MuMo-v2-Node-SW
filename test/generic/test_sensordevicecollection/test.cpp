@@ -20,7 +20,6 @@ void test_initalize() {
     for (auto index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
         TEST_ASSERT_FALSE(sensorDeviceCollection::isPresent[index]);
     }
-    TEST_ASSERT_EQUAL_UINT32(0U, sensorDeviceCollection::actualNumberOfDevices);
 }
 
 void test_discover() {
@@ -29,7 +28,6 @@ void test_discover() {
     TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)]);
     TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::tsl2591)]);
     TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::sht40)]);
-    TEST_ASSERT_EQUAL_UINT32(4U, sensorDeviceCollection::actualNumberOfDevices);
 }
 
 void test_name() {

@@ -13,6 +13,7 @@
 bool screen::isModified{false};
 char screen::bigText[numberOfLines][maxTextLength + 1]{};
 char screen::smallText[numberOfLines][maxTextLength + 1]{};
+char screen::consoleText[numberOfLines2][maxTextLength2 + 1]{};
 
 uint32_t screen::deviceIndex[numberOfLines]{1, 3, 2, 2};
 uint32_t screen::channelIndex[numberOfLines]{0, 0, 1, 0};
@@ -20,6 +21,17 @@ uint32_t screen::channelIndex[numberOfLines]{0, 0, 1, 0};
 extern font roboto36bold;
 extern font tahoma24bold;
 extern font lucidaConsole12;
+
+void screen::show(screenType theScreenType) {
+    switch (theScreenType) {
+        case screenType::measurements:
+            showMeasurements();
+            break;
+        case screenType::message:
+            showMessage();
+            break;
+    }
+}
 
 void screen::showMeasurements() {
     getContents();
@@ -29,18 +41,22 @@ void screen::showMeasurements() {
 }
 
 void screen::setText(uint32_t lineIndex, const char* text) {
-    graphics::drawFilledRectangle(0, (180 - (20 * lineIndex)), display::widthInPixels, 20, graphics::color::white);
-    graphics::drawText(4, (180 - (20 * lineIndex)), lucidaConsole12, text);
+    if (lineIndex < numberOfLines2) {
+        strncpy(consoleText[lineIndex], text, maxTextLength2);
+    }
 }
 
-void screen::showMessage(const char* line1, const char* line2) {
+void screen::clearAllTexts() {
+    for (uint32_t lineIndex = 0; lineIndex < numberOfLines2; lineIndex++) {
+        strncpy(consoleText[lineIndex], "", maxTextLength2);
+    }
+}
+
+void screen::showMessage() {
     display::initialize();
-    uint32_t line1Width = graphics::getTextwidth(tahoma24bold, line1);
-    uint32_t line2Width = graphics::getTextwidth(tahoma24bold, line2);
-    uint32_t line1x     = ux::mid - (line1Width / 2);
-    uint32_t line2x     = ux::mid - (line2Width / 2);
-    graphics::drawText(line1x, 100, tahoma24bold, line1);
-    graphics::drawText(line2x, 150, tahoma24bold, line2);
+    for (uint32_t lineIndex = 0; lineIndex < numberOfLines2; lineIndex++) {
+        graphics::drawText(2, (182 - (20 * lineIndex)), lucidaConsole12, consoleText[lineIndex]);
+    }
     display::update();
 }
 
