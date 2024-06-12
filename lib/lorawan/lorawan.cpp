@@ -55,6 +55,9 @@ txRxCycleState LoRaWAN::state{txRxCycleState::idle};
 linearBuffer<LoRaWAN::macInOutLength> LoRaWAN::macIn;
 linearBuffer<LoRaWAN::macInOutLength> LoRaWAN::macOut;
 
+uint32_t LoRaWAN::margin{0};
+uint32_t LoRaWAN::gatewayCount{0};
+
 #pragma endregion
 #pragma region Global Objects & Variables
 
@@ -827,10 +830,11 @@ void LoRaWAN::removeNonStickyMacStuff() {
 }
 
 void LoRaWAN::processLinkCheckAnswer() {
-    constexpr uint32_t linkCheckAnswerLength{3};                                                                                        // commandId, margin, GwCnt
-    uint8_t margin       = macIn[1];                                                                                                    // margin : [0..254] = value in dB above the demodulation floor -> the higher the better,  margin [255] = reserved
-    uint8_t gatewayCount = macIn[2];                                                                                                    // GwCnt : number of gateways that successfully received the last uplink
-    macIn.consume(linkCheckAnswerLength);                                                                                               // consume all bytes
+    constexpr uint32_t linkCheckAnswerLength{3};        // commandId, margin, GwCnt
+    margin       = macIn[1];                            // margin : [0..254] = value in dB above the demodulation floor -> the higher the better,  margin [255] = reserved
+    gatewayCount = macIn[2];                            // GwCnt : number of gateways that successfully received the last uplink
+    macIn.consume(linkCheckAnswerLength);               // consume all bytes
+
     logging::snprintf(logging::source::lorawanMac, "LinkCheckAnswer : margin = %d, gatewayCount = %d \n", margin, gatewayCount);        // TODO : For the time being, we just show this info in the logging. Later we could use it to show the quality of the link on the display
 }
 

@@ -67,6 +67,10 @@ class LoRaWAN {
     static void dumpDownlinkChannelRequest();
     static void dumpDeviceTimeAnswer();
 
+    static uint32_t margin;
+    static uint32_t gatewayCount;
+    static uint32_t currentDataRateIndex;
+
 #ifndef unitTesting
   private:
 #endif
@@ -80,7 +84,6 @@ class LoRaWAN {
     static frameCount uplinkFrameCount;
     static frameCount downlinkFrameCount;
     static dataRates theDataRates;
-    static uint32_t currentDataRateIndex;
     static uint32_t rx1DataRateOffset;
     static uint32_t rx2DataRateIndex;
     static uint32_t rx2FrequencyInHz;

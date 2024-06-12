@@ -284,9 +284,13 @@ void mainController::showBootScreen2() {
     // snprintf(tmpString, screen::maxTextLength2, "MuMo %s", version::getIsVersionAsString());
     screen::clearAllTexts();
     screen::setText(0, "network OK");
-    screen::setText(1, "SF7");
-    screen::setText(2, "SNR : 12.3 dB");
+    snprintf(tmpString, screen::maxTextLength2, "DataRate %u", LoRaWAN::currentDataRateIndex);
+    screen::setText(1, tmpString);
+    snprintf(tmpString, screen::maxTextLength2, "Margin %u", LoRaWAN::margin);
+    screen::setText(2, tmpString);
+    snprintf(tmpString, screen::maxTextLength2, "Gateways %u", LoRaWAN::gatewayCount);
+    screen::setText(3, tmpString);
     time_t localTime = realTimeClock::get();
-    screen::setText(3, ctime(&localTime));
+    screen::setText(4, ctime(&localTime));
     screen::show(screenType::message);
 }
