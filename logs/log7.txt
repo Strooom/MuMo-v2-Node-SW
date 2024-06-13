@@ -1,4 +1,0 @@
-after sending first uplink from mumo-v2-000 to LNS, we received this downlink
-
-D1D4A234EDC5C3D2F836C6E9F90D071F16C5D7939F1D6130DB91DE149749606A11988A
-

@@ -20,14 +20,16 @@
 
 eepromType selectedEepromType{eepromType::BR24G512};
 uint8_t selectedDisplayType{0};
-batteryType selectedBatteryType{batteryType::alkaline_1200mAh};
+bool resetBatteryType{false};
+batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
 
-bool overwriteExistingLoRaWANConfig{true};
+bool overwriteExistingLoRaWANConfig{false};
 uint32_t toBeDevAddr            = 0x260B509F;
 const char toBeApplicationKey[] = "8D4C447250E491DCA4072E5EC76A9A46";
 const char toBeNetworkKey[]     = "A691F59651352C2CCDF03286E2A5BA8B";
-bool resetLoRaWANStateAndChannels{true};
-bool eraseMeasurements{false};
+bool resetLoRaWANState{true};
+bool resetLoRaWANChannels{true};
+bool eraseMeasurementsInEeprom{false};
 
 // #######################################################
 
@@ -47,8 +49,10 @@ void initializeDisplayType() {
 }
 
 void initializeBatteryType() {
+    if (resetBatteryType) {
     settingsCollection::save(static_cast<uint8_t>(selectedBatteryType), settingsCollection::settingIndex::batteryType);
     TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedBatteryType), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
+    }
 }
 
 void initializeEepromType() {
@@ -90,38 +94,40 @@ void initializeLorawanConfig() {
 }
 
 void initializeLorawanState() {
-    LoRaWAN::currentDataRateIndex = 5;
-    LoRaWAN::saveState();
-    LoRaWAN::restoreState();
+    if (resetLoRaWANState) {
+        LoRaWAN::currentDataRateIndex = 5;
+        LoRaWAN::saveState();
+        LoRaWAN::restoreState();
 
-    // TODO : make this config dependent on the setting of the resetLoRaWANStateAndChannels flag
-
-    TEST_ASSERT_EQUAL_UINT32(5, LoRaWAN::currentDataRateIndex);
-    TEST_ASSERT_EQUAL_UINT32(0, LoRaWAN::rx1DataRateOffset);
-    TEST_ASSERT_EQUAL_UINT32(3, LoRaWAN::rx2DataRateIndex);
-    TEST_ASSERT_EQUAL_UINT32(1, LoRaWAN::rx1DelayInSeconds);
-    TEST_ASSERT_EQUAL_UINT32(1, LoRaWAN::uplinkFrameCount.asUint32);
-    TEST_ASSERT_EQUAL_UINT32(0, LoRaWAN::downlinkFrameCount.asUint32);
+        TEST_ASSERT_EQUAL_UINT32(5, LoRaWAN::currentDataRateIndex);
+        TEST_ASSERT_EQUAL_UINT32(0, LoRaWAN::rx1DataRateOffset);
+        TEST_ASSERT_EQUAL_UINT32(3, LoRaWAN::rx2DataRateIndex);
+        TEST_ASSERT_EQUAL_UINT32(1, LoRaWAN::rx1DelayInSeconds);
+        TEST_ASSERT_EQUAL_UINT32(1, LoRaWAN::uplinkFrameCount.asUint32);
+        TEST_ASSERT_EQUAL_UINT32(0, LoRaWAN::downlinkFrameCount.asUint32);
+    }
 }
 
 void initializeLorawanChannels() {
-    LoRaWAN::saveChannels();
-    LoRaWAN::restoreChannels();
+    if (resetLoRaWANChannels) {
+        LoRaWAN::saveChannels();
+        LoRaWAN::restoreChannels();
 
-    // TODO : make this config dependent on the setting of the resetLoRaWANStateAndChannels flag
+        // TODO : make this config dependent on the setting of the resetLoRaWANStateAndChannels flag
 
-    TEST_ASSERT_EQUAL_UINT32(868'100'000U, loRaTxChannelCollection::channel[0].frequencyInHz);
-    TEST_ASSERT_EQUAL_UINT32(868'300'000U, loRaTxChannelCollection::channel[1].frequencyInHz);
-    TEST_ASSERT_EQUAL_UINT32(868'500'000U, loRaTxChannelCollection::channel[2].frequencyInHz);
+        TEST_ASSERT_EQUAL_UINT32(868'100'000U, loRaTxChannelCollection::channel[0].frequencyInHz);
+        TEST_ASSERT_EQUAL_UINT32(868'300'000U, loRaTxChannelCollection::channel[1].frequencyInHz);
+        TEST_ASSERT_EQUAL_UINT32(868'500'000U, loRaTxChannelCollection::channel[2].frequencyInHz);
 
-    for (auto index = 3U; index < static_cast<uint32_t>(loRaTxChannelCollection::maxNmbrChannels); index++) {
-        TEST_ASSERT_EQUAL_UINT32(0U, loRaTxChannelCollection::channel[index].frequencyInHz);
+        for (auto index = 3U; index < static_cast<uint32_t>(loRaTxChannelCollection::maxNmbrChannels); index++) {
+            TEST_ASSERT_EQUAL_UINT32(0U, loRaTxChannelCollection::channel[index].frequencyInHz);
+        }
+        TEST_ASSERT_EQUAL(869525000U, LoRaWAN::rx2FrequencyInHz);
     }
-    TEST_ASSERT_EQUAL(869525000U, LoRaWAN::rx2FrequencyInHz);
 }
 
 void eraseMeasurementsInEeprom() {
-    if (eraseMeasurements) {
+    if (eraseMeasurementsInEeprom) {
         measurementCollection::eraseAll();
     }
 }

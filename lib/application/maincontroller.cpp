@@ -3,32 +3,31 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
-#define noTransmit
-#include <stdio.h>           // snprintf
-#include <inttypes.h>        // for PRIu32
-#include <maincontroller.hpp>
+// #define noTransmit
 #include <applicationevent.hpp>
-#include <circularbuffer.hpp>
-#include <power.hpp>
-#include <gpio.hpp>
-#include <sensordevicecollection.hpp>
-#include <lorawan.hpp>
-#include <display.hpp>
-#include <graphics.hpp>
-#include <screen.hpp>
-#include <realtimeclock.hpp>
-// #include <linearbuffer.hpp>
-#include <version.hpp>
-#include <buildinfo.hpp>
 #include <battery.hpp>
 #include <bme680.hpp>
-#include <tsl2591.hpp>
-#include <settingscollection.hpp>
-#include <measurementcollection.hpp>
-// #include <aeskey.hpp>
-// #include <datarate.hpp>
-#include <maccommand.hpp>
+#include <buildinfo.hpp>
+#include <circularbuffer.hpp>
+#include <display.hpp>
+#include <gpio.hpp>
+#include <graphics.hpp>
+#include <hexascii.hpp>
+#include <inttypes.h>        // for PRIu32
 #include <logging.hpp>
+#include <lorawan.hpp>
+#include <maccommand.hpp>
+#include <maincontroller.hpp>
+#include <measurementcollection.hpp>
+#include <power.hpp>
+#include <realtimeclock.hpp>
+#include <screen.hpp>
+#include <sensordevicecollection.hpp>
+#include <settingscollection.hpp>
+#include <stdio.h>        // snprintf
+#include <tsl2591.hpp>
+#include <uniqueid.hpp>
+#include <version.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -55,14 +54,14 @@ void mainController::initialize() {
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 4);
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 4);
 
+    gpio::enableGpio(gpio::group::rfControl);
+    LoRaWAN::initialize();
+
     gpio::enableGpio(gpio::group::spiDisplay);
     showBootScreen1();
 
     measurementCollection::initialize();
     measurementCollection::findMeasurementsInEeprom();
-
-    gpio::enableGpio(gpio::group::rfControl);
-    LoRaWAN::initialize();
 }
 
 void mainController::handleEvents() {
@@ -74,6 +73,7 @@ void mainController::handleEvents() {
             case mainState::waitForNetworkRequest:
                 switch (theEvent) {
                     case applicationEvent::realTimeClockTick:
+                        showBootScreen2();
                         LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
                         LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
                         LoRaWAN::sendUplink(0, nullptr, 0);
@@ -93,6 +93,7 @@ void mainController::handleEvents() {
 
                     case applicationEvent::realTimeClockTick:
                         // decrease DataRate and try again
+                        showBootScreen2();
                         LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
                         LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
                         LoRaWAN::sendUplink(0, nullptr, 0);
@@ -209,7 +210,8 @@ void mainController::run() {
             break;
 
         case mainState::idle:
-            if (!power::hasUsbPower()) {
+            if (false) {
+                //            if (!power::hasUsbPower()) {
                 logging::snprintf("goSleep...\n");
                 gpio::disableGpio(gpio::group::spiDisplay);
                 gpio::disableGpio(gpio::group::writeProtect);
@@ -222,7 +224,7 @@ void mainController::run() {
 
                 sleep();
 
-                gpio::disableGpio(gpio::group::rfControl);
+                gpio::enableGpio(gpio::group::rfControl);
                 gpio::enableGpio(gpio::group::usbPresent);
 #ifndef generic
                 MX_I2C2_Init();
@@ -245,14 +247,41 @@ void mainController::goTo(mainState newState) {
 }
 
 void mainController::sleep() {
+    // Prepare before going to sleep
+    switch (state) {
+        case mainState::idle:
+            break;
+
+        default:
+            break;
+    }
+    // Sleep mode depending on state we are in
+    switch (state) {
+        case mainState::idle:
 #ifndef generic
-    uint32_t currentPriMaskState = __get_PRIMASK();
-    __disable_irq();
-    HAL_SuspendTick();
-    HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
-    HAL_ResumeTick();
-    __set_PRIMASK(currentPriMaskState);
+        {
+            uint32_t currentPriMaskState = __get_PRIMASK();
+            __disable_irq();
+            HAL_SuspendTick();
+            HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
+            HAL_ResumeTick();
+            __set_PRIMASK(currentPriMaskState);
+        }
 #endif
+        break;
+
+        default:
+            break;
+    }
+
+    // Repair after waking up
+    switch (state) {
+        case mainState::idle:
+            break;
+
+        default:
+            break;
+    }
 }
 
 void mainController::showBootScreen1() {
@@ -262,30 +291,64 @@ void mainController::showBootScreen1() {
     screen::setText(0, tmpString);
     screen::setText(1, "CC 4.0 BY-NC-SA");
     screen::setText(2, buildInfo::buildTimeStamp);
-    screen::setText(3, toString(battery::type));
+    hexAscii::uint64ToHexString(tmpString, uniqueId::get());
+    screen::setText(3, tmpString);
+    screen::setText(4, toString(battery::type));
 
     for (uint32_t sensorDeviceIndex = 2; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
         if (sensorDeviceCollection::isValid(sensorDeviceIndex)) {
-            screen::setText(2U + sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
+            screen::setText(3U + sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
         }
     }
-
-    screen::setText(9, "network check...");
     screen::show(screenType::message);
 }
 
 void mainController::showBootScreen2() {
     char tmpString[screen::maxTextLength2 + 1];
-    // snprintf(tmpString, screen::maxTextLength2, "MuMo %s", version::getIsVersionAsString());
     screen::clearAllTexts();
-    screen::setText(0, "network OK");
-    snprintf(tmpString, screen::maxTextLength2, "DataRate : %" PRIu32, LoRaWAN::currentDataRateIndex);
+    uint16_t devAddrEnd = LoRaWAN::DevAddr.asUint8[0] + (LoRaWAN::DevAddr.asUint8[1] << 8);
+    uint16_t applicationKeyEnd = LoRaWAN::applicationKey.asBytes()[15] + (LoRaWAN::applicationKey.asBytes()[14] << 8);
+    uint16_t networkKeyEnd     = LoRaWAN::networkKey.asBytes()[15] + (LoRaWAN::networkKey.asBytes()[14] << 8);
+    snprintf(tmpString, screen::maxTextLength2, "%04X %04X %04X", devAddrEnd, applicationKeyEnd, networkKeyEnd);
+    screen::setText(0, tmpString);
+    snprintf(tmpString, screen::maxTextLength2, "DR:%u rx1D:%u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex), static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
     screen::setText(1, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "Margin : %" PRIu32, LoRaWAN::margin);
+
+    if (LoRaWAN::gatewayCount == 0) {
+        screen::setText(6, "connecting 1/n...");
+    } else {
+        screen::setText(6, "connected! 1/n");
+        snprintf(tmpString, screen::maxTextLength2, "Margin : %" PRIu32, LoRaWAN::margin);
+        screen::setText(7, tmpString);
+        snprintf(tmpString, screen::maxTextLength2, "Gateways : %" PRIu32, LoRaWAN::gatewayCount);
+        screen::setText(8, tmpString);
+        time_t localTime = realTimeClock::get();
+        screen::setText(9, ctime(&localTime));
+        screen::show(screenType::message);
+    }
+}
+
+void mainController::showBootScreen3() {
+    char tmpString[screen::maxTextLength2 + 1];
+    screen::clearAllTexts();
+
+    hexAscii::uint64ToHexString(tmpString, uniqueId::get());
+    screen::setText(0, tmpString);
+    snprintf(tmpString, screen::maxTextLength2, "%08X:%04X:%04X", 0, 0, 0);
+    screen::setText(1, tmpString);
+    snprintf(tmpString, screen::maxTextLength2, "DR%u:rx1D%u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex), 0);
     screen::setText(2, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "Gateways : %" PRIu32, LoRaWAN::gatewayCount);
-    screen::setText(3, tmpString);
-    time_t localTime = realTimeClock::get();
-    screen::setText(4, ctime(&localTime));
-    screen::show(screenType::message);
+
+    if (LoRaWAN::gatewayCount == 0) {
+        screen::setText(6, "connecting 1/n...");
+    } else {
+        screen::setText(6, "connected! 1/n");
+        snprintf(tmpString, screen::maxTextLength2, "Margin : %" PRIu32, LoRaWAN::margin);
+        screen::setText(7, tmpString);
+        snprintf(tmpString, screen::maxTextLength2, "Gateways : %" PRIu32, LoRaWAN::gatewayCount);
+        screen::setText(8, tmpString);
+        time_t localTime = realTimeClock::get();
+        screen::setText(9, ctime(&localTime));
+        screen::show(screenType::message);
+    }
 }

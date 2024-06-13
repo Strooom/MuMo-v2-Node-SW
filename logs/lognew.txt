@@ -1,0 +1,315 @@
+logging : 
+  sources      : applicationEvents sensorData lorawanData lorawanMac error criticalError 
+  destinations : debugProbe 
+https://github.com/Strooom - v0.2.0
+local development build - 2024-Jun-13 09:51:49
+Creative Commons 4.0 - BY-NC-SA
+Device UID:  0080E11505474C71
+RTC initialized to buildTime
+UTC = Thu Jun 13 09:51:49 2024
+LoRaWAN Config :
+  devAddr        = 0x260BC71B
+  applicationKey = ECF61A5B18BFBF81EF4FA7DBA764CE8B
+  networkKey     = 34CE07A8DDE81F4C29A0AED7B4F1D7BB
+LoRaWAN State :
+  uplinkFrameCount   = 11
+  downlinkFrameCount = 0
+  dataRateIndex      = 5
+  rx1Delay           = 1 [s]
+realTimeClockTick[3] in waitForNetworkRequest[0]
+Uplink :
+  dataRate = 5
+  spreadingFactor = SF7
+  channel = 0
+  frequency = 868100000
+
+LoRaWAN msg :
+[000]      : MacHeader 40 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 0B 00
+[008]      : FramePort 00
+[009..010] : FramePayload[2]  64 CE 
+[011..015] : MIC B3 1B 95 04
+
+MainController stateChange : waitForNetworkRequest[0] -> waitForNetworkResponse[1]
+lowPowerTimerExpired[4] in waitForNetworkResponse[1]
+sx126xTxComplete[8] in waitForNetworkResponse[1]
+lowPowerTimerExpired[4] in waitForNetworkResponse[1]
+sx126xTimeout[10] in waitForNetworkResponse[1]
+lowPowerTimerExpired[4] in waitForNetworkResponse[1]
+sx126xTimeout[10] in waitForNetworkResponse[1]
+realTimeClockTick[3] in waitForNetworkResponse[1]
+Uplink :
+  dataRate = 5
+  spreadingFactor = SF7
+  channel = 2
+  frequency = 868500000
+
+LoRaWAN msg :
+[000]      : MacHeader 40 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 0C 00
+[008]      : FramePort 00
+[009..010] : FramePayload[2]  F4 1B 
+[011..015] : MIC D1 72 56 53
+
+lowPowerTimerExpired[4] in waitForNetworkResponse[1]
+sx126xTxComplete[8] in waitForNetworkResponse[1]
+lowPowerTimerExpired[4] in waitForNetworkResponse[1]
+sx126xTimeout[10] in waitForNetworkResponse[1]
+lowPowerTimerExpired[4] in waitForNetworkResponse[1]
+sx126xTimeout[10] in waitForNetworkResponse[1]
+realTimeClockTick[3] in waitForNetworkResponse[1]
+Uplink :
+  dataRate = 5
+  spreadingFactor = SF7
+  channel = 2
+  frequency = 868500000
+
+LoRaWAN msg :
+[000]      : MacHeader 40 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 0D 00
+[008]      : FramePort 00
+[009..010] : FramePayload[2]  83 D7 
+[011..015] : MIC 0A C2 46 59
+
+lowPowerTimerExpired[4] in waitForNetworkResponse[1]
+sx126xTxComplete[8] in waitForNetworkResponse[1]
+lowPowerTimerExpired[4] in waitForNetworkResponse[1]
+sx126xRxComplete[9] in waitForNetworkResponse[1]
+Received LoRaWAN  msg in Rx1
+LoRaWAN msg :
+[000]      : MacHeader 60 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 00 00
+[008]      : FramePort 00
+[009..054] : FramePayload[46]  D9 D8 F6 0C 3A 7B C2 DA B6 B7 95 3C 50 61 56 98 5E 8D 56 7B C6 9D D9 61 59 49 BF 95 7F 10 E3 62 78 1A 52 72 04 D0 DB 3A F3 16 38 09 53 DD 
+[055..059] : MIC B3 A9 26 7D
+
+receivedFramecount = 0, lastFramecount = 0, guessedFramecount = 0
+[009..054] : FramePayload[46]  0D 0F 86 95 53 B9 02 10 01 05 03 D2 AD 84 07 03 18 4F 84 50 07 04 E8 56 84 50 07 05 B8 5E 84 50 07 06 88 66 84 50 07 07 58 6E 84 50 08 05 
+MAC input [46] = 0D 0F 86 95 53 B9 02 10 01 05 03 D2 AD 84 07 03 18 4F 84 50 07 04 E8 56 84 50 07 05 B8 5E 84 50 07 06 88 66 84 50 07 07 58 6E 84 50 08 05 
+received UTC = Thu Jun 13 10:01:33 2024
+RTC set to Thu Jun 13 10:01:33 2024
+LinkCheckAnswer : margin = 16, gatewayCount = 1 
+ReceiveParameterSetupRequest : rx1DataRateOffset = 0, rx2DataRateIndex = 3, rx2Frequency = 869525000 Hz 
+ReceiveParameterSetupAnswer : 0x07 
+NewChannelRequest for channel 3, frequency = 867100000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+NewChannelRequest for channel 4, frequency = 867300000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+NewChannelRequest for channel 5, frequency = 867500000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+NewChannelRequest for channel 6, frequency = 867700000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+NewChannelRequest for channel 7, frequency = 867900000, minimumDataRate = 0, maximumDataRate = 5 
+NewChannelAnswer : 0x03 
+ReceiveTimingSetupRequest : rx1Delay set to 5
+ReceiveTimingSetupAnswer 
+MAC output [13] = 05 07 07 03 07 03 07 03 07 03 07 03 08 
+downlinkMACReceived[6] in waitForNetworkResponse[1]
+MainController stateChange : waitForNetworkResponse[1] -> idle[2]
+lowPowerTimerExpired[4] in idle[2]
+lowPowerTimerExpired[4] in idle[2]
+realTimeClockTick[3] in idle[2]
+MainController stateChange : idle[2] -> measuring[3]
+MainController stateChange : measuring[3] -> logging[4]
+voltage = 3.4 V
+temperature = 21.7 ~C
+relativeHumidity = 44 %RH
+visibleLight = 1 lux
+--> 25 bytes to transmit
+Uplink :
+  dataRate = 5
+  spreadingFactor = SF7
+  channel = 2
+  frequency = 868500000
+
+LoRaWAN msg :
+[000]      : MacHeader 40 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 0D
+[006..007] : FCnt 0E 00
+[008..021] : FrameOptions 05 07 07 03 07 03 07 03 07 03 07 03 08 
+[021]      : FramePort 11
+[022..046] : FramePayload[25]  6A 1A 7B 9A 7B 15 0A 14 76 DB 8D 6E D0 9C A8 4E 55 B9 37 E6 33 CB DC 38 8B 
+[047..051] : MIC 85 46 7A D4
+
+MainController stateChange : logging[4] -> networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xTxComplete[8] in networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xRxComplete[9] in networking[6]
+Received LoRaWAN  msg in Rx1
+LoRaWAN msg :
+[000]      : MacHeader 60 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 01 00
+[008..012] : MIC F7 C8 AC 85
+
+receivedFramecount = 1, lastFramecount = 0, guessedFramecount = 1
+MAC input [0] = 
+MAC output [0] = 
+downlinkMACReceived[6] in networking[6]
+MainController stateChange : networking[6] -> idle[2]
+lowPowerTimerExpired[4] in idle[2]
+lowPowerTimerExpired[4] in idle[2]
+realTimeClockTick[3] in idle[2]
+realTimeClockTick[3] in idle[2]
+realTimeClockTick[3] in idle[2]
+realTimeClockTick[3] in idle[2]
+MainController stateChange : idle[2] -> measuring[3]
+MainController stateChange : measuring[3] -> logging[4]
+voltage = 3.4 V
+temperature = 21.8 ~C
+relativeHumidity = 44 %RH
+visibleLight = 1 lux
+--> 25 bytes to transmit
+Uplink :
+  dataRate = 5
+  spreadingFactor = SF7
+  channel = 0
+  frequency = 868100000
+
+LoRaWAN msg :
+[000]      : MacHeader 40 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 0F 00
+[008]      : FramePort 11
+[009..033] : FramePayload[25]  E0 85 11 27 BA 7E F8 D4 2D 2A 78 33 F8 3F B0 F0 66 06 71 19 0E 6A 78 87 6E 
+[034..038] : MIC 80 89 75 9A
+
+MainController stateChange : logging[4] -> networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xTxComplete[8] in networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xTimeout[10] in networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xTimeout[10] in networking[6]
+MainController stateChange : networking[6] -> idle[2]
+realTimeClockTick[3] in idle[2]
+realTimeClockTick[3] in idle[2]
+realTimeClockTick[3] in idle[2]
+realTimeClockTick[3] in idle[2]
+MainController stateChange : idle[2] -> measuring[3]
+MainController stateChange : measuring[3] -> logging[4]
+voltage = 3.4 V
+temperature = 21.7 ~C
+relativeHumidity = 44 %RH
+visibleLight = 1 lux
+--> 25 bytes to transmit
+Uplink :
+  dataRate = 5
+  spreadingFactor = SF7
+  channel = 7
+  frequency = 867900000
+
+LoRaWAN msg :
+[000]      : MacHeader 40 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 10 00
+[008]      : FramePort 11
+[009..033] : FramePayload[25]  7F 6E 97 39 A5 B6 73 8D 53 1C D6 37 93 9D 16 1A D2 0E 3E 43 00 D8 87 AF D1 
+[034..038] : MIC 46 B1 E7 91
+
+MainController stateChange : logging[4] -> networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xTxComplete[8] in networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xTimeout[10] in networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xTimeout[10] in networking[6]
+MainController stateChange : networking[6] -> idle[2]
+realTimeClockTick[3] in idle[2]
+realTimeClockTick[3] in idle[2]
+realTimeClockTick[3] in idle[2]
+realTimeClockTick[3] in idle[2]
+MainController stateChange : idle[2] -> measuring[3]
+MainController stateChange : measuring[3] -> logging[4]
+voltage = 3.4 V
+temperature = 21.8 ~C
+relativeHumidity = 44 %RH
+visibleLight = 0 lux
+--> 25 bytes to transmit
+Uplink :
+  dataRate = 5
+  spreadingFactor = SF7
+  channel = 5
+  frequency = 867500000
+
+LoRaWAN msg :
+[000]      : MacHeader 40 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 00
+[006..007] : FCnt 11 00
+[008]      : FramePort 11
+[009..033] : FramePayload[25]  AF 38 34 69 60 44 C3 AF 70 BD A7 76 24 20 6F 54 BF D3 E8 F2 54 3C E6 85 9F 
+[034..038] : MIC E9 5F 44 CB
+
+MainController stateChange : logging[4] -> networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xTxComplete[8] in networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xRxComplete[9] in networking[6]
+Received LoRaWAN  msg in Rx1
+LoRaWAN msg :
+[000]      : MacHeader 60 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 01
+[006..007] : FCnt 02 00
+[008..009] : FrameOptions 06 
+[009..013] : MIC A2 2E 1A 03
+
+receivedFramecount = 2, lastFramecount = 1, guessedFramecount = 2
+MAC input [1] = 06 
+DeviceStatusRequest 
+DeviceStatusAnswer : 0xFF, 0x0A 
+MAC output [3] = 06 FF 0A 
+downlinkMACReceived[6] in networking[6]
+MainController stateChange : networking[6] -> idle[2]
+lowPowerTimerExpired[4] in idle[2]
+lowPowerTimerExpired[4] in idle[2]
+realTimeClockTick[3] in idle[2]
+realTimeClockTick[3] in idle[2]
+realTimeClockTick[3] in idle[2]
+realTimeClockTick[3] in idle[2]
+MainController stateChange : idle[2] -> measuring[3]
+MainController stateChange : measuring[3] -> logging[4]
+voltage = 3.4 V
+temperature = 21.8 ~C
+relativeHumidity = 44 %RH
+visibleLight = 0 lux
+--> 25 bytes to transmit
+Uplink :
+  dataRate = 5
+  spreadingFactor = SF7
+  channel = 7
+  frequency = 867900000
+
+LoRaWAN msg :
+[000]      : MacHeader 40 
+[001..004] : DevAddr 1B C7 0B 26
+[005]      : FCtrl 03
+[006..007] : FCnt 12 00
+[008..011] : FrameOptions 06 FF 0A 
+[011]      : FramePort 11
+[012..036] : FramePayload[25]  65 18 26 4A CC 6D 5B 8F EF EC 74 7F 13 45 E2 E6 67 B6 FE CB 66 A7 ED 81 A4 
+[037..041] : MIC 71 A4 A5 17
+
+MainController stateChange : logging[4] -> networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xTxComplete[8] in networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xTimeout[10] in networking[6]
+lowPowerTimerExpired[4] in networking[6]
+sx126xTimeout[10] in networking[6]
+MainController stateChange : networking[6] -> idle[2]
+realTimeClockTick[3] in idle[2]

@@ -67,9 +67,17 @@ class LoRaWAN {
     static void dumpDownlinkChannelRequest();
     static void dumpDeviceTimeAnswer();
 
+    static void correctDevAddrEndianness();
+
     static uint32_t margin;
     static uint32_t gatewayCount;
     static uint32_t currentDataRateIndex;
+    static deviceAddress DevAddr;
+    static aesKey applicationKey;
+    static aesKey networkKey;
+    static frameCount uplinkFrameCount;
+    static frameCount downlinkFrameCount;
+    static uint32_t rx1DelayInSeconds;
 
 #ifndef unitTesting
   private:
@@ -78,17 +86,11 @@ class LoRaWAN {
     static txRxCycleState state;
     static void goTo(txRxCycleState newState);
 
-    static deviceAddress DevAddr;
-    static aesKey applicationKey;
-    static aesKey networkKey;
-    static frameCount uplinkFrameCount;
-    static frameCount downlinkFrameCount;
     static dataRates theDataRates;
     static uint32_t rx1DataRateOffset;
     static uint32_t rx2DataRateIndex;
     static uint32_t rx2FrequencyInHz;
     static loRaTxChannelCollection txChannels;
-    static uint32_t rx1DelayInSeconds;
     static constexpr uint32_t maxRandomDelayBeforeTx{4096U};
 
     // #################################################

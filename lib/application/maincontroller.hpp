@@ -27,4 +27,6 @@ class mainController {
 
     static void showBootScreen1();
     static void showBootScreen2();
+    static void showBootScreen3();
+
 };

@@ -1,5 +1,7 @@
 // This is a variant returning an array-object, more aligned to the object model in the device
 // test-vector from device : 04452E606608F6284440090000803F10B6ECB041181F854B40
+// test-vector from device : 04452E606608F6284440090000803F10B6ECB041181F854B4002452E606608F6284440090000803F
+
 
 
 

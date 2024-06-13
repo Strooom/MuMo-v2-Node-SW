@@ -30,7 +30,7 @@ frameCount LoRaWAN::uplinkFrameCount(1);
 frameCount LoRaWAN::downlinkFrameCount(0);
 
 dataRates LoRaWAN::theDataRates;
-uint32_t LoRaWAN::currentDataRateIndex{0};
+uint32_t LoRaWAN::currentDataRateIndex{5};
 loRaTxChannelCollection LoRaWAN::txChannels;
 uint32_t LoRaWAN::rx1DelayInSeconds{1};
 uint32_t LoRaWAN::rx1DataRateOffset{0};
@@ -1173,7 +1173,7 @@ void LoRaWAN::dumpConfig() {
         return;
     }
     logging::snprintf("LoRaWAN Config :\n");
-    logging::snprintf("  devAddr        = 0x%04X\n", DevAddr.asUint32);
+    logging::snprintf("  devAddr        = 0x%04X\n", DevAddr.asUint32); // TODO : I think this should be 0x%08X
     char tmpKeyAsHexAscii[33];
     hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, applicationKey.asBytes(), 16);
     logging::snprintf("  applicationKey = %s\n", tmpKeyAsHexAscii);
@@ -1284,4 +1284,15 @@ void LoRaWAN::dumpDeviceTimeAnswer() {}
 
 void LoRaWAN::appendMacCommand(macCommand theMacCommand) {
     LoRaWAN::macOut.append(static_cast<uint8_t>(theMacCommand));
+}
+
+// This function can be removed once all devices with wrong DevAddr are updated
+
+void LoRaWAN::correctDevAddrEndianness() {
+    if ((DevAddr.asUint8[0] == 0x26) && (DevAddr.asUint8[1] == 0x0B)) {
+        uint32_t oldAddress = DevAddr.asUint32;
+        uint32_t newAddress = swapLittleBigEndian(oldAddress);
+        DevAddr.asUint32    = newAddress;
+        saveConfig();
+    }
 }
