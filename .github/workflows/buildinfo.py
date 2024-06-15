@@ -36,7 +36,7 @@ print ("\033[93;1mNumber of Commits ahead : " + str(number_of_commits_ahead) + "
 
 # determine the build timstamp
 
-build_timestamp = datetime.now(timezone.utc).strftime("%Y-%b-%d %H:%M:%S")
+build_timestamp = datetime.now(timezone.utc).strftime("%a %b %d %H:%M:%S %Y")
 build_epoch = int(datetime.now(timezone.utc).timestamp())
 print ("\033[93;1mBuild Timestamp UTC     : " + build_timestamp + "\033[0m")
 print ("\033[93;1mBuild Timestamp Epoch   : " + str(build_epoch) + "\033[0m")

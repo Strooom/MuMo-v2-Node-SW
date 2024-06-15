@@ -13,7 +13,6 @@
 #include <gpio.hpp>
 #include <graphics.hpp>
 #include <hexascii.hpp>
-#include <inttypes.h>        // for PRIu32
 #include <logging.hpp>
 #include <lorawan.hpp>
 #include <maccommand.hpp>
@@ -35,11 +34,11 @@ extern I2C_HandleTypeDef hi2c2;
 void MX_I2C2_Init(void);
 #endif
 
-mainState mainController::state{mainState::waitForNetworkRequest};
+mainState mainController::state{mainState::boot};
+uint32_t mainController::requestCounter{0};
+uint32_t mainController::answerCounter{0};
+
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
-extern font roboto36bold;
-extern font tahoma24bold;
-extern font lucidaConsole12;
 
 void mainController::initialize() {
     if (nonVolatileStorage::isPresent()) {
@@ -58,7 +57,7 @@ void mainController::initialize() {
     LoRaWAN::initialize();
 
     gpio::enableGpio(gpio::group::spiDisplay);
-    showBootScreen1();
+    showDeviceInfo();
 
     measurementCollection::initialize();
     measurementCollection::findMeasurementsInEeprom();
@@ -70,33 +69,42 @@ void mainController::handleEvents() {
         logging::snprintf(logging::source::applicationEvents, "%s[%u] in %s[%u]\n", toString(theEvent), static_cast<uint8_t>(theEvent), toString(state), static_cast<uint32_t>(state));
 
         switch (state) {
-            case mainState::waitForNetworkRequest:
+            case mainState::boot:
                 switch (theEvent) {
                     case applicationEvent::realTimeClockTick:
-                        showBootScreen2();
+                        showLoRaWanConfig();
+                        requestCounter++;
                         LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
                         LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
                         LoRaWAN::sendUplink(0, nullptr, 0);
-                        goTo(mainState::waitForNetworkResponse);
+                        goTo(mainState::networkCheck);
                         break;
                     default:
                         break;
                 }
                 break;
 
-            case mainState::waitForNetworkResponse:
+            case mainState::networkCheck:
                 switch (theEvent) {
                     case applicationEvent::downlinkMacCommandReceived:
-                        showBootScreen2();
-                        goTo(mainState::idle);
+                        answerCounter++;
+                        showLoRaWanStatus();
+                        if (answerCounter >= minNmbrAnswers) {
+                            goTo(mainState::idle);
+                        }
                         break;
 
                     case applicationEvent::realTimeClockTick:
-                        // decrease DataRate and try again
-                        showBootScreen2();
-                        LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
-                        LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
-                        LoRaWAN::sendUplink(0, nullptr, 0);
+                        requestCounter++;
+                        // TODO : if we don't get answers, decrease DataRate and try again
+                        showLoRaWanStatus();
+                        if (requestCounter >= maxNmbrRequests) {
+                            goTo(mainState::networkError);
+                        } else {
+                            LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
+                            LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
+                            LoRaWAN::sendUplink(0, nullptr, 0);
+                        }
                         break;
 
                     case applicationEvent::lowPowerTimerExpired:
@@ -284,7 +292,7 @@ void mainController::sleep() {
     }
 }
 
-void mainController::showBootScreen1() {
+void mainController::showDeviceInfo() {
     char tmpString[screen::maxTextLength2 + 1];
     screen::clearAllTexts();
     snprintf(tmpString, screen::maxTextLength2, "MuMo %s", version::getIsVersionAsString());
@@ -303,52 +311,37 @@ void mainController::showBootScreen1() {
     screen::show(screenType::message);
 }
 
-void mainController::showBootScreen2() {
+void mainController::showLoRaWanConfig() {
     char tmpString[screen::maxTextLength2 + 1];
     screen::clearAllTexts();
-    uint16_t devAddrEnd = LoRaWAN::DevAddr.asUint8[0] + (LoRaWAN::DevAddr.asUint8[1] << 8);
+    uint16_t devAddrEnd        = LoRaWAN::DevAddr.asUint8[0] + (LoRaWAN::DevAddr.asUint8[1] << 8);
     uint16_t applicationKeyEnd = LoRaWAN::applicationKey.asBytes()[15] + (LoRaWAN::applicationKey.asBytes()[14] << 8);
     uint16_t networkKeyEnd     = LoRaWAN::networkKey.asBytes()[15] + (LoRaWAN::networkKey.asBytes()[14] << 8);
     snprintf(tmpString, screen::maxTextLength2, "%04X %04X %04X", devAddrEnd, applicationKeyEnd, networkKeyEnd);
     screen::setText(0, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "DR:%u rx1D:%u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex), static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
-    screen::setText(1, tmpString);
-
-    if (LoRaWAN::gatewayCount == 0) {
-        screen::setText(6, "connecting 1/n...");
-    } else {
-        screen::setText(6, "connected! 1/n");
-        snprintf(tmpString, screen::maxTextLength2, "Margin : %" PRIu32, LoRaWAN::margin);
-        screen::setText(7, tmpString);
-        snprintf(tmpString, screen::maxTextLength2, "Gateways : %" PRIu32, LoRaWAN::gatewayCount);
-        screen::setText(8, tmpString);
-        time_t localTime = realTimeClock::get();
-        screen::setText(9, ctime(&localTime));
-        screen::show(screenType::message);
-    }
+    snprintf(tmpString, screen::maxTextLength2, "DataRate : %u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex));
+    screen::setText(2, tmpString);
+    snprintf(tmpString, screen::maxTextLength2, "rx1Delay : %u", static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
+    screen::setText(3, tmpString);
+    screen::show(screenType::message);
 }
 
-void mainController::showBootScreen3() {
+void mainController::showLoRaWanStatus() {
     char tmpString[screen::maxTextLength2 + 1];
     screen::clearAllTexts();
-
-    hexAscii::uint64ToHexString(tmpString, uniqueId::get());
+    snprintf(tmpString, screen::maxTextLength2, "requests %u", static_cast<uint8_t>(requestCounter));
     screen::setText(0, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "%08X:%04X:%04X", 0, 0, 0);
+    snprintf(tmpString, screen::maxTextLength2, "answers %u", static_cast<uint8_t>(answerCounter));
     screen::setText(1, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "DR%u:rx1D%u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex), 0);
+    snprintf(tmpString, screen::maxTextLength2, "DataRate : %u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex));
     screen::setText(2, tmpString);
-
-    if (LoRaWAN::gatewayCount == 0) {
-        screen::setText(6, "connecting 1/n...");
-    } else {
-        screen::setText(6, "connected! 1/n");
-        snprintf(tmpString, screen::maxTextLength2, "Margin : %" PRIu32, LoRaWAN::margin);
-        screen::setText(7, tmpString);
-        snprintf(tmpString, screen::maxTextLength2, "Gateways : %" PRIu32, LoRaWAN::gatewayCount);
-        screen::setText(8, tmpString);
-        time_t localTime = realTimeClock::get();
-        screen::setText(9, ctime(&localTime));
-        screen::show(screenType::message);
-    }
+    snprintf(tmpString, screen::maxTextLength2, "rx1Delay : %u", static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
+    screen::setText(3, tmpString);
+    snprintf(tmpString, screen::maxTextLength2, "Margin : %u", static_cast<uint8_t>(LoRaWAN::margin));
+    screen::setText(4, tmpString);
+    snprintf(tmpString, screen::maxTextLength2, "Gateways : %u", static_cast<uint8_t>(LoRaWAN::gatewayCount));
+    screen::setText(5, tmpString);
+    time_t localTime = realTimeClock::get();
+    screen::setText(6, ctime(&localTime));
+    screen::show(screenType::message);
 }

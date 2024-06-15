@@ -548,14 +548,14 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                     messageType receivedMessageType = decodeMessage();
                     switch (receivedMessageType) {
                         case messageType::application:
-                            // stopTimer(); I don't think this timer is needed, as we use the timer of the SX126x
+                            stopTimer();
                             processMacContents();
                             applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                             goTo(txRxCycleState::waitForRxMessageReadout);
                             return;
                             break;
                         case messageType::lorawanMac:
-                            // stopTimer();
+                            stopTimer();
                             processMacContents();
                             applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
                             goTo(txRxCycleState::idle);

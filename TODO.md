@@ -1,18 +1,21 @@
 # Short Term ToDo's
 * get LowPower working again
+  - MX_USART2_UART_Init(); MX_SPI2_Init(); MX_I2C2_Init();
+
+    MX_ADC_Init();
+    MX_AES_Init();
+    MX_RNG_Init();
+    MX_LPTIM1_Init();
+    MX_SUBGHZ_Init();
+    MX_USART1_UART_Init();
+
 * extend / improve stateMachine : according to drawing
 * deviceStatusReq doen werken met echte waarden
   - ontvangstwaarden van laatste downlink opslaan
   - batterijspanning omzetten in uint8
-* transmit timeout is fixed to 64000 and does not work for SF12.. static constexpr uint32_t transmitTimeout{64000U};
-* lowPowerTimer expired in idle ??
 * batteryVoltage seems incorrect ?? also shown with 1 decimal io 2 ??
 * wrapping of measurementsCollection : writing and reading measurements
 * erase old measurements when space needed for new ones
-* add space to characterset / driver
-
-
-
 
 
 

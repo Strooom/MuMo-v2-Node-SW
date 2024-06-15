@@ -16,7 +16,8 @@ class mainController {
     static void run();
     static void sleep();
 
-    static constexpr uint32_t nmbrUplinksWaitingForNetwork{3};
+    static constexpr uint32_t minNmbrAnswers{3};
+    static constexpr uint32_t maxNmbrRequests{8};
 
 #ifndef unitTesting
 
@@ -25,8 +26,12 @@ class mainController {
     static void goTo(mainState newState);
     static mainState state;
 
-    static void showBootScreen1();
-    static void showBootScreen2();
-    static void showBootScreen3();
+    static void showDeviceInfo();
+    static void showLoRaWanConfig();
+    static void showLoRaWanStatus();
+
+    
+    static uint32_t requestCounter;
+    static uint32_t answerCounter;
 
 };

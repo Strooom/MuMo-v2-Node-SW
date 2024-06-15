@@ -31,7 +31,7 @@ class sx126x {
     static void goSleep(sleepMode aSleepMode = sleepMode::warmStart);
     enum class standbyMode;
     static void goStandby(standbyMode aStandbyMode = standbyMode::rc);
-    static constexpr uint32_t transmitTimeout{64000U};
+    static constexpr uint32_t transmitTimeout{3 * 64000U};        // 51 bytes @ SF12 takes 2793.5 ms, so 3*64000 is a safe upper value here
     static void startTransmit(uint32_t timeOut = transmitTimeout);
     static void startReceive(uint32_t timeOut);
 

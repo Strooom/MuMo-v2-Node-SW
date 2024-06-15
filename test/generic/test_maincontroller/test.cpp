@@ -15,21 +15,39 @@ void setUp(void) {}
 void tearDown(void) {}
 
 void test_transitions_boot() {
-    TEST_ASSERT_EQUAL(mainState::waitForNetworkRequest, mainController::state);
-    mainController::handleEvents();
-    mainController::run();
-    TEST_ASSERT_EQUAL(mainState::waitForNetworkRequest, mainController::state);
-
     mainController::initialize();
-    TEST_ASSERT_EQUAL(mainState::waitForNetworkRequest, mainController::state);
+    TEST_ASSERT_EQUAL(mainState::boot, mainController::state);
+
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
     mainController::handleEvents();
-    TEST_ASSERT_EQUAL(mainState::waitForNetworkResponse, mainController::state);
-    applicationEventBuffer.push(applicationEvent::realTimeClockTick);
-    mainController::handleEvents();
+    TEST_ASSERT_EQUAL(1U, mainController::requestCounter);
+    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
+
     applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
     mainController::handleEvents();
+    TEST_ASSERT_EQUAL(1U, mainController::answerCounter);
+    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
+
+    applicationEventBuffer.push(applicationEvent::realTimeClockTick);
+    mainController::handleEvents();
+    TEST_ASSERT_EQUAL(2U, mainController::requestCounter);
+    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
+
+    applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
+    mainController::handleEvents();
+    TEST_ASSERT_EQUAL(2U, mainController::answerCounter);
+    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
+
+    applicationEventBuffer.push(applicationEvent::realTimeClockTick);
+    mainController::handleEvents();
+    TEST_ASSERT_EQUAL(3U, mainController::requestCounter);
+    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
+
+    applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
+    mainController::handleEvents();
+    TEST_ASSERT_EQUAL(3U, mainController::answerCounter);
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
+
     mainController::run();
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
     mainController::run();
@@ -95,9 +113,11 @@ void test_toString() {
     TEST_ASSERT_EQUAL_STRING("logging", toString(mainState::logging));
     TEST_ASSERT_EQUAL_STRING("displaying", toString(mainState::displaying));
     TEST_ASSERT_EQUAL_STRING("networking", toString(mainState::networking));
-    TEST_ASSERT_EQUAL_STRING("waitForNetworkRequest", toString(mainState::waitForNetworkRequest));
-    TEST_ASSERT_EQUAL_STRING("waitForNetworkResponse", toString(mainState::waitForNetworkResponse));
+    TEST_ASSERT_EQUAL_STRING("boot", toString(mainState::boot));
+    TEST_ASSERT_EQUAL_STRING("networkCheck", toString(mainState::networkCheck));
+    TEST_ASSERT_EQUAL_STRING("networkError", toString(mainState::networkError));
     TEST_ASSERT_EQUAL_STRING("test", toString(mainState::test));
+    TEST_ASSERT_EQUAL_STRING("unknown", toString(static_cast<mainState>(999U)));
 }
 
 int main(int argc, char **argv) {

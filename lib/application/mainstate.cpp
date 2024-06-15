@@ -7,11 +7,11 @@
 
 const char *toString(mainState aState) {
     switch (aState) {
-        case mainState::waitForNetworkRequest:
-            return "waitForNetworkRequest";
+        case mainState::boot:
+            return "boot";
             break;
-        case mainState::waitForNetworkResponse:
-            return "waitForNetworkResponse";
+        case mainState::networkCheck:
+            return "networkCheck";
             break;
         case mainState::idle:
             return "idle";
