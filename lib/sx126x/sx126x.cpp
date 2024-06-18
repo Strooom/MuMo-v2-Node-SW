@@ -18,7 +18,7 @@ uint8_t mockSX126xCommandData[256][8];
 #include <cstring>
 #endif
 
-sx126x::powerVersion sx126x::thePowerVersion{powerVersion::unknown};
+powerVersion sx126x::thePowerVersion{powerVersion::unknown};
 
 void sx126x::initialize() {
     if (thePowerVersion == powerVersion::unknown) {

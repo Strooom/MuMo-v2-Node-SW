@@ -12,6 +12,7 @@
 #pragma once
 #include <stdint.h>
 #include <spreadingfactor.hpp>
+#include <powerversion.hpp>
 
 enum class rfSwitchState : uint8_t {
     off,
@@ -39,13 +40,6 @@ class sx126x {
 
 //  private:
 #endif
-    enum class powerVersion : uint8_t {
-        unknown, 
-        lowPower,
-        highPower,
-        nmbrPowerVersions
-    };
-
     static powerVersion thePowerVersion;
 
     static constexpr uint32_t rxTxBufferLength{256};

@@ -13,22 +13,31 @@
 #include <batterytype.hpp>
 #include <eepromtype.hpp>
 #include <measurementcollection.hpp>
+#include <sx126x.hpp>
+#include <powerversion.hpp>
 
 // #######################################################
 // ###  Non-Volatile settings to be written to EEPROM  ###
 // #######################################################
 
 eepromType selectedEepromType{eepromType::BR24G512};
+
 uint8_t selectedDisplayType{0};
-bool resetBatteryType{false};
+
+bool resetBatteryType{true};
 batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
 
-bool overwriteExistingLoRaWANConfig{false};
-uint32_t toBeDevAddr            = 0x260B509F;
-const char toBeApplicationKey[] = "8D4C447250E491DCA4072E5EC76A9A46";
-const char toBeNetworkKey[]     = "A691F59651352C2CCDF03286E2A5BA8B";
+powerVersion selectedPowerVersion{powerVersion::highPower};
+bool resetMcuType{true};
+
+uint32_t toBeDevAddr            = 0x260BE4E6;
+const char toBeNetworkKey[]     = "A5C41E6019780F993C3551E84B1229F0";
+const char toBeApplicationKey[] = "D5956EBB748FEBCC68EB03610F60082C";
+bool overwriteExistingLoRaWANConfig{true};
+
 bool resetLoRaWANState{true};
 bool resetLoRaWANChannels{true};
+
 bool eraseMeasurementsInEeprom{false};
 
 // #######################################################
@@ -59,6 +68,14 @@ void initializeEepromType() {
     settingsCollection::save(static_cast<uint8_t>(selectedEepromType), settingsCollection::settingIndex::eepromType);
     TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedEepromType), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::eepromType));
 }
+
+void initializeMcuType() {
+    if (resetMcuType) {
+    settingsCollection::save(static_cast<uint8_t>(selectedPowerVersion), settingsCollection::settingIndex::mcuType);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedPowerVersion), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
+    }
+}
+
 
 void initializeActiveLoggingSources() {
     logging::reset();
@@ -126,7 +143,7 @@ void initializeLorawanChannels() {
     }
 }
 
-void eraseMeasurementsInEeprom() {
+void test_eraseMeasurementsInEeprom() {
     if (eraseMeasurementsInEeprom) {
         measurementCollection::eraseAll();
     }
@@ -148,6 +165,6 @@ int main(int argc, char **argv) {
     RUN_TEST(initializeLorawanConfig);
     RUN_TEST(initializeLorawanState);
     RUN_TEST(initializeLorawanChannels);
-    RUN_TEST(eraseMeasurementsInEeprom);
+    RUN_TEST(test_eraseMeasurementsInEeprom);
     UNITY_END();
 }
