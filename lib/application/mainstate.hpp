@@ -12,7 +12,6 @@ enum class mainState : uint32_t {
     idle,
     measuring,
     logging,
-    displaying, 
     networking,
     networkError,
     test

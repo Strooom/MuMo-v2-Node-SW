@@ -5,6 +5,8 @@
 
 #include <display.hpp>
 #include <logging.hpp>
+#include <string.h>        // needed for memset
+#include <spi.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -18,6 +20,19 @@ displayRotation display::rotation{displayRotation::rotation270};
 displayMirroring display::mirroring{displayMirroring::none};
 uint8_t display::displayBuffer[display::bufferSize];
 
+void display::detectPresence() {
+    hardwareReset();
+    goSleep();
+#ifndef generic
+    HAL_Delay(1U);
+#endif
+    if (isBusy()) {
+        displayPresent = displayPresence::present;
+    } else {
+        displayPresent = displayPresence::notPresent;
+    }
+}
+
 bool display::isPresent() {
 #ifdef generic
     if (mockDisplayPresent) {
@@ -29,21 +44,12 @@ bool display::isPresent() {
     }
 #endif
     if (displayPresent == displayPresence::unknown) {
-        hardwareReset();
-        goSleep();
-#ifndef generic
-        HAL_Delay(1U);
-#endif
-        if (isBusy()) {
-            displayPresent = displayPresence::present;
-        } else {
-            displayPresent = displayPresence::notPresent;
-        }
+        detectPresence();
     }
     return (displayPresent == displayPresence::present);
 }
 
-void display::initialize() {
+void display::wakeUp() {
     hardwareReset();
     waitWhileBusy();
     softwareReset();
@@ -89,8 +95,6 @@ void display::initialize() {
     commandData[1] = 0x00;        // this seems to be (height - 1) / 256
     writeCommand(SSD1681Commands::SET_RAM_Y_ADDRESS_COUNTER, commandData, 2);
     waitWhileBusy();
-
-    clearAllPixels();
 }
 
 void display::goSleep() {
@@ -117,9 +121,10 @@ void display::clearPixel(uint32_t x, uint32_t y) {
 }
 
 void display::clearAllPixels() {
-    for (uint32_t i = 0; i < bufferSize; i++) {
-        displayBuffer[i] = 0xFF;
-    }
+    memset(displayBuffer, 0xFF, bufferSize);
+    // for (uint32_t i = 0; i < bufferSize; i++) {
+    //     displayBuffer[i] = 0xFF;
+    // }
 }
 
 bool display::getPixel(uint32_t x, uint32_t y) {
@@ -275,15 +280,17 @@ void display::writeCommand(SSD1681Commands theCommand, uint8_t* theData, uint32_
 }
 
 void display::waitWhileBusy() {
-    // TODO : this is potentially and endless loop -> add a timeout
-    #ifndef generic
+// TODO : this is potentially and endless loop -> add a timeout
+#ifndef generic
     while (isBusy()) {
         asm("NOP");
     }
-    #endif
+#endif
 }
 
 void display::update() {
+    spi::wakeUp();
+    wakeUp();
     uint8_t commandData[4]{0};
     writeCommand(SSD1681Commands::WRITE_RAM, nullptr, 0);
     writeData(displayBuffer, bufferSize);
@@ -292,6 +299,7 @@ void display::update() {
     writeCommand(SSD1681Commands::MASTER_ACTIVATION, nullptr, 0);
     waitWhileBusy();
     goSleep();
+    spi::goSleep();
 }
 
 void display::dump() {

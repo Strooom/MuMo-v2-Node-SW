@@ -198,7 +198,7 @@ void test_read_busy() {
 
 void test_dummy() {
     display::isPresent();
-    display::initialize();
+    display::wakeUp();
     display::dump();
     display::update();
     display::goSleep();

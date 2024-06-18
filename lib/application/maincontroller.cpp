@@ -27,11 +27,23 @@
 #include <tsl2591.hpp>
 #include <uniqueid.hpp>
 #include <version.hpp>
+#include <lptim.hpp>
 
 #ifndef generic
 #include "main.h"
 extern I2C_HandleTypeDef hi2c2;
+extern SPI_HandleTypeDef hspi2;
+extern ADC_HandleTypeDef hadc;
+extern RNG_HandleTypeDef hrng;
+extern CRYP_HandleTypeDef hcryp;
+
 void MX_I2C2_Init(void);
+void MX_SPI2_Init(void);
+void MX_ADC_Init(void);
+void MX_AES_Init(void);
+void MX_RNG_Init(void);
+void MX_USART1_UART_Init(void);
+void MX_USART2_UART_Init(void);
 #endif
 
 mainState mainController::state{mainState::boot};
@@ -60,7 +72,7 @@ void mainController::initialize() {
     showDeviceInfo();
 
     measurementCollection::initialize();
-    measurementCollection::findMeasurementsInEeprom();
+    // measurementCollection::findMeasurementsInEeprom();
 }
 
 void mainController::handleEvents() {
@@ -71,14 +83,21 @@ void mainController::handleEvents() {
         switch (state) {
             case mainState::boot:
                 switch (theEvent) {
-                    case applicationEvent::realTimeClockTick:
-                        showLoRaWanConfig();
-                        requestCounter++;
-                        LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
-                        LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
-                        LoRaWAN::sendUplink(0, nullptr, 0);
-                        goTo(mainState::networkCheck);
+                    case applicationEvent::lowPowerTimerExpired:
+                        lptim::stop();
                         break;
+
+                    case applicationEvent::realTimeClockTick:
+                        if (!lptim::isRunning()) {
+                            showLoRaWanConfig();
+                            requestCounter++;
+                            LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
+                            LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
+                            LoRaWAN::sendUplink(0, nullptr, 0);
+                            goTo(mainState::networkCheck);
+                        }
+                        break;
+
                     default:
                         break;
                 }
@@ -96,7 +115,7 @@ void mainController::handleEvents() {
 
                     case applicationEvent::realTimeClockTick:
                         requestCounter++;
-                        // TODO : if we don't get answers, decrease DataRate and try again
+                        miniAdr();
                         showLoRaWanStatus();
                         if (requestCounter >= maxNmbrRequests) {
                             goTo(mainState::networkError);
@@ -176,6 +195,25 @@ void mainController::run() {
     }
 
     switch (state) {
+        case mainState::boot:
+            mcuStop2();
+            break;
+
+        case mainState::idle:
+        case mainState::networkError:
+            if (!power::hasUsbPower()) {
+                sleep();
+            }
+            break;
+
+        case mainState::networkCheck:
+            if (LoRaWAN::isIdle()) {
+                if (!power::hasUsbPower()) {
+                    mcuStop2();
+                }
+            }
+            break;
+
         case mainState::measuring:
             sensorDeviceCollection::run();
             if (sensorDeviceCollection::isSleeping()) {
@@ -189,11 +227,12 @@ void mainController::run() {
                 if (logging::isActive(logging::source::sensorData)) {
                     sensorDeviceCollection::log();
                 }
+
                 sensorDeviceCollection::collectNewMeasurements();
                 measurementCollection::saveNewMeasurementsToEeprom();
+
                 uint32_t payloadLength        = measurementCollection::nmbrOfBytesToTransmit();
                 const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
-                logging::snprintf("--> %d bytes to transmit\n", payloadLength);
 #ifndef noTransmit
                 LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
 #endif
@@ -213,37 +252,6 @@ void mainController::run() {
             }
             break;
 
-        case mainState::displaying:
-            goTo(mainState::idle);
-            break;
-
-        case mainState::idle:
-            if (false) {
-                //            if (!power::hasUsbPower()) {
-                logging::snprintf("goSleep...\n");
-                gpio::disableGpio(gpio::group::spiDisplay);
-                gpio::disableGpio(gpio::group::writeProtect);
-                gpio::disableGpio(gpio::group::uart1);
-#ifndef generic
-                HAL_I2C_DeInit(&hi2c2);
-#endif
-                gpio::disableGpio(gpio::group::usbPresent);
-                gpio::disableGpio(gpio::group::rfControl);
-
-                sleep();
-
-                gpio::enableGpio(gpio::group::rfControl);
-                gpio::enableGpio(gpio::group::usbPresent);
-#ifndef generic
-                MX_I2C2_Init();
-#endif
-                gpio::enableGpio(gpio::group::uart1);
-                gpio::enableGpio(gpio::group::writeProtect);
-                gpio::enableGpio(gpio::group::spiDisplay);
-                logging::snprintf("...wakeUp\n");
-            }
-            break;
-
         default:
             break;
     }
@@ -258,6 +266,8 @@ void mainController::sleep() {
     // Prepare before going to sleep
     switch (state) {
         case mainState::idle:
+            logging::snprintf("goSleep...\n");
+            gpio::disableAllGpio();
             break;
 
         default:
@@ -266,17 +276,8 @@ void mainController::sleep() {
     // Sleep mode depending on state we are in
     switch (state) {
         case mainState::idle:
-#ifndef generic
-        {
-            uint32_t currentPriMaskState = __get_PRIMASK();
-            __disable_irq();
-            HAL_SuspendTick();
-            HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
-            HAL_ResumeTick();
-            __set_PRIMASK(currentPriMaskState);
-        }
-#endif
-        break;
+            mcuStop2();
+            break;
 
         default:
             break;
@@ -285,6 +286,20 @@ void mainController::sleep() {
     // Repair after waking up
     switch (state) {
         case mainState::idle:
+#ifndef generic
+            // HAL_Delay(1000);
+            MX_I2C2_Init();
+            MX_ADC_Init();
+            MX_AES_Init();
+            MX_RNG_Init();
+            // MX_USART1_UART_Init();
+#endif
+            // HAL_Delay(1000);
+            gpio::enableGpio(gpio::group::rfControl);
+            gpio::enableGpio(gpio::group::usbPresent);
+            gpio::enableGpio(gpio::group::i2c);
+            gpio::enableGpio(gpio::group::writeProtect);
+            logging::snprintf("...wakeUp\n");
             break;
 
         default:
@@ -344,4 +359,30 @@ void mainController::showLoRaWanStatus() {
     time_t localTime = realTimeClock::get();
     screen::setText(6, ctime(&localTime));
     screen::show(screenType::message);
+}
+
+void mainController::mcuStop2() {
+#ifndef generic
+    {
+        uint32_t currentPriMaskState = __get_PRIMASK();
+        __disable_irq();
+        HAL_SuspendTick();
+        HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
+        HAL_ResumeTick();
+        __set_PRIMASK(currentPriMaskState);
+    }
+#endif
+}
+
+void mainController::miniAdr() {
+    if (answerCounter == 0) {
+        int32_t newDataRateIndex = 5 - (requestCounter / 2);
+        if (newDataRateIndex < 0) {
+            newDataRateIndex = 0;
+        }
+        if (newDataRateIndex > 5) {
+            newDataRateIndex = 5;
+        }
+        LoRaWAN::currentDataRateIndex = newDataRateIndex;
+    }
 }

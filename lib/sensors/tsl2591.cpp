@@ -9,6 +9,7 @@
 #include <logging.hpp>
 #include <float.hpp>
 #include <measurementcollection.hpp>
+#include <i2c.hpp>
 
 #ifndef generic
 #include <main.h>
@@ -69,11 +70,11 @@ void tsl2591::startSampling() {
 }
 
 bool tsl2591::samplingIsReady() {
-    #ifndef generic
+#ifndef generic
     return (readRegister(registers::status) & 0x01) == 0x01;
-    #else
+#else
     return true;
-    #endif
+#endif
 }
 
 void tsl2591::readSample() {
@@ -99,7 +100,15 @@ float tsl2591::calculateLux() {
 
 bool tsl2591::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
-    return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
+    bool i2cState = i2c::isAwake();
+    if (!i2cState) {
+        i2c::wakeUp();
+    }
+    bool result = (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
+    if (!i2cState) {
+        i2c::goSleep();
+    }
+    return result;
 #else
     return mockTSL2591Present;
 #endif
@@ -110,7 +119,14 @@ uint8_t tsl2591::readRegister(registers registerAddress) {
     uint8_t result;
 
 #ifndef generic
+    bool i2cState = i2c::isAwake();
+    if (!i2cState) {
+        i2c::wakeUp();
+    }
     HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, command, I2C_MEMADD_SIZE_8BIT, &result, 1, halTimeout);
+            if (!i2cState) {
+        i2c::goSleep();
+    }
 #else
     result = mockTSL2591Registers[static_cast<uint8_t>(registerAddress)];
 #endif
@@ -120,7 +136,14 @@ uint8_t tsl2591::readRegister(registers registerAddress) {
 void tsl2591::writeRegister(registers registerAddress, uint8_t value) {
     uint16_t command = commandMask | static_cast<uint16_t>(registerAddress);
 #ifndef generic
+    bool i2cState = i2c::isAwake();
+    if (!i2cState) {
+        i2c::wakeUp();
+    }
     HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, command, I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
+            if (!i2cState) {
+        i2c::goSleep();
+    }
 #else
     mockTSL2591Registers[static_cast<uint8_t>(registerAddress)] = value;
 #endif
@@ -136,6 +159,6 @@ void tsl2591::run() {
                 channels[visibleLight].hasNewValue = true;
             }
         }
-        state = sensorDeviceState::sleeping;
+        goSleep();
     }
 }

@@ -5,16 +5,15 @@
 
 #include <stdint.h>
 
-class power {
+class lptim {
   public:
-    static bool isUsbConnected();        // detect insertion of USB cable event
-    static bool isUsbRemoved();          // detect removal of USB cable event
-    static bool hasUsbPower();
-    // static void goSleep();
+    static void start(uint32_t timeOutIn4096zTicks);
+    static void stop();
+    static bool isRunning() { return running; }  
 
 #ifndef unitTesting
 
   private:
 #endif
-    static bool usbPower;
+    static bool running;
 };

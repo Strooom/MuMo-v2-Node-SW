@@ -12,6 +12,7 @@
 #include <swaplittleandbigendian.hpp>
 #include <ctime>
 #include <realtimeclock.hpp>
+#include <lptim.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -515,7 +516,7 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
         case txRxCycleState::waitForTxComplete:
             switch (theEvent) {
                 case applicationEvent::sx126xTxComplete:
-                    startTimer(ticksFromSeconds(rx1DelayInSeconds));
+                    lptim::start(ticksFromSeconds(rx1DelayInSeconds));
                     goTo(txRxCycleState::waitForRx1Start);
                     return;
                     break;
@@ -527,8 +528,8 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
         case txRxCycleState::waitForRx1Start:
             switch (theEvent) {
                 case applicationEvent::lowPowerTimerExpired: {
-                    stopTimer();
-                    startTimer(ticksFromSeconds(1U));
+                    lptim::stop();
+                    lptim::start(ticksFromSeconds(1U));
                     uint32_t rxFrequency = txChannels.channel[txChannels.getCurrentChannelIndex()].frequencyInHz;
                     uint32_t rxTimeout   = getReceiveTimeout(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor);
                     sx126x::configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
@@ -548,14 +549,14 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                     messageType receivedMessageType = decodeMessage();
                     switch (receivedMessageType) {
                         case messageType::application:
-                            stopTimer();
+                            lptim::stop();
                             processMacContents();
                             applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                             goTo(txRxCycleState::waitForRxMessageReadout);
                             return;
                             break;
                         case messageType::lorawanMac:
-                            stopTimer();
+                            lptim::stop();
                             processMacContents();
                             applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
                             goTo(txRxCycleState::idle);
@@ -580,7 +581,7 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
         case txRxCycleState::waitForRx2Start:
             switch (theEvent) {
                 case applicationEvent::lowPowerTimerExpired: {
-                    stopTimer();
+                    lptim::stop();
                     sx126x::configForReceive(theDataRates.theDataRates[rx2DataRateIndex].theSpreadingFactor, rx2FrequencyInHz);
                     uint32_t rxTimeout = getReceiveTimeout(theDataRates.theDataRates[rx2DataRateIndex].theSpreadingFactor);
                     sx126x::startReceive(rxTimeout);
@@ -638,7 +639,7 @@ void LoRaWAN::goTo(txRxCycleState newState) {
             break;
 
         case txRxCycleState::waitForRandomTimeBeforeTransmit:
-            stopTimer();
+            lptim::stop();
             break;
 
         case txRxCycleState::waitForTxComplete:
@@ -668,7 +669,7 @@ void LoRaWAN::goTo(txRxCycleState newState) {
 
         case txRxCycleState::waitForRandomTimeBeforeTransmit: {
             uint32_t randomDelayAsTicks = randomNumber() % maxRandomDelayBeforeTx;
-            startTimer(randomDelayAsTicks);
+            lptim::start(randomDelayAsTicks);
         } break;
 
         case txRxCycleState::waitForTxComplete:
@@ -694,17 +695,6 @@ void LoRaWAN::goTo(txRxCycleState newState) {
     }
 }
 
-void LoRaWAN::startTimer(uint32_t timeOutIn4096HzTicks) {
-#ifndef generic
-    HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, timeOutIn4096HzTicks);
-#endif
-}
-
-void LoRaWAN::stopTimer() {
-#ifndef generic
-    HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
-#endif
-}
 
 #pragma endregion
 #pragma region 4 : MAC layer functions

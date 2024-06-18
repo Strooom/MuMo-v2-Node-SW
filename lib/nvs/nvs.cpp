@@ -4,6 +4,7 @@
 // ######################################################################################
 
 #include "nvs.hpp"
+#include <i2c.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -43,6 +44,10 @@ void nonVolatileStorage::fill(uint8_t value) {
 }
 
 bool nonVolatileStorage::isPresent() {
+    bool i2cState = i2c::isAwake();
+    if (!i2cState) {
+        i2c::wakeUp();
+    }
 #ifndef generic
     if (HAL_OK != HAL_I2C_IsDeviceReady(&hi2c2, i2cAddress << 1, halTrialsIsPresent, halTimeoutIsPresent)) {        // testing presence of the first bank of 64K (U7)
         return false;
@@ -50,16 +55,26 @@ bool nonVolatileStorage::isPresent() {
     if (HAL_OK != HAL_I2C_IsDeviceReady(&hi2c2, (i2cAddress << 1) + 1, halTrialsIsPresent, halTimeoutIsPresent)) {        // testing presence of the second bank of 64K (U8)
         return false;
     }
+    if (!i2cState) {
+        i2c::goSleep();
+    }
 #endif
     return true;
 }
 
 void nonVolatileStorage::read(const uint32_t startAddress, uint8_t* data, const uint32_t dataLength) {
+    bool i2cState = i2c::isAwake();
+    if (!i2cState) {
+        i2c::wakeUp();
+    }
 #ifndef generic
     HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_16BIT, data, dataLength, halTimeoutIsPresent);        //
 #else
     (void)memcpy(data, mockEepromMemory + startAddress, dataLength);
 #endif
+    if (!i2cState) {
+        i2c::goSleep();
+    }
 }
 
 void nonVolatileStorage::write(const uint32_t startAddress, const uint8_t* data, const uint32_t dataLength) {
@@ -67,7 +82,10 @@ void nonVolatileStorage::write(const uint32_t startAddress, const uint8_t* data,
     uint8_t* remainingData{const_cast<uint8_t*>(data)};
     uint32_t remainingLength{dataLength};
     uint32_t currentAddress{startAddress};
-
+    bool i2cState = i2c::isAwake();
+    if (!i2cState) {
+        i2c::wakeUp();
+    }
 #ifndef generic
     HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_RESET);        // Drive writeProtect LOW = enable write
 #endif
@@ -87,4 +105,8 @@ void nonVolatileStorage::write(const uint32_t startAddress, const uint8_t* data,
 #ifndef generic
     HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_SET);        // disable write
 #endif
+    if (!i2cState) {
+        i2c::goSleep();
+    }
+
 }

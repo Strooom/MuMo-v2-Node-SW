@@ -11,7 +11,7 @@
 #include <gpio.hpp>
 #include <power.hpp>
 #include <settingscollection.hpp>
-
+#include <i2c.hpp>
 #ifndef generic
 #include "main.h"
 extern UART_HandleTypeDef huart1;
@@ -33,22 +33,20 @@ void logging::initialize() {
         LL_DBGMCU_DisableDBGStopMode();
     }
 #endif
-
-    gpio::enableGpio(gpio::group::usbPresent);
     if (power::hasUsbPower()) {
         logging::enable(logging::destination::uart2usb);
     }
-
     if (!logging::isActive(logging::destination::debugProbe)) {
         gpio::disableGpio(gpio::group::debugPort);
     }
 
-#if !defined unitTesting && defined platformio        // when on platformio, we don't have SWO trace, so use UART1, except when unitTesting because then we need UART1 for test-results transport
-    logging::enable(logging::destination::uart1);
-#endif
+    // #if !defined unitTesting && defined platformio        // when on platformio, we don't have SWO trace, so use UART1, except when unitTesting because then we need UART1 for test-results transport
+    //     logging::enable(logging::destination::uart1);
+    // #endif
 
-    gpio::enableGpio(gpio::group::i2cEeprom);
+    i2c::wakeUp();
     logging::setActiveSources(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));
+    i2c::goSleep();
 }
 
 uint32_t logging::snprintf(const char *format, ...) {

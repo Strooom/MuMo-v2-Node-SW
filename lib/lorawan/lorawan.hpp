@@ -186,8 +186,6 @@ class LoRaWAN {
     // #############################################################
 
     static uint32_t randomNumber();
-    static void startTimer(uint32_t timeOutIn4096zTicks);
-    static void stopTimer();
     static void insertBlockB0(linkDirection theDirection, frameCount &aFrameCount);        // in downlink, the framecount is the received framecount, not necessarily the downlink framecount so I need to pass it as a parameter
 
     static void prepareBlockAi(aesBlock &theBlock, linkDirection theDirection, uint32_t blockIndex);

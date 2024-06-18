@@ -9,6 +9,7 @@
 #include <cmath>
 #include <inttypes.h>        // for PRIu32
 #include <float.hpp>
+#include <spi.hpp>
 
 bool screen::isModified{false};
 char screen::bigText[numberOfLines][maxTextLength + 1]{};
@@ -53,11 +54,12 @@ void screen::clearAllTexts() {
 }
 
 void screen::showMessage() {
-    display::initialize();
+    display::clearAllPixels();
     for (uint32_t lineIndex = 0; lineIndex < numberOfLines2; lineIndex++) {
         graphics::drawText(2, (182 - (20 * lineIndex)), lucidaConsole12, consoleText[lineIndex]);
     }
     display::update();
+
 }
 
 void screen::getContents() {
@@ -72,8 +74,7 @@ void screen::getContents() {
 }
 
 void screen::drawContents() {
-    display::initialize();
-
+    display::clearAllPixels();
     graphics::drawFilledRectangle(ux::marginLeft, 49, display::widthInPixels - ux::marginLeft, 50, graphics::color::black);
     graphics::drawFilledRectangle(ux::marginLeft, 99, display::widthInPixels - ux::marginLeft, 100, graphics::color::black);
     graphics::drawFilledRectangle(ux::marginLeft, 149, display::widthInPixels - ux::marginLeft, 150, graphics::color::black);

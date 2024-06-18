@@ -122,9 +122,11 @@ bool sensorDeviceCollection::isSleeping() {
     return true;
 }
 
-bool sensorDeviceCollection::needsSampling(uint32_t deviceIndex, uint32_t channelIndex) {
-    if (isValid(deviceIndex, channelIndex)) {
-        return channel(deviceIndex, channelIndex).needsSampling();
+bool sensorDeviceCollection::needsSampling() {
+    for (auto deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
+        if (needsSampling(deviceIndex)) {
+            return true;
+        }
     }
     return false;
 }
@@ -140,14 +142,14 @@ bool sensorDeviceCollection::needsSampling(uint32_t deviceIndex) {
     return false;
 }
 
-bool sensorDeviceCollection::needsSampling() {
-    for (auto deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
-        if (needsSampling(deviceIndex)) {
-            return true;
-        }
+bool sensorDeviceCollection::needsSampling(uint32_t deviceIndex, uint32_t channelIndex) {
+    if (isValid(deviceIndex, channelIndex)) {
+        return channel(deviceIndex, channelIndex).needsSampling();
     }
     return false;
 }
+
+
 
 void sensorDeviceCollection::updateCounters() {
     for (auto deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {

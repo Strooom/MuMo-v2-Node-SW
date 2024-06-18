@@ -5,6 +5,7 @@
 
 #include <sx126x.hpp>
 #include <logging.hpp>
+#include <settingscollection.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -17,7 +18,18 @@ uint8_t mockSX126xCommandData[256][8];
 #include <cstring>
 #endif
 
+sx126x::powerVersion sx126x::thePowerVersion{powerVersion::unknown};
+
 void sx126x::initialize() {
+    if (thePowerVersion == powerVersion::unknown) {
+        uint8_t typeIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType);
+        if (typeIndex >= static_cast<uint8_t>(powerVersion::nmbrPowerVersions)) {
+            logging::snprintf(logging::source::error, "invalid settingsCollection::settingIndex::mcuType : %d\n", typeIndex);
+            thePowerVersion = powerVersion::highPower;
+        }
+        thePowerVersion = static_cast<powerVersion>(typeIndex);
+    }
+
     initializeInterface();
     initializeRadio();
     goSleep();
@@ -30,10 +42,9 @@ uint8_t sx126x::getStatus() {
 }
 
 float sx126x::getPacketSnr() {
-
-            // RssiPkt = (-1 * response[0])/2;
-            // SnrPkt = response[1] / 4;
-            // SignalRssiPkt = -response[2]/2;
+    // RssiPkt = (-1 * response[0])/2;
+    // SnrPkt = response[1] / 4;
+    // SignalRssiPkt = -response[2]/2;
 
     uint8_t response[3];
     sx126x::executeGetCommand(sx126x::command::getPacketStatus, response, 3);
@@ -242,10 +253,21 @@ void sx126x::initializeRadio() {
     commandParameters[3] = 0x99;
     executeSetCommand(command::setRfFRequency, commandParameters, 4);
 
-    commandParameters[0] = 0x02;
-    commandParameters[1] = 0x03;
-    commandParameters[2] = 0x00;
-    commandParameters[3] = 0x01;
+    switch (thePowerVersion) {
+        case powerVersion::lowPower:        // lowPower Amp : Wio-E5-LE-HF 14 dBm
+            commandParameters[0] = 0x04;
+            commandParameters[1] = 0x00;
+            commandParameters[2] = 0x01;
+            commandParameters[3] = 0x01;
+            break;
+
+        default:        // highPower Amp : LoRa-E5-HF 14dBm
+            commandParameters[0] = 0x02;
+            commandParameters[1] = 0x02;
+            commandParameters[2] = 0x00;
+            commandParameters[3] = 0x01;
+            break;
+    }
     executeSetCommand(command::setPaConfig, commandParameters, 4);
 
     commandParameters[0] = 0x0D;        // PA optimal setting and operating modes: 14 dBm HighPower mode
@@ -263,6 +285,7 @@ void sx126x::initializeRadio() {
 
 void sx126x::initializeInterface() {
 #ifndef generic
+    hsubghz.Init.BaudratePrescaler = SUBGHZSPI_BAUDRATEPRESCALER_2;
     HAL_SUBGHZ_Init(&hsubghz);
 #endif
 }

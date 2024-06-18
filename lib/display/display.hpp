@@ -31,8 +31,9 @@ enum class displayPresence : uint32_t {
 class display {
   public:
     display() = delete;
-    static bool isPresent();          // return displayPresent
-    static void initialize();         // wakeup through HW reset, then configure display
+    static void detectPresence();
+    static bool isPresent();
+    static void wakeUp();
     static bool isReady();
     static void update();
     static void goSleep();

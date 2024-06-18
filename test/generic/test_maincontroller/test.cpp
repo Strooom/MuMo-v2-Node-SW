@@ -36,20 +36,8 @@ void test_transitions_boot() {
     applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
     mainController::handleEvents();
     TEST_ASSERT_EQUAL(2U, mainController::answerCounter);
-    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
-
-    applicationEventBuffer.push(applicationEvent::realTimeClockTick);
-    mainController::handleEvents();
-    TEST_ASSERT_EQUAL(3U, mainController::requestCounter);
-    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
-
-    applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
-    mainController::handleEvents();
-    TEST_ASSERT_EQUAL(3U, mainController::answerCounter);
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
 
-    mainController::run();
-    TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
     mainController::run();
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
 }
@@ -111,7 +99,6 @@ void test_toString() {
     TEST_ASSERT_EQUAL_STRING("idle", toString(mainState::idle));
     TEST_ASSERT_EQUAL_STRING("measuring", toString(mainState::measuring));
     TEST_ASSERT_EQUAL_STRING("logging", toString(mainState::logging));
-    TEST_ASSERT_EQUAL_STRING("displaying", toString(mainState::displaying));
     TEST_ASSERT_EQUAL_STRING("networking", toString(mainState::networking));
     TEST_ASSERT_EQUAL_STRING("boot", toString(mainState::boot));
     TEST_ASSERT_EQUAL_STRING("networkCheck", toString(mainState::networkCheck));

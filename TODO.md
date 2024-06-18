@@ -1,15 +1,4 @@
 # Short Term ToDo's
-* get LowPower working again
-  - MX_USART2_UART_Init(); MX_SPI2_Init(); MX_I2C2_Init();
-
-    MX_ADC_Init();
-    MX_AES_Init();
-    MX_RNG_Init();
-    MX_LPTIM1_Init();
-    MX_SUBGHZ_Init();
-    MX_USART1_UART_Init();
-
-* extend / improve stateMachine : according to drawing
 * deviceStatusReq doen werken met echte waarden
   - ontvangstwaarden van laatste downlink opslaan
   - batterijspanning omzetten in uint8
@@ -20,10 +9,8 @@
 
 
 
-
 # Medium Term ToDo's
 * move lptim out of lorawan and make it available to application
-* extend SX126x code to the 14dBm veriant of the Wio-E5
 * allow firmware upgrade from usb/serial
 * show usb connection on display
 * improve isModified in display refresh : set to false after updating display, set to true when writing different text into screen

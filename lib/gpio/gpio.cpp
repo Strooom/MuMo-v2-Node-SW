@@ -19,6 +19,7 @@ void gpio::disableAllGpio() {
     enableDisableGpio(gpio::group::writeProtect, false);
     enableDisableGpio(gpio::group::spiDisplay, false);
     enableDisableGpio(gpio::group::usbPresent, false);
+    enableDisableGpio(gpio::group::uart1, false);
     enableDisableGpio(gpio::group::uart2, false);
     enableDisableGpio(gpio::group::rfControl, false);
     // NOTE : debugPort is not disabled as it is used for logging
@@ -140,8 +141,9 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
                 GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
                 HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
             } else {
-                HAL_GPIO_DeInit(GPIOA, displayReset_Pin | GPIO_PIN_10);
-                HAL_GPIO_DeInit(GPIOB, displayBusy_Pin | displayDataCommand_Pin | displayChipSelect_Pin | GPIO_PIN_13);
+                HAL_GPIO_DeInit(GPIOB, displayBusy_Pin);
+                // HAL_GPIO_DeInit(GPIOA, GPIO_PIN_10);
+                // HAL_GPIO_DeInit(GPIOB, displayBusy_Pin | displayDataCommand_Pin | displayChipSelect_Pin | GPIO_PIN_13);
             }
             break;
 
@@ -149,8 +151,10 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
             if (enable) {
                 // These need to be set as after reset...
             } else {
-                HAL_GPIO_DeInit(GPIOA, GPIO_PIN_13 | GPIO_PIN_14);
-                HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3);
+                // NOTE : This resets the SWD AND JTAG pins to analog inputs (lowest power consumption).
+                // We don't use JTAG, but we assigned PIN PB4 another function (usbPowerPresent). Disabling all debug pins, also disables PB4 as usbPowerPresent.
+                HAL_GPIO_DeInit(GPIOA, GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15);
+                HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3 | GPIO_PIN_4);
             }
             break;
 

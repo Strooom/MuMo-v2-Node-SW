@@ -39,6 +39,15 @@ class sx126x {
 
 //  private:
 #endif
+    enum class powerVersion : uint8_t {
+        unknown, 
+        lowPower,
+        highPower,
+        nmbrPowerVersions
+    };
+
+    static powerVersion thePowerVersion;
+
     static constexpr uint32_t rxTxBufferLength{256};
     static constexpr uint32_t TCXOfrequencyInHz{32000000U};
 

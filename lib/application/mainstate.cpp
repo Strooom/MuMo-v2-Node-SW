@@ -22,9 +22,6 @@ const char *toString(mainState aState) {
         case mainState::logging:
             return "logging";
             break;
-        case mainState::displaying:
-            return "displaying";
-            break;
         case mainState::networking:
             return "networking";
             break;

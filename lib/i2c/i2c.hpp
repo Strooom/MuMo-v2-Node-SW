@@ -5,16 +5,15 @@
 
 #include <stdint.h>
 
-class power {
+class i2c {
   public:
-    static bool isUsbConnected();        // detect insertion of USB cable event
-    static bool isUsbRemoved();          // detect removal of USB cable event
-    static bool hasUsbPower();
-    // static void goSleep();
+    static void wakeUp();
+    static void goSleep();
+    static bool isAwake() { return active; }  
 
 #ifndef unitTesting
 
   private:
 #endif
-    static bool usbPower;
+    static bool active;
 };
