@@ -17,11 +17,10 @@ uint8_t mockSCD40Registers[256];
 #endif
 
 sensorDeviceState scd40::state{sensorDeviceState::unknown};
-sensorChannel scd40::channels[nmbrChannels];
-sensorChannelFormat scd40::channelFormats[nmbrChannels] = {
-    {"temperature", "~C", 1},
-    {"relativeHumidity", "%RH", 0},
-    {"CO2", "ppm", 0},
+sensorChannel scd40::channels[nmbrChannels] = {
+    {1, "temperature", "~C"},
+    {0, "relativeHumidity", "%RH"},
+    {0, "CO2", "ppm"},
 };
 
 uint32_t scd40::rawDataTemperature;
@@ -55,10 +54,9 @@ bool scd40::hasNewMeasurement() {
 }
 
 void scd40::clearNewMeasurements() {
-    channels[temperature].hasNewValue        = false;
+    channels[temperature].hasNewValue      = false;
     channels[relativeHumidity].hasNewValue = false;
 }
-
 
 float scd40::valueAsFloat(uint32_t index) {
     return channels[index].getOutput();
@@ -141,9 +139,9 @@ void scd40::readSample() {
     constexpr uint32_t nmbrRegisters{8};
     uint8_t registerData[nmbrRegisters];
     readRegisters(0x1F, nmbrRegisters, registerData);        // reads 8 registers, from 0x1F up to 0x26, they contain the raw ADC results for temperature, relativeHumidity and pressure
-    rawDataTemperature        = ((static_cast<uint32_t>(registerData[3]) << 12) | (static_cast<uint32_t>(registerData[4]) << 4) | (static_cast<uint32_t>(registerData[5]) >> 4));
-    rawDataRelativeHumidity   = ((static_cast<uint32_t>(registerData[6]) << 8) | (static_cast<uint32_t>(registerData[7])));
-    rawCo2 = ((static_cast<uint32_t>(registerData[0]) << 12) | (static_cast<uint32_t>(registerData[1]) << 4) | (static_cast<uint32_t>(registerData[2]) >> 4));
+    rawDataTemperature      = ((static_cast<uint32_t>(registerData[3]) << 12) | (static_cast<uint32_t>(registerData[4]) << 4) | (static_cast<uint32_t>(registerData[5]) >> 4));
+    rawDataRelativeHumidity = ((static_cast<uint32_t>(registerData[6]) << 8) | (static_cast<uint32_t>(registerData[7])));
+    rawCo2                  = ((static_cast<uint32_t>(registerData[0]) << 12) | (static_cast<uint32_t>(registerData[1]) << 4) | (static_cast<uint32_t>(registerData[2]) >> 4));
 }
 
 float scd40::calculateTemperature() {
@@ -231,12 +229,12 @@ void scd40::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* desti
 
 void scd40::log() {
     if (channels[temperature].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.2f *C\n", channelFormats[temperature].name, channels[temperature].getOutput());
+        logging::snprintf(logging::source::sensorData, "%s = %.2f *C\n", channels[temperature].name, channels[temperature].getOutput());
     }
     if (channels[relativeHumidity].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[relativeHumidity].name, channels[relativeHumidity].getOutput(), channelFormats[relativeHumidity].unit);
+        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channels[relativeHumidity].name, channels[relativeHumidity].getOutput(), channels[relativeHumidity].unit);
     }
     if (channels[co2].hasNewValue) {
-        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channelFormats[co2].name, channels[co2].getOutput(), channelFormats[co2].unit);
+        logging::snprintf(logging::source::sensorData, "%s = %.0f %s\n", channels[co2].name, channels[co2].getOutput(), channels[co2].unit);
     }
 }

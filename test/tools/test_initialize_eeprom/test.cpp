@@ -13,21 +13,32 @@
 #include <batterytype.hpp>
 #include <eepromtype.hpp>
 #include <measurementcollection.hpp>
+#include <sx126x.hpp>
+#include <powerversion.hpp>
 
 // #######################################################
 // ###  Non-Volatile settings to be written to EEPROM  ###
 // #######################################################
 
 eepromType selectedEepromType{eepromType::BR24G512};
-uint8_t selectedDisplayType{0};
-batteryType selectedBatteryType{batteryType::alkaline_1200mAh};
 
-bool overwriteExistingLoRaWANConfig{false};
-uint32_t toBeDevAddr            = 0x260BC71B;
-const char toBeApplicationKey[] = "ECF61A5B18BFBF81EF4FA7DBA764CE8B";
-const char toBeNetworkKey[]     = "34CE07A8DDE81F4C29A0AED7B4F1D7BB";
-bool resetLoRaWANStateAndChannels{false};
-bool eraseMeasurements{true};
+uint8_t selectedDisplayType{0};
+
+bool resetBatteryType{true};
+batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
+
+powerVersion selectedPowerVersion{powerVersion::highPower};
+bool resetMcuType{true};
+
+uint32_t toBeDevAddr            = 0x260BE4E6;
+const char toBeNetworkKey[]     = "A5C41E6019780F993C3551E84B1229F0";
+const char toBeApplicationKey[] = "D5956EBB748FEBCC68EB03610F60082C";
+bool overwriteExistingLoRaWANConfig{true};
+
+bool resetLoRaWANState{true};
+bool resetLoRaWANChannels{true};
+
+bool eraseMeasurementsInEeprom{false};
 
 // #######################################################
 
@@ -47,14 +58,24 @@ void initializeDisplayType() {
 }
 
 void initializeBatteryType() {
+    if (resetBatteryType) {
     settingsCollection::save(static_cast<uint8_t>(selectedBatteryType), settingsCollection::settingIndex::batteryType);
     TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedBatteryType), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
+    }
 }
 
 void initializeEepromType() {
     settingsCollection::save(static_cast<uint8_t>(selectedEepromType), settingsCollection::settingIndex::eepromType);
     TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedEepromType), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::eepromType));
 }
+
+void initializeMcuType() {
+    if (resetMcuType) {
+    settingsCollection::save(static_cast<uint8_t>(selectedPowerVersion), settingsCollection::settingIndex::mcuType);
+    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedPowerVersion), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
+    }
+}
+
 
 void initializeActiveLoggingSources() {
     logging::reset();
@@ -90,39 +111,41 @@ void initializeLorawanConfig() {
 }
 
 void initializeLorawanState() {
-    LoRaWAN::currentDataRateIndex = 5;
-    LoRaWAN::saveState();
-    LoRaWAN::restoreState();
+    if (resetLoRaWANState) {
+        LoRaWAN::currentDataRateIndex = 5;
+        LoRaWAN::saveState();
+        LoRaWAN::restoreState();
 
-    // TODO : make this config dependent on the setting of the resetLoRaWANStateAndChannels flag
-
-    TEST_ASSERT_EQUAL_UINT32(5, LoRaWAN::currentDataRateIndex);
-    TEST_ASSERT_EQUAL_UINT32(0, LoRaWAN::rx1DataRateOffset);
-    TEST_ASSERT_EQUAL_UINT32(3, LoRaWAN::rx2DataRateIndex);
-    TEST_ASSERT_EQUAL_UINT32(1, LoRaWAN::rx1DelayInSeconds);
-    TEST_ASSERT_EQUAL_UINT32(1, LoRaWAN::uplinkFrameCount.asUint32);
-    TEST_ASSERT_EQUAL_UINT32(0, LoRaWAN::downlinkFrameCount.asUint32);
+        TEST_ASSERT_EQUAL_UINT32(5, LoRaWAN::currentDataRateIndex);
+        TEST_ASSERT_EQUAL_UINT32(0, LoRaWAN::rx1DataRateOffset);
+        TEST_ASSERT_EQUAL_UINT32(3, LoRaWAN::rx2DataRateIndex);
+        TEST_ASSERT_EQUAL_UINT32(1, LoRaWAN::rx1DelayInSeconds);
+        TEST_ASSERT_EQUAL_UINT32(1, LoRaWAN::uplinkFrameCount.asUint32);
+        TEST_ASSERT_EQUAL_UINT32(0, LoRaWAN::downlinkFrameCount.asUint32);
+    }
 }
 
 void initializeLorawanChannels() {
-    LoRaWAN::saveChannels();
-    LoRaWAN::restoreChannels();
+    if (resetLoRaWANChannels) {
+        LoRaWAN::saveChannels();
+        LoRaWAN::restoreChannels();
 
-    // TODO : make this config dependent on the setting of the resetLoRaWANStateAndChannels flag
+        // TODO : make this config dependent on the setting of the resetLoRaWANStateAndChannels flag
 
-    TEST_ASSERT_EQUAL_UINT32(868'100'000U, loRaTxChannelCollection::channel[0].frequencyInHz);
-    TEST_ASSERT_EQUAL_UINT32(868'300'000U, loRaTxChannelCollection::channel[1].frequencyInHz);
-    TEST_ASSERT_EQUAL_UINT32(868'500'000U, loRaTxChannelCollection::channel[2].frequencyInHz);
+        TEST_ASSERT_EQUAL_UINT32(868'100'000U, loRaTxChannelCollection::channel[0].frequencyInHz);
+        TEST_ASSERT_EQUAL_UINT32(868'300'000U, loRaTxChannelCollection::channel[1].frequencyInHz);
+        TEST_ASSERT_EQUAL_UINT32(868'500'000U, loRaTxChannelCollection::channel[2].frequencyInHz);
 
-    for (auto index = 3U; index < static_cast<uint32_t>(loRaTxChannelCollection::maxNmbrChannels); index++) {
-        TEST_ASSERT_EQUAL_UINT32(0U, loRaTxChannelCollection::channel[index].frequencyInHz);
+        for (auto index = 3U; index < static_cast<uint32_t>(loRaTxChannelCollection::maxNmbrChannels); index++) {
+            TEST_ASSERT_EQUAL_UINT32(0U, loRaTxChannelCollection::channel[index].frequencyInHz);
+        }
+        TEST_ASSERT_EQUAL(869525000U, LoRaWAN::rx2FrequencyInHz);
     }
-    TEST_ASSERT_EQUAL(869525000U, LoRaWAN::rx2FrequencyInHz);
 }
 
-void eraseMeasurementsInEeprom() {
-    if (eraseMeasurements) {
-        measurementCollection::erase();
+void test_eraseMeasurementsInEeprom() {
+    if (eraseMeasurementsInEeprom) {
+        measurementCollection::eraseAll();
     }
 }
 
@@ -142,6 +165,6 @@ int main(int argc, char **argv) {
     RUN_TEST(initializeLorawanConfig);
     RUN_TEST(initializeLorawanState);
     RUN_TEST(initializeLorawanChannels);
-    RUN_TEST(eraseMeasurementsInEeprom);
+    RUN_TEST(test_eraseMeasurementsInEeprom);
     UNITY_END();
 }

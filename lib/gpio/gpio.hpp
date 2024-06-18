@@ -11,17 +11,17 @@ class gpio {
     gpio() = delete;
     enum class group : uint32_t {
         none = 0,
-        rfControl,
-        i2c,
-        writeProtect,
+        rfControl,           // PP output
+        i2c,                 // bidirectional
+        writeProtect,        // PP output
         i2cSensors,
         i2cEeprom,
-        spiDisplay,
-        debugPort,
-        uart1,
-        uart2,
-        usbPresent,
-        vddEnable,
+        spiDisplay,        // output + inputs
+        debugPort,         // output + inputs
+        uart1,             // output + inputs
+        uart2,             // output + inputs
+        usbPresent,        // input
+        vddEnable,         // output
         other
     };
 

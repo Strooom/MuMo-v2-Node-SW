@@ -1,35 +1,41 @@
-# Plan / ToDo
+# Short Term ToDo's
+* deviceStatusReq doen werken met echte waarden
+  - ontvangstwaarden van laatste downlink opslaan
+  - batterijspanning omzetten in uint8
+* batteryVoltage seems incorrect ?? also shown with 1 decimal io 2 ??
+* wrapping of measurementsCollection : writing and reading measurements
+* erase old measurements when space needed for new ones
 
-* eerste LUX meting na power on is fout 16700 lux ???
 
-* make unit tests for each sensor
-* make unit tests for a sensorCollection which enables all sensors.
-*. make EEPROM work for 128 K io 64K
-*. take channel-initialization out of the device initialization and into sensorDeviceCollection
-*. probleem bij het zoeken van measurementOffsets.. wanneer de nieuwe de oude data overschrijven, is mogelijk slechts een stuk ve measurement overschreven.. en kan uitlezen dus corrupt worden, dus bij overschrijven van metingen zou ineens de hele meting moeten overschreven worden..
 
+
+# Medium Term ToDo's
+* move lptim out of lorawan and make it available to application
+* allow firmware upgrade from usb/serial
+* show usb connection on display
+* improve isModified in display refresh : set to false after updating display, set to true when writing different text into screen
+* measurementsScreen only has 3 lines io 4
+* high lux value does not show on display
+
+
+
+
+
+
+
+# Long Term ToDo's
 * make generic unit tests also run on target
-
-1. get LowPower working again
-2. make display show non-blocking
-3. get cli working
-    * detect commands
-    * show version etc commands
-    * set config commands
-4. store measurements into eeprom
-5. get LoRaWAN working
-
- 
-
- # Small Next Steps
-
-* extend stateMachine : if not LoRaWAN config found -> show msg asking for config
-* extend SX126x code to the 14dBm veriant of the Wio-E5
+* OTAA
+* make EEPROM work for multiples of 64K : 
+  - I2C address = 0x50 + address/64K
+  - address = address % 64K
+* target unit test for wait time after page write into eeprom
 * reading the tamper button and wake up from it
-* 
-
-
-
-
+* get cli working
+* report number of measurements on bootscreen
 * merge hw aes tests into 1, in order to not have too many target unit tests
 * Put some of the aesKey stuff, only needed for SW-AES in conditional compilation, eg key expansion
+* read LoRaWAN properties in a safe way to display them in mainController.. I need some getters() io making them public
+ - frameCount
+ - devAddr
+ - keys

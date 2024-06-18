@@ -6,6 +6,8 @@
 #pragma once
 #include <stdint.h>
 
+
+
 enum class displayRotation : uint32_t {        // rotation is clockwise
     rotation0,
     rotation90,
@@ -29,12 +31,12 @@ enum class displayPresence : uint32_t {
 class display {
   public:
     display() = delete;
-    static bool isPresent();         // return displayPresent
-    static void initialize();        // wakeup through HW reset, then configure display
-    static void run();               //
-    static bool isReady();           //
-    static void goSleep();           //
-    static void update();            // refresh display
+    static void detectPresence();
+    static bool isPresent();
+    static void wakeUp();
+    static bool isReady();
+    static void update();
+    static void goSleep();
 
     static void setPixel(uint32_t x, uint32_t y);
     static void clearPixel(uint32_t x, uint32_t y);

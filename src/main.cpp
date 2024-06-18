@@ -39,6 +39,12 @@
 #include <uniqueid.hpp>
 #include <settingscollection.hpp>
 #include <measurementcollection.hpp>
+#include <spi.hpp>
+#include <i2c.hpp>
+#include <bme680.hpp>
+#include <tsl2591.hpp>
+#include <battery.hpp>
+#include <lptim.hpp>
 
 /* USER CODE END Includes */
 
@@ -59,23 +65,14 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc;
-
 CRYP_HandleTypeDef hcryp;
-__ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {
-    0x00000000, 0x00000000, 0x00000000, 0x00000000};
-
+__ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {0x00000000, 0x00000000, 0x00000000, 0x00000000};
 I2C_HandleTypeDef hi2c2;
-
 LPTIM_HandleTypeDef hlptim1;
-
 RNG_HandleTypeDef hrng;
-
 RTC_HandleTypeDef hrtc;
-
 SPI_HandleTypeDef hspi2;
-
 SUBGHZ_HandleTypeDef hsubghz;
-
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
@@ -85,17 +82,17 @@ circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
+// static void MX_GPIO_Init(void);
 static void MX_RTC_Init(void);
-static void MX_USART2_UART_Init(void);
-static void MX_SPI2_Init(void);
-static void MX_ADC_Init(void);
+void MX_USART2_UART_Init(void);
+void MX_SPI2_Init(void);
+void MX_ADC_Init(void);
 void MX_I2C2_Init(void);
-static void MX_AES_Init(void);
-static void MX_RNG_Init(void);
+void MX_AES_Init(void);
+void MX_RNG_Init(void);
 static void MX_LPTIM1_Init(void);
-static void MX_SUBGHZ_Init(void);
-static void MX_USART1_UART_Init(void);
+// static void MX_SUBGHZ_Init(void);
+void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
 
@@ -124,42 +121,55 @@ int main(void) {
 
     /* Configure the system clock */
     SystemClock_Config();
+    HAL_Delay(3000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
 
     /* USER CODE BEGIN SysInit */
     __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
     /* USER CODE END SysInit */
 
     /* Initialize all configured peripherals */
-    MX_GPIO_Init();
     MX_RTC_Init();
-    MX_USART2_UART_Init();
-    MX_SPI2_Init();
     MX_ADC_Init();
-    MX_I2C2_Init();
     MX_AES_Init();
     MX_RNG_Init();
     MX_LPTIM1_Init();
-    MX_SUBGHZ_Init();
-    MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
-    gpio ::enableGpio(gpio::group::uart1);        // check if this is needed on top of MX_USART1_UART_Init();
-
-    HAL_Delay(5000);
-
-    gpio::enableGpio(gpio::group::i2cEeprom);
 
     logging::initialize();
-    logging::enable(logging::source::lorawanEvents);
-    logging::dump();
+    logging::enable(logging::source::applicationEvents);
+
     version::initialize();
     uniqueId::dump();
     realTimeClock::initialize();
-    mainController::initialize();
+
+    spi::wakeUp();
+    display::detectPresence();
+    spi::goSleep();
+
+    i2c::wakeUp();
+    if (nonVolatileStorage::isPresent()) {
+        if (!settingsCollection::isInitialized()) {
+            settingsCollection::initializeOnce();
+        }
+    }
+    sensorDeviceCollection::discover();
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 30);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 30);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 30);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 30);
+    i2c::goSleep();
+
+    gpio::enableGpio(gpio::group::rfControl);
+    LoRaWAN::initialize();
+    measurementCollection::initialize();
+    mainController::showDeviceInfo();
+    lptim::start(5 * 4096);
+
     // measurementCollection::dumpRaw(0, 128);
     // measurementCollection::dumpAll();
-    LoRaWAN::dumpConfig();
-    //LoRaWAN::dumpState();
-    //LoRaWAN::dumpChannels();
+    // LoRaWAN::dumpConfig();
+    // LoRaWAN::dumpState();
+    // LoRaWAN::dumpChannels();
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -223,7 +233,7 @@ void SystemClock_Config(void) {
  * @param None
  * @retval None
  */
-static void MX_ADC_Init(void) {
+void MX_ADC_Init(void) {
     /* USER CODE BEGIN ADC_Init 0 */
 
     /* USER CODE END ADC_Init 0 */
@@ -267,7 +277,7 @@ static void MX_ADC_Init(void) {
  * @param None
  * @retval None
  */
-static void MX_AES_Init(void) {
+void MX_AES_Init(void) {
     /* USER CODE BEGIN AES_Init 0 */
 
     /* USER CODE END AES_Init 0 */
@@ -368,7 +378,7 @@ static void MX_LPTIM1_Init(void) {
  * @param None
  * @retval None
  */
-static void MX_RNG_Init(void) {
+void MX_RNG_Init(void) {
     /* USER CODE BEGIN RNG_Init 0 */
 
     /* USER CODE END RNG_Init 0 */
@@ -454,7 +464,7 @@ static void MX_RTC_Init(void) {
  * @param None
  * @retval None
  */
-static void MX_SPI2_Init(void) {
+void MX_SPI2_Init(void) {
     /* USER CODE BEGIN SPI2_Init 0 */
 
     /* USER CODE END SPI2_Init 0 */
@@ -485,34 +495,34 @@ static void MX_SPI2_Init(void) {
     /* USER CODE END SPI2_Init 2 */
 }
 
-/**
- * @brief SUBGHZ Initialization Function
- * @param None
- * @retval None
- */
-static void MX_SUBGHZ_Init(void) {
-    /* USER CODE BEGIN SUBGHZ_Init 0 */
+// /**
+//  * @brief SUBGHZ Initialization Function
+//  * @param None
+//  * @retval None
+//  */
+// static void MX_SUBGHZ_Init(void) {
+//     /* USER CODE BEGIN SUBGHZ_Init 0 */
 
-    /* USER CODE END SUBGHZ_Init 0 */
+//     /* USER CODE END SUBGHZ_Init 0 */
 
-    /* USER CODE BEGIN SUBGHZ_Init 1 */
+//     /* USER CODE BEGIN SUBGHZ_Init 1 */
 
-    /* USER CODE END SUBGHZ_Init 1 */
-    hsubghz.Init.BaudratePrescaler = SUBGHZSPI_BAUDRATEPRESCALER_2;
-    if (HAL_SUBGHZ_Init(&hsubghz) != HAL_OK) {
-        Error_Handler();
-    }
-    /* USER CODE BEGIN SUBGHZ_Init 2 */
+//     /* USER CODE END SUBGHZ_Init 1 */
+//     hsubghz.Init.BaudratePrescaler = SUBGHZSPI_BAUDRATEPRESCALER_2;
+//     if (HAL_SUBGHZ_Init(&hsubghz) != HAL_OK) {
+//         Error_Handler();
+//     }
+//     /* USER CODE BEGIN SUBGHZ_Init 2 */
 
-    /* USER CODE END SUBGHZ_Init 2 */
-}
+//     /* USER CODE END SUBGHZ_Init 2 */
+// }
 
 /**
  * @brief USART1 Initialization Function
  * @param None
  * @retval None
  */
-static void MX_USART1_UART_Init(void) {
+void MX_USART1_UART_Init(void) {
     /* USER CODE BEGIN USART1_Init 0 */
 
     /* USER CODE END USART1_Init 0 */
@@ -553,7 +563,7 @@ static void MX_USART1_UART_Init(void) {
  * @param None
  * @retval None
  */
-static void MX_USART2_UART_Init(void) {
+void MX_USART2_UART_Init(void) {
     /* USER CODE BEGIN USART2_Init 0 */
 
     /* USER CODE END USART2_Init 0 */
@@ -589,23 +599,23 @@ static void MX_USART2_UART_Init(void) {
     /* USER CODE END USART2_Init 2 */
 }
 
-/**
- * @brief GPIO Initialization Function
- * @param None
- * @retval None
- */
-static void MX_GPIO_Init(void) {
-    /* USER CODE BEGIN MX_GPIO_Init_1 */
-    /* USER CODE END MX_GPIO_Init_1 */
+// /**
+//  * @brief GPIO Initialization Function
+//  * @param None
+//  * @retval None
+//  */
+// static void MX_GPIO_Init(void) {
+//     /* USER CODE BEGIN MX_GPIO_Init_1 */
+//     /* USER CODE END MX_GPIO_Init_1 */
 
-    /* GPIO Ports Clock Enable */
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
+//     /* GPIO Ports Clock Enable */
+//     __HAL_RCC_GPIOA_CLK_ENABLE();
+//     __HAL_RCC_GPIOB_CLK_ENABLE();
+//     __HAL_RCC_GPIOC_CLK_ENABLE();
 
-    /* USER CODE BEGIN MX_GPIO_Init_2 */
-    /* USER CODE END MX_GPIO_Init_2 */
-}
+//     /* USER CODE BEGIN MX_GPIO_Init_2 */
+//     /* USER CODE END MX_GPIO_Init_2 */
+// }
 
 /* USER CODE BEGIN 4 */
 void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {

@@ -154,8 +154,12 @@ void graphics::drawText(const uint32_t xStart, const uint32_t y, const font &the
     uint32_t xPos{xStart};
     uint32_t charachterIndex{0};
     while (theText[charachterIndex] != '\0' && xPos < display::widthInPixels) {
-        drawCharacter(xPos, y, theFont, theText[charachterIndex]);
-        xPos = xPos + theFont.getCharacterWidthInPixels(theText[charachterIndex]) + theFont.properties.spaceBetweenCharactersInPixels;
+        if (theText[charachterIndex] != '\0') {
+            drawCharacter(xPos, y, theFont, theText[charachterIndex]);
+            xPos = xPos + theFont.getCharacterWidthInPixels(theText[charachterIndex]) + theFont.properties.spaceBetweenCharactersInPixels;
+        } else {
+            xPos = xPos + (8 * theFont.properties.spaceBetweenCharactersInPixels);
+        }
         charachterIndex++;
     }
 }

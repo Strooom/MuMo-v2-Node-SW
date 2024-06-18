@@ -25,10 +25,13 @@ void test_convertGpsToUnix() {
     TEST_ASSERT_EQUAL(1717101555, realTimeClock::gpsTimeToUnixTime(1401136773));
 }
 
-void test_set() {
-    tm brokenDownTime;
-    realTimeClock::set(brokenDownTime);
-    TEST_IGNORE_MESSAGE("ToDo : Test on Target");
+void test_set() {   
+    mockRealTimeClock = buildInfo::buildEpoch;
+    realTimeClock::set(buildInfo::buildEpoch - 100);
+    TEST_ASSERT_EQUAL(buildInfo::buildEpoch, realTimeClock::get());
+    realTimeClock::set(buildInfo::buildEpoch + 100);
+    TEST_ASSERT_EQUAL(buildInfo::buildEpoch + 100, realTimeClock::get());
+    TEST_IGNORE_MESSAGE("TODO : Further tests on Target");
 }
 
 void test_time_tToBytes() {

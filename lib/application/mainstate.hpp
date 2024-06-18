@@ -8,14 +8,12 @@
 
 enum class mainState : uint32_t {
     boot,
-    waitingForNetwork,
-    waitingForTime,
+    networkCheck,
     idle,
     measuring,
     logging,
-    displaying, 
     networking,
-    sleeping,
+    networkError,
     test
 };
 

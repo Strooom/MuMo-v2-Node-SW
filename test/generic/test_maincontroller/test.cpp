@@ -2,59 +2,116 @@
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
 #include <maincontroller.hpp>
+#include <sensordevicecollection.hpp>
+#include <battery.hpp>
+#include <power.hpp>
+#include <lorawan.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-extern uint8_t mockSX126xDataBuffer[256];            // unitTesting mock for the LoRa Rx/Tx buffer, inside the SX126x
-extern uint8_t mockSX126xRegisters[0x1000];          // unitTesting mock for the config registers, inside the SX126x
-extern uint8_t mockSX126xCommandData[256][8];        // unitTesting mock for capturing the commands and their parameters to configure the SX126x
-extern uint8_t mockBME680Registers[256];           // unitTesting mock for the config registers, inside the BME680
-extern uint8_t mockTSL2591Registers[256];          // unitTesting mock for the config registers, inside the TSL2591
+extern bool mockUsbPower;
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {}
+void tearDown(void) {}
 
-void test_initialize() {
-    TEST_ASSERT_EQUAL(mainState::boot, mainController::state);
+void test_transitions_boot() {
     mainController::initialize();
-//    TEST_ASSERT_EQUAL(mainState::waitingForNetwork, mainController::state);
-}
+    TEST_ASSERT_EQUAL(mainState::boot, mainController::state);
 
-void test_handleEvents() {
-    // Not really testing a lot yet... Need to check state transitions
-    mainController::handleEvents();
-    applicationEventBuffer.push(applicationEvent::usbConnected);
-    mainController::handleEvents();
-    applicationEventBuffer.push(applicationEvent::usbRemoved);
-    mainController::handleEvents();
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
     mainController::handleEvents();
+    TEST_ASSERT_EQUAL(1U, mainController::requestCounter);
+    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
+
+    applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
+    mainController::handleEvents();
+    TEST_ASSERT_EQUAL(1U, mainController::answerCounter);
+    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
+
+    applicationEventBuffer.push(applicationEvent::realTimeClockTick);
+    mainController::handleEvents();
+    TEST_ASSERT_EQUAL(2U, mainController::requestCounter);
+    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
+
+    applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
+    mainController::handleEvents();
+    TEST_ASSERT_EQUAL(2U, mainController::answerCounter);
+    TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
+
+    mainController::run();
+    TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
+}
+
+void test_transitions_tick() {
+    sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), static_cast<uint32_t>(battery::voltage)).set(1, 1, 3.2F);
+    TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
+    applicationEventBuffer.push(applicationEvent::realTimeClockTick);
+    mainController::handleEvents();
+    TEST_ASSERT_EQUAL(mainState::measuring, mainController::state);
+    mainController::run();
+    TEST_ASSERT_EQUAL(mainState::logging, mainController::state);
+    mainController::run();
+    TEST_ASSERT_EQUAL(mainState::networking, mainController::state);
+    TEST_ASSERT_EQUAL(txRxCycleState::waitForRandomTimeBeforeTransmit, LoRaWAN::state);
     applicationEventBuffer.push(applicationEvent::lowPowerTimerExpired);
     mainController::handleEvents();
-    applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
+    mainController::run();
+    TEST_ASSERT_EQUAL(txRxCycleState::waitForTxComplete, LoRaWAN::state);
+    applicationEventBuffer.push(applicationEvent::sx126xTxComplete);
     mainController::handleEvents();
-    applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
+    mainController::run();
+    TEST_ASSERT_EQUAL(txRxCycleState::waitForRx1Start, LoRaWAN::state);
+    applicationEventBuffer.push(applicationEvent::lowPowerTimerExpired);
+    mainController::handleEvents();
+    mainController::run();
+    TEST_ASSERT_EQUAL(txRxCycleState::waitForRx1CompleteOrTimeout, LoRaWAN::state);
+    applicationEventBuffer.push(applicationEvent::sx126xTimeout);
+    mainController::handleEvents();
+    mainController::run();
+    TEST_ASSERT_EQUAL(txRxCycleState::waitForRx2Start, LoRaWAN::state);
+    applicationEventBuffer.push(applicationEvent::lowPowerTimerExpired);
+    mainController::handleEvents();
+    mainController::run();
+    TEST_ASSERT_EQUAL(txRxCycleState::waitForRx2CompleteOrTimeout, LoRaWAN::state);
+    applicationEventBuffer.push(applicationEvent::sx126xTimeout);
+    mainController::handleEvents();
+    mainController::run();
+    TEST_ASSERT_EQUAL(txRxCycleState::idle, LoRaWAN::state);
+    mainController::run();
+    TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
+}
+
+void test_usb_detection() {
+    mockUsbPower = false;
+    mainController::run();
+    mainController::handleEvents();
+    mockUsbPower = true;
+    mainController::run();
+    mainController::handleEvents();
+    mockUsbPower = false;
+    mainController::run();
     mainController::handleEvents();
 }
 
 void test_toString() {
     // for test coverage only
-    TEST_ASSERT_EQUAL_STRING("boot", toString(mainState::boot));
+
     TEST_ASSERT_EQUAL_STRING("idle", toString(mainState::idle));
     TEST_ASSERT_EQUAL_STRING("measuring", toString(mainState::measuring));
     TEST_ASSERT_EQUAL_STRING("logging", toString(mainState::logging));
-    TEST_ASSERT_EQUAL_STRING("displaying", toString(mainState::displaying));
     TEST_ASSERT_EQUAL_STRING("networking", toString(mainState::networking));
-    TEST_ASSERT_EQUAL_STRING("sleeping", toString(mainState::sleeping));
-    TEST_ASSERT_EQUAL_STRING("waitingForNetwork", toString(mainState::waitingForNetwork));
-    TEST_ASSERT_EQUAL_STRING("waitingForTime", toString(mainState::waitingForTime));
+    TEST_ASSERT_EQUAL_STRING("boot", toString(mainState::boot));
+    TEST_ASSERT_EQUAL_STRING("networkCheck", toString(mainState::networkCheck));
+    TEST_ASSERT_EQUAL_STRING("networkError", toString(mainState::networkError));
     TEST_ASSERT_EQUAL_STRING("test", toString(mainState::test));
+    TEST_ASSERT_EQUAL_STRING("unknown", toString(static_cast<mainState>(999U)));
 }
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
-    RUN_TEST(test_initialize);
-    // RUN_TEST(test_handleEvents);
+    RUN_TEST(test_transitions_boot);
+    RUN_TEST(test_transitions_tick);
+    RUN_TEST(test_usb_detection);
     RUN_TEST(test_toString);
     UNITY_END();
 }

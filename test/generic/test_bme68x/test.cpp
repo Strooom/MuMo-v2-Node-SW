@@ -2,28 +2,18 @@
 #include <power.hpp>
 #include <bme680.hpp>
 #include <cstring>
+#include <sensordevicecollection.hpp>
 
 extern uint8_t mockBME680Registers[256];
+extern bool mockBME680Present;
 
-void setUp(void) {
-    mockBME680Registers[static_cast<uint8_t>(bme680::registers::chipId)]      = bme680::chipIdValue;
-    mockBME680Registers[static_cast<uint8_t>(bme680::registers::meas_status)] = 0x80;
-
-    // Calibration data
-    uint8_t calibrationDataPart1[23] = {0x62, 0x67, 0x03, 0x10, 0x8F, 0x90, 0x68, 0xD7, 0x58, 0x00, 0x38, 0x22, 0x62, 0xFF, 0x2C, 0x1E, 0x00, 0x00, 0x71, 0xF4, 0x5B, 0xF6, 0x1E};
-    uint8_t calibrationDataPart2[14] = {0x3D, 0xBD, 0x37, 0x00, 0x2D, 0x14, 0x78, 0x9C, 0xB6, 0x65, 0xAB, 0xDC, 0xFB, 0x12};
-    uint8_t calibrationDataPart3[5]  = {0x28, 0xAA, 0x16, 0x4C, 0x03};
-    memcpy(mockBME680Registers + 0x8A, calibrationDataPart1, 23);
-    memcpy(mockBME680Registers + 0xE1, calibrationDataPart2, 14);
-    memcpy(mockBME680Registers + 0xF0, calibrationDataPart3, 5);
-
-    // Raw Measurements Data : TODO
-}
-
-void tearDown(void) {}        // after test
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_isPresent() {
     mockBME680Registers[static_cast<uint8_t>(bme680::registers::chipId)] = bme680::chipIdValue;
+    TEST_ASSERT_FALSE(bme680::isPresent());
+    mockBME680Present = true;
     TEST_ASSERT_TRUE(bme680::isPresent());
 }
 
@@ -33,80 +23,30 @@ void test_initialize() {
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, bme680::state);
 }
 
-void test_nmbrOfNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < bme680::nmbrChannels; channelIndex++) {
-        bme680::channels[channelIndex].hasNewValue = false;
-    }
-    TEST_ASSERT_EQUAL_UINT32(0, bme680::nmbrOfNewMeasurements());
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement());
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::temperature));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::relativeHumidity));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::barometricPressure));
-    bme680::channels[bme680::temperature].hasNewValue = true;
-    TEST_ASSERT_EQUAL_UINT32(1, bme680::nmbrOfNewMeasurements());
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement());
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement(bme680::temperature));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::relativeHumidity));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::barometricPressure));
-    bme680::channels[bme680::relativeHumidity].hasNewValue = true;
-    TEST_ASSERT_EQUAL_UINT32(2, bme680::nmbrOfNewMeasurements());
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement());
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement(bme680::temperature));
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement(bme680::relativeHumidity));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::barometricPressure));
-    bme680::channels[bme680::barometricPressure].hasNewValue = true;
-    TEST_ASSERT_EQUAL_UINT32(3, bme680::nmbrOfNewMeasurements());
-    bme680::clearNewMeasurements();
-    TEST_ASSERT_EQUAL_UINT32(0, bme680::nmbrOfNewMeasurements());
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement());
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::temperature));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::relativeHumidity));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::barometricPressure));
+void test_sampling() {
+    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, bme680::getState());
+    bme680::startSampling();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sampling, bme680::getState());
+    TEST_ASSERT_TRUE(bme680::samplingIsReady());
 }
 
-void test_tickAndRun() {
-    power::mockUsbPower = false;
+void test_run() {
     bme680::initialize();
-    bme680::channels[bme680::temperature].set(0, 1, 0, 0);
-    bme680::channels[bme680::relativeHumidity].set(0, 0, 0, 0);
-    bme680::channels[bme680::barometricPressure].set(0, 0, 0, 0);
-    TEST_ASSERT_TRUE(bme680::channels[bme680::temperature].needsSampling());
-    TEST_ASSERT_FALSE(bme680::channels[bme680::relativeHumidity].needsSampling());
-    TEST_ASSERT_FALSE(bme680::channels[bme680::barometricPressure].needsSampling());
-    TEST_ASSERT_TRUE(bme680::anyChannelNeedsSampling());
-    bme680::tick();
-    TEST_ASSERT_EQUAL(sensorDeviceState::sampling, bme680::state);
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement());
+    bme680::channels[bme680::temperature].set(1, 1,  25.0F);
+    bme680::channels[bme680::relativeHumidity].set(1, 1,  50.0F);
+    bme680::channels[bme680::barometricPressure].set(1, 1, 1013.0F);
+    sensorDeviceCollection::discover();
+    sensorDeviceCollection::updateCounters(static_cast<uint32_t>(sensorDeviceType::bme680));
+    bme680::startSampling();
     bme680::run();
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement());
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement(bme680::temperature));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::relativeHumidity));
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::barometricPressure));
-    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, bme680::state);
-
-    bme680::channels[bme680::temperature].set(0, 0, 0, 0);
-    bme680::channels[bme680::relativeHumidity].set(0, 1, 0, 0);
-    bme680::channels[bme680::barometricPressure].set(0, 1, 0, 0);
-    TEST_ASSERT_FALSE(bme680::channels[bme680::temperature].needsSampling());
-    TEST_ASSERT_TRUE(bme680::channels[bme680::relativeHumidity].needsSampling());
-    TEST_ASSERT_TRUE(bme680::channels[bme680::barometricPressure].needsSampling());
-    TEST_ASSERT_TRUE(bme680::anyChannelNeedsSampling());
-    bme680::tick();
-    TEST_ASSERT_EQUAL(sensorDeviceState::sampling, bme680::state);
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement());
-    bme680::run();
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement());
-    TEST_ASSERT_FALSE(bme680::hasNewMeasurement(bme680::temperature));
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement(bme680::relativeHumidity));
-    TEST_ASSERT_TRUE(bme680::hasNewMeasurement(bme680::barometricPressure));
-    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, bme680::state);
 }
+
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_isPresent);
     RUN_TEST(test_initialize);
-    RUN_TEST(test_nmbrOfNewMeasurements);
-    RUN_TEST(test_tickAndRun);
+    RUN_TEST(test_sampling);
+    RUN_TEST(test_run);
     UNITY_END();
 }

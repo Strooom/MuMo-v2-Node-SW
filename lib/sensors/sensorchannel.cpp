@@ -1,21 +1,17 @@
 #include "sensorchannel.hpp"
-#include "power.hpp"
 
-sensorChannel::sensorChannel() : oversamplingLowPower{0}, prescalerLowPower{0}, oversamplingHighPower{0}, prescalerHighPower{0} {
+sensorChannel::sensorChannel(uint32_t decimals, const char* name, const char* unit) : oversampling{0}, prescaling{0}, decimals{decimals}, name{name}, unit{unit} {
     limitOversamplingAndPrescaler();
 }
 
-void sensorChannel::set(uint32_t newOversamplingLowPower, uint32_t newPrescalerLowPower, uint32_t newOversamplingHighPower, uint32_t newPrescalerHighPower) {
-    oversamplingLowPower  = newOversamplingLowPower;
-    prescalerLowPower     = newPrescalerLowPower;
-    oversamplingHighPower = newOversamplingHighPower;
-    prescalerHighPower    = newPrescalerHighPower;
+void sensorChannel::set(uint32_t newOversampling, uint32_t newPrescaler, float initialSampleValue) {
+    oversampling = newOversampling;
+    prescaling   = newPrescaler;
     limitOversamplingAndPrescaler();
-    oversamplingCounter = getCurrentOversampling();
-    if (getCurrentPrescaler() > 0) {
-        prescaleCounter = getCurrentPrescaler()-1;
-    } else {
-        prescaleCounter = 0;
+    oversamplingCounter = 0;
+    prescaleCounter     = 0;
+    for (uint32_t i = 0; i < (maxOversampling + 1); i++) {
+        samples[i] = initialSampleValue;
     }
 }
 
@@ -29,26 +25,15 @@ bool sensorChannel::hasOutput() {
 };
 
 void sensorChannel::limitOversamplingAndPrescaler() {
-    if (oversamplingLowPower > maxOversampling) {
-        oversamplingLowPower = maxOversampling;
+    if (oversampling > maxOversampling) {
+        oversampling = maxOversampling;
     }
-    if (prescalerLowPower > maxPrescaler) {
-        prescalerLowPower = maxPrescaler;
-    }
-    if (oversamplingHighPower > maxOversampling) {
-        oversamplingHighPower = maxOversampling;
-    }
-    if (prescalerHighPower > maxPrescaler) {
-        prescalerHighPower = maxPrescaler;
+    if (prescaling > maxPrescaler) {
+        prescaling = maxPrescaler;
     }
 }
 
 sensorChannel::action sensorChannel::getNextAction() {
-    uint32_t prescaler    = getCurrentPrescaler();
-    uint32_t oversampling = getCurrentOversampling();
-    limitPrescaleCounter(prescaler);
-    limitOversamplingCounter(oversampling);
-
     if (isActive()) {
         if (prescaleCounter > 0) {
             return action::prescale;
@@ -64,20 +49,16 @@ sensorChannel::action sensorChannel::getNextAction() {
     }
 }
 
-void sensorChannel::adjustCounters() {
+void sensorChannel::updateCounters() {
     if (isActive()) {
-        uint32_t prescaler    = getCurrentPrescaler();
-        uint32_t oversampling = getCurrentOversampling();
-        limitPrescaleCounter(prescaler);
-        limitOversamplingCounter(oversampling);
         if (prescaleCounter > 0) {
             prescaleCounter--;
         } else {
-            prescaleCounter = getCurrentPrescaler() - 1;
+            prescaleCounter = prescaling - 1;
             if (oversamplingCounter > 0) {
                 oversamplingCounter--;
             } else {
-                oversamplingCounter = getCurrentOversampling();
+                oversamplingCounter = oversampling;
             }
         }
     } else {
@@ -90,39 +71,13 @@ void sensorChannel::addSample(float theSample) {
     samples[oversamplingCounter] = theSample;
 }
 
-float sensorChannel::getOutput() {
-    return average(getCurrentOversampling() + 1);
-}
-
-float sensorChannel::average(uint32_t nmbrOfSamples) const {
-    if (nmbrOfSamples == 0) {
-        nmbrOfSamples = 1;
-    }
-    if (nmbrOfSamples > (maxOversampling + 1)) {
-        nmbrOfSamples = (maxOversampling + 1);
-    }
-
+float sensorChannel::value() {
+    uint32_t nmbrOfSamples = oversampling + 1;
     float sum{0.0F};
     for (uint32_t i = 0; i < nmbrOfSamples; i++) {
         sum += samples[i];
     }
     return (sum / nmbrOfSamples);
-}
-
-uint32_t sensorChannel::getCurrentPrescaler() const {
-    if (power::hasUsbPower()) {
-        return prescalerHighPower;
-    } else {
-        return prescalerLowPower;
-    }
-}
-
-uint32_t sensorChannel::getCurrentOversampling() const {
-    if (power::hasUsbPower()) {
-        return oversamplingHighPower;
-    } else {
-        return oversamplingLowPower;
-    }
 }
 
 void sensorChannel::limitPrescaleCounter(uint32_t activePrescaler) {
@@ -138,5 +93,5 @@ void sensorChannel::limitOversamplingCounter(uint32_t activeOversampling) {
 }
 
 bool sensorChannel::isActive() const {
-    return (getCurrentPrescaler() > 0);
+    return (prescaling > 0);
 }

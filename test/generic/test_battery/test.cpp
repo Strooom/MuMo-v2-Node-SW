@@ -1,6 +1,10 @@
 #include <unity.h>
 #include <settingscollection.hpp>
 #include <battery.hpp>
+#include <sensordevicecollection.hpp>
+
+extern uint32_t mockBatteryRawADC;
+extern float mockBatteryVoltage;
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -13,64 +17,40 @@ void test_initialization() {
     battery::initalize();
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::getState());
     TEST_ASSERT_EQUAL(batteryType::saft_ls_14250, battery::type);
-
-    testType = static_cast<batteryType>(1000);
-    settingsCollection::save<batteryType>(testType, settingsCollection::settingIndex::batteryType);
-    battery::initalize();
-    TEST_ASSERT_EQUAL(batteryType::liFePO4_700mAh, battery::type);
+    for (uint32_t channelIndex = 0; channelIndex < battery::nmbrChannels; channelIndex++) {
+        TEST_ASSERT_EQUAL(0, battery::channels[channelIndex].oversampling);
+        TEST_ASSERT_EQUAL(0, battery::channels[channelIndex].prescaling);
+    }
 }
 
-void test_tickAndRun() {
-    batteryType testType = batteryType::saft_ls_14250;
-    settingsCollection::save<batteryType>(testType, settingsCollection::settingIndex::batteryType);
+void test_sampling() {
     battery::initalize();
-
-    battery::channels[battery::voltage].set(0, 1, 0, 0);
-    battery::channels[battery::percentCharged].set(0, 0, 0, 0);
-
-    TEST_ASSERT_TRUE(battery::anyChannelNeedsSampling());
-    TEST_ASSERT_TRUE(battery::channels[battery::voltage].needsSampling());
-    TEST_ASSERT_FALSE(battery::channels[battery::percentCharged].needsSampling());
-    battery::tick();
-    TEST_ASSERT_EQUAL(sensorDeviceState::sampling, battery::getState());
-    TEST_ASSERT_FALSE(battery::hasNewMeasurement());
-    TEST_ASSERT_EQUAL(0, battery::nmbrOfNewMeasurements());
-    battery::run();
-    TEST_ASSERT_TRUE(battery::hasNewMeasurement());
-    TEST_ASSERT_TRUE(battery::hasNewMeasurement(battery::voltage));
-    TEST_ASSERT_FALSE(battery::hasNewMeasurement(battery::percentCharged));
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::getState());
-    TEST_ASSERT_EQUAL(1, battery::nmbrOfNewMeasurements());
-
-    battery::channels[battery::percentCharged].set(0, 1, 0, 0);
-    TEST_ASSERT_TRUE(battery::channels[battery::percentCharged].needsSampling());
-    battery::tick();
-    battery::run();
-    TEST_ASSERT_EQUAL(2, battery::nmbrOfNewMeasurements());
-    battery::clearNewMeasurement(battery::voltage);
-    TEST_ASSERT_EQUAL(1, battery::nmbrOfNewMeasurements());
-    battery::clearAllNewMeasurements();
-    TEST_ASSERT_EQUAL(0, battery::nmbrOfNewMeasurements());
+    battery::startSampling();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sampling, battery::getState());
+    TEST_ASSERT_TRUE(battery::samplingIsReady());
+    mockBatteryRawADC = 1234;
+    TEST_ASSERT_EQUAL(mockBatteryRawADC, battery::readSample());
+    TEST_ASSERT_EQUAL(0, battery::voltageFromRaw(0));
 }
 
-void test_findNewMeasurements() {
-    batteryType testType = batteryType::saft_ls_14250;
-    settingsCollection::save<batteryType>(testType, settingsCollection::settingIndex::batteryType);
+void test_run() {
     battery::initalize();
-    battery::channels[battery::voltage].set(0, 1, 0, 0);
-    battery::channels[battery::percentCharged].set(0, 0, 0, 0);
-    battery::tick();
+    battery::channels[battery::voltage].set(1, 1,  3.2F);
+    battery::channels[battery::percentCharged].set(1, 1, 0.5F);
+    sensorDeviceCollection::discover();
+    sensorDeviceCollection::updateCounters(static_cast<uint32_t>(sensorDeviceType::battery));
+    battery::startSampling();
     battery::run();
-    TEST_ASSERT_EQUAL(0, battery::nextNewMeasurementChannel(0));
-    TEST_ASSERT_EQUAL(battery::notFound, battery::nextNewMeasurementChannel(1));
-
-    battery::initalize();
-    battery::channels[battery::voltage].set(0, 0, 0, 0);
-    battery::channels[battery::percentCharged].set(0, 1, 0, 0);
-    battery::tick();
+    sensorDeviceCollection::updateCounters(static_cast<uint32_t>(sensorDeviceType::battery));
+    battery::startSampling();
     battery::run();
-    TEST_ASSERT_EQUAL(1, battery::nextNewMeasurementChannel(0));
-    TEST_ASSERT_EQUAL(1, battery::nextNewMeasurementChannel(1));
+    sensorDeviceCollection::updateCounters(static_cast<uint32_t>(sensorDeviceType::battery));
+    battery::startSampling();
+    battery::run();
+    sensorDeviceCollection::updateCounters(static_cast<uint32_t>(sensorDeviceType::battery));
+    battery::startSampling();
+    battery::run();
 }
 
 void test_toString() {
@@ -79,14 +59,15 @@ void test_toString() {
     toString(batteryType::alkaline_1200mAh);
     toString(batteryType::saft_ls_14250);
     toString(batteryType::saft_ls_14500);
+    toString(static_cast<batteryType>(999));
     TEST_IGNORE_MESSAGE("Dummy test for coverage");
 }
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialization);
-    RUN_TEST(test_tickAndRun);
-    RUN_TEST(test_findNewMeasurements);
     RUN_TEST(test_toString);
+    RUN_TEST(test_sampling);
+    RUN_TEST(test_run);
     UNITY_END();
 }

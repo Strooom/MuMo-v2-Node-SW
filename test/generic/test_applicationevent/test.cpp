@@ -8,12 +8,12 @@ void tearDown(void) {}        // after test
 void test_toString() {
     // for test coverage only
     TEST_ASSERT_EQUAL_STRING("none", toString(applicationEvent::none));
-    TEST_ASSERT_EQUAL_STRING("usb Connected", toString(applicationEvent::usbConnected));
-    TEST_ASSERT_EQUAL_STRING("usb Removed", toString(applicationEvent::usbRemoved));
-    TEST_ASSERT_EQUAL_STRING("realTimeClock Tick", toString(applicationEvent::realTimeClockTick));
-    TEST_ASSERT_EQUAL_STRING("lowPower Timer Expired", toString(applicationEvent::lowPowerTimerExpired));
-    TEST_ASSERT_EQUAL_STRING("downlink Application Payload Received", toString(applicationEvent::downlinkApplicationPayloadReceived));
-    TEST_ASSERT_EQUAL_STRING("downlink MAC command Received", toString(applicationEvent::downlinkMacCommandReceived));
+    TEST_ASSERT_EQUAL_STRING("usbConnected", toString(applicationEvent::usbConnected));
+    TEST_ASSERT_EQUAL_STRING("usbRemoved", toString(applicationEvent::usbRemoved));
+    TEST_ASSERT_EQUAL_STRING("realTimeClockTick", toString(applicationEvent::realTimeClockTick));
+    TEST_ASSERT_EQUAL_STRING("lowPowerTimerExpired", toString(applicationEvent::lowPowerTimerExpired));
+    TEST_ASSERT_EQUAL_STRING("downlinkApplicationPayloadReceived", toString(applicationEvent::downlinkApplicationPayloadReceived));
+    TEST_ASSERT_EQUAL_STRING("downlinkMACReceived", toString(applicationEvent::downlinkMacCommandReceived));
 }
 
 int main(int argc, char **argv) {

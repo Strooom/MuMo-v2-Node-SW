@@ -14,5 +14,8 @@ enum class sensorDeviceType : uint32_t {
     sht40,
     lis3dh,
     sths34,
+    scd40,
+    sps30,
+    xa1110,
     nmbrOfKnownDevices
 };

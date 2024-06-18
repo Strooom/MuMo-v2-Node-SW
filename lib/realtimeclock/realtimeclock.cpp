@@ -15,7 +15,7 @@ union realTimeClock::convert realTimeClock::convertor;
 
 time_t realTimeClock::gpsTimeToUnixTime(uint32_t gpsTime) {
     static constexpr uint32_t unixToGpsOffset{315964800};
-    static constexpr uint32_t leapSecondsOffset{18};
+    static constexpr uint32_t leapSecondsOffset{18};        // TODO : get this from nvs setting, so we can update it when needed
     return (gpsTime + unixToGpsOffset - leapSecondsOffset);
 }
 
@@ -30,21 +30,21 @@ void realTimeClock::initialize() {
 }
 
 void realTimeClock::set(time_t unixTime) {
+    if (unixTime >= buildInfo::buildEpoch) {
 #ifndef generic
-    tm brokenDownTime;
-    (void)gmtime_r(&unixTime, &brokenDownTime);
-    set(brokenDownTime);
+        tm brokenDownTime;
+        (void)gmtime_r(&unixTime, &brokenDownTime);
+        set(brokenDownTime);
 #else
-    mockRealTimeClock = unixTime;
+        mockRealTimeClock = unixTime;
 #endif
+    }
 }
 
 void realTimeClock::set(tm brokenDownTime) {
 #ifndef generic
     RTC_TimeTypeDef stm32Time;
     RTC_DateTypeDef stm32Date;
-
-    // TODO : I could check if the members of brokenDownTime are within the correct ranges for the STM32WLE5
 
     stm32Time.Hours          = brokenDownTime.tm_hour;
     stm32Time.Minutes        = brokenDownTime.tm_min;

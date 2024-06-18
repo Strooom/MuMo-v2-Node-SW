@@ -38,7 +38,7 @@ void test_initialize_config() {
 void test_initialize_state() {
     TEST_ASSERT_EQUAL(1, LoRaWAN::uplinkFrameCount.asUint32);
     TEST_ASSERT_EQUAL(0, LoRaWAN::downlinkFrameCount.asUint32);
-    TEST_ASSERT_EQUAL(0, LoRaWAN::currentDataRateIndex);
+    TEST_ASSERT_EQUAL(5, LoRaWAN::currentDataRateIndex);
     TEST_ASSERT_EQUAL(3, LoRaWAN::rx2DataRateIndex);
     TEST_ASSERT_EQUAL(0, LoRaWAN::rx1DataRateOffset);
 }

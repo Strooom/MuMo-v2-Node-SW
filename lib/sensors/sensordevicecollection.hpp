@@ -6,31 +6,53 @@
 #pragma once
 #include <stdint.h>
 #include <sensordevicetype.hpp>
+#include <sensorchannel.hpp>
 
 class sensorDeviceCollection {
   public:
     sensorDeviceCollection() = delete;
-    static void discover();                   // discover all sensor devices that are present by scanning the I2C addresses and checking register-values
-    static void tick();                       // service all sensor devices after a RTC tick
-    static void run();                        // service all sensor devices until they are back to sleep
+    static void discover();
+    static void set(uint32_t deviceIndex, uint32_t channelIndex, uint32_t oversampling, uint32_t prescaler);
+    static void startSampling();
+    static void run();
     static void log();
+    static void log(uint32_t deviceIndex);
+    static void log(uint32_t deviceIndex, uint32_t channelIndex);
     static bool isSleeping();
-    static const char* name(uint32_t index);
 
-    static float valueAsFloat(uint32_t deviceIndex, uint32_t channelIndex);
-    static uint32_t channelDecimals(uint32_t deviceIndex, uint32_t channelIndex);
-    static const char* channelName(uint32_t deviceIndex, uint32_t channelIndex);
-    static const char* channelUnits(uint32_t deviceIndex, uint32_t channelIndex);
+    static float value(uint32_t deviceIndex, uint32_t channelIndex);
+    static uint32_t decimals(uint32_t deviceIndex, uint32_t channelIndex);
+    static const char* name(uint32_t deviceIndex);
+    static const char* name(uint32_t deviceIndex, uint32_t channelIndex);
+    static const char* units(uint32_t deviceIndex, uint32_t channelIndex);
 
-    static uint32_t nmbrOfNewMeasurements();
+    static uint32_t nmbrOfChannels(uint32_t deviceIndex);
+    static sensorChannel& channel(uint32_t deviceIndex, uint32_t channelIndex);
+
+    static bool needsSampling();
+    static bool needsSampling(uint32_t deviceIndex);
+    static bool needsSampling(uint32_t deviceIndex, uint32_t channelIndex);
+    static void updateCounters();
+    static void updateCounters(uint32_t deviceIndex);
+    static void updateCounters(uint32_t deviceIndex, uint32_t channelIndex);
     static bool hasNewMeasurements();
+    static bool hasNewMeasurements(uint32_t deviceIndex);
+    static bool hasNewMeasurement(uint32_t deviceIndex, uint32_t channelIndex);
+    static uint32_t nmbrOfNewMeasurements();
+    static uint32_t nmbrOfNewMeasurements(uint32_t deviceIndex);
     static void collectNewMeasurements();
+    static void collectNewMeasurements(uint32_t deviceIndex);
+    static void clearNewMeasurements();
+    static void clearNewMeasurements(uint32_t deviceIndex);
+
+    static bool isValid(uint32_t deviceIndex);
+    static bool isValid(uint32_t deviceIndex, uint32_t channelIndex);
 
 #ifndef unitTesting
 
   private:
 #endif
 
-    static bool isPresent[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)];        // an array of bools, with true for each known device that is present
-    static uint32_t actualNumberOfDevices;
+    static bool isPresent[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)];
+    static sensorChannel dummy;        // dummy, so we can return a valid reference to a channel in edge cases
 };

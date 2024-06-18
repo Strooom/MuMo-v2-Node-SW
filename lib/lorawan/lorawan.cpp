@@ -11,6 +11,8 @@
 #include <hexascii.hpp>
 #include <swaplittleandbigendian.hpp>
 #include <ctime>
+#include <realtimeclock.hpp>
+#include <lptim.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -29,7 +31,7 @@ frameCount LoRaWAN::uplinkFrameCount(1);
 frameCount LoRaWAN::downlinkFrameCount(0);
 
 dataRates LoRaWAN::theDataRates;
-uint32_t LoRaWAN::currentDataRateIndex{0};
+uint32_t LoRaWAN::currentDataRateIndex{5};
 loRaTxChannelCollection LoRaWAN::txChannels;
 uint32_t LoRaWAN::rx1DelayInSeconds{1};
 uint32_t LoRaWAN::rx1DataRateOffset{0};
@@ -53,6 +55,9 @@ txRxCycleState LoRaWAN::state{txRxCycleState::idle};
 
 linearBuffer<LoRaWAN::macInOutLength> LoRaWAN::macIn;
 linearBuffer<LoRaWAN::macInOutLength> LoRaWAN::macOut;
+
+uint32_t LoRaWAN::margin{0};
+uint32_t LoRaWAN::gatewayCount{0};
 
 #pragma endregion
 #pragma region Global Objects & Variables
@@ -267,9 +272,9 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
         theBlock[11] = downlinkFrameCount[1];           //
         theBlock[12] = downlinkFrameCount[2];           //
         theBlock[13] = downlinkFrameCount[3];           // MSByte
-    }                                                   //
-    theBlock[14] = 0x00;                                //
-    theBlock[15] = blockIndex;                          // Blocks Ai are indexed from 1..k, where k is the number of blocks
+    }        //
+    theBlock[14] = 0x00;              //
+    theBlock[15] = blockIndex;        // Blocks Ai are indexed from 1..k, where k is the number of blocks
 }
 
 void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirection) {
@@ -511,7 +516,7 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
         case txRxCycleState::waitForTxComplete:
             switch (theEvent) {
                 case applicationEvent::sx126xTxComplete:
-                    startTimer(ticksFromSeconds(rx1DelayInSeconds));
+                    lptim::start(ticksFromSeconds(rx1DelayInSeconds));
                     goTo(txRxCycleState::waitForRx1Start);
                     return;
                     break;
@@ -523,8 +528,8 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
         case txRxCycleState::waitForRx1Start:
             switch (theEvent) {
                 case applicationEvent::lowPowerTimerExpired: {
-                    stopTimer();
-                    startTimer(ticksFromSeconds(1U));
+                    lptim::stop();
+                    lptim::start(ticksFromSeconds(1U));
                     uint32_t rxFrequency = txChannels.channel[txChannels.getCurrentChannelIndex()].frequencyInHz;
                     uint32_t rxTimeout   = getReceiveTimeout(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor);
                     sx126x::configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
@@ -544,15 +549,16 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                     messageType receivedMessageType = decodeMessage();
                     switch (receivedMessageType) {
                         case messageType::application:
-                            stopTimer();
+                            lptim::stop();
                             processMacContents();
                             applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                             goTo(txRxCycleState::waitForRxMessageReadout);
                             return;
                             break;
                         case messageType::lorawanMac:
-                            stopTimer();
+                            lptim::stop();
                             processMacContents();
+                            applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
                             goTo(txRxCycleState::idle);
                             return;
                             break;
@@ -575,7 +581,7 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
         case txRxCycleState::waitForRx2Start:
             switch (theEvent) {
                 case applicationEvent::lowPowerTimerExpired: {
-                    stopTimer();
+                    lptim::stop();
                     sx126x::configForReceive(theDataRates.theDataRates[rx2DataRateIndex].theSpreadingFactor, rx2FrequencyInHz);
                     uint32_t rxTimeout = getReceiveTimeout(theDataRates.theDataRates[rx2DataRateIndex].theSpreadingFactor);
                     sx126x::startReceive(rxTimeout);
@@ -601,6 +607,7 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                             break;
                         case messageType::lorawanMac:
                             processMacContents();
+                            applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
                             goTo(txRxCycleState::idle);
                             return;
                             break;
@@ -632,7 +639,7 @@ void LoRaWAN::goTo(txRxCycleState newState) {
             break;
 
         case txRxCycleState::waitForRandomTimeBeforeTransmit:
-            stopTimer();
+            lptim::stop();
             break;
 
         case txRxCycleState::waitForTxComplete:
@@ -662,7 +669,7 @@ void LoRaWAN::goTo(txRxCycleState newState) {
 
         case txRxCycleState::waitForRandomTimeBeforeTransmit: {
             uint32_t randomDelayAsTicks = randomNumber() % maxRandomDelayBeforeTx;
-            startTimer(randomDelayAsTicks);
+            lptim::start(randomDelayAsTicks);
         } break;
 
         case txRxCycleState::waitForTxComplete:
@@ -688,17 +695,6 @@ void LoRaWAN::goTo(txRxCycleState newState) {
     }
 }
 
-void LoRaWAN::startTimer(uint32_t timeOutIn4096HzTicks) {
-#ifndef generic
-    HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, timeOutIn4096HzTicks);
-#endif
-}
-
-void LoRaWAN::stopTimer() {
-#ifndef generic
-    HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
-#endif
-}
 
 #pragma endregion
 #pragma region 4 : MAC layer functions
@@ -824,10 +820,11 @@ void LoRaWAN::removeNonStickyMacStuff() {
 }
 
 void LoRaWAN::processLinkCheckAnswer() {
-    constexpr uint32_t linkCheckAnswerLength{3};                                                                                        // commandId, margin, GwCnt
-    uint8_t margin       = macIn[1];                                                                                                    // margin : [0..254] = value in dB above the demodulation floor -> the higher the better,  margin [255] = reserved
-    uint8_t gatewayCount = macIn[2];                                                                                                    // GwCnt : number of gateways that successfully received the last uplink
-    macIn.consume(linkCheckAnswerLength);                                                                                               // consume all bytes
+    constexpr uint32_t linkCheckAnswerLength{3};        // commandId, margin, GwCnt
+    margin       = macIn[1];                            // margin : [0..254] = value in dB above the demodulation floor -> the higher the better,  margin [255] = reserved
+    gatewayCount = macIn[2];                            // GwCnt : number of gateways that successfully received the last uplink
+    macIn.consume(linkCheckAnswerLength);               // consume all bytes
+
     logging::snprintf(logging::source::lorawanMac, "LinkCheckAnswer : margin = %d, gatewayCount = %d \n", margin, gatewayCount);        // TODO : For the time being, we just show this info in the logging. Later we could use it to show the quality of the link on the display
 }
 
@@ -958,15 +955,11 @@ void LoRaWAN::processDownlinkChannelRequest() {
 
 void LoRaWAN::processDeviceTimeAnswer() {
     uint32_t gpsTime = static_cast<uint32_t>(macIn[1]) + (static_cast<uint32_t>(macIn[2]) << 8U) + (static_cast<uint32_t>(macIn[3]) << 16U) + (static_cast<uint32_t>(macIn[4]) << 24U);        // macIn[5] contains subsecond time, but we don't use it for the time being
-    static constexpr uint32_t unixToGpsOffset{315964800};
-    static constexpr uint32_t leapSecondsOffset{18};        // TODO : get this from nvs setting, so we can update it when needed
-    // NOTE : this time is the time at the end of the uplink -> we need to add the rx1Delay and optionally the rx2Delay  + if possible the duration of the RxMessage to get accurate time..
-    // I need a mock for the RTC, so I can test this code
-    time_t unixTime = gpsTime + unixToGpsOffset - leapSecondsOffset;
-    struct tm* timeInfo;
-    timeInfo = gmtime(&unixTime);
-    logging::snprintf(logging::source::lorawanMac, "DeviceTimeAnswer : %s", asctime(timeInfo));
-
+    time_t unixTime  = realTimeClock::gpsTimeToUnixTime(gpsTime);
+    realTimeClock::set(unixTime);
+    logging::snprintf(logging::source::lorawanMac, "received UTC = %s", ctime(&unixTime));
+    time_t localTime = realTimeClock::get();
+    logging::snprintf(logging::source::lorawanMac, "RTC set to %s", ctime(&localTime));
     macIn.consume(6);
 }
 
@@ -984,7 +977,6 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
 
     sx126x::initializeInterface();
     sx126x::initializeRadio();
-
 
     if (theFramePort == 0) {
         setOffsetsAndLengthsTx(macOut.getLevel());
@@ -1083,7 +1075,7 @@ messageType LoRaWAN::decodeMessage() {
         macIn.append(rawMessage + frameOptionsOffset, frameOptionsLength);
     }
 
-    // 8. If there is any framePayload, decrypt if
+    // 8. If there is any framePayload, decrypt it
     if (framePayloadLength > 0) {
         if (rawMessage[framePortOffset] == 0) {
             encryptDecryptPayload(networkKey, linkDirection::downlink);
@@ -1171,7 +1163,7 @@ void LoRaWAN::dumpConfig() {
         return;
     }
     logging::snprintf("LoRaWAN Config :\n");
-    logging::snprintf("  devAddr        = 0x%04X\n", DevAddr.asUint32);
+    logging::snprintf("  devAddr        = 0x%04X\n", DevAddr.asUint32); // TODO : I think this should be 0x%08X
     char tmpKeyAsHexAscii[33];
     hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, applicationKey.asBytes(), 16);
     logging::snprintf("  applicationKey = %s\n", tmpKeyAsHexAscii);
@@ -1279,3 +1271,18 @@ void LoRaWAN::dumpDeviceTimeAnswer() {}
 //     }
 //     logging::snprintf("\n");
 // }
+
+void LoRaWAN::appendMacCommand(macCommand theMacCommand) {
+    LoRaWAN::macOut.append(static_cast<uint8_t>(theMacCommand));
+}
+
+// This function can be removed once all devices with wrong DevAddr are updated
+
+void LoRaWAN::correctDevAddrEndianness() {
+    if ((DevAddr.asUint8[0] == 0x26) && (DevAddr.asUint8[1] == 0x0B)) {
+        uint32_t oldAddress = DevAddr.asUint32;
+        uint32_t newAddress = swapLittleBigEndian(oldAddress);
+        DevAddr.asUint32    = newAddress;
+        saveConfig();
+    }
+}

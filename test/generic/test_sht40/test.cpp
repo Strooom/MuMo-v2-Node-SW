@@ -1,8 +1,10 @@
 #include <unity.h>
 #include <sht40.hpp>
 #include <cstring>
+#include <sensordevicecollection.hpp>
 
 extern uint8_t mockSHT40Registers[6];
+extern bool mockSHT40Present;
 
 void setUp(void) {
     uint8_t testData[6]{0x80, 0x00, 0xA2, 0x80, 0x00, 0xA2};
@@ -11,6 +13,9 @@ void setUp(void) {
 void tearDown(void) {}
 
 void test_isPresent() {
+    mockSHT40Present = false;
+    TEST_ASSERT_FALSE(sht40::isPresent());
+    mockSHT40Present = true;
     TEST_ASSERT_TRUE(sht40::isPresent());
 }
 
@@ -49,9 +54,16 @@ void test_calculateRelativeHumidity() {
     TEST_ASSERT_EQUAL(100.0F, sht40::calculateRelativeHumidity());
 }
 
-void test_log() {
-    sht40::log();
+void test_run() {
+    sht40::initialize();
+    sht40::channels[sht40::temperature].set(1, 1, 20.0F);
+    sht40::channels[sht40::relativeHumidity].set(1, 1, 50.0F);
+    sensorDeviceCollection::discover();
+    sensorDeviceCollection::updateCounters(static_cast<uint32_t>(sensorDeviceType::tsl2591));
+    sht40::startSampling();
+    sht40::run();
 }
+
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
@@ -60,6 +72,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_sampling);
     RUN_TEST(test_calculateTemperature);
     RUN_TEST(test_calculateRelativeHumidity);
-    RUN_TEST(test_log);
+    RUN_TEST(test_run);
     UNITY_END();
 }

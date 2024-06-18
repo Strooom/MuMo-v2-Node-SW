@@ -7,14 +7,11 @@
 
 const char *toString(mainState aState) {
     switch (aState) {
-        case mainState::boot: 
+        case mainState::boot:
             return "boot";
             break;
-        case mainState::waitingForNetwork:
-            return "waitingForNetwork";
-            break;
-        case mainState::waitingForTime:
-            return "waitingForTime";
+        case mainState::networkCheck:
+            return "networkCheck";
             break;
         case mainState::idle:
             return "idle";
@@ -25,14 +22,11 @@ const char *toString(mainState aState) {
         case mainState::logging:
             return "logging";
             break;
-        case mainState::displaying:
-            return "displaying";
-            break;
         case mainState::networking:
             return "networking";
             break;
-        case mainState::sleeping:
-            return "sleeping";
+        case mainState::networkError:
+            return "networkError";
             break;
         case mainState::test:
             return "test";

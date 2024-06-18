@@ -14,16 +14,16 @@
 extern I2C_HandleTypeDef hi2c2;
 #else
 uint8_t mockSHT40Registers[256];
+bool mockSHT40Present{false};
 #include <cstring>
 
 #endif
 
 uint8_t sht40::i2cAddress;
 sensorDeviceState sht40::state{sensorDeviceState::unknown};
-sensorChannel sht40::channels[nmbrChannels];
-sensorChannelFormat sht40::channelFormats[nmbrChannels] = {
-    {"temperature", "~C", 1},
-    {"relativeHumidity", "%RH", 0},
+sensorChannel sht40::channels[nmbrChannels] = {
+    {1, "temperature", "~C"},
+    {0, "relativeHumidity", "%RH"},
 };
 
 uint32_t sht40::rawDataTemperature;
@@ -43,57 +43,16 @@ bool sht40::isPresent() {
 }
 
 void sht40::initialize() {
-    channels[temperature].set(0, 1, 0, 1);
-    channels[relativeHumidity].set(0, 1, 0, 1);
-    state = sensorDeviceState::sleeping;
-}
-
-uint32_t sht40::nmbrOfNewMeasurements() {
-    uint32_t count{0};
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            count++;
-        }
+        channels[channelIndex].set(0, 0);
+        channels[channelIndex].hasNewValue = false;
     }
-    return count;
-}
-
-bool sht40::hasNewMeasurement() {
-    return (channels[temperature].hasNewValue || channels[relativeHumidity].hasNewValue);
-}
-
-bool sht40::hasNewMeasurement(uint32_t channelIndex) {
-    return channels[channelIndex].hasNewValue;
-}
-
-void sht40::clearNewMeasurements() {
-    channels[temperature].hasNewValue      = false;
-    channels[relativeHumidity].hasNewValue = false;
-}
-
-float sht40::valueAsFloat(uint32_t index) {
-    return channels[index].getOutput();
-}
-
-void sht40::tick() {
-    if (state != sensorDeviceState::sleeping) {
-        adjustAllCounters();
-        return;
-    }
-
-    if (anyChannelNeedsSampling()) {
-        clearNewMeasurements();
-        startSampling();
-        state = sensorDeviceState::sampling;
-    } else {
-        adjustAllCounters();
-    }
+    state = sensorDeviceState::sleeping;
 }
 
 void sht40::run() {
     if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
         readSample();
-
         if (channels[temperature].needsSampling()) {
             float sht40Temperature = calculateTemperature();
             channels[temperature].addSample(sht40Temperature);
@@ -101,7 +60,6 @@ void sht40::run() {
                 channels[temperature].hasNewValue = true;
             }
         }
-
         if (channels[relativeHumidity].needsSampling()) {
             float sht40RelativeHumidity = calculateRelativeHumidity();
             channels[relativeHumidity].addSample(sht40RelativeHumidity);
@@ -109,19 +67,8 @@ void sht40::run() {
                 channels[relativeHumidity].hasNewValue = true;
             }
         }
-
         state = sensorDeviceState::sleeping;
-        adjustAllCounters();
     }
-}
-
-bool sht40::anyChannelNeedsSampling() {
-    return (channels[temperature].needsSampling() || channels[relativeHumidity].needsSampling());
-}
-
-void sht40::adjustAllCounters() {
-    channels[temperature].adjustCounters();
-    channels[relativeHumidity].adjustCounters();
 }
 
 void sht40::startSampling() {
@@ -172,7 +119,7 @@ bool sht40::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
     return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
 #else
-    return true;
+    return mockSHT40Present;
 #endif
 }
 
@@ -191,28 +138,4 @@ void sht40::read(uint8_t* response, uint32_t responseLength) {
 #else
     (void)memcpy(response, mockSHT40Registers, responseLength);
 #endif
-}
-
-void sht40::log() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            float value       = valueAsFloat(channelIndex);
-            uint32_t decimals = channelFormats[channelIndex].decimals;
-            uint32_t intPart  = integerPart(value, decimals);
-            if (decimals > 0) {
-                uint32_t fracPart = fractionalPart(value, decimals);
-                logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
-            } else {
-                logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelFormats[channelIndex].name, intPart, channelFormats[channelIndex].unit);
-            }
-        }
-    }
-}
-
-void sht40::addNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::sht40), channelIndex, channels[channelIndex].getOutput());
-        }
-    }
 }

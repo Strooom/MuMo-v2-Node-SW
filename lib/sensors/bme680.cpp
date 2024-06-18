@@ -9,21 +9,22 @@
 #include <logging.hpp>
 #include <float.hpp>
 #include <measurementcollection.hpp>
+#include <i2c.hpp>
 
 #ifndef generic
 #include "main.h"
 extern I2C_HandleTypeDef hi2c2;
 #else
 uint8_t mockBME680Registers[256];
+bool mockBME680Present{false};
 #include <cstring>
 #endif
 
 sensorDeviceState bme680::state{sensorDeviceState::unknown};
-sensorChannel bme680::channels[nmbrChannels];
-sensorChannelFormat bme680::channelFormats[nmbrChannels] = {
-    {"temperature", "~C", 1},
-    {"relativeHumidity", "%RH", 0},
-    {"barometricPressure", "hPa", 0},
+sensorChannel bme680::channels[nmbrChannels] = {
+    {1, "temperature", "~C"},
+    {0, "relativeHumidity", "%RH"},
+    {0, "barometricPressure", "hPa"},
 };
 
 uint32_t bme680::rawDataTemperature;
@@ -65,11 +66,7 @@ bool bme680::isPresent() {
 }
 
 void bme680::initialize() {
-    // TODO : need to read the sensorChannel settins from EEPROM and restore them
-    channels[temperature].set(0, 1, 0, 1);
-    channels[relativeHumidity].set(0, 0, 0, 0);
-    channels[barometricPressure].set(0, 0, 0, 0);
-
+#ifndef generic
     uint8_t registerData[42]{};
     readRegisters(0x8A, 23, registerData);             // read all calibration data from the sensorChannel and convert to proper coefficients
     readRegisters(0xE1, 14, registerData + 23);        //
@@ -97,46 +94,21 @@ void bme680::initialize() {
     calibrationCoefficientPressure8  = static_cast<float>(static_cast<int16_t>(static_cast<uint16_t>(registerData[19]) << 8) | static_cast<uint16_t>(registerData[18]));
     calibrationCoefficientPressure9  = static_cast<float>(static_cast<int16_t>(static_cast<uint16_t>(registerData[21]) << 8) | static_cast<uint16_t>(registerData[20]));
     calibrationCoefficientPressure10 = static_cast<float>(static_cast<uint8_t>(registerData[22]));
-
-    state = sensorDeviceState::sleeping;
-}
-
-uint32_t bme680::nmbrOfNewMeasurements() {
-    uint32_t count{0};
+#else
+    mockBME680Registers[static_cast<uint8_t>(bme680::registers::chipId)]      = bme680::chipIdValue;
+    mockBME680Registers[static_cast<uint8_t>(bme680::registers::meas_status)] = 0x80;
+    uint8_t calibrationDataPart1[23]                                          = {0x62, 0x67, 0x03, 0x10, 0x8F, 0x90, 0x68, 0xD7, 0x58, 0x00, 0x38, 0x22, 0x62, 0xFF, 0x2C, 0x1E, 0x00, 0x00, 0x71, 0xF4, 0x5B, 0xF6, 0x1E};
+    uint8_t calibrationDataPart2[14]                                          = {0x3D, 0xBD, 0x37, 0x00, 0x2D, 0x14, 0x78, 0x9C, 0xB6, 0x65, 0xAB, 0xDC, 0xFB, 0x12};
+    uint8_t calibrationDataPart3[5]                                           = {0x28, 0xAA, 0x16, 0x4C, 0x03};
+    memcpy(mockBME680Registers + 0x8A, calibrationDataPart1, 23);
+    memcpy(mockBME680Registers + 0xE1, calibrationDataPart2, 14);
+    memcpy(mockBME680Registers + 0xF0, calibrationDataPart3, 5);
+#endif
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            count++;
-        }
-    }
-    return count;
-}
-
-bool bme680::hasNewMeasurement() {
-    return (nmbrOfNewMeasurements() > 0);
-}
-
-bool bme680::hasNewMeasurement(uint32_t channelIndex) {
-    return channels[channelIndex].hasNewValue;
-}
-
-void bme680::clearNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        channels[channelIndex].set(0, 0);
         channels[channelIndex].hasNewValue = false;
     }
-}
-
-float bme680::valueAsFloat(uint32_t channelIndex) {
-    return channels[channelIndex].getOutput();
-}
-
-void bme680::tick() {
-    if (anyChannelNeedsSampling()) {
-        clearNewMeasurements();
-        startSampling();
-        state = sensorDeviceState::sampling;
-    } else {
-        adjustAllCounters();
-    }
+    state = sensorDeviceState::sleeping;
 }
 
 void bme680::run() {
@@ -168,22 +140,6 @@ void bme680::run() {
         }
 
         state = sensorDeviceState::sleeping;
-        adjustAllCounters();
-    }
-}
-
-bool bme680::anyChannelNeedsSampling() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].needsSampling()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void bme680::adjustAllCounters() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        channels[channelIndex].adjustCounters();
     }
 }
 
@@ -262,16 +218,32 @@ float bme680::calculateBarometricPressure() {
 
 bool bme680::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
-    return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
+    bool i2cState = i2c::isAwake();
+    if (!i2cState) {
+        i2c::wakeUp();
+    }
+    bool result = (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
+    if (!i2cState) {
+        i2c::goSleep();
+    }
+    return result;
+
 #else
-    return true;
+    return mockBME680Present;
 #endif
 }
 
 uint8_t bme680::readRegister(registers registerAddress) {
     uint8_t result;
 #ifndef generic
+    bool i2cState = i2c::isAwake();
+    if (!i2cState) {
+        i2c::wakeUp();
+    }
     HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &result, 1, halTimeout);
+    if (!i2cState) {
+        i2c::goSleep();
+    }
 #else
     result = mockBME680Registers[static_cast<uint8_t>(registerAddress)];
 #endif
@@ -280,7 +252,14 @@ uint8_t bme680::readRegister(registers registerAddress) {
 
 void bme680::writeRegister(registers registerAddress, uint8_t value) {
 #ifndef generic
+    bool i2cState = i2c::isAwake();
+    if (!i2cState) {
+        i2c::wakeUp();
+    }
     HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
+    if (!i2cState) {
+        i2c::goSleep();
+    }
 #else
     mockBME680Registers[static_cast<uint8_t>(registerAddress)] = value;
 #endif
@@ -288,32 +267,15 @@ void bme680::writeRegister(registers registerAddress, uint8_t value) {
 
 void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* destination) {
 #ifndef generic
+    bool i2cState = i2c::isAwake();
+    if (!i2cState) {
+        i2c::wakeUp();
+    }
     HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_8BIT, destination, length, halTimeout);
+    if (!i2cState) {
+        i2c::goSleep();
+    }
 #else
     (void)memcpy(destination, mockBME680Registers + startAddress, length);
 #endif
-}
-
-void bme680::log() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            float value       = valueAsFloat(channelIndex);
-            uint32_t decimals = channelFormats[channelIndex].decimals;
-            uint32_t intPart  = integerPart(value, decimals);
-            if (decimals > 0) {
-                uint32_t fracPart = fractionalPart(value, decimals);
-                logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
-            } else {
-                logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelFormats[channelIndex].name, intPart, channelFormats[channelIndex].unit);
-            }
-        }
-    }
-}
-
-void bme680::addNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::bme680), channelIndex, channels[channelIndex].getOutput());
-        }
-    }
 }

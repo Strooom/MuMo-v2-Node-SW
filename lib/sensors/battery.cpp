@@ -15,77 +15,29 @@
 #include <main.h>
 extern ADC_HandleTypeDef hadc;
 #else
-uint32_t mockBatteryRawADC;
-float mockBatteryVoltage;
+uint32_t mockBatteryRawADC{0};
+float mockBatteryVoltage{0};
 #endif
 
-// ### initialize static members ###
 batteryType battery::type{batteryType::liFePO4_700mAh};
 sensorDeviceState battery::state{sensorDeviceState::unknown};
-sensorChannel battery::channels[nmbrChannels];
-sensorChannelFormat battery::channelFormats[nmbrChannels] = {
-    {"voltage", "V", 2},
-    {"percentCharged", "%", 0},
+sensorChannel battery::channels[nmbrChannels] = {
+    {2, "voltage", "V"},
+    {0, "percentCharged", "%"},
 };
 
 void battery::initalize() {
-    channels[voltage].set(0, 1, 0, 1);
-    channels[percentCharged].set(0, 1, 0, 1);
-
     uint8_t typeIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType);
     if (typeIndex >= nmbrBatteryTypes) {
+        logging::snprintf(logging::source::error, "invalid settingsCollection::settingIndex::batteryType : %d\n", typeIndex);
         typeIndex = 0;
     }
     type  = static_cast<batteryType>(typeIndex);
     state = sensorDeviceState::sleeping;
-
     logging::snprintf(logging::source::settings, "batteryType : %s\n", toString(type));
-}
-
-uint32_t battery::nmbrOfNewMeasurements() {
-    uint32_t count{0};
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            count++;
-        }
-    }
-    return count;
-}
-
-bool battery::hasNewMeasurement(uint32_t channelIndex) {
-    return channels[channelIndex].hasNewValue;
-}
-
-void battery::clearNewMeasurement(uint32_t channelIndex) {
-    channels[channelIndex].hasNewValue = false;
-}
-
-void battery::clearAllNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        channels[channelIndex].set(0, 0);
         channels[channelIndex].hasNewValue = false;
-    }
-}
-
-uint32_t battery::nextNewMeasurementChannel(uint32_t startIndex) {
-    for (uint32_t channelIndex = startIndex; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            return channelIndex;
-        }
-    }
-    return notFound;
-}
-
-float battery::valueAsFloat(uint32_t index) {
-    return channels[index].getOutput();
-}
-
-void battery::tick() {
-    if (anyChannelNeedsSampling()) {
-        clearAllNewMeasurements();
-        startSampling();
-        state = sensorDeviceState::sampling;
-    } else {
-        adjustAllCounters();
     }
 }
 
@@ -100,7 +52,6 @@ void battery::run() {
                 channels[voltage].hasNewValue = true;
             }
         }
-
         if (channels[percentCharged].needsSampling()) {
             float batteryVoltage        = voltageFromRaw(rawADC);
             float batteryPercentCharged = chargeFromVoltage::calculateChargeLevel(batteryVoltage, type);
@@ -109,22 +60,12 @@ void battery::run() {
                 channels[percentCharged].hasNewValue = true;
             }
         }
-
         state = sensorDeviceState::sleeping;
-        adjustAllCounters();
     }
 }
 
-bool battery::anyChannelNeedsSampling() {
-    return (channels[voltage].needsSampling() || channels[percentCharged].needsSampling());
-}
-
-void battery::adjustAllCounters() {
-    channels[voltage].adjustCounters();
-    channels[percentCharged].adjustCounters();
-}
-
 void battery::startSampling() {
+    state = sensorDeviceState::sampling;
 #ifndef generic
     ADC_ChannelConfTypeDef theAdcConfig;
     theAdcConfig.Channel      = ADC_CHANNEL_VREFINT;
@@ -158,28 +99,4 @@ float battery::voltageFromRaw(uint32_t rawADC) {
 #else
     return mockBatteryVoltage;
 #endif
-}
-
-void battery::addNewMeasurements() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            measurementCollection::addMeasurement(static_cast<uint32_t>(sensorDeviceType::battery), channelIndex, channels[channelIndex].getOutput());
-        }
-    }
-}
-
-void battery::log() {
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
-        if (channels[channelIndex].hasNewValue) {
-            float value       = valueAsFloat(channelIndex);
-            uint32_t decimals = channelFormats[channelIndex].decimals;
-            uint32_t intPart  = integerPart(value, decimals);
-            if (decimals > 0) {
-                uint32_t fracPart = fractionalPart(value, decimals);
-                logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", channelFormats[channelIndex].name, intPart, fracPart, channelFormats[channelIndex].unit);
-            } else {
-                logging::snprintf(logging::source::sensorData, "%s = %d %s\n", channelFormats[channelIndex].name, intPart, channelFormats[channelIndex].unit);
-            }
-        }
-    }
 }

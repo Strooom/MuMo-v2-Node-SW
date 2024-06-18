@@ -21,6 +21,7 @@
 #include <spreadingfactor.hpp>
 #include <linearbuffer.hpp>
 #include <payloadencoder.hpp>
+#include <maccommand.hpp>
 
 class LoRaWAN {
   public:
@@ -37,6 +38,7 @@ class LoRaWAN {
     static void handleEvents(applicationEvent theEvent);
     static uint32_t getMaxApplicationPayloadLength();
     static void sendUplink(uint8_t framePort, const uint8_t payload[], uint32_t payloadLength);
+    static void appendMacCommand(macCommand theMacCommand);
     static void getReceivedDownlinkMessage();
     static txRxCycleState getState();
     static bool isIdle();
@@ -65,6 +67,18 @@ class LoRaWAN {
     static void dumpDownlinkChannelRequest();
     static void dumpDeviceTimeAnswer();
 
+    static void correctDevAddrEndianness();
+
+    static uint32_t margin;
+    static uint32_t gatewayCount;
+    static uint32_t currentDataRateIndex;
+    static deviceAddress DevAddr;
+    static aesKey applicationKey;
+    static aesKey networkKey;
+    static frameCount uplinkFrameCount;
+    static frameCount downlinkFrameCount;
+    static uint32_t rx1DelayInSeconds;
+
 #ifndef unitTesting
   private:
 #endif
@@ -72,18 +86,11 @@ class LoRaWAN {
     static txRxCycleState state;
     static void goTo(txRxCycleState newState);
 
-    static deviceAddress DevAddr;
-    static aesKey applicationKey;
-    static aesKey networkKey;
-    static frameCount uplinkFrameCount;
-    static frameCount downlinkFrameCount;
     static dataRates theDataRates;
-    static uint32_t currentDataRateIndex;
     static uint32_t rx1DataRateOffset;
     static uint32_t rx2DataRateIndex;
     static uint32_t rx2FrequencyInHz;
     static loRaTxChannelCollection txChannels;
-    static uint32_t rx1DelayInSeconds;
     static constexpr uint32_t maxRandomDelayBeforeTx{4096U};
 
     // #################################################
@@ -173,19 +180,16 @@ class LoRaWAN {
     static uint32_t receivedMic();
     static bool isValidDownlinkFrameCount(frameCount testFrameCount);
     static messageType decodeMessage();
-    
+
     // #############################################################
     // ### Other Helper functions                                ###
     // #############################################################
 
     static uint32_t randomNumber();
-    static void startTimer(uint32_t timeOutIn4096zTicks);
-    static void stopTimer();
     static void insertBlockB0(linkDirection theDirection, frameCount &aFrameCount);        // in downlink, the framecount is the received framecount, not necessarily the downlink framecount so I need to pass it as a parameter
 
     static void prepareBlockAi(aesBlock &theBlock, linkDirection theDirection, uint32_t blockIndex);
     static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);
 
     static uint32_t calculateMaxTransmitTimeout(uint32_t currentDataRateIndex, uint32_t loRaPayloadLength);
-
 };

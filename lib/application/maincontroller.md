@@ -28,3 +28,19 @@ When receiving power:
 * the MCU will not go into sleep
 * the UART1 is enabled
 * in idle state, the MCU processes CLI commands
+
+
+## StateMachine top-level
+* boot
+* waitForBootScreen : shows data on e-paper display (skipped if no display present)
+  - copyright
+  - buildinfo version - buildtype
+  - buildtimestamp
+  - sensors found
+  - 
+* waitForNetworkResponse : send some mac commands, expect an answer. Retry with higher SF if no answer.. Give up if no answer at all..
+  - used SF
+  - SNR
+  - actual time
+    
+* then idle and run a cycle every 30 seconds

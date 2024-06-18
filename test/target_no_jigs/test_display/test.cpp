@@ -19,33 +19,10 @@ circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 void setUp(void) {}
 void tearDown(void) {}
 
-void test_displayPresent() {
-    display::initialize();
-    display::clearAllPixels();
-    graphics::drawFilledRectangle(0, 0, 99, 99, graphics::color::black);
-    display::update();
-    HAL_Delay(2000);
-    display::initialize();
-    display::clearAllPixels();
-    graphics::drawFilledRectangle(0, 99, 99, 199, graphics::color::black);
-    display::update();
-    HAL_Delay(2000);
-    display::initialize();
-    display::clearAllPixels();
-    graphics::drawFilledRectangle(99, 99, 199, 199, graphics::color::black);
-    display::update();
-    HAL_Delay(2000);
-    display::initialize();
-    display::clearAllPixels();
-    graphics::drawFilledRectangle(99, 0, 199, 99, graphics::color::black);
-    display::update();
-}
-
 void test_displayFonts() {
     display::initialize();
-    display::clearAllPixels();
 
-    version::setIsVersion();
+    version::initialize();
     graphics::drawText(4, 180, lucidaConsole12, version::getIsVersionAsString());
     graphics::drawText(4, 160, lucidaConsole12, "0080E11505474CAC");
     graphics::drawText(4, 140, lucidaConsole12, "2024-04-19  16:38");
@@ -54,7 +31,6 @@ void test_displayFonts() {
     graphics::drawText(4, 4, roboto36bold, "012345");
 
     display::update();
-    HAL_Delay(5000);
 }
 
 void test_displayNotPresent() {
@@ -63,7 +39,7 @@ void test_displayNotPresent() {
 
 int main(int argc, char **argv) {
     HAL_Init();
-    HAL_Delay(2000);        // required for testing framework to connect
+    HAL_Delay(2000);
     SystemClock_Config();
 
     MX_SPI2_Init();
@@ -72,7 +48,6 @@ int main(int argc, char **argv) {
     UNITY_BEGIN();
     if (display::isPresent()) {
         RUN_TEST(test_displayFonts);
-        // RUN_TEST(test_displayPresent);
     } else {
         RUN_TEST(test_displayNotPresent);
     }

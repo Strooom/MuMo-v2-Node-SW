@@ -48,7 +48,7 @@ jobs:
           echo "extract commit short hash : $(git rev-parse --short HEAD)"
           declare commithash=$(git rev-parse --short HEAD)
           echo "extract build timestamp"
-          declare buildtimestamp=$(date "+%Y-%b-%d-%H:%M:%S")
+          declare buildtimestamp=$(date +"%a %b %d %H:%M:%S %Y")
           echo "buildtimestamp = $buildtimestamp"
           declare -i buildEpoch=$(date "+%s")
 
