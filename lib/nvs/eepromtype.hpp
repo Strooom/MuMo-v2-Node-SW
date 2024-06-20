@@ -4,7 +4,7 @@
 // ######################################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 // Different EEPROM types have different page size and memory size, etc.
 

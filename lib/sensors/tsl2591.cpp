@@ -100,7 +100,7 @@ float tsl2591::calculateLux() {
 
 bool tsl2591::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }
@@ -119,7 +119,7 @@ uint8_t tsl2591::readRegister(registers registerAddress) {
     uint8_t result;
 
 #ifndef generic
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }
@@ -136,7 +136,7 @@ uint8_t tsl2591::readRegister(registers registerAddress) {
 void tsl2591::writeRegister(registers registerAddress, uint8_t value) {
     uint16_t command = commandMask | static_cast<uint16_t>(registerAddress);
 #ifndef generic
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }

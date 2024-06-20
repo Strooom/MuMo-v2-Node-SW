@@ -4,7 +4,7 @@
 // ######################################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 enum class transmitPolicy : uint8_t {
     asSoonAsPossible,        // transmit measurements immediately

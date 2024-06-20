@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 enum class cliCommand : uint32_t {
     help = (0x68 << 24) + (0x65 << 16) + (0x6C << 8) + 0x70,        // show Help

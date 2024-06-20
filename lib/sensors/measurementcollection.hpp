@@ -4,7 +4,7 @@
 // ######################################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 #include <nvs.hpp>
 #include <measurement.hpp>
 #include <linearbuffer.hpp>

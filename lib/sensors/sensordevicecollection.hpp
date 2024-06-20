@@ -4,7 +4,7 @@
 // ######################################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 #include <sensordevicetype.hpp>
 #include <sensorchannel.hpp>
 

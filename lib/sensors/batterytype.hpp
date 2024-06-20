@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include "stdint.h"
+#include "cstdint"
 
 enum class batteryType : uint8_t {
     liFePO4_700mAh   = 0x00,        // AA LiFePO4 battery

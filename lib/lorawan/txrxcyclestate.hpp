@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 enum class txRxCycleState : uint32_t {
     idle,                                   // radio is standby - initialized

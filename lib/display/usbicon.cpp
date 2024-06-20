@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <cstdint>
 #include <bitmap.hpp>
 
 const uint8_t usbIconPixelData[] = {

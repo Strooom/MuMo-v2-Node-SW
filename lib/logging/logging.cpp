@@ -3,7 +3,7 @@
 // ### License : CC 4.0 BY-NC-SA  https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
-#include <stdint.h>
+#include <cstdint>
 #include <cstring>
 #include <cstdio>
 #include <cstdarg>

@@ -4,7 +4,7 @@
 // ######################################################################################
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include <ctime>
 #include <buildinfo.hpp>
 
@@ -14,9 +14,11 @@ class realTimeClock {
     static void set(time_t unixTime = buildInfo::buildEpoch);
     static void set(tm brokenDownTime);
     static time_t get();
-    static uint8_t* time_tToBytes(time_t input);
-    static time_t bytesToTime_t(uint8_t* input);
-    static time_t gpsTimeToUnixTime(uint32_t gpsTime);
+    static uint8_t* bytesFromTime_t(time_t input);
+    static time_t time_tFromBytes(uint8_t* input);
+    static time_t unixTimeFromGpsTime(uint32_t gpsTime);
+    static bool needsSync();
+    static constexpr uint32_t rtcSyncPeriod = 60 * 60 * 24 * 7;
 
 #ifndef unitTesting
 
@@ -26,4 +28,6 @@ class realTimeClock {
         uint32_t asUint32;
         uint8_t asBytes[4];
     } convertor;
+
+    static time_t lastSyncTime;
 };

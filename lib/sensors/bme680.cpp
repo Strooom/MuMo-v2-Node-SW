@@ -218,7 +218,7 @@ float bme680::calculateBarometricPressure() {
 
 bool bme680::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }
@@ -236,7 +236,7 @@ bool bme680::testI2cAddress(uint8_t addressToTest) {
 uint8_t bme680::readRegister(registers registerAddress) {
     uint8_t result;
 #ifndef generic
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }
@@ -252,7 +252,7 @@ uint8_t bme680::readRegister(registers registerAddress) {
 
 void bme680::writeRegister(registers registerAddress, uint8_t value) {
 #ifndef generic
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }
@@ -267,7 +267,7 @@ void bme680::writeRegister(registers registerAddress, uint8_t value) {
 
 void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* destination) {
 #ifndef generic
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }

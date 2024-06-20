@@ -4,7 +4,7 @@
 // ######################################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 // https://lvgl.io/tools/imageconverter
 // Use v8, CF_INDEXED_1_BIT

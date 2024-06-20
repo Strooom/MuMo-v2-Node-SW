@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 enum class frameType : uint8_t {
     joinRequest         = 0b000,

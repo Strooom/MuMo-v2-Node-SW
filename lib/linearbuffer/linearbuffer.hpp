@@ -4,8 +4,8 @@
 // #############################################################################
 
 #pragma once
-#include <stdint.h>
-#include <string.h>
+#include <cstdint>
+#include <cstring>
 
 // template class for a byte buffer.
 // In LoRaWAN data is usually binary io null terminated strings, so I use this class to easily pass data around between application, Lorawan and the LoRa modem

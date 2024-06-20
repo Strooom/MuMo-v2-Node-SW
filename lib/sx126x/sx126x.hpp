@@ -10,7 +10,7 @@
 // the RF switch is strictly speaking not part of the SX126X or STM32WLE5, but it is included in the Lora-E5 module, so it is included in this driver
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 #include <spreadingfactor.hpp>
 #include <powerversion.hpp>
 

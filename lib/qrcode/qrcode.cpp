@@ -35,7 +35,7 @@
 
 #include <qrcode.hpp>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 
 #pragma mark - Error Correction Lookup tables
 

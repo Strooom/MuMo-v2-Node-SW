@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 enum class applicationEvent : uint8_t {
     none = 0x00,        // when an eventBuffer underflows, it pops this dummy event

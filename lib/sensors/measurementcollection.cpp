@@ -79,7 +79,7 @@ void measurementCollection::addMeasurement(uint32_t deviceIndex, uint32_t channe
 }
 
 void measurementCollection::saveNewMeasurementsToEeprom() {
-    newMeasurements.prefix(realTimeClock::time_tToBytes(realTimeClock::get()), 4);
+    newMeasurements.prefix(realTimeClock::bytesFromTime_t(realTimeClock::get()), 4);
     newMeasurements.prefix(nmbrOfNewMeasurements);
     uint32_t level           = newMeasurements.getLevel();
     uint8_t trailingBytes[4] = {0xFF, 0xFF, 0xFF, 0xFF};        // TODO : check if we need to erase old measurements and add more 0xFF padding
@@ -195,7 +195,7 @@ time_t measurementCollection::timestampOfMeasurementsGroup(uint32_t measurementG
     nonVolatileStorage::read(offsetToAddress(measurementGroupOffset + 2), timeStampAsBytes + 1, 1);
     nonVolatileStorage::read(offsetToAddress(measurementGroupOffset + 3), timeStampAsBytes + 2, 1);
     nonVolatileStorage::read(offsetToAddress(measurementGroupOffset + 4), timeStampAsBytes + 3, 1);
-    time_t timestamp = realTimeClock::bytesToTime_t(timeStampAsBytes);
+    time_t timestamp = realTimeClock::time_tFromBytes(timeStampAsBytes);
     return timestamp;
 }
 

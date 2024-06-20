@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 enum class linkDirection : uint8_t {
     uplink = 0x00,

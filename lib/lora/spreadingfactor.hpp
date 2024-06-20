@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 enum class spreadingFactor : uint8_t {
     SF7  = 0x07,

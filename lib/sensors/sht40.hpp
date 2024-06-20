@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include <sensirion.hpp>
 #include <sensordevicestate.hpp>
 #include <sensorchannel.hpp>

@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 enum class payloadEncodingVersion : uint8_t {
     unknown   = 0x00,

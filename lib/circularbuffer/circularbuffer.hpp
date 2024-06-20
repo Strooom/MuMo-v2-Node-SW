@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 #ifndef generic
 #include "main.h"        // required for suspending interrupts to make it thread safe
 #endif

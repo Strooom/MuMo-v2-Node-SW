@@ -12,8 +12,9 @@ time_t mockRealTimeClock;
 #endif
 
 union realTimeClock::convert realTimeClock::convertor;
+time_t realTimeClock::lastSyncTime{0};
 
-time_t realTimeClock::gpsTimeToUnixTime(uint32_t gpsTime) {
+time_t realTimeClock::unixTimeFromGpsTime(uint32_t gpsTime) {
     static constexpr uint32_t unixToGpsOffset{315964800};
     static constexpr uint32_t leapSecondsOffset{18};        // TODO : get this from nvs setting, so we can update it when needed
     return (gpsTime + unixToGpsOffset - leapSecondsOffset);
@@ -92,15 +93,19 @@ time_t realTimeClock::get() {
 #endif
 }
 
-uint8_t* realTimeClock::time_tToBytes(time_t input) {
+uint8_t* realTimeClock::bytesFromTime_t(time_t input) {
     convertor.asUint32 = static_cast<uint32_t>(input);
     return convertor.asBytes;
 }
 
-time_t realTimeClock::bytesToTime_t(uint8_t* input) {
+time_t realTimeClock::time_tFromBytes(uint8_t* input) {
     convertor.asBytes[0] = input[0];
     convertor.asBytes[1] = input[1];
     convertor.asBytes[2] = input[2];
     convertor.asBytes[3] = input[3];
     return static_cast<time_t>(convertor.asUint32);
+}
+
+bool realTimeClock::needsSync() {
+    return (get() - lastSyncTime > rtcSyncPeriod);
 }

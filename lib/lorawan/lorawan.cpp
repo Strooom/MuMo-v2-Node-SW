@@ -955,7 +955,7 @@ void LoRaWAN::processDownlinkChannelRequest() {
 
 void LoRaWAN::processDeviceTimeAnswer() {
     uint32_t gpsTime = static_cast<uint32_t>(macIn[1]) + (static_cast<uint32_t>(macIn[2]) << 8U) + (static_cast<uint32_t>(macIn[3]) << 16U) + (static_cast<uint32_t>(macIn[4]) << 24U);        // macIn[5] contains subsecond time, but we don't use it for the time being
-    time_t unixTime  = realTimeClock::gpsTimeToUnixTime(gpsTime);
+    time_t unixTime  = realTimeClock::unixTimeFromGpsTime(gpsTime);
     realTimeClock::set(unixTime);
     logging::snprintf(logging::source::lorawanMac, "received UTC = %s", ctime(&unixTime));
     time_t localTime = realTimeClock::get();
