@@ -13,7 +13,10 @@ class screen {
     static void setText(uint32_t lineIndex, const char* text);
     static void clearAllTexts();
 
-    static constexpr uint32_t numberOfLines{4};
+    static void setText(uint32_t lineIndex, const char* textBig, const char* textSmall);
+    static void setStatus(const bool hasUsbPower, const uint32_t networkSignalStrength, uint32_t batterylevel);
+
+    static constexpr uint32_t numberOfLines{3};
     static constexpr uint32_t maxTextLength{8};
     static constexpr uint32_t numberOfLines2{10};
     static constexpr uint32_t maxTextLength2{24};
@@ -21,28 +24,19 @@ class screen {
 
   private:
 #endif
-    // Properties for screenType::measurements
+    static bool isModified;
 
-    static uint32_t deviceIndex[numberOfLines];         // which device is shown on each line
-    static uint32_t channelIndex[numberOfLines];        // which channel of the device is shown on each line
+    // Properties for screenType::measurements
 
     static char bigText[numberOfLines][maxTextLength + 1];
     static char smallText[numberOfLines][maxTextLength + 1];
+    static bool hasUsbPower;
+    static uint32_t netwerkStrength;
+    static uint32_t batteryLevel;
 
     // Properties for screenType::message
+
     static char consoleText[numberOfLines2][maxTextLength2 + 1];
-
-
-
-
-    static bool isModified;
-
-    static void getContents();
-    static void drawContents();
-
-    static void buildBigTextString(int32_t value, uint32_t lineIndex);
-    static void buildSmallTextString(uint32_t value, uint32_t decimals, const char* suffix, uint32_t lineIndex);
-
     static void showMeasurements();
     static void showMessage();
 };

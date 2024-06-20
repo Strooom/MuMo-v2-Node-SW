@@ -49,6 +49,8 @@ void MX_USART2_UART_Init(void);
 mainState mainController::state{mainState::boot};
 uint32_t mainController::requestCounter{0};
 uint32_t mainController::answerCounter{0};
+uint32_t mainController::deviceIndex[screen::numberOfLines]{1, 3, 2};
+uint32_t mainController::channelIndex[screen::numberOfLines]{0, 0, 1};
 
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -194,6 +196,8 @@ void mainController::run() {
         applicationEventBuffer.push(applicationEvent::usbRemoved);
     }
 
+
+
     switch (state) {
         case mainState::boot:
             mcuStop2();
@@ -246,6 +250,8 @@ void mainController::run() {
         case mainState::networking:
             if (LoRaWAN::isIdle()) {
                 if (display::isPresent()) {
+                     // Here we need to update values to be shown on the screen...
+                     // Then showing them can happen in idle later-on
                     screen::show(screenType::measurements);
                 }
                 goTo(mainState::idle);

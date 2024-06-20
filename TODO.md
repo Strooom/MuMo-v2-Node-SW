@@ -8,7 +8,7 @@
 * batteryVoltage seems incorrect ?? also shown with 1 decimal io 2 ??
 * wrapping of measurementsCollection : writing and reading measurements
 * erase old measurements when space needed for new ones
-
+* show UID as QRCode when LoRaWAN is not yet configured...
 
 
 
@@ -16,7 +16,7 @@
 * improve isModified in display refresh : set to false after updating display, set to true when writing different text into screen
 * measurementsScreen only has 3 lines io 4
 * high lux value does not show on display
-
+* Give the node a name property which can be set from downlink, and which appears on the display status bar
 
 
 

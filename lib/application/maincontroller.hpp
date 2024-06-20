@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <mainstate.hpp>
+#include <screen.hpp>
 
 class mainController {
   public:
@@ -18,8 +19,11 @@ class mainController {
     static void mcuStop2();
     static void miniAdr();
 
-    static constexpr uint32_t minNmbrAnswers{1};
+    static constexpr uint32_t minNmbrAnswers{2};
     static constexpr uint32_t maxNmbrRequests{12};
+    static uint32_t deviceIndex[screen::numberOfLines];
+    static uint32_t channelIndex[screen::numberOfLines];
+
 
 #ifndef unitTesting
 

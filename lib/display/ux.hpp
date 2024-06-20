@@ -28,7 +28,7 @@ class ux {
 
     // dimensions for battery icon
     static constexpr uint32_t batteryIconWidth{16};
-    static constexpr uint32_t batteryIconHeight{32};
+    static constexpr uint32_t batteryIconHeight{36};
     static constexpr uint32_t batteryIconThickness{2};
     static constexpr uint32_t batteryIconGaugeHeight{batteryIconHeight - 2 * batteryIconThickness};
     static constexpr uint32_t batteryIconTipHeight{5};
@@ -39,7 +39,7 @@ class ux {
     static constexpr uint32_t netwerkSignalStrengthBarWidth{6};
     static constexpr uint32_t netwerkSignalStrengthNumberOfBars{4};
     static constexpr uint32_t netwerkSignalStrengthBaseHeight{10};
-    static constexpr uint32_t netwerkSignalStrengthStepHeight{9};
+    static constexpr uint32_t netwerkSignalStrengthStepHeight{10};
     static constexpr uint32_t netwerkSignalStrengthWidth{(netwerkSignalStrengthBarWidth * netwerkSignalStrengthNumberOfBars)};
     static constexpr uint32_t netwerkSignalStrengthHeight{netwerkSignalStrengthBaseHeight + (netwerkSignalStrengthStepHeight * (netwerkSignalStrengthNumberOfBars - 1))};
 };

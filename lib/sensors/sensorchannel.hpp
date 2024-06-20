@@ -24,6 +24,8 @@ class sensorChannel {
 
     void addSample(float theSample);
     float value();
+    void buildBigTextString(char* destination, uint32_t maxLength);
+    void buildSmallTextString(char* destination, uint32_t maxLength);
 
 #ifndef unitTesting
 
