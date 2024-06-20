@@ -22,6 +22,7 @@ uint32_t screen::channelIndex[numberOfLines]{0, 0, 1, 0};
 extern font roboto36bold;
 extern font tahoma24bold;
 extern font lucidaConsole12;
+extern bitmap usbIcon;
 
 void screen::show(screenType theScreenType) {
     switch (theScreenType) {
@@ -88,6 +89,7 @@ void screen::drawContents() {
     uint32_t batteryLevel = static_cast<uint32_t>(sensorDeviceCollection::value(1, 1) * 100.0F);
     graphics::drawBatteryIcon(display::widthInPixels - (1 + ux::marginLeft + ux::batteryIconWidth), 2, batteryLevel);
     graphics::drawNetworkSignalStrengthIcon(display::widthInPixels - (1 + ux::marginLeft + ux::marginLeft + ux::batteryIconWidth + ux::netwerkSignalStrengthWidth), 2, 50);
+    graphics::drawBitMap(ux::marginLeft, 2, usbIcon);
     display::update();
 }
 

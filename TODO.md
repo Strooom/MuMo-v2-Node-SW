@@ -1,4 +1,7 @@
 # Short Term ToDo's
+* USB icon tonen bij USB connectie
+* UART2 activeren bij USB connectie
+* bootloader jumpen bij detectie 0xF7 van STM32CubeProgrammer
 * deviceStatusReq doen werken met echte waarden
   - ontvangstwaarden van laatste downlink opslaan
   - batterijspanning omzetten in uint8
@@ -10,9 +13,6 @@
 
 
 # Medium Term ToDo's
-* move lptim out of lorawan and make it available to application
-* allow firmware upgrade from usb/serial
-* show usb connection on display
 * improve isModified in display refresh : set to false after updating display, set to true when writing different text into screen
 * measurementsScreen only has 3 lines io 4
 * high lux value does not show on display

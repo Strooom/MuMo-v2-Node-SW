@@ -6,7 +6,8 @@
 #pragma once
 #include <stdint.h>
 
-
+// https://lvgl.io/tools/imageconverter
+// Use v8, CF_INDEXED_1_BIT
 
 class bitmap {
   public:

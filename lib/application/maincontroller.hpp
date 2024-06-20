@@ -18,7 +18,7 @@ class mainController {
     static void mcuStop2();
     static void miniAdr();
 
-    static constexpr uint32_t minNmbrAnswers{2};
+    static constexpr uint32_t minNmbrAnswers{1};
     static constexpr uint32_t maxNmbrRequests{12};
 
 #ifndef unitTesting
