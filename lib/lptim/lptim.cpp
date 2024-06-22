@@ -14,7 +14,9 @@ void MX_LPTIM1_Init(void);
 bool lptim::running{false};
 
 void lptim::initialize() {
+#ifndef generic
     MX_LPTIM1_Init();
+#endif
 }
 
 void lptim::start(uint32_t timeOutIn4096HzTicks) {

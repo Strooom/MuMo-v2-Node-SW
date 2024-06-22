@@ -1,120 +1,117 @@
-#include "clicommand.h"
-#include "cli.h"
+#include <cli.hpp>
+#include <cstring>        // for strcmp
 
-#ifndef generic
-#include "main.h"
-extern UART_HandleTypeDef huart2;
-
-#else
-#endif
-
-circularBuffer<uint8_t, cli::commandBufferLength> cli::commandBuffer;
-circularBuffer<uint8_t, cli::responseBufferLength> cli::responseBuffer;
-
-
-void cli::startTx() {
-    if (!commandBuffer.isEmpty()) {
-    #ifndef generic
-        bool interrupts_enabled = (__get_PRIMASK() == 0);
-        __disable_irq();
-        USART2->CR1 = USART2->CR1 | USART_CR1_TXEIE_TXFNFIE;
-        if (interrupts_enabled) {
-            __enable_irq();
-        }
-
-
-    #endif
-}
+void setDevAddr() {
+    // TODO : implement this
 }
 
-void cli::handleRxEvent() {
-#ifndef generic
-    uint8_t received_char;
-    if (HAL_UART_Receive(&huart2, &received_char, 1, 0) == HAL_OK) {
-        commandBuffer.push(received_char);
-        if (received_char == '\r') {
-            handleEvents();
-        }
-        if (received_char == bootLoaderMagicValue) {
-            jumpToBootLoader();
+void showHelp() {
+    // TODO : implement this
+}
+
+char cli::command[cliCommand::maxLongNameLength]{};
+uint32_t cli::nmbrOfArguments{0};
+char cli::arguments[cliCommand::maxNmbrOfArguments][cliCommand::maxArgumentLength]{};
+char cli::error[cli::maxCommandLineLength]{};
+
+cliCommand cli::commands[nmbrOfCommands]{
+    {"?", "help", 0, showHelp},
+    {"ssw", "show-software", 0, nullptr},
+    {"shw", "show-hardware", 0, nullptr},
+    {"sl", "show-lorawan", 0, nullptr},
+    {"sda", "set-devaddr", 1, setDevAddr},
+    {"snk", "set-nwkkey", 1, nullptr},
+    {"sak", "set-appkey", 1, nullptr}};
+
+uint32_t cli::countArguments(char* commandLine) {
+    uint32_t count{0};
+    uint32_t commandLineLength{0};
+    commandLineLength = strnlen(commandLine, maxCommandLineLength);
+    for (uint32_t i{0}; i < commandLineLength; i++) {
+        if (commandLine[i] == ' ') {
+            count++;
         }
     }
-#endif
+    if (count > cliCommand::maxNmbrOfArguments) {
+        count = cliCommand::maxNmbrOfArguments;
+    }
+    return count;
 }
 
-void cli::handleTxEvent() {
-#ifndef generic
-    uint8_t received_char;
-    if (HAL_UART_Receive(&huart2, &received_char, 1, 0) == HAL_OK) {
-        commandBuffer.push(received_char);
-        if (received_char == '\r') {
-            handleEvents();
+int32_t cli::getSeparatorPosition(char* commandLine, uint32_t separatorIndex) {
+    uint32_t slashCount{0};
+    uint32_t dataLength = strnlen(commandLine, maxCommandLineLength);
+    for (uint32_t position = 0; position < dataLength; position++) {
+        if (commandLine[position] == commandArgumentSeparator) {
+            if (slashCount == separatorIndex) {
+                return position;
+            }
+            slashCount++;
         }
-        if (received_char == bootLoaderMagicValue) {
-            jumpToBootLoader();
-        }
     }
-#endif
+    return -1;
 }
 
-void cli::handleEvents() {
-}
+void cli::getSegment(char* destination, char* commandLine, uint32_t segmentIndex) {
+    uint32_t startIndex;
+    uint32_t endIndex;
+    uint32_t nmbrOfArguments = countArguments(commandLine);
 
-void cli::jumpToBootLoader() {
-#ifndef generic
-    HAL_UART_DeInit(&huart2);        // TODO : maybe need to reset some other stuff as well, to bring the MCU back to a clean state as after reset
-
-    uint32_t i = 0;
-    void (*SysMemBootJump)(void);
-    volatile uint32_t BootAddr = 0x1FFF0000;
-
-    __disable_irq();
-    SysTick->CTRL = 0;
-    HAL_RCC_DeInit();
-    for (i = 0; i < 5; i++) {
-        NVIC->ICER[i] = 0xFFFFFFFF;
-        NVIC->ICPR[i] = 0xFFFFFFFF;
+    if (segmentIndex > nmbrOfArguments) {
+        destination[0] = '\0';
+        return;
     }
-    __enable_irq();
 
-    SysMemBootJump = (void (*)(void))(*((uint32_t *)((BootAddr + 4))));
-
-    __set_MSP(*(uint32_t *)BootAddr);        // Set the main stack pointer to the boot loader stack
-
-    SysMemBootJump();
-#endif
-    while (1) {
-    }
-}
-
-
-
-void cli::txEmptyInterrupt() {
-#ifndef generic
-    if (responseBuffer.isEmpty()) {
-        USART2->CR1 = USART2->CR1 & ~USART_CR1_TXEIE_TXFNFIE;
+    if (segmentIndex == 0) {
+        startIndex = 0;
     } else {
-        USART2->TDR = responseBuffer.pop();
+        startIndex = getSeparatorPosition(commandLine, segmentIndex - 1) + 1;
     }
-#endif
-}
 
-void cli::txCompleteInterrupt() {
-#ifndef generic
-    USART2->CR1 = USART2->CR1 & ~USART_CR1_TCIE;
-#endif
-}
-
-void cli::rxNotEmptyInterrupt() {
-#ifndef generic
-    uint8_t received_char = USART2->RDR;
-    if (received_char == bootLoaderMagicValue) {
-        jumpToBootLoader();
+    if (segmentIndex == nmbrOfArguments) {
+        endIndex = strnlen(commandLine, maxCommandLineLength);
     } else {
-        commandBuffer.push(received_char);
+        endIndex = getSeparatorPosition(commandLine, segmentIndex);
     }
-    // if (received_char == '\r') {
-    //     handleEvents();
-    // }
-#endif
+
+    for (uint32_t index = startIndex; index < endIndex; index++) {
+        destination[index - startIndex] = commandLine[index];
+    }
+    destination[endIndex - startIndex] = '\0';
+}
+
+void cli::splitCommandLine(char* commandLine) {
+    nmbrOfArguments = countArguments(commandLine);
+    getSegment(command, commandLine, 0);
+    for (uint32_t argumentIndex = 0; argumentIndex < cliCommand::maxNmbrOfArguments; argumentIndex++) {
+        if (argumentIndex < nmbrOfArguments) {
+            getSegment(arguments[argumentIndex], commandLine, argumentIndex + 1);
+        } else {
+            arguments[argumentIndex][0] = '\0';
+        }
+    }
+}
+
+int32_t cli::findCommandIndex() {
+    for (uint32_t commandIndex = 0; commandIndex < nmbrOfCommands; commandIndex++) {
+        if (strcmp(command, commands[commandIndex].longName) == 0) {
+            return commandIndex;
+        }
+        if (strcmp(command, commands[commandIndex].shortName) == 0) {
+            return commandIndex;
+        }
+    }
+    return -1;
+}
+
+void cli::parseCommandLine(char* commandLine) {
+    splitCommandLine(commandLine);
+    int32_t commandIndex = findCommandIndex();
+    if (commandIndex >= 0) {
+        if (commands[commandIndex].handler != nullptr) {
+            commands[commandIndex].handler();
+        }
+    } else {
+        // respond with error message "unrecognized command 'xxxxx'"
+    }
 }

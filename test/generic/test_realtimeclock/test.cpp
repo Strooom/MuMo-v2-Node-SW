@@ -22,7 +22,7 @@ void test_initialize() {
 }
 
 void test_convertGpsToUnix() {
-    TEST_ASSERT_EQUAL(1717101555, realTimeClock::gpsTimeToUnixTime(1401136773));
+    TEST_ASSERT_EQUAL(1717101555, realTimeClock::unixTimeFromGpsTime(1401136773));
 }
 
 void test_set() {   
@@ -36,7 +36,7 @@ void test_set() {
 
 void test_time_tToBytes() {
     time_t testInput = 0x12345678;
-    uint8_t* result = realTimeClock::time_tToBytes(testInput);
+    uint8_t* result = realTimeClock::bytesFromTime_t(testInput);
     TEST_ASSERT_EQUAL(0x78, result[0]);
     TEST_ASSERT_EQUAL(0x56, result[1]);
     TEST_ASSERT_EQUAL(0x34, result[2]);
@@ -45,7 +45,7 @@ void test_time_tToBytes() {
 
 void test_bytesToTime_t() {
     uint8_t testInput[4] = {0x78, 0x56, 0x34, 0x12};
-    time_t result = realTimeClock::bytesToTime_t(testInput);
+    time_t result = realTimeClock::time_tFromBytes(testInput);
     TEST_ASSERT_EQUAL(0x12345678, result);
 }
 

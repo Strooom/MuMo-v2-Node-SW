@@ -1,14 +1,7 @@
-// #############################################################################
-// ### Author(s) : Pascal Roobrouck - @strooom                               ###
-// ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
-// #############################################################################
 
-#pragma once
 #include <cstdint>
 #include <circularbuffer.hpp>
 
-class cli {
-  public:
   static void startTx();
     static void handleRxEvent();
     static void handleTxEvent();
@@ -17,16 +10,8 @@ class cli {
     static void txCompleteInterrupt();
     static void rxNotEmptyInterrupt();
 
-
-  private:
-    static void handleEvents();
-    static void jumpToBootLoader();
-
     static constexpr uint32_t commandBufferLength{256};
     static constexpr uint32_t responseBufferLength{256};
 
     static circularBuffer<uint8_t, commandBufferLength> commandBuffer;
     static circularBuffer<uint8_t, responseBufferLength> responseBuffer;
-
-    static constexpr uint8_t bootLoaderMagicValue{0x7F};
-};
