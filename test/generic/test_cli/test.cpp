@@ -106,11 +106,11 @@ void test_findCommandIndex() {
 
 void test_parseCommandLine() {
     char commandLine1[] = "help";
-    cli::parseCommandLine(commandLine1);
+    cli::executeCommand(commandLine1);
     char commandLine2[] = "set-devaddr 12345678";
-    cli::parseCommandLine(commandLine2);
+    cli::executeCommand(commandLine2);
     char commandLine3[] = "unknown command";
-    cli::parseCommandLine(commandLine3);
+    cli::executeCommand(commandLine3);
 }
 
 int main(int argc, char **argv) {

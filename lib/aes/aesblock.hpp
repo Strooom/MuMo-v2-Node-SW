@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include <cstdint>
+#include <stdint.h>
 #include <cstddef>        // std::size_t
 #include <aeskey.hpp>
 

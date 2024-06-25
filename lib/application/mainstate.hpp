@@ -4,7 +4,7 @@
 // ######################################################################################
 
 #pragma once
-#include <cstdint>
+#include <stdint.h>
 
 enum class mainState : uint32_t {
     boot,

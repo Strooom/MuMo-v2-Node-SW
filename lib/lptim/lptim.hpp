@@ -3,7 +3,7 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 
-#include <cstdint>
+#include <stdint.h>
 
 class lptim {
   public:

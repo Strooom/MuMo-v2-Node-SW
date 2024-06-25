@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 #include "buildtype.hpp"
 #include "buildenvironment.hpp"
 #include <ctime>

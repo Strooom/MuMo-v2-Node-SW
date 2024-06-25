@@ -4,7 +4,7 @@
 // ######################################################################################
 
 #pragma once
-#include <cstdint>
+#include <stdint.h>
 
 enum class sensorDeviceState : uint32_t {
     unknown,

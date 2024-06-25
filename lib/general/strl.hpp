@@ -6,7 +6,7 @@
 #pragma once
 
 #if !defined strlcpy || !defined strlcat
-#include <cstdint>        // required for uint8_t and similar type definitions
+#include <stdint.h>        // required for uint8_t and similar type definitions
 #include <cstring>        // required for strncpy()
 #endif
 

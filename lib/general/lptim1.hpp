@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include <cstdint>
+#include <stdint.h>
 
 static constexpr uint32_t timerOffset{128U};        // offset to get timing of LPTIM1 accurate, compensating for start/stop overhead
 

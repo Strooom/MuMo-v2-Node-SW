@@ -1,4 +1,5 @@
 #include <cli.hpp>
+#include <uart.hpp>
 #include <cstring>        // for strcmp
 
 void setDevAddr() {
@@ -22,6 +23,14 @@ cliCommand cli::commands[nmbrOfCommands]{
     {"sda", "set-devaddr", 1, setDevAddr},
     {"snk", "set-nwkkey", 1, nullptr},
     {"sak", "set-appkey", 1, nullptr}};
+
+void cli::run() {
+    char commandLine[maxCommandLineLength];
+    if (uart2::commandCount() > 0) {
+        uart2::read(commandLine);
+        executeCommand(commandLine);
+    }
+}
 
 uint32_t cli::countArguments(char* commandLine) {
     uint32_t count{0};
@@ -104,7 +113,7 @@ int32_t cli::findCommandIndex() {
     return -1;
 }
 
-void cli::parseCommandLine(char* commandLine) {
+void cli::executeCommand(char* commandLine) {
     splitCommandLine(commandLine);
     int32_t commandIndex = findCommandIndex();
     if (commandIndex >= 0) {

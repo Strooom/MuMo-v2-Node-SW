@@ -4,7 +4,7 @@
 // ######################################################################################
 
 #pragma once
-#include <cstdint>
+#include <stdint.h>
 
 enum class transmitPower : uint8_t {
     max = 0x00,

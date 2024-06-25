@@ -4,7 +4,7 @@
 // #############################################################################
 
 #pragma once
-#include <cstdint>
+#include <stdint.h>
 #include <aeskey.hpp>
 #include <aesblock.hpp>
 

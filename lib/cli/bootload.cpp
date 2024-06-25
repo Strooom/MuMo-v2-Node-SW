@@ -1,12 +1,13 @@
 #ifndef generic
 #include <main.h>
 extern void HAL_UART_DeInit();
+extern UART_HandleTypeDef huart2;
 #endif
-#include <cstdint>
+#include <stdint.h>
 
 // Need all kinds of HAL functions to reset the MCU to a clean state
 
-static constexpr uint8_t bootLoaderMagicValue{0x7F};
+
 
 void jumpToBootLoader() {
 #ifndef generic

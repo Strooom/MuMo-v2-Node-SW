@@ -4,7 +4,7 @@
 // ######################################################################################
 
 #pragma once
-#include <cstdint>
+#include <stdint.h>
 
 enum class screenType : uint32_t {
     measurements,

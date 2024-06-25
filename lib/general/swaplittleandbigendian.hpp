@@ -3,7 +3,7 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 #pragma once
-#include <cstdint>
+#include <stdint.h>
 
 uint32_t swapLittleBigEndian(uint32_t wordIn);
 uint32_t bytesToBigEndianWord(uint8_t byte0, uint8_t byte1, uint8_t byte2, uint8_t byte3);

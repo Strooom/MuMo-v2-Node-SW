@@ -5,7 +5,7 @@
 // #############################################################################
 
 #pragma once
-#include <cstdint>
+#include <stdint.h>
 #include <linkdirection.hpp>
 
 enum class macCommand : uint32_t {

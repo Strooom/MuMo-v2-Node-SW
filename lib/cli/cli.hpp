@@ -4,12 +4,12 @@
 // #############################################################################
 
 #pragma once
-#include <cstdint>
+#include <stdint.h>
 #include <clicommand.hpp>
 
 class cli {
   public:
-    static void parseCommandLine(char* commandLine);
+    static void run();
 
 #ifndef unitTesting
 
@@ -29,4 +29,5 @@ class cli {
     static int32_t findCommandIndex();
     static int32_t getSeparatorPosition(char* commandLine, uint32_t separatorIndex);
     static void getSegment(char* destination, char* commandLine, uint32_t segmentIndex);
+    static void executeCommand(char* commandLine);
 };

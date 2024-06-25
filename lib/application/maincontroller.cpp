@@ -28,6 +28,7 @@
 #include <uniqueid.hpp>
 #include <version.hpp>
 #include <lptim.hpp>
+#include <cli.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -196,19 +197,20 @@ void mainController::run() {
         applicationEventBuffer.push(applicationEvent::usbRemoved);
     }
 
-
-
     switch (state) {
         case mainState::boot:
             mcuStop2();
             break;
 
         case mainState::idle:
-        case mainState::networkError:
-            if (!power::hasUsbPower()) {
+        case mainState::networkError: {
+            if (power::hasUsbPower()) {
+                cli::run();
+            } else {
                 sleep();
             }
-            break;
+
+        } break;
 
         case mainState::networkCheck:
             if (LoRaWAN::isIdle()) {
@@ -250,8 +252,8 @@ void mainController::run() {
         case mainState::networking:
             if (LoRaWAN::isIdle()) {
                 if (display::isPresent()) {
-                     // Here we need to update values to be shown on the screen...
-                     // Then showing them can happen in idle later-on
+                    // Here we need to update values to be shown on the screen...
+                    // Then showing them can happen in idle later-on
                     screen::show(screenType::measurements);
                 }
                 goTo(mainState::idle);
