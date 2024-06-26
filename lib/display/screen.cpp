@@ -10,6 +10,9 @@
 #include <inttypes.h>                        // for PRIu32
 #include <float.hpp>
 #include <spi.hpp>
+#include <uniqueid.hpp>
+#include <qrcode.hpp>
+#include <hexascii.hpp>
 
 bool screen::modified{false};
 screenType screen::currentScreenType{screenType::message};
@@ -55,6 +58,30 @@ void screen::update() {
             }
         } break;
 
+        case screenType::qrcode: {
+            QRCode qrcode;
+            uint8_t qrcodeData[qrcode_getBufferSize(2)];
+
+            char tmpKeyAsHexAscii[17];
+            hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
+            qrcode_initText(&qrcode, qrcodeData, 2, ECC_MEDIUM, tmpKeyAsHexAscii);
+
+            display::clearAllPixels();
+
+            for (uint8_t y = 0; y < qrcode.size; y++) {
+                for (uint8_t x = 0; x < qrcode.size; x++) {
+                    if (qrcode_getModule(&qrcode, x, y)) {
+                        graphics::drawFilledRectangle(ux::qrCodeOffset + (x * ux::qrCodeScale), ux::qrCodeOffset + (y * ux::qrCodeScale), ux::qrCodeOffset + ((x + 1) * ux::qrCodeScale), ux::qrCodeOffset + ((y + 1) * ux::qrCodeScale), graphics::color::black);
+                    }
+                }
+            }
+
+            uint32_t textLength = graphics::getTextwidth(lucidaConsole12, tmpKeyAsHexAscii);
+            graphics::drawText((display::widthInPixels - textLength) / 2, 10, lucidaConsole12, tmpKeyAsHexAscii);
+        }
+
+        break;
+
         default:
             return;
             break;
@@ -63,14 +90,18 @@ void screen::update() {
     display::update();
 }
 
+void screen::setType(screenType newType) {
+    if (currentScreenType != newType) {
+        currentScreenType = newType;
+        modified          = true;
+    }
+}
+
 #pragma region consoleScreen
 
 void screen::setText(uint32_t lineIndex, const char* text) {
     if (lineIndex < numberOfLines2) {
-        if (currentScreenType != screenType::message) {
-            currentScreenType = screenType::message;
-            modified          = true;
-        }
+        setType(screenType::message);
         if (strncmp(consoleText[lineIndex], text, maxTextLength2) != 0) {
             strncpy(consoleText[lineIndex], text, maxTextLength2);
             modified = true;
@@ -92,10 +123,7 @@ void screen::clearAllTexts() {
 
 void screen::setText(uint32_t lineIndex, const char* newBigText, const char* newSmallText) {
     if (lineIndex < numberOfLines) {
-        if (currentScreenType != screenType::measurements) {
-            currentScreenType = screenType::measurements;
-            modified          = true;
-        }
+        setType(screenType::measurements);
         if (strncmp(bigText[lineIndex], newBigText, maxTextLength) != 0) {
             strncpy(bigText[lineIndex], newBigText, maxTextLength);
             modified = true;

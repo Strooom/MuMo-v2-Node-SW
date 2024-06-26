@@ -26,10 +26,6 @@
 #include <circularbuffer.hpp>
 #include <uart.hpp>
 
-extern uint32_t rxNeCount;
-extern uint32_t txNfCount;
-extern uint32_t txCplCount;
-
 
 // Some commment
 /* USER CODE END Includes */

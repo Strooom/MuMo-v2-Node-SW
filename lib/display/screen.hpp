@@ -14,6 +14,9 @@ class screen {
     static void setText(uint32_t lineIndex, const char* text);
     static void clearAllTexts();
 
+    static void setType(screenType newType);
+
+
     static void setText(uint32_t lineIndex, const char* textBig, const char* textSmall);
     static void setUsbStatus(const bool hasUsbPower);
     static void setNetworkStatus(const uint32_t networkSignalStrength);

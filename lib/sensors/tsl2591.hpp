@@ -19,6 +19,8 @@ class tsl2591 {
     static constexpr uint32_t visibleLight{0};
     static sensorChannel channels[nmbrChannels];
 
+    static constexpr float df{408.0F};
+
 #ifndef unitTesting
 
   private:
@@ -65,6 +67,9 @@ class tsl2591 {
     static constexpr uint8_t commandMask = 0xA0;        // 1010 0000: bits 7 and 5 for 'command normal'
     static constexpr uint8_t powerOn     = 0x01;
     static constexpr uint8_t powerOff    = 0x00;
+
+    static constexpr float coefficient1{0.128235F};        // used in the calculation from rawData to Lux
+    static constexpr float coefficient2{0.0F};             // simple linear translation : ax + b
 
     static int32_t rawChannel0;
     static int32_t rawChannel1;

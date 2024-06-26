@@ -18,8 +18,9 @@
 
 
 # Medium Term ToDo's
-Clock synchroniseren 1 maal per week,
-Display updaten minimaal 1 maal per dag
+* Clock synchroniseren 1 maal per week,
+* Display updaten minimaal 1 maal per dag
+* integrate qrCode as full static class. 
 
 
 

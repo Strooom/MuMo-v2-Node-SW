@@ -75,8 +75,8 @@ void mainController::initialize() {
 
     gpio::enableGpio(gpio::group::spiDisplay);
     showDeviceInfo();
-
     measurementCollection::initialize();
+
     // measurementCollection::findMeasurementsInEeprom();
 }
 
@@ -123,6 +123,7 @@ void mainController::handleEvents() {
                         miniAdr();
                         showLoRaWanStatus();
                         if (requestCounter >= maxNmbrRequests) {
+                            screen::setType(screenType::qrcode);
                             goTo(mainState::networkError);
                         } else {
                             LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);

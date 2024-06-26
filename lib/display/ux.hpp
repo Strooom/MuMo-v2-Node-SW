@@ -44,4 +44,8 @@ class ux {
     static constexpr uint32_t netwerkSignalStrengthStepHeight{10};
     static constexpr uint32_t netwerkSignalStrengthWidth{(netwerkSignalStrengthBarWidth * netwerkSignalStrengthNumberOfBars)};
     static constexpr uint32_t netwerkSignalStrengthHeight{netwerkSignalStrengthBaseHeight + (netwerkSignalStrengthStepHeight * (netwerkSignalStrengthNumberOfBars - 1))};
+
+    // qrCode
+    static constexpr uint32_t qrCodeScale{5};
+    static constexpr uint32_t qrCodeOffset = (display::widthInPixels - (qrCodeScale * 25)) / 2;
 };
