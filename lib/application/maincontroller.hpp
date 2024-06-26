@@ -15,6 +15,10 @@ class mainController {
     static void initialize();
     static void handleEvents();
     static void run();
+    static void runUsbPowerDetection();
+    static void runDisplayUpdate();
+    static void runCli();
+    static void runStateMachine();
     static void sleep();
     static void mcuStop2();
     static void miniAdr();
@@ -23,7 +27,6 @@ class mainController {
     static constexpr uint32_t maxNmbrRequests{12};
     static uint32_t deviceIndex[screen::numberOfLines];
     static uint32_t channelIndex[screen::numberOfLines];
-
 
 #ifndef unitTesting
 
@@ -35,6 +38,7 @@ class mainController {
     static void showDeviceInfo();
     static void showLoRaWanConfig();
     static void showLoRaWanStatus();
+    static void showMeasurements();
 
     static uint32_t requestCounter;
     static uint32_t answerCounter;

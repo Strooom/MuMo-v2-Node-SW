@@ -9,12 +9,15 @@
 
 class screen {
   public:
-    static void show(screenType theScreenType);
+    static bool isModified() { return modified; }
+    static void update();
     static void setText(uint32_t lineIndex, const char* text);
     static void clearAllTexts();
 
     static void setText(uint32_t lineIndex, const char* textBig, const char* textSmall);
-    static void setStatus(const bool hasUsbPower, const uint32_t networkSignalStrength, uint32_t batterylevel);
+    static void setUsbStatus(const bool hasUsbPower);
+    static void setNetworkStatus(const uint32_t networkSignalStrength);
+    static void setBatteryStatus(uint32_t batterylevel);
 
     static constexpr uint32_t numberOfLines{3};
     static constexpr uint32_t maxTextLength{8};
@@ -24,7 +27,9 @@ class screen {
 
   private:
 #endif
-    static bool isModified;
+    static bool modified;
+    static screenType currentScreenType;
+
 
     // Properties for screenType::measurements
 
@@ -37,6 +42,5 @@ class screen {
     // Properties for screenType::message
 
     static char consoleText[numberOfLines2][maxTextLength2 + 1];
-    static void showMeasurements();
-    static void showMessage();
+
 };

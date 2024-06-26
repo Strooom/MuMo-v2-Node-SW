@@ -29,6 +29,8 @@
 #include <version.hpp>
 #include <lptim.hpp>
 #include <cli.hpp>
+#include <float.hpp>
+#include <inttypes.h>        // for PRIu32
 
 #ifndef generic
 #include "main.h"
@@ -50,8 +52,8 @@ void MX_USART2_UART_Init(void);
 mainState mainController::state{mainState::boot};
 uint32_t mainController::requestCounter{0};
 uint32_t mainController::answerCounter{0};
-uint32_t mainController::deviceIndex[screen::numberOfLines]{1, 3, 2};
-uint32_t mainController::channelIndex[screen::numberOfLines]{0, 0, 1};
+uint32_t mainController::deviceIndex[screen::numberOfLines]{2, 2, 3};
+uint32_t mainController::channelIndex[screen::numberOfLines]{0, 1, 0};
 
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -173,33 +175,58 @@ void mainController::handleEvents() {
             default:
                 break;
         }
-
-        switch (theEvent) {
-            case applicationEvent::usbConnected:
-                // MX_USART2_UART_Init();
-                break;
-
-            case applicationEvent::usbRemoved:
-                // MX_USART2_UART_DeInit();
-                break;
-
-            default:
-                break;
-        }
     }
 }
 
-void mainController::run() {
+void mainController::runUsbPowerDetection() {
     if (power::isUsbConnected()) {
-        applicationEventBuffer.push(applicationEvent::usbConnected);
+        // enable uart2
+        // update display
+        screen::setUsbStatus(true);
     }
     if (power::isUsbRemoved()) {
-        applicationEventBuffer.push(applicationEvent::usbRemoved);
+        // disable uart2
+        // update display
+        screen::setUsbStatus(false);
     }
+}
+
+void mainController::runDisplayUpdate() {
+    switch (state) {
+        case mainState::networking:
+            break;
+
+        default:
+            if (display::isPresent()) {
+                if (screen::isModified()) {
+                    screen::update();
+                }
+            }
+            break;
+    }
+}
+
+void mainController::runCli() {
+    switch (state) {
+        case mainState::networking:
+            break;
+
+        default:
+            if (power::hasUsbPower()) {
+                cli::run();
+            }
+            break;
+    }
+}
+
+void mainController::runStateMachine() {
+    runUsbPowerDetection();
+    runDisplayUpdate();
+    runCli();
 
     switch (state) {
         case mainState::boot:
-            mcuStop2();
+            // mcuStop2();
             break;
 
         case mainState::idle:
@@ -213,11 +240,11 @@ void mainController::run() {
         } break;
 
         case mainState::networkCheck:
-            if (LoRaWAN::isIdle()) {
-                if (!power::hasUsbPower()) {
-                    mcuStop2();
-                }
-            }
+            // if (LoRaWAN::isIdle()) {
+            //     if (!power::hasUsbPower()) {
+            //         mcuStop2();
+            //     }
+            // }
             break;
 
         case mainState::measuring:
@@ -251,11 +278,7 @@ void mainController::run() {
 
         case mainState::networking:
             if (LoRaWAN::isIdle()) {
-                if (display::isPresent()) {
-                    // Here we need to update values to be shown on the screen...
-                    // Then showing them can happen in idle later-on
-                    screen::show(screenType::measurements);
-                }
+                showMeasurements();
                 goTo(mainState::idle);
             }
             break;
@@ -263,6 +286,13 @@ void mainController::run() {
         default:
             break;
     }
+}
+
+void mainController::run() {
+    runUsbPowerDetection();
+    runDisplayUpdate();
+    runCli();
+    runStateMachine();
 }
 
 void mainController::goTo(mainState newState) {
@@ -331,7 +361,6 @@ void mainController::showDeviceInfo() {
             screen::setText(3U + sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
         }
     }
-    screen::show(screenType::message);
 }
 
 void mainController::showLoRaWanConfig() {
@@ -346,7 +375,6 @@ void mainController::showLoRaWanConfig() {
     screen::setText(2, tmpString);
     snprintf(tmpString, screen::maxTextLength2, "rx1Delay : %u", static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
     screen::setText(3, tmpString);
-    screen::show(screenType::message);
 }
 
 void mainController::showLoRaWanStatus() {
@@ -366,7 +394,22 @@ void mainController::showLoRaWanStatus() {
     screen::setText(5, tmpString);
     time_t localTime = realTimeClock::get();
     screen::setText(6, ctime(&localTime));
-    screen::show(screenType::message);
+}
+
+void mainController::showMeasurements() {
+    for (uint32_t lineIndex = 0; lineIndex < screen::numberOfLines; lineIndex++) {
+        float value       = sensorDeviceCollection::value(deviceIndex[lineIndex], channelIndex[lineIndex]);
+        uint32_t decimals = sensorDeviceCollection::decimals(deviceIndex[lineIndex], channelIndex[lineIndex]);
+        char textBig[8];
+        char textSmall[8];
+        snprintf(textBig, 8, "%" PRId32, integerPart(value, decimals));
+        if (decimals > 0) {
+            snprintf(textSmall, 8, "%" PRIu32 " %s", fractionalPart(value, decimals), sensorDeviceCollection::units(deviceIndex[lineIndex], channelIndex[lineIndex]));
+        } else {
+            snprintf(textSmall, 8, "%s", sensorDeviceCollection::units(deviceIndex[lineIndex], channelIndex[lineIndex]));
+        }
+        screen::setText(lineIndex, textBig, textSmall);
+    }
 }
 
 void mainController::mcuStop2() {

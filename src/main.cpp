@@ -94,6 +94,7 @@ static void MX_LPTIM1_Init(void);
 // static void MX_SUBGHZ_Init(void);
 void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
+void executeRomBootloader();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -122,6 +123,12 @@ int main(void) {
     /* Configure the system clock */
     SystemClock_Config();
     HAL_Delay(3000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
+
+    if (power::hasUsbPower()) {        // If USB is present on reboot, we jump to bootloader for firmware update
+        HAL_RCC_DeInit();
+        HAL_DeInit();
+        executeRomBootloader();
+    }
 
     /* USER CODE BEGIN SysInit */
     __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
@@ -630,6 +637,27 @@ void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
     applicationEventBuffer.push(applicationEvent::sx126xTimeout);
 }
 
+void executeRomBootloader() {
+    void (*SysMemBootJump)(void);
+    volatile uint32_t BootAddr = 0x1FFF0000;
+
+    __disable_irq();
+    SysTick->CTRL = 0;
+    HAL_RCC_DeInit();
+    for (uint8_t i = 0; i < sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]); i++) {
+        NVIC->ICER[i] = 0xFFFFFFFF;
+        NVIC->ICPR[i] = 0xFFFFFFFF;
+    }
+    __enable_irq();
+
+    SysMemBootJump = (void (*)(void))(*((uint32_t *)((BootAddr + 4))));
+
+    __set_MSP(*(uint32_t *)BootAddr);        // Set the main stack pointer to the boot loader stack
+
+    SysMemBootJump();
+    while (1) {
+    }
+}
 
 /* USER CODE END 4 */
 
