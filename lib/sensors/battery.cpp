@@ -53,12 +53,17 @@ void battery::run() {
                 channels[voltage].hasNewValue = true;
             }
         }
-        if (channels[percentCharged].needsSampling()) {
-            channels[percentCharged].addSample(batteryPercentCharged);
-            if (channels[percentCharged].hasOutput()) {
-                channels[percentCharged].hasNewValue = true;
+        if (channels[percentCharged].isActive()) {
+            if (channels[percentCharged].needsSampling()) {
+                channels[percentCharged].addSample(batteryPercentCharged);
+                if (channels[percentCharged].hasOutput()) {
+                    channels[percentCharged].hasNewValue = true;
+                }
             }
+        } else {
+                channels[percentCharged].addSample(batteryPercentCharged); // because we need this on the display, we always calculate percentCharged, even if we don't transmit it to the cloud
         }
+
         state = sensorDeviceState::sleeping;
     }
 }

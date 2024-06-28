@@ -30,14 +30,13 @@ batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
 powerVersion selectedPowerVersion{powerVersion::highPower};
 bool resetMcuType{true};
 
-uint32_t toBeDevAddr            = 0x260B03CA;
-const char toBeNetworkKey[]     = "6F38C1DB4FD09D2BE7B23DC56F2F39EF";
-const char toBeApplicationKey[] = "1583D9D86A021EE774B9391118DEEFF2";
+uint32_t toBeDevAddr            = 0x260BF7F1;
+const char toBeNetworkKey[]     = "4353A27A7861A3F684C943A1E45B6536";
+const char toBeApplicationKey[] = "8F2C23EB05B8A2D7129E6D7FB6A064E8";
 bool overwriteExistingLoRaWANConfig{true};
 
 bool resetLoRaWANState{true};
 bool resetLoRaWANChannels{true};
-
 bool eraseMeasurementsInEeprom{false};
 
 // #######################################################

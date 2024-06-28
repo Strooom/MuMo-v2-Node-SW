@@ -79,6 +79,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
+extern font tahoma24bold;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -110,18 +111,35 @@ int main(void) {
     HAL_Init();
     SystemClock_Config();
     HAL_Delay(3000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
+
+    if (power::hasUsbPower()) {        // If USB is present on reboot, we jump to bootloader for firmware update
+        HAL_RCC_DeInit();
+        HAL_DeInit();
+        executeRomBootloader();
+    }
+
     logging::initialize();
 
     i2c::wakeUp();
     tsl2591::initialize();
+
+    spi::wakeUp();
     while (1) {
         tsl2591::startSampling();
         while (!tsl2591::samplingIsReady()) {
             asm("NOP");
         }
         tsl2591::readSample();
-        float tsl2591visible = tsl2591::calculateLux();
-        HAL_Delay(1000);
+
+        char line1[32];
+        char line2[32];
+        snprintf(line1, 32, "0 :  %d", tsl2591::rawChannel0);
+        snprintf(line2, 32, "1 :  %d", tsl2591::rawChannel1);
+        display::clearAllPixels();
+        graphics::drawText(10, 100, tahoma24bold, line1);
+        graphics::drawText(10,50, tahoma24bold, line2);
+        display::update();
+        HAL_Delay(10000);
     }
 }
 

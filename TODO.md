@@ -1,4 +1,5 @@
 # Short Term ToDo's
+* high lux value does not show on display
 * show UID as QRCode when LoRaWAN is not yet configured...
 * LoRaWAN : investigate why sometimes downlinks are not working : tune Rx timing
 * CLI : 
@@ -12,7 +13,6 @@
 * wrapping of measurementsCollection : writing and reading measurements
 * erase old measurements when space needed for new ones
 * Give the node a name property which can be set from CLI / downlink, and which appears on the display status bar
-* high lux value does not show on display
 
 
 
