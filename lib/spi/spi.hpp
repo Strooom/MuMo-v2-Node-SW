@@ -9,11 +9,11 @@ class spi {
   public:
     static void wakeUp();
     static void goSleep();
-    static bool isAwake() { return active; }
+    static bool isInitialized() { return initialized; }
 
 #ifndef unitTesting
 
   private:
 #endif
-    static bool active;
+    static bool initialized;
 };

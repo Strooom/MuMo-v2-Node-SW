@@ -6,113 +6,154 @@
 #include <stdio.h>                           // snprintf
 #include <sensordevicecollection.hpp>        //
 #include <cstring>                           // strncmp, strncpy
-#include <cmath>
-#include <inttypes.h>        // for PRIu32
+#include <cmath>                             //
+#include <inttypes.h>                        // for PRIu32
 #include <float.hpp>
 #include <spi.hpp>
+#include <uniqueid.hpp>
+#include <qrcode.hpp>
+#include <hexascii.hpp>
 
-bool screen::isModified{false};
+bool screen::modified{false};
+screenType screen::currentScreenType{screenType::message};
+
 char screen::bigText[numberOfLines][maxTextLength + 1]{};
 char screen::smallText[numberOfLines][maxTextLength + 1]{};
 char screen::consoleText[numberOfLines2][maxTextLength2 + 1]{};
 
-uint32_t screen::deviceIndex[numberOfLines]{1, 3, 2, 2};
-uint32_t screen::channelIndex[numberOfLines]{0, 0, 1, 0};
+bool screen::hasUsbPower{false};
+uint32_t screen::netwerkStrength{0};
+uint32_t screen::batteryLevel{0};
 
 extern font roboto36bold;
 extern font tahoma24bold;
 extern font lucidaConsole12;
+extern bitmap usbIcon;
 
-void screen::show(screenType theScreenType) {
-    switch (theScreenType) {
-        case screenType::measurements:
-            showMeasurements();
+void screen::update() {
+    display::clearAllPixels();
+    switch (currentScreenType) {
+        case screenType::measurements: {
+            graphics::drawFilledRectangle(ux::marginLeft, 49, display::widthInPixels - ux::marginLeft, 50, graphics::color::black);
+            graphics::drawFilledRectangle(ux::marginLeft, 99, display::widthInPixels - ux::marginLeft, 100, graphics::color::black);
+            graphics::drawFilledRectangle(ux::marginLeft, 149, display::widthInPixels - ux::marginLeft, 150, graphics::color::black);
+
+            for (uint32_t lineIndex = 0; lineIndex < numberOfLines; lineIndex++) {
+                uint32_t leftOffset = ux::mid - (graphics::getTextwidth(roboto36bold, bigText[lineIndex]) + roboto36bold.properties.spaceBetweenCharactersInPixels);
+                graphics::drawText(leftOffset, ux::marginBottomLarge + ((3U - lineIndex) * 50U), roboto36bold, bigText[lineIndex]);
+                graphics::drawText(ux::mid + tahoma24bold.properties.spaceBetweenCharactersInPixels, ux::marginBottomSmall + ((3U - lineIndex) * 50U), tahoma24bold, smallText[lineIndex]);
+            }
+
+            uint32_t batteryLevel = static_cast<uint32_t>(sensorDeviceCollection::value(1, 1) * 100.0F);
+            graphics::drawBatteryIcon(display::widthInPixels - (1 + ux::marginLeft + ux::batteryIconWidth), 2, batteryLevel);
+            graphics::drawNetworkSignalStrengthIcon(display::widthInPixels - (1 + ux::marginLeft + ux::marginLeft + ux::batteryIconWidth + ux::netwerkSignalStrengthWidth), 2, netwerkStrength);
+            if (hasUsbPower) {
+                graphics::drawBitMap(ux::marginLeft + 100U, 2, usbIcon);
+            }
+        } break;
+
+        case screenType::message: {
+            for (uint32_t lineIndex = 0; lineIndex < numberOfLines2; lineIndex++) {
+                graphics::drawText(2, (182 - (20 * lineIndex)), lucidaConsole12, consoleText[lineIndex]);
+            }
+        } break;
+
+        case screenType::qrcode: {
+            QRCode qrcode;
+            uint8_t qrcodeData[qrcode_getBufferSize(2)];
+
+            char tmpKeyAsHexAscii[17];
+            hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
+            qrcode_initText(&qrcode, qrcodeData, 2, ECC_MEDIUM, tmpKeyAsHexAscii);
+
+            display::clearAllPixels();
+
+            for (uint8_t y = 0; y < qrcode.size; y++) {
+                for (uint8_t x = 0; x < qrcode.size; x++) {
+                    if (qrcode_getModule(&qrcode, x, y)) {
+                        graphics::drawFilledRectangle(ux::qrCodeOffset + (x * ux::qrCodeScale), ux::qrCodeOffset + (y * ux::qrCodeScale), ux::qrCodeOffset + ((x + 1) * ux::qrCodeScale), ux::qrCodeOffset + ((y + 1) * ux::qrCodeScale), graphics::color::black);
+                    }
+                }
+            }
+
+            uint32_t textLength = graphics::getTextwidth(lucidaConsole12, tmpKeyAsHexAscii);
+            graphics::drawText((display::widthInPixels - textLength) / 2, 10, lucidaConsole12, tmpKeyAsHexAscii);
+        }
+
+        break;
+
+        default:
+            return;
             break;
-        case screenType::message:
-            showMessage();
-            break;
+    }
+    modified = false;
+    display::update();
+}
+
+void screen::setType(screenType newType) {
+    if (currentScreenType != newType) {
+        currentScreenType = newType;
+        modified          = true;
     }
 }
 
-void screen::showMeasurements() {
-    getContents();
-    if (isModified) {
-        drawContents();
-    }
-}
+#pragma region consoleScreen
 
 void screen::setText(uint32_t lineIndex, const char* text) {
     if (lineIndex < numberOfLines2) {
-        strncpy(consoleText[lineIndex], text, maxTextLength2);
+        setType(screenType::message);
+        if (strncmp(consoleText[lineIndex], text, maxTextLength2) != 0) {
+            strncpy(consoleText[lineIndex], text, maxTextLength2);
+            modified = true;
+        }
     }
 }
 
 void screen::clearAllTexts() {
     for (uint32_t lineIndex = 0; lineIndex < numberOfLines2; lineIndex++) {
-        strncpy(consoleText[lineIndex], "", maxTextLength2);
-    }
-}
-
-void screen::showMessage() {
-    display::clearAllPixels();
-    for (uint32_t lineIndex = 0; lineIndex < numberOfLines2; lineIndex++) {
-        graphics::drawText(2, (182 - (20 * lineIndex)), lucidaConsole12, consoleText[lineIndex]);
-    }
-    display::update();
-
-}
-
-void screen::getContents() {
-    isModified = false;
-    for (uint32_t lineIndex = 1; lineIndex < numberOfLines; lineIndex++) {
-        float value       = sensorDeviceCollection::value(deviceIndex[lineIndex], channelIndex[lineIndex]);
-        uint32_t decimals = sensorDeviceCollection::decimals(deviceIndex[lineIndex], channelIndex[lineIndex]);
-
-        buildBigTextString(integerPart(value, decimals), lineIndex);
-        buildSmallTextString(fractionalPart(value, decimals), decimals, sensorDeviceCollection::units(deviceIndex[lineIndex], channelIndex[lineIndex]), lineIndex);
-    }
-}
-
-void screen::drawContents() {
-    display::clearAllPixels();
-    graphics::drawFilledRectangle(ux::marginLeft, 49, display::widthInPixels - ux::marginLeft, 50, graphics::color::black);
-    graphics::drawFilledRectangle(ux::marginLeft, 99, display::widthInPixels - ux::marginLeft, 100, graphics::color::black);
-    graphics::drawFilledRectangle(ux::marginLeft, 149, display::widthInPixels - ux::marginLeft, 150, graphics::color::black);
-
-    for (uint32_t lineIndex = 1; lineIndex < numberOfLines; lineIndex++) {
-        uint32_t leftOffset = ux::mid - (graphics::getTextwidth(roboto36bold, bigText[lineIndex]) + roboto36bold.properties.spaceBetweenCharactersInPixels);
-        graphics::drawText(leftOffset, ux::marginBottomLarge + (lineIndex * 50), roboto36bold, bigText[lineIndex]);
-        graphics::drawText(ux::mid + tahoma24bold.properties.spaceBetweenCharactersInPixels, ux::marginBottomSmall + (lineIndex * 50), tahoma24bold, smallText[lineIndex]);
-    }
-
-    uint32_t batteryLevel = static_cast<uint32_t>(sensorDeviceCollection::value(1, 1) * 100.0F);
-    graphics::drawBatteryIcon(display::widthInPixels - (1 + ux::marginLeft + ux::batteryIconWidth), 2, batteryLevel);
-    graphics::drawNetworkSignalStrengthIcon(display::widthInPixels - (1 + ux::marginLeft + ux::marginLeft + ux::batteryIconWidth + ux::netwerkSignalStrengthWidth), 2, 50);
-    display::update();
-}
-
-void screen::buildBigTextString(int32_t value, uint32_t lineIndex) {
-    char base[8];
-    snprintf(base, 8, "%" PRId32, value);
-    if (strncmp(base, bigText[lineIndex], maxTextLength) != 0) {
-        strncpy(bigText[lineIndex], base, maxTextLength);
-        isModified = true;
-    }
-}
-
-void screen::buildSmallTextString(uint32_t value, uint32_t decimals, const char* suffix, uint32_t lineIndex) {
-    char suffixString[8];
-    if (decimals > 0) {
-        snprintf(suffixString, 8, "%" PRIu32 " %s", value, suffix);
-        if (strncmp(suffixString, smallText[lineIndex], maxTextLength) != 0) {
-            strncpy(smallText[lineIndex], suffixString, maxTextLength);
-            isModified = true;
-        }
-    } else {
-        snprintf(suffixString, 8, "%s", suffix);
-        if (strncmp(suffixString, smallText[lineIndex], maxTextLength) != 0) {
-            strncpy(smallText[lineIndex], suffixString, maxTextLength);
-            isModified = true;
+        if (strncmp(consoleText[lineIndex], "", maxTextLength2) != 0) {
+            strncpy(consoleText[lineIndex], "", maxTextLength2);
+            modified = true;
         }
     }
 }
+
+#pragma endregion
+#pragma region measurementsScreen
+
+void screen::setText(uint32_t lineIndex, const char* newBigText, const char* newSmallText) {
+    if (lineIndex < numberOfLines) {
+        setType(screenType::measurements);
+        if (strncmp(bigText[lineIndex], newBigText, maxTextLength) != 0) {
+            strncpy(bigText[lineIndex], newBigText, maxTextLength);
+            modified = true;
+        }
+        if (strncmp(smallText[lineIndex], newSmallText, maxTextLength) != 0) {
+            strncpy(smallText[lineIndex], newSmallText, maxTextLength);
+            modified = true;
+        }
+    }
+};
+
+void screen::setUsbStatus(const bool newHasUsbPower) {
+    if (hasUsbPower != newHasUsbPower) {
+        hasUsbPower = newHasUsbPower;
+        modified    = true;
+    }
+}
+
+void screen::setNetworkStatus(const uint32_t newNetworkSignalStrength) {
+    if (netwerkStrength != newNetworkSignalStrength) {
+        netwerkStrength = newNetworkSignalStrength;
+        modified        = true;
+    }
+}
+
+void screen::setBatteryStatus(uint32_t newBatterylevel) {
+    if (batteryLevel != newBatterylevel) {
+        batteryLevel = newBatterylevel;
+        modified     = true;
+    }
+}
+
+#pragma endregion

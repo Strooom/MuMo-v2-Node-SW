@@ -1,5 +1,5 @@
 #include <hexascii.hpp>
-#include "string.h"
+#include "cstring"
 
 uint8_t hexAscii::toUpperCase(const uint8_t characterToConvert) {
     if (characterToConvert >= 'a' && characterToConvert <= 'z') {

@@ -21,7 +21,7 @@ class tsl2591 {
 
 #ifndef unitTesting
 
-  private:
+  //private:
 #endif
     static sensorDeviceState state;
     static void startSampling();
@@ -65,6 +65,9 @@ class tsl2591 {
     static constexpr uint8_t commandMask = 0xA0;        // 1010 0000: bits 7 and 5 for 'command normal'
     static constexpr uint8_t powerOn     = 0x01;
     static constexpr uint8_t powerOff    = 0x00;
+
+    static constexpr float coefficient1{0.04F};
+    static constexpr float coefficient2{0.08F};
 
     static int32_t rawChannel0;
     static int32_t rawChannel1;

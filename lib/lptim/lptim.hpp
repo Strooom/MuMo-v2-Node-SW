@@ -7,9 +7,10 @@
 
 class lptim {
   public:
+    static void initialize();
     static void start(uint32_t timeOutIn4096zTicks);
     static void stop();
-    static bool isRunning() { return running; }  
+    static bool isRunning() { return running; }
 
 #ifndef unitTesting
 

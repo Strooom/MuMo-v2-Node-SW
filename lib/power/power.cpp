@@ -45,20 +45,3 @@ bool power::isUsbRemoved() {
     }
 }
 
-// NOTE : if this function is only called from the main thread, there is no need to check the PRIMASK state :
-//   in main thread, interrupts should be enabled all the time, except when accessing a resource shared with an ISR
-// When there are no common resources accessed from different ISRs, there is also no point in disabling interrupts in the ISR
-//   as the ISR itself cannot be interrupted by the same interrupt.
-// --> check that goSleep() is only called from the main thread, not from ISR
-// --> check that resources accessed from an ISR, are not accessed by any other ISR
-
-// void power::goSleep() {
-// #ifndef generic
-//     uint32_t currentPriMaskState = __get_PRIMASK();
-//     __disable_irq();
-//     HAL_SuspendTick();
-//     HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
-//     HAL_ResumeTick();
-//     __set_PRIMASK(currentPriMaskState);
-// #endif
-// }

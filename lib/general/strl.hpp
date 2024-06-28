@@ -7,11 +7,11 @@
 
 #if !defined strlcpy || !defined strlcat
 #include <stdint.h>        // required for uint8_t and similar type definitions
-#include <string.h>        // required for strncpy()
+#include <cstring>        // required for strncpy()
 #endif
 
 #ifndef strlcpy
-// on some platforms, string.h does not contain strlcpy, so in this case we add it here directly
+// on some platforms, cstring does not contain strlcpy, so in this case we add it here directly
 size_t
 strlcpy(char* dst, const char* src, size_t maxlen) {
     const size_t srclen = strlen(src);
@@ -26,7 +26,7 @@ strlcpy(char* dst, const char* src, size_t maxlen) {
 #endif
 
 #ifndef strlcat
-// on some platforms, string.h does not contain strlcpy, so in this case we add it here directly
+// on some platforms, cstring does not contain strlcpy, so in this case we add it here directly
 size_t
 strlcat(char* dst, const char* src, size_t maxlen) {
     const size_t srclen = strlen(src);

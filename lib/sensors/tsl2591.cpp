@@ -40,14 +40,16 @@ bool tsl2591::isPresent() {
 
 void tsl2591::initialize() {
     writeRegister(registers::enable, powerOn);
-    writeRegister(registers::config, 0x01);        // gain 1x, integration time 200 ms. I found out these fixed settings are more than sufficient for my use case
-    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+    writeRegister(registers::config, 0x11);
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels;
+         channelIndex++) {
         channels[channelIndex].set(0, 0);
         channels[channelIndex].hasNewValue = false;
     }
     // The first measurements after power on are not reliable. So we do a few dummy measurements
     static constexpr uint32_t nmbrOfCleaningSamples{4};
-    for (uint32_t sampleIndex = 0; sampleIndex < nmbrOfCleaningSamples; sampleIndex++) {
+    for (uint32_t sampleIndex = 0; sampleIndex < nmbrOfCleaningSamples;
+         sampleIndex++) {
         startSampling();
         while (!samplingIsReady()) {
 #ifndef generic
@@ -84,27 +86,17 @@ void tsl2591::readSample() {
 }
 
 float tsl2591::calculateLux() {
-    float CPL  = 200.0F / 53.0F;
-    float Lux1 = (rawChannel0 - (2 * rawChannel1)) / CPL;
-    float Lux2 = ((0.6F * rawChannel0) - rawChannel1) / CPL;
-
-    float Lux = 0.0F;
-    if (Lux1 > Lux) {
-        Lux = Lux1;
-    }
-    if (Lux2 > Lux) {
-        Lux = Lux2;
-    }
-    return Lux;
+    return (static_cast<float>(rawChannel0) * coefficient1) + (static_cast<float>(rawChannel0) * coefficient2);
 }
 
 bool tsl2591::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }
-    bool result = (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
+    bool result = (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials,
+                                                   halTimeout));
     if (!i2cState) {
         i2c::goSleep();
     }
@@ -119,12 +111,13 @@ uint8_t tsl2591::readRegister(registers registerAddress) {
     uint8_t result;
 
 #ifndef generic
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }
-    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, command, I2C_MEMADD_SIZE_8BIT, &result, 1, halTimeout);
-            if (!i2cState) {
+    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, command, I2C_MEMADD_SIZE_8BIT,
+                     &result, 1, halTimeout);
+    if (!i2cState) {
         i2c::goSleep();
     }
 #else
@@ -136,12 +129,13 @@ uint8_t tsl2591::readRegister(registers registerAddress) {
 void tsl2591::writeRegister(registers registerAddress, uint8_t value) {
     uint16_t command = commandMask | static_cast<uint16_t>(registerAddress);
 #ifndef generic
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }
-    HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, command, I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
-            if (!i2cState) {
+    HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, command, I2C_MEMADD_SIZE_8BIT,
+                      &value, 1, halTimeout);
+    if (!i2cState) {
         i2c::goSleep();
     }
 #else
@@ -153,8 +147,7 @@ void tsl2591::run() {
     if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
         readSample();
         if (channels[visibleLight].needsSampling()) {
-            float tsl2591visible = calculateLux();
-            channels[visibleLight].addSample(tsl2591visible);
+            channels[visibleLight].addSample(calculateLux());
             if (channels[visibleLight].hasOutput()) {
                 channels[visibleLight].hasNewValue = true;
             }

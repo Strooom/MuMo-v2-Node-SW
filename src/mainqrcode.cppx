@@ -1,4 +1,26 @@
+/* USER CODE BEGIN Header */
+/**
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2024 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
 #include <gpio.hpp>
 #include <logging.hpp>        // logging to SWO and/or UART
 #include <power.hpp>
@@ -17,14 +39,35 @@
 #include <uniqueid.hpp>
 #include <settingscollection.hpp>
 #include <measurementcollection.hpp>
+#include <spi.hpp>
+#include <i2c.hpp>
 #include <bme680.hpp>
 #include <tsl2591.hpp>
 #include <battery.hpp>
-#include <spi.hpp>
-#include <i2c.hpp>
+#include <lptim.hpp>
+#include <qrcode.hpp>
+#include <hexascii.hpp>
 
-#define testRtcWakeupPeriod 10239
+extern font lucidaConsole12;
 
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc;
 CRYP_HandleTypeDef hcryp;
 __ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {0x00000000, 0x00000000, 0x00000000, 0x00000000};
@@ -37,10 +80,13 @@ SUBGHZ_HandleTypeDef hsubghz;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
+/* USER CODE BEGIN PV */
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
+/* USER CODE END PV */
 
+/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
+// static void MX_GPIO_Init(void);
 static void MX_RTC_Init(void);
 void MX_USART2_UART_Init(void);
 void MX_SPI2_Init(void);
@@ -49,107 +95,150 @@ void MX_I2C2_Init(void);
 void MX_AES_Init(void);
 void MX_RNG_Init(void);
 static void MX_LPTIM1_Init(void);
-static void MX_SUBGHZ_Init(void);
+// static void MX_SUBGHZ_Init(void);
 void MX_USART1_UART_Init(void);
+/* USER CODE BEGIN PFP */
+/* USER CODE END PFP */
 
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/**
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void) {
+    /* USER CODE BEGIN 1 */
+
+    /* USER CODE END 1 */
+
+    /* MCU Configuration--------------------------------------------------------*/
+
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     HAL_Init();
+
+    /* USER CODE BEGIN Init */
+
+    /* USER CODE END Init */
+
+    /* Configure the system clock */
     SystemClock_Config();
-    HAL_Delay(3000);
+    HAL_Delay(3000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
+
     __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
+
     MX_RTC_Init();
-    gpio::disableGpio(gpio::group::debugPort);
-    realTimeClock::initialize();
-    mainController::mcuStop2();
+    MX_ADC_Init();
+    MX_AES_Init();
+    MX_RNG_Init();
+    MX_LPTIM1_Init();
+    MX_USART1_UART_Init();
 
+    // logging::initialize();
+    // logging::enable(logging::source::applicationEvents);
 
-    // Detect Display
+    // version::initialize();
+    // uniqueId::dump();
+    // realTimeClock::initialize();
 
-    spi::wakeUp();
-    display::detectPresence();
-    spi::goSleep();
-    mainController::mcuStop2();
+    // spi::wakeUp();
+    // display::detectPresence();
+    // spi::goSleep();
 
-    // Write some text to the display
+    // i2c::wakeUp();
+    // if (nonVolatileStorage::isPresent()) {
+    //     if (!settingsCollection::isInitialized()) {
+    //         settingsCollection::initializeOnce();
+    //     }
+    // }
+    // sensorDeviceCollection::discover();
+    // sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 30);
+    // sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 30);
+    // sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 30);
+    // sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 30);
+    // i2c::goSleep();
 
-    spi::wakeUp();
-    mainController::showDeviceInfo();
-    spi::goSleep();
-    mainController::mcuStop2();
+    // gpio::enableGpio(gpio::group::rfControl);
+    // LoRaWAN::initialize();
+    // measurementCollection::initialize();
+    // mainController::showDeviceInfo();
+    // lptim::start(5 * 4096);
 
-    // Detect EEPROM
+    // measurementCollection::dumpRaw(0, 128);
+    // measurementCollection::dumpAll();
+    // LoRaWAN::dumpConfig();
+    // LoRaWAN::dumpState();
+    // LoRaWAN::dumpChannels();
+    /* USER CODE END 2 */
 
-    i2c::wakeUp();
-    if (nonVolatileStorage::isPresent()) {
-        if (!settingsCollection::isInitialized()) {
-            settingsCollection::initializeOnce();
+    /* Infinite loop */
+    /* USER CODE BEGIN WHILE */
+    uint8_t theText[] = "Hello World\n\n\n\n";
+    HAL_UART_Transmit(&huart1, theText, 15, 1000);
+
+    // Create the QR code
+    QRCode qrcode;
+    uint8_t qrcodeData[qrcode_getBufferSize(2)];
+
+    char tmpKeyAsHexAscii[17];
+    hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
+    qrcode_initText(&qrcode, qrcodeData, 2, ECC_MEDIUM, tmpKeyAsHexAscii);
+
+    display::clearAllPixels();
+
+    const int scale{5};
+    const int offset = (display::widthInPixels - (scale * 25)) / 2;
+
+    for (uint8_t y = 0; y < qrcode.size; y++) {
+        for (uint8_t x = 0; x < qrcode.size; x++) {
+            if (qrcode_getModule(&qrcode, x, y)) {
+                graphics::drawFilledRectangle(offset + (x * scale), offset + (y * scale), offset + ((x + 1) * scale), offset + ((y + 1) * scale), graphics::color::black);
+            }
         }
     }
-    i2c::goSleep();
-    mainController::mcuStop2();
 
-    // Detect Sensors
+    uint32_t textLength = graphics::getTextwidth(lucidaConsole12, tmpKeyAsHexAscii);
 
-    i2c::wakeUp();
-    sensorDeviceCollection::discover();
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 4);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 4);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 4);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 4);
-    i2c::goSleep();
-    mainController::mcuStop2();
+    graphics::drawText((display::widthInPixels - textLength) / 2, 10, lucidaConsole12, tmpKeyAsHexAscii);
+    display::update();
 
-    gpio::enableGpio(gpio::group::rfControl);
-    LoRaWAN::initialize();
-    HAL_Delay(10);
-    mainController::mcuStop2();
+    for (uint8_t y = 0; y < qrcode.size; y++) {
+        uint8_t space[] = "        ";
+        HAL_UART_Transmit(&huart1, space, 8, 1000);
 
-    measurementCollection::initialize();
-    HAL_Delay(10);
-    mainController::mcuStop2();
-    // measurementCollection::findMeasurementsInEeprom();
+        for (uint8_t x = 0; x < qrcode.size; x++) {
+            uint8_t black = '#';
+            uint8_t white = ' ';
+            if (qrcode_getModule(&qrcode, x, y)) {
+                HAL_UART_Transmit(&huart1, &black, 1, 1000);
+            } else {
+                HAL_UART_Transmit(&huart1, &white, 1, 1000);
+            }
+        }
 
-    // gpio::disableAllGpio();
+        uint8_t endline[] = "\n";
+        HAL_UART_Transmit(&huart1, endline, 1, 1000);
+    }
+
+    uint8_t endcode[] = "\n\n\n\n";
+    HAL_UART_Transmit(&huart1, endcode, 4, 1000);
 
     while (1) {
-        // logging::snprintf("goSleep...\n");
+        // mainController ::handleEvents();
+        // mainController ::run();
+        /* USER CODE END WHILE */
 
-        // HAL_ADC_DeInit(&hadc);
-        // HAL_RNG_DeInit(&hrng);
-        // HAL_CRYP_DeInit(&hcryp);
-
-        // gpio::disableGpio(gpio::group::i2c);
-        // gpio::disableGpio(gpio::group::usbPresent);
-
-        // uint32_t currentPriMaskState = __get_PRIMASK();
-        // __disable_irq();
-        // HAL_SuspendTick();
-        // HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
-        // HAL_ResumeTick();
-        // __set_PRIMASK(currentPriMaskState);
-
-        // MX_I2C2_Init();
-        // MX_ADC_Init();
-        // MX_AES_Init();
-        // MX_RNG_Init();
-
-        // gpio::enableGpio(gpio::group::rfControl);
-        // gpio::enableGpio(gpio::group::writeProtect);
-        // gpio::enableGpio(gpio::group::usbPresent);
-        // gpio::enableGpio(gpio::group::i2c);
-
-        // logging::snprintf("...wakeUp\n");
-
-        mainController::handleEvents();
-        mainController::run();
-
-        // while (applicationEventBuffer.hasEvents()) {
-        //     (void)applicationEventBuffer.pop();
-        //     HAL_Delay(10);
-        // }
+        /* USER CODE BEGIN 3 */
     }
+    /* USER CODE END 3 */
 }
 
+/**
+ * @brief System Clock Configuration
+ * @retval None
+ */
 void SystemClock_Config(void) {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -412,8 +501,7 @@ static void MX_RTC_Init(void) {
 
     /** Enable the WakeUp
      */
-    //        if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
-    if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, testRtcWakeupPeriod, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
+    if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
         Error_Handler();
     }
     /* USER CODE BEGIN RTC_Init 2 */
@@ -457,27 +545,27 @@ void MX_SPI2_Init(void) {
     /* USER CODE END SPI2_Init 2 */
 }
 
-/**
- * @brief SUBGHZ Initialization Function
- * @param None
- * @retval None
- */
-static void MX_SUBGHZ_Init(void) {
-    /* USER CODE BEGIN SUBGHZ_Init 0 */
+// /**
+//  * @brief SUBGHZ Initialization Function
+//  * @param None
+//  * @retval None
+//  */
+// static void MX_SUBGHZ_Init(void) {
+//     /* USER CODE BEGIN SUBGHZ_Init 0 */
 
-    /* USER CODE END SUBGHZ_Init 0 */
+//     /* USER CODE END SUBGHZ_Init 0 */
 
-    /* USER CODE BEGIN SUBGHZ_Init 1 */
+//     /* USER CODE BEGIN SUBGHZ_Init 1 */
 
-    /* USER CODE END SUBGHZ_Init 1 */
-    hsubghz.Init.BaudratePrescaler = SUBGHZSPI_BAUDRATEPRESCALER_2;
-    if (HAL_SUBGHZ_Init(&hsubghz) != HAL_OK) {
-        Error_Handler();
-    }
-    /* USER CODE BEGIN SUBGHZ_Init 2 */
+//     /* USER CODE END SUBGHZ_Init 1 */
+//     hsubghz.Init.BaudratePrescaler = SUBGHZSPI_BAUDRATEPRESCALER_2;
+//     if (HAL_SUBGHZ_Init(&hsubghz) != HAL_OK) {
+//         Error_Handler();
+//     }
+//     /* USER CODE BEGIN SUBGHZ_Init 2 */
 
-    /* USER CODE END SUBGHZ_Init 2 */
-}
+//     /* USER CODE END SUBGHZ_Init 2 */
+// }
 
 /**
  * @brief USART1 Initialization Function
@@ -561,23 +649,23 @@ void MX_USART2_UART_Init(void) {
     /* USER CODE END USART2_Init 2 */
 }
 
-/**
- * @brief GPIO Initialization Function
- * @param None
- * @retval None
- */
-static void MX_GPIO_Init(void) {
-    /* USER CODE BEGIN MX_GPIO_Init_1 */
-    /* USER CODE END MX_GPIO_Init_1 */
+// /**
+//  * @brief GPIO Initialization Function
+//  * @param None
+//  * @retval None
+//  */
+// static void MX_GPIO_Init(void) {
+//     /* USER CODE BEGIN MX_GPIO_Init_1 */
+//     /* USER CODE END MX_GPIO_Init_1 */
 
-    /* GPIO Ports Clock Enable */
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
+//     /* GPIO Ports Clock Enable */
+//     __HAL_RCC_GPIOA_CLK_ENABLE();
+//     __HAL_RCC_GPIOB_CLK_ENABLE();
+//     __HAL_RCC_GPIOC_CLK_ENABLE();
 
-    /* USER CODE BEGIN MX_GPIO_Init_2 */
-    /* USER CODE END MX_GPIO_Init_2 */
-}
+//     /* USER CODE BEGIN MX_GPIO_Init_2 */
+//     /* USER CODE END MX_GPIO_Init_2 */
+// }
 
 /* USER CODE BEGIN 4 */
 void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {

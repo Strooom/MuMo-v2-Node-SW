@@ -12,24 +12,24 @@ extern SPI_HandleTypeDef hspi2;
 void MX_SPI2_Init(void);
 #endif
 
-bool spi::active{false};
+bool spi::initialized{false};
 
 void spi::wakeUp() {
-    if (!active) {
+    if (!initialized) {
 #ifndef generic
         MX_SPI2_Init();
 #endif
         gpio::enableGpio(gpio::group::spiDisplay);
-        active = true;
+        initialized = true;
     }
 }
 
 void spi::goSleep() {
-    if (active) {
+    if (initialized) {
 #ifndef generic
         HAL_SPI_DeInit(&hspi2);
 #endif
         gpio::disableGpio(gpio::group::spiDisplay);
-        active = false;
+        initialized = false;
     }
 }

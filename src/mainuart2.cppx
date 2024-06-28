@@ -45,7 +45,7 @@
 #include <tsl2591.hpp>
 #include <battery.hpp>
 #include <lptim.hpp>
-#include <qrcode.hpp>
+#include <uart.hpp>
 
 /* USER CODE END Includes */
 
@@ -84,18 +84,17 @@ circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 // static void MX_GPIO_Init(void);
-static void MX_RTC_Init(void);
+//static void MX_RTC_Init(void);
 void MX_USART2_UART_Init(void);
-void MX_SPI2_Init(void);
-void MX_ADC_Init(void);
-void MX_I2C2_Init(void);
-void MX_AES_Init(void);
-void MX_RNG_Init(void);
-static void MX_LPTIM1_Init(void);
+//void MX_SPI2_Init(void);
+//void MX_ADC_Init(void);
+//void MX_I2C2_Init(void);
+//void MX_AES_Init(void);
+//void MX_RNG_Init(void);
+//static void MX_LPTIM1_Init(void);
 // static void MX_SUBGHZ_Init(void);
-void MX_USART1_UART_Init(void);
+//void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void executeRomBootloader();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -107,6 +106,8 @@ void executeRomBootloader();
  * @brief  The application entry point.
  * @retval int
  */
+
+
 int main(void) {
     /* USER CODE BEGIN 1 */
 
@@ -116,82 +117,29 @@ int main(void) {
 
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     HAL_Init();
-
-    /* USER CODE BEGIN Init */
-
-    /* USER CODE END Init */
-
-    /* Configure the system clock */
     SystemClock_Config();
     HAL_Delay(3000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
 
-    if (power::hasUsbPower()) {        // If USB is present on reboot, we jump to bootloader for firmware update
-        HAL_RCC_DeInit();
-        HAL_DeInit();
-        executeRomBootloader();
-    }
+    //MX_USART2_UART_Init();
+//    USART2->CR1 = USART2->CR1 | USART_CR1_RXNEIE_RXFNEIE;        // enable Receive data register not empty interrupt
+//    USART2->ICR = 0xFFFF;        // clear all pending interrupt flags
+//    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+//    HAL_NVIC_EnableIRQ(USART2_IRQn);
 
-    /* USER CODE BEGIN SysInit */
-    __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
-    /* USER CODE END SysInit */
+    gpio::enableGpio(gpio::group::uart2);
+    uart2::initialize();
 
-    /* Initialize all configured peripherals */
-    MX_RTC_Init();
-    MX_ADC_Init();
-    MX_AES_Init();
-    MX_RNG_Init();
-    MX_LPTIM1_Init();
-    /* USER CODE BEGIN 2 */
-
-    logging::initialize();
-    logging::enable(logging::source::applicationEvents);
-
-    version::initialize();
-    uniqueId::dump();
-    realTimeClock::initialize();
-
-    spi::wakeUp();
-    display::detectPresence();
-    spi::goSleep();
-
-    i2c::wakeUp();
-    if (nonVolatileStorage::isPresent()) {
-        if (!settingsCollection::isInitialized()) {
-            settingsCollection::initializeOnce();
-        }
-    }
-    sensorDeviceCollection::discover();
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 30);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 30);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 30);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 2, 10);
-    i2c::goSleep();
-
-    gpio::enableGpio(gpio::group::rfControl);
-    LoRaWAN::initialize();
-    measurementCollection::initialize();
-
-    mainController::showDeviceInfo();
-    lptim::start(5 * 4096);
-
-    // measurementCollection::dumpRaw(0, 128);
-    // measurementCollection::dumpAll();
-    // LoRaWAN::dumpConfig();
-    // LoRaWAN::dumpState();
-    // LoRaWAN::dumpChannels();
-    /* USER CODE END 2 */
-
-    /* Infinite loop */
-    /* USER CODE BEGIN WHILE */
+	char message[64];
 
     while (1) {
-        mainController ::handleEvents();
-        mainController ::run();
-        /* USER CODE END WHILE */
+if (uart2::commandCount() > 0) {
+	uart2::read(message);
+	uart2::send("> ");
+	uart2::send(message);
+	uart2::send("\n");
+	}
 
-        /* USER CODE BEGIN 3 */
-    }
-    /* USER CODE END 3 */
+		   }
 }
 
 /**
@@ -639,27 +587,6 @@ void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
     applicationEventBuffer.push(applicationEvent::sx126xTimeout);
 }
 
-void executeRomBootloader() {
-    void (*SysMemBootJump)(void);
-    volatile uint32_t BootAddr = 0x1FFF0000;
-
-    __disable_irq();
-    SysTick->CTRL = 0;
-    HAL_RCC_DeInit();
-    for (uint8_t i = 0; i < sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]); i++) {
-        NVIC->ICER[i] = 0xFFFFFFFF;
-        NVIC->ICPR[i] = 0xFFFFFFFF;
-    }
-    __enable_irq();
-
-    SysMemBootJump = (void (*)(void))(*((uint32_t *)((BootAddr + 4))));
-
-    __set_MSP(*(uint32_t *)BootAddr);        // Set the main stack pointer to the boot loader stack
-
-    SysMemBootJump();
-    while (1) {
-    }
-}
 
 /* USER CODE END 4 */
 

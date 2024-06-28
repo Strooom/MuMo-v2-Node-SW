@@ -1,4 +1,6 @@
 #include "sensorchannel.hpp"
+#include <stdio.h>           // snprintf
+#include <inttypes.h>        // for PRIu32
 
 sensorChannel::sensorChannel(uint32_t decimals, const char* name, const char* unit) : oversampling{0}, prescaling{0}, decimals{decimals}, name{name}, unit{unit} {
     limitOversamplingAndPrescaler();
@@ -94,4 +96,16 @@ void sensorChannel::limitOversamplingCounter(uint32_t activeOversampling) {
 
 bool sensorChannel::isActive() const {
     return (prescaling > 0);
+}
+
+void sensorChannel::buildBigTextString(char* destination, uint32_t maxLength) {
+    snprintf(destination, maxLength, "%" PRId32, value());
+}
+
+void sensorChannel::buildSmallTextString(char* destination, uint32_t maxLength) {
+    if (decimals > 0) {
+        snprintf(destination, maxLength, "%" PRIu32 " %s", value(), unit);
+    } else {
+        snprintf(destination, maxLength, "%s", unit);
+    }
 }

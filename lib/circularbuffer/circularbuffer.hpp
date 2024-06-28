@@ -13,28 +13,30 @@
 // push() on an already full buffer, overwrites the oldest event.
 // pop() on an empty buffer, returns 0x00
 
-template <typename itemType, uint32_t bufferLength>
+template <typename itemType, uint32_t toBeLength>
 class circularBuffer {
   public:
-    static constexpr uint32_t length = bufferLength;
+    static constexpr uint32_t length = toBeLength;
 
-    circularBuffer(){};
+    circularBuffer(){
+        initialize();
+    };
 
     void initialize() {
         head  = 0;
         level = 0;
     };
 
-    void push(itemType event) {
+    void push(itemType newItem) {
 #ifndef generic
         bool interrupts_enabled = (__get_PRIMASK() == 0);
         __disable_irq();
 #endif
-        theBuffer[(head + level) % bufferLength] = event;
-        if (level < bufferLength) {
+        buffer[(head + level) % length] = newItem;
+        if (level < length) {
             level++;
         } else {
-            head = (head + 1) % bufferLength;
+            head = (head + 1) % length;
         }
 #ifndef generic
         if (interrupts_enabled) {
@@ -50,8 +52,8 @@ class circularBuffer {
 #endif
         itemType result;
         if (level > 0) {
-            result = theBuffer[head];
-            head   = (head + 1) % bufferLength;
+            result = buffer[head];
+            head   = (head + 1) % length;
             level--;
         } else {
             result = static_cast<itemType>(0x00);
@@ -82,5 +84,5 @@ class circularBuffer {
 #endif
     uint32_t head{0};
     uint32_t level{0};
-    itemType theBuffer[bufferLength]{};
+    itemType buffer[length]{};
 };

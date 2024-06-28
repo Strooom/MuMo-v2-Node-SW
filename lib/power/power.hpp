@@ -10,8 +10,7 @@ class power {
     static bool isUsbConnected();        // detect insertion of USB cable event
     static bool isUsbRemoved();          // detect removal of USB cable event
     static bool hasUsbPower();
-    // static void goSleep();
-
+    
 #ifndef unitTesting
 
   private:

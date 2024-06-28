@@ -20,7 +20,6 @@
 #include <linkdirection.hpp>
 #include <spreadingfactor.hpp>
 #include <linearbuffer.hpp>
-#include <payloadencoder.hpp>
 #include <maccommand.hpp>
 
 class LoRaWAN {

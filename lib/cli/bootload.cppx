@@ -1,0 +1,72 @@
+#ifndef generic
+#include <main.h>
+extern void HAL_UART_DeInit();
+extern UART_HandleTypeDef huart2;
+#endif
+#include <stdint.h>
+
+
+RCC->RSTR
+
+
+
+void jumpToBootLoader() {
+#ifndef generic
+
+    void (*SysMemBootJump)(void);
+    volatile uint32_t BootAddr = 0x1FFF0000;
+
+    __disable_irq();
+    SysTick->CTRL = 0;
+    HAL_RCC_DeInit();
+    for (uint8_t i = 0; i < sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]); i++)
+    {
+      NVIC->ICER[i] = 0xFFFFFFFF;
+      NVIC->ICPR[i] = 0xFFFFFFFF;
+    }
+    __enable_irq();
+
+    SysMemBootJump = (void (*)(void))(*((uint32_t *)((BootAddr + 4))));
+
+    __set_MSP(*(uint32_t *)BootAddr);        // Set the main stack pointer to the boot loader stack
+
+    SysMemBootJump();
+#endif
+    while (1) {
+    }
+}
+
+
+/* USER CODE BEGIN 4 */
+#define BOOT_ADDR	0x1FFFF000	// my MCU boot code base address
+#define	MCU_IRQS	70u	// no. of NVIC IRQ inputs
+
+struct boot_vectable_ {
+    uint32_t Initial_SP;
+    void (*Reset_Handler)(void);
+};
+
+#define BOOTVTAB	((struct boot_vectable_ *)BOOT_ADDR)
+
+void JumpToBootloader(void)
+{
+	__disable_irq();
+	SysTick->CTRL = 0;
+	// HAL_RCC_DeInit();
+
+	/* Clear Interrupt Enable Register & Interrupt Pending Register */
+    for (uint8_t i = 0; i < sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]); i++)
+    {
+      NVIC->ICER[i] = 0xFFFFFFFF;
+      NVIC->ICPR[i] = 0xFFFFFFFF;
+    }
+
+	/* Re-enable all interrupts */
+	__enable_irq();
+
+	// Set the MSP
+	__set_MSP(BOOTVTAB->Initial_SP);
+
+	// Jump to app firmware
+	BOOTVTAB->Reset_Handler();
+}

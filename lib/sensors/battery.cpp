@@ -43,23 +43,27 @@ void battery::initalize() {
 
 void battery::run() {
     if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
-        uint32_t rawADC = readSample();
+        uint32_t rawADC             = readSample();
+        float batteryVoltage        = voltageFromRaw(rawADC);
+        float batteryPercentCharged = chargeFromVoltage::calculateChargeLevel(batteryVoltage, type);
 
         if (channels[voltage].needsSampling()) {
-            float batteryVoltage = voltageFromRaw(rawADC);
             channels[voltage].addSample(batteryVoltage);
             if (channels[voltage].hasOutput()) {
                 channels[voltage].hasNewValue = true;
             }
         }
-        if (channels[percentCharged].needsSampling()) {
-            float batteryVoltage        = voltageFromRaw(rawADC);
-            float batteryPercentCharged = chargeFromVoltage::calculateChargeLevel(batteryVoltage, type);
-            channels[percentCharged].addSample(batteryPercentCharged);
-            if (channels[percentCharged].hasOutput()) {
-                channels[percentCharged].hasNewValue = true;
+        if (channels[percentCharged].isActive()) {
+            if (channels[percentCharged].needsSampling()) {
+                channels[percentCharged].addSample(batteryPercentCharged);
+                if (channels[percentCharged].hasOutput()) {
+                    channels[percentCharged].hasNewValue = true;
+                }
             }
+        } else {
+                channels[percentCharged].addSample(batteryPercentCharged); // because we need this on the display, we always calculate percentCharged, even if we don't transmit it to the cloud
         }
+
         state = sensorDeviceState::sleeping;
     }
 }

@@ -8,5 +8,6 @@
 
 enum class screenType : uint32_t {
     measurements,
-    message
+    message,
+    qrcode
 };

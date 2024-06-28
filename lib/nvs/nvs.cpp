@@ -44,7 +44,7 @@ void nonVolatileStorage::fill(uint8_t value) {
 }
 
 bool nonVolatileStorage::isPresent() {
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }
@@ -63,7 +63,7 @@ bool nonVolatileStorage::isPresent() {
 }
 
 void nonVolatileStorage::read(const uint32_t startAddress, uint8_t* data, const uint32_t dataLength) {
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }
@@ -82,7 +82,7 @@ void nonVolatileStorage::write(const uint32_t startAddress, const uint8_t* data,
     uint8_t* remainingData{const_cast<uint8_t*>(data)};
     uint32_t remainingLength{dataLength};
     uint32_t currentAddress{startAddress};
-    bool i2cState = i2c::isAwake();
+    bool i2cState = i2c::isInitialized();
     if (!i2cState) {
         i2c::wakeUp();
     }
