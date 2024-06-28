@@ -1,14 +1,21 @@
 # Short Term ToDo's
-* high lux value does not show on display
-* show UID as QRCode when LoRaWAN is not yet configured...
+* move smallText to the right, so more room for at least 4 digits bigText (unit test it for widest char = 25 pix)
+* show UID as QRCode
+  - on boot
+  - when LoRaWAN is not yet configured...
 * LoRaWAN : investigate why sometimes downlinks are not working : tune Rx timing
+  - run a testloop with linkCheckRequest, and have Rx1 start tuned to middle of still working values..
+  - also think about how long to listen for rx rx1/rx2 timeout
+
 * CLI : 
   - UART2 activeren bij USB connectie
 
 
 * deviceStatusReq doen werken met echte waarden
   - ontvangstwaarden van laatste downlink opslaan
-  - batterijspanning omzetten in uint8
+  - batterijspanning omzetten in uint8 : omrekening toevoegen aan battery
+
+
 * batteryVoltage seems incorrect ?? also shown with 1 decimal io 2 ??
 * wrapping of measurementsCollection : writing and reading measurements
 * erase old measurements when space needed for new ones
@@ -18,9 +25,11 @@
 
 
 # Medium Term ToDo's
-* Clock synchroniseren 1 maal per week,
+* Clock synchroniseren 1 maal per week : 
+  - define a timer-class to run things regularly
 * Display updaten minimaal 1 maal per dag
 * integrate qrCode as full static class. 
+  - add unit testing
 
 
 
