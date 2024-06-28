@@ -56,11 +56,11 @@ jobs:
           echo "fulltag = [$fulltag]"
           declare versiontag=$(echo $fulltag | cut -d'-' -f1)
           echo "extract SemVer numbers from version tag [$versiontag]"
-          declare -i lastmajordigit=$(echo $versiontag | cut -c 1- | cut -d'.' -f1)
+          declare -i lastmajordigit=$(echo $versiontag | cut -c 2- | cut -d'.' -f1)
           echo "lastmajordigit = $lastmajordigit"
-          declare -i lastminordigit=$(echo $versiontag | cut -c 1- | cut -d'.' -f2)
+          declare -i lastminordigit=$(echo $versiontag | cut -c 2- | cut -d'.' -f2)
           echo "lastminordigit = $lastminordigit"
-          declare -i lastpatchdigit=$(echo $versiontag | cut -c 1- | cut -d'.' -f3)
+          declare -i lastpatchdigit=$(echo $versiontag | cut -c 2- | cut -d'.' -f3)
           echo "lastpatchdigit = $lastpatchdigit"
           declare lastversion="v$lastmajordigit.$lastminordigit.$lastpatchdigit"
           echo "output variables to GitHub Actions"
