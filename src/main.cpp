@@ -161,7 +161,8 @@ int main(void) {
         }
     }
     sensorDeviceCollection::discover();
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 30);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 3, 720);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged, 3, 720);
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 30);
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 30);
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 2, 10);
