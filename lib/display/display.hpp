@@ -48,6 +48,9 @@ class display {
     static constexpr uint32_t widthInBytes{widthInPixels / 8};        // [bytes]
 
     static void dump();
+    static constexpr uint32_t refreshPeriodInTicks{2 * 60 * 24};
+
+
 
 #ifndef unitTesting
 

@@ -25,6 +25,7 @@
 #include <applicationevent.hpp>
 #include <circularbuffer.hpp>
 #include <uart.hpp>
+#include <realtimeclock.hpp>
 
 
 // Some commment
@@ -203,6 +204,7 @@ void RTC_WKUP_IRQHandler(void) {
     /* USER CODE END RTC_WKUP_IRQn 0 */
     HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
     /* USER CODE BEGIN RTC_WKUP_IRQn 1 */
+    realTimeClock::tickCounter++;
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
     /* USER CODE END RTC_WKUP_IRQn 1 */
 }

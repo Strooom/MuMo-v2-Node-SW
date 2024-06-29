@@ -18,7 +18,8 @@ class realTimeClock {
     static time_t time_tFromBytes(uint8_t* input);
     static time_t unixTimeFromGpsTime(uint32_t gpsTime);
     static bool needsSync();
-    static constexpr uint32_t rtcSyncPeriod = 60 * 60 * 24 * 7;
+    static constexpr uint32_t rtcSyncPeriodInTicks = 2 * 60 * 24 * 7;
+    static uint32_t tickCounter;
 
 #ifndef unitTesting
 
@@ -29,5 +30,4 @@ class realTimeClock {
         uint8_t asBytes[4];
     } convertor;
 
-    static time_t lastSyncTime;
 };
