@@ -12,7 +12,7 @@ time_t mockRealTimeClock;
 #endif
 
 union realTimeClock::convert realTimeClock::convertor;
-time_t realTimeClock::lastSyncTime{0};
+uint32_t realTimeClock::tickCounter{0};
 
 time_t realTimeClock::unixTimeFromGpsTime(uint32_t gpsTime) {
     static constexpr uint32_t unixToGpsOffset{315964800};
@@ -107,5 +107,5 @@ time_t realTimeClock::time_tFromBytes(uint8_t* input) {
 }
 
 bool realTimeClock::needsSync() {
-    return (get() - lastSyncTime > rtcSyncPeriod);
+    return ((tickCounter % rtcSyncPeriodInTicks) == 0);
 }

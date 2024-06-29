@@ -25,9 +25,6 @@
 
 
 # Medium Term ToDo's
-* Clock synchroniseren 1 maal per week : 
-  - define a timer-class to run things regularly
-* Display updaten minimaal 1 maal per dag
 * integrate qrCode as full static class. 
   - add unit testing
 

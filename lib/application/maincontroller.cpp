@@ -147,6 +147,9 @@ void mainController::handleEvents() {
             case mainState::idle:
                 switch (theEvent) {
                     case applicationEvent::realTimeClockTick:
+                        if (realTimeClock::needsSync()) {
+                            LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
+                        }
                         if (sensorDeviceCollection::needsSampling()) {
                             sensorDeviceCollection::startSampling();
                             goTo(mainState::measuring);
@@ -199,7 +202,7 @@ void mainController::runDisplayUpdate() {
 
         default:
             if (display::isPresent()) {
-                if (screen::isModified()) {
+                if (screen::isModified() || ((realTimeClock::tickCounter % display::refreshPeriodInTicks) == 0)) {
                     screen::update();
                 }
             }
