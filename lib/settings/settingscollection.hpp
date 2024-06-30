@@ -15,6 +15,7 @@ class settingsCollection {
         unusedHardware,
 
         activeLoggingSources,
+        name,
         unusedGeneral,
 
         unusedMeasurements,

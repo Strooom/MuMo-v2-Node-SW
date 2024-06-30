@@ -54,6 +54,7 @@ uint32_t mainController::requestCounter{0};
 uint32_t mainController::answerCounter{0};
 uint32_t mainController::deviceIndex[screen::numberOfLines]{2, 2, 3};
 uint32_t mainController::channelIndex[screen::numberOfLines]{0, 1, 0};
+char mainController::name[mainController::maxNameLength + 1]{0};
 
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 

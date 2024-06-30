@@ -1,5 +1,4 @@
 # Short Term ToDo's
-* move smallText to the right, so more room for at least 4 digits bigText (unit test it for widest char = 25 pix)
 * show UID as QRCode
   - on boot
   - when LoRaWAN is not yet configured...

@@ -13,6 +13,7 @@
 #include <uniqueid.hpp>
 #include <qrcode.hpp>
 #include <hexascii.hpp>
+#include <maincontroller.hpp>
 
 bool screen::modified{false};
 screenType screen::currentScreenType{screenType::message};
@@ -50,6 +51,8 @@ void screen::update() {
             if (hasUsbPower) {
                 graphics::drawBitMap(display::widthInPixels - (ux::marginLeft + (3 * ux::iconWidth)), 2, usbIcon);
             }
+            graphics::drawText(ux::marginLeft, 2, tahoma24bold, mainController::name);
+
         } break;
 
         case screenType::message: {
