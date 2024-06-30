@@ -24,6 +24,7 @@ class ux {
     static constexpr uint32_t marginBottomConsole{2};
 
     static constexpr uint32_t mid{display::widthInPixels / 2};
+    static constexpr uint32_t mid60{display::widthInPixels * 0.6};
 
     // icon spacing
     static constexpr uint32_t iconWidth{20};
