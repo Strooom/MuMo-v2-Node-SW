@@ -217,12 +217,12 @@ void test_hasNewMeasurements2() {
     battery::channels[battery::voltage].set(1, 1);
     TEST_ASSERT_TRUE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage).isActive());
     TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged).isActive());
-    TEST_ASSERT_EQUAL_FLOAT(0.0F, sensorDeviceCollection::value(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_EQUAL_FLOAT(mockBatteryVoltage, sensorDeviceCollection::value(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
     TEST_ASSERT_TRUE(sensorDeviceCollection::needsSampling());
     sensorDeviceCollection::startSampling();
     sensorDeviceCollection::run();
     TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurement(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
-    TEST_ASSERT_EQUAL_FLOAT(mockBatteryVoltage / 2.0F, sensorDeviceCollection::value(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
+    TEST_ASSERT_EQUAL_FLOAT(mockBatteryVoltage, sensorDeviceCollection::value(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
 
     sensorDeviceCollection::clearNewMeasurements();
     sensorDeviceCollection::updateCounters();
