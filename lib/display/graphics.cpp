@@ -170,7 +170,7 @@ void graphics::drawBatteryIcon(const uint32_t xStart, const uint32_t yStart, con
     }
     drawFilledRectangle(xStart + ux::batteryIconTipLeft, yStart + ux::batteryIconHeight, xStart + ux::batteryIconTipLeft + ux::batteryIconTipWidth, yStart + ux::batteryIconHeight + ux::batteryIconTipHeight, color::black);
     uint32_t fill = (ux::batteryIconGaugeHeight * level) / 100;
-    drawFilledRectangle(xStart, yStart, xStart + ux::batteryIconWidth, yStart + fill, color::black);
+    drawFilledRectangle(xStart, yStart + ux::batteryIconThickness, xStart + ux::batteryIconWidth, yStart + ux::batteryIconThickness + fill, color::black);
 }
 
 void graphics::drawNetworkSignalStrengthIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level) {

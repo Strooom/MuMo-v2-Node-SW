@@ -51,9 +51,8 @@ void screen::update() {
             graphics::drawBatteryIcon(iconLeft, 2, batteryLevel);
             iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth + ux::iconSpacing);
             graphics::drawNetworkSignalStrengthIcon(iconLeft, 2, netwerkStrength);
-            if (true) {
-//            if (hasUsbPower) {
-            iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth + ux::iconSpacing + ux::iconSpacing);
+            if (hasUsbPower) {
+                iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth + ux::iconSpacing + ux::iconSpacing);
                 graphics::drawBitMap(iconLeft, 2, usbIcon);
             }
             graphics::drawText(ux::marginLeft, 2, tahoma24bold, mainController::name);
