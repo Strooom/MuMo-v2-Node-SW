@@ -34,5 +34,5 @@ void lptim::stop() {
 }
 
 uint32_t lptim::ticksFromSeconds(uint32_t seconds) {
-    return (seconds * 4096U) - timerOffset;
+    return ((seconds * 4096U) + timerOffset);
 }
