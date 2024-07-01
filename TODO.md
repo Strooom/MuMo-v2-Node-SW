@@ -1,4 +1,5 @@
 # Short Term ToDo's
+* getbatteryChargeFromVoltage table right by doing a discharge test over 24h
 * show UID as QRCode
   - on boot
   - when LoRaWAN is not yet configured...
@@ -26,6 +27,7 @@
 # Medium Term ToDo's
 * integrate qrCode as full static class. 
   - add unit testing
+  - move code from screen to graphics
 
 
 
