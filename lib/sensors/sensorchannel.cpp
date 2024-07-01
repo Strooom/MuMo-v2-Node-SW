@@ -6,15 +6,16 @@ sensorChannel::sensorChannel(uint32_t decimals, const char* name, const char* un
     limitOversamplingAndPrescaler();
 }
 
-void sensorChannel::set(uint32_t newOversampling, uint32_t newPrescaler, float initialSampleValue) {
+void sensorChannel::set(uint32_t newOversampling, uint32_t newPrescaler) {
     oversampling = newOversampling;
     prescaling   = newPrescaler;
     limitOversamplingAndPrescaler();
     oversamplingCounter = 0;
     prescaleCounter     = 0;
-    for (uint32_t i = 0; i < (maxOversampling + 1); i++) {
-        samples[i] = initialSampleValue;
-    }
+
+    // for (uint32_t i = 0; i < (maxOversampling + 1); i++) {
+    //     samples[i] = initialSampleValue;
+    // }
 }
 
 bool sensorChannel::needsSampling() {
@@ -70,7 +71,14 @@ void sensorChannel::updateCounters() {
 }
 
 void sensorChannel::addSample(float theSample) {
-    samples[oversamplingCounter] = theSample;
+    if (initialized) {
+        samples[oversamplingCounter] = theSample;
+    } else {
+        for (uint32_t i = 0; i < (maxOversampling + 1); i++) {
+            samples[i] = theSample;
+        }
+        initialized = true;
+    }
 }
 
 float sensorChannel::value() {
