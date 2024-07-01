@@ -24,9 +24,11 @@ class ux {
     static constexpr uint32_t marginBottomConsole{2};
 
     static constexpr uint32_t mid{display::widthInPixels / 2};
+    static constexpr uint32_t mid60{(display::widthInPixels * 60)/100};
 
-    // icon spacing
-    static constexpr uint32_t iconWidth{20};
+    // icon width / spacing
+    static constexpr uint32_t iconWidth{16};
+    static constexpr uint32_t iconSpacing{20};
 
     // dimensions for battery icon
     static constexpr uint32_t batteryIconWidth{16};
@@ -38,7 +40,7 @@ class ux {
     static constexpr uint32_t batteryIconTipLeft{(batteryIconWidth - batteryIconTipWidth) / 2};
 
     // dimensions for network signal icon
-    static constexpr uint32_t netwerkSignalStrengthBarWidth{6};
+    static constexpr uint32_t netwerkSignalStrengthBarWidth{4};
     static constexpr uint32_t netwerkSignalStrengthNumberOfBars{4};
     static constexpr uint32_t netwerkSignalStrengthBaseHeight{10};
     static constexpr uint32_t netwerkSignalStrengthStepHeight{10};

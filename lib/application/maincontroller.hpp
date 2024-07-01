@@ -27,6 +27,8 @@ class mainController {
     static constexpr uint32_t maxNmbrRequests{12};
     static uint32_t deviceIndex[screen::numberOfLines];
     static uint32_t channelIndex[screen::numberOfLines];
+    static constexpr uint32_t maxNameLength{8};
+    static char name[maxNameLength + 1];
 
 #ifndef unitTesting
 

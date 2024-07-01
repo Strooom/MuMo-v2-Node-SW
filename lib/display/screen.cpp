@@ -13,6 +13,7 @@
 #include <uniqueid.hpp>
 #include <qrcode.hpp>
 #include <hexascii.hpp>
+#include <maincontroller.hpp>
 
 bool screen::modified{false};
 screenType screen::currentScreenType{screenType::message};
@@ -39,17 +40,24 @@ void screen::update() {
             graphics::drawFilledRectangle(ux::marginLeft, 149, display::widthInPixels - ux::marginLeft, 150, graphics::color::black);
 
             for (uint32_t lineIndex = 0; lineIndex < numberOfLines; lineIndex++) {
-                uint32_t leftOffset = ux::mid - (graphics::getTextwidth(roboto36bold, bigText[lineIndex]) + roboto36bold.properties.spaceBetweenCharactersInPixels);
+                uint32_t leftOffset = ux::mid60 - (graphics::getTextwidth(roboto36bold, bigText[lineIndex]) + roboto36bold.properties.spaceBetweenCharactersInPixels);
                 graphics::drawText(leftOffset, ux::marginBottomLarge + ((3U - lineIndex) * 50U), roboto36bold, bigText[lineIndex]);
-                graphics::drawText(ux::mid + tahoma24bold.properties.spaceBetweenCharactersInPixels, ux::marginBottomSmall + ((3U - lineIndex) * 50U), tahoma24bold, smallText[lineIndex]);
+                graphics::drawText(ux::mid60 + tahoma24bold.properties.spaceBetweenCharactersInPixels, ux::marginBottomSmall + ((3U - lineIndex) * 50U), tahoma24bold, smallText[lineIndex]);
             }
 
             uint32_t batteryLevel = static_cast<uint32_t>(sensorDeviceCollection::value(1, 1) * 100.0F);
-            graphics::drawBatteryIcon(display::widthInPixels - (1 + ux::marginLeft + ux::batteryIconWidth), 2, batteryLevel);
-            graphics::drawNetworkSignalStrengthIcon(display::widthInPixels - (1 + ux::marginLeft + ux::marginLeft + ux::batteryIconWidth + ux::netwerkSignalStrengthWidth), 2, netwerkStrength);
-            if (hasUsbPower) {
-                graphics::drawBitMap(ux::marginLeft + 100U, 2, usbIcon);
+            uint32_t iconLeft;
+            iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth);
+            graphics::drawBatteryIcon(iconLeft, 2, batteryLevel);
+            iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth + ux::iconSpacing);
+            graphics::drawNetworkSignalStrengthIcon(iconLeft, 2, netwerkStrength);
+            if (true) {
+//            if (hasUsbPower) {
+            iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth + ux::iconSpacing + ux::iconSpacing);
+                graphics::drawBitMap(iconLeft, 2, usbIcon);
             }
+            graphics::drawText(ux::marginLeft, 2, tahoma24bold, mainController::name);
+
         } break;
 
         case screenType::message: {

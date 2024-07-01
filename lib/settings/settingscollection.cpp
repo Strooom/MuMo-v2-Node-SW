@@ -12,7 +12,8 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
 
     {5, 59},         // unusedGeneral : extra hardware settings can be inserted hereafter
     {64, 4},         // activelogging::sources : 4 bytes
-    {68, 60},        // unusedGeneral : extra settings can be inserted hereafter
+    {68, 8},         // nodeName
+    {76, 52},        // unusedGeneral : extra settings can be inserted hereafter
 
     {128, 128},        // unusedMeasurements : 128 bytes
 
@@ -41,6 +42,7 @@ bool settingsCollection::isInitialized() {
 }
 
 void settingsCollection::initializeOnce() {
+    // TODO : this is not a good approach : the unit should get settings before being deployed. If it did not get settings, we should just show the QR code
     save<uint8_t>(0x01, settingsCollection::settingIndex::nvsMapVersion);
 
     save<uint32_t>(0, settingsCollection::settingIndex::DevAddr);

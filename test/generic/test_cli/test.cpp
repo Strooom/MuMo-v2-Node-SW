@@ -97,7 +97,7 @@ void test_findCommandIndex() {
 
     char commandLine3[] = "set-devaddr 12345678";
     cli::splitCommandLine(commandLine3);
-    TEST_ASSERT_EQUAL(4, cli::findCommandIndex());
+    TEST_ASSERT_EQUAL(5, cli::findCommandIndex());
 
     char commandLine4[] = "unknown command";
     cli::splitCommandLine(commandLine4);
