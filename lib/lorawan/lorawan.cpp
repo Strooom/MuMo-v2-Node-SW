@@ -1,6 +1,5 @@
 #include <lorawan.hpp>
 #include <sx126x.hpp>
-#include <lptim1.hpp>
 #include <logging.hpp>
 #include <circularbuffer.hpp>
 #include <settingscollection.hpp>
@@ -516,7 +515,7 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
         case txRxCycleState::waitForTxComplete:
             switch (theEvent) {
                 case applicationEvent::sx126xTxComplete:
-                    lptim::start(ticksFromSeconds(rx1DelayInSeconds));
+                    lptim::start(lptim::ticksFromSeconds(rx1DelayInSeconds));
                     goTo(txRxCycleState::waitForRx1Start);
                     return;
                     break;
@@ -529,7 +528,7 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
             switch (theEvent) {
                 case applicationEvent::lowPowerTimerExpired: {
                     lptim::stop();
-                    lptim::start(ticksFromSeconds(1U));
+                    lptim::start(lptim::ticksFromSeconds(1U));
                     uint32_t rxFrequency = txChannels.channel[txChannels.getCurrentChannelIndex()].frequencyInHz;
                     uint32_t rxTimeout   = getReceiveTimeout(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor);
                     sx126x::configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);

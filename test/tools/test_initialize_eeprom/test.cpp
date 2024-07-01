@@ -40,7 +40,7 @@ batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
 
 powerVersion selectedPowerVersion{powerVersion::highPower};
 
-const char toBeName[mainController::maxNameLength + 1] = "123";
+const char toBeName[mainController::maxNameLength + 1] = "000";
 
 uint32_t toBeDevAddr            = 0x260BF7F1;
 const char toBeNetworkKey[]     = "4353A27A7861A3F684C943A1E45B6536";

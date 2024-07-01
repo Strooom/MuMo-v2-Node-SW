@@ -32,3 +32,7 @@ void lptim::stop() {
     HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
 #endif
 }
+
+uint32_t lptim::ticksFromSeconds(uint32_t seconds) {
+    return (seconds * 4096U) - timerOffset;
+}

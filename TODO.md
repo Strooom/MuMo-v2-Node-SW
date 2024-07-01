@@ -1,4 +1,5 @@
 # Short Term ToDo's
+* bug : measurements with oversampling are not correct because the samples array is not initialized properly and so an average is taken over uninitialized data..
 * getbatteryChargeFromVoltage table right by doing a discharge test over 24h
 * show UID as QRCode
   - on boot
