@@ -17,12 +17,16 @@ char cli::error[cli::maxCommandLineLength]{};
 
 cliCommand cli::commands[nmbrOfCommands]{
     {"?", "help", 0, showHelp},
-    {"ssw", "show-software", 0, nullptr},
-    {"shw", "show-hardware", 0, nullptr},
+    {"ssw", "show-software", 0, nullptr},        // version, build date, build time
+    {"shw", "show-hardware", 0, nullptr},        // settings, battery-voltage
+    {"shs", "show-sensors", 0, nullptr},         // list sensors present and their channel settings
     {"sl", "show-lorawan", 0, nullptr},
     {"sda", "set-devaddr", 1, setDevAddr},
     {"snk", "set-nwkkey", 1, nullptr},
-    {"sak", "set-appkey", 1, nullptr}};
+    {"sak", "set-appkey", 1, nullptr},
+    {"rml", "reset-mac-layer", 0, nullptr},
+    {"sls", "set-logging-sources", 1, nullptr},
+    {"res", "restart", 0, nullptr}};        // will restart the software and jump to the bootloader for firmware update
 
 void cli::run() {
     char commandLine[maxCommandLineLength];

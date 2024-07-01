@@ -32,6 +32,7 @@
 
 
 # Long Term ToDo's
+* look at partial display updates : C:\Users\pasca\Documents\Projects\UA\GxEPD\examples\PartialUpdateExample
 * make generic unit tests also run on target
 * OTAA
 * make EEPROM work for multiples of 64K : 

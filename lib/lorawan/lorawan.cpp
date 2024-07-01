@@ -1093,7 +1093,8 @@ messageType LoRaWAN::decodeMessage() {
 }
 
 uint32_t LoRaWAN::getReceiveTimeout(spreadingFactor aSpreadingFactor) {
-    static constexpr uint32_t baseTimeout{640};
+    static constexpr uint32_t baseTimeout{640}; // SX126x uses 64 KHz RTC, so 640 ticks is 10ms
+    // See more info in SemTech document, we need 5ms for SF7, and then double for each higher SF
     switch (aSpreadingFactor) {
         case spreadingFactor::SF7:
             return 4 * baseTimeout;

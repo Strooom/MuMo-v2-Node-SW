@@ -15,29 +15,37 @@
 #include <measurementcollection.hpp>
 #include <sx126x.hpp>
 #include <powerversion.hpp>
+#include <maincontroller.hpp>
+
+// #######################################################
+// ###  Which settings to be written to EEPROM         ###
+// #######################################################
+
+
+bool resetBatteryType{false};
+bool resetMcuType{false};
+bool setName{true};
+bool overwriteExistingLoRaWANConfig{false};
+bool resetLoRaWANState{false};
+bool resetLoRaWANChannels{false};
+bool eraseMeasurementsInEeprom{false};
 
 // #######################################################
 // ###  Non-Volatile settings to be written to EEPROM  ###
 // #######################################################
 
 eepromType selectedEepromType{eepromType::BR24G512};
-
 uint8_t selectedDisplayType{0};
-
-bool resetBatteryType{true};
 batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
 
 powerVersion selectedPowerVersion{powerVersion::highPower};
-bool resetMcuType{true};
+
+const char toBeName[mainController::maxNameLength + 1] = "123";
 
 uint32_t toBeDevAddr            = 0x260BF7F1;
 const char toBeNetworkKey[]     = "4353A27A7861A3F684C943A1E45B6536";
 const char toBeApplicationKey[] = "8F2C23EB05B8A2D7129E6D7FB6A064E8";
-bool overwriteExistingLoRaWANConfig{true};
 
-bool resetLoRaWANState{true};
-bool resetLoRaWANChannels{true};
-bool eraseMeasurementsInEeprom{false};
 
 // #######################################################
 
@@ -58,8 +66,8 @@ void initializeDisplayType() {
 
 void initializeBatteryType() {
     if (resetBatteryType) {
-    settingsCollection::save(static_cast<uint8_t>(selectedBatteryType), settingsCollection::settingIndex::batteryType);
-    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedBatteryType), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
+        settingsCollection::save(static_cast<uint8_t>(selectedBatteryType), settingsCollection::settingIndex::batteryType);
+        TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedBatteryType), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
     }
 }
 
@@ -70,11 +78,23 @@ void initializeEepromType() {
 
 void initializeMcuType() {
     if (resetMcuType) {
-    settingsCollection::save(static_cast<uint8_t>(selectedPowerVersion), settingsCollection::settingIndex::mcuType);
-    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedPowerVersion), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
+        settingsCollection::save(static_cast<uint8_t>(selectedPowerVersion), settingsCollection::settingIndex::mcuType);
+        TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedPowerVersion), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
     }
 }
 
+void initializeName() {
+    if (setName) {
+        uint8_t newName[mainController::maxNameLength + 1]{0};
+        for (uint32_t index = 0; index < strlen(toBeName); index++) {
+            newName[index] = toBeName[index];
+        }
+        settingsCollection::saveByteArray(newName, settingsCollection::settingIndex::name);
+        uint8_t isName[mainController::maxNameLength + 1]{0};
+        settingsCollection::readByteArray(isName, settingsCollection::settingIndex::name);
+        TEST_ASSERT_EQUAL_STRING(newName, isName);
+    }
+}
 
 void initializeActiveLoggingSources() {
     logging::reset();
@@ -161,6 +181,8 @@ int main(int argc, char **argv) {
     RUN_TEST(initializeBatteryType);
     RUN_TEST(initializeEepromType);
     RUN_TEST(initializeActiveLoggingSources);
+    RUN_TEST(initializeMcuType);
+    RUN_TEST(initializeName);
     RUN_TEST(initializeLorawanConfig);
     RUN_TEST(initializeLorawanState);
     RUN_TEST(initializeLorawanChannels);

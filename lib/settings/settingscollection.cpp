@@ -42,6 +42,7 @@ bool settingsCollection::isInitialized() {
 }
 
 void settingsCollection::initializeOnce() {
+    // TODO : this is not a good approach : the unit should get settings before being deployed. If it did not get settings, we should just show the QR code
     save<uint8_t>(0x01, settingsCollection::settingIndex::nvsMapVersion);
 
     save<uint32_t>(0, settingsCollection::settingIndex::DevAddr);

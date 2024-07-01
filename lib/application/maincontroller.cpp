@@ -203,7 +203,7 @@ void mainController::runDisplayUpdate() {
 
         default:
             if (display::isPresent()) {
-                if (screen::isModified() || ((realTimeClock::tickCounter % display::refreshPeriodInTicks) == 0)) {
+                if (screen::isModified() || ((realTimeClock::tickCounter % display::refreshPeriodInTicks) == (display::refreshPeriodInTicks - 1))) {
                     screen::update();
                 }
             }
@@ -356,10 +356,12 @@ void mainController::showDeviceInfo() {
     snprintf(tmpString, screen::maxTextLength2, "MuMo %s", version::getIsVersionAsString());
     screen::setText(0, tmpString);
     screen::setText(1, "CC 4.0 BY-NC-SA");
-    screen::setText(2, buildInfo::buildTimeStamp);
     hexAscii::uint64ToHexString(tmpString, uniqueId::get());
-    screen::setText(3, tmpString);
+    screen::setText(2, tmpString);
+    screen::setText(3, name);
     screen::setText(4, toString(battery::type));
+
+// TODO : this does not work so well as lineindex is increased even if the sensor is not present, resutling in empty lines
 
     for (uint32_t sensorDeviceIndex = 2; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
         if (sensorDeviceCollection::isValid(sensorDeviceIndex)) {

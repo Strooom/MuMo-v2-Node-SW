@@ -46,10 +46,15 @@ void screen::update() {
             }
 
             uint32_t batteryLevel = static_cast<uint32_t>(sensorDeviceCollection::value(1, 1) * 100.0F);
-            graphics::drawBatteryIcon(display::widthInPixels - (ux::marginLeft + ux::iconWidth), 2, batteryLevel);
-            graphics::drawNetworkSignalStrengthIcon(display::widthInPixels - (ux::marginLeft + (2 * ux::iconWidth)), 2, netwerkStrength);
-            if (hasUsbPower) {
-                graphics::drawBitMap(display::widthInPixels - (ux::marginLeft + (3 * ux::iconWidth)), 2, usbIcon);
+            uint32_t iconLeft;
+            iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth);
+            graphics::drawBatteryIcon(iconLeft, 2, batteryLevel);
+            iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth + ux::iconSpacing);
+            graphics::drawNetworkSignalStrengthIcon(iconLeft, 2, netwerkStrength);
+            if (true) {
+//            if (hasUsbPower) {
+            iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth + ux::iconSpacing + ux::iconSpacing);
+                graphics::drawBitMap(iconLeft, 2, usbIcon);
             }
             graphics::drawText(ux::marginLeft, 2, tahoma24bold, mainController::name);
 
