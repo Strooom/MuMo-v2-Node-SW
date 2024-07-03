@@ -1,12 +1,9 @@
 # Short Term ToDo's
-* bug : measurements with oversampling are not correct because the samples array is not initialized properly and so an average is taken over uninitialized data..
+
 * getbatteryChargeFromVoltage table right by doing a discharge test over 24h
 * show UID as QRCode
   - on boot
   - when LoRaWAN is not yet configured...
-* LoRaWAN : investigate why sometimes downlinks are not working : tune Rx timing
-  - run a testloop with linkCheckRequest, and have Rx1 start tuned to middle of still working values..
-  - also think about how long to listen for rx rx1/rx2 timeout
 
 * CLI : 
   - UART2 activeren bij USB connectie
@@ -20,8 +17,6 @@
 * batteryVoltage seems incorrect ?? also shown with 1 decimal io 2 ??
 * wrapping of measurementsCollection : writing and reading measurements
 * erase old measurements when space needed for new ones
-* Give the node a name property which can be set from CLI / downlink, and which appears on the display status bar
-
 
 
 

@@ -10,7 +10,7 @@ class uart2 {
     static void rxNotEmpty();
     static void startOrContinueTx();
     static void txEmpty();
-    static constexpr uint32_t commandBufferLength{256};
+    static constexpr uint32_t commandBufferLength{256}; // TODO this buffer is longer than the processing in cli class -> could overflow
     static constexpr uint32_t responseBufferLength{256};
     static constexpr uint8_t commandTerminator{0xD};
     static constexpr uint8_t bootLoaderMagicValue{0x7F};
