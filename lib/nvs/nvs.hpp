@@ -36,6 +36,9 @@ class nonVolatileStorage {
     static uint32_t bytesInCurrentPage(uint32_t address, uint32_t dataLength);
     static void erase();
     static void fill(uint8_t value);
+#ifdef generic
+    static uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
+#endif
 
     friend class settingsCollection;
     friend class measurementCollection;

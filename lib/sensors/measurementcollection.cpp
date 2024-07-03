@@ -6,8 +6,6 @@
 #include <realtimeclock.hpp>
 #include <float.hpp>
 
-extern uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
-
 uint32_t measurementCollection::oldestMeasurementOffset{0};
 uint32_t measurementCollection::newMeasurementsOffset{0};
 uint32_t measurementCollection::uplinkHistoryIndex{0};
