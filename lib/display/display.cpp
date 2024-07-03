@@ -176,8 +176,8 @@ void display::mirrorCoordinates(uint32_t& x, uint32_t& y) {
             mirrorCoordinate(x, display::widthInPixels);
             mirrorCoordinate(y, display::heightInPixels);
             break;
-        default:
         case displayMirroring::none:
+        default:
             break;
     }
 }

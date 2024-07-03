@@ -114,21 +114,23 @@ void uart2::send(const uint8_t* data, uint32_t length) {
 }
 
 uint32_t uart2::commandCount() {
+    uint32_t result{0};
 #ifndef generic
     bool interrupts_enabled = (__get_PRIMASK() == 0);
     __disable_irq();
-    uint32_t result = commandCounter;
+    result = commandCounter;
     if (interrupts_enabled) {
         __enable_irq();
     }
-    return result;
 #endif
+    return result;
 }
 
 void uart2::read(char* data) {
     uint32_t index{0};
+    uint8_t character{0};
     while (!rxBuffer.isEmpty()) {
-        uint8_t character = rxBuffer.pop();
+        character = rxBuffer.pop();
         if (character == commandTerminator) {
             commandCounter--;
             break;
@@ -137,5 +139,6 @@ void uart2::read(char* data) {
         }
         index++;
     }
-    data[index] = 0;
+    data[index]    = 0;
+    commandCounter = 0;
 }

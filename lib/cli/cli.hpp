@@ -17,7 +17,7 @@ class cli {
 #endif
     static constexpr char commandArgumentSeparator{' '};
     static constexpr uint32_t maxCommandLineLength{128};
-    static constexpr uint32_t nmbrOfCommands{11};
+    static constexpr uint32_t nmbrOfCommands{12};
     static cliCommand commands[nmbrOfCommands];
     static char command[cliCommand::maxLongNameLength];
     static uint32_t nmbrOfArguments;
