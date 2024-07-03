@@ -10,7 +10,7 @@
 #include "main.h"
 extern I2C_HandleTypeDef hi2c2;
 #else
-uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
+uint8_t nonVolatileStorage::mockEepromMemory[nonVolatileStorage::totalSize];
 #include <cstring>
 #endif
 

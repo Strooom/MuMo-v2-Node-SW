@@ -29,6 +29,10 @@ class battery {
     static bool samplingIsReady();
     static uint32_t readSample();
     static float voltageFromRaw(uint32_t rawADC);
+#ifdef generic
+    static uint32_t mockBatteryRawADC;
+    static float mockBatteryVoltage;
+#endif
     static sensorChannel channels[nmbrChannels];
 
     friend class sensorDeviceCollection;

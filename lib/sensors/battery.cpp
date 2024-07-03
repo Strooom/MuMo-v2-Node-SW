@@ -15,8 +15,8 @@
 #include <main.h>
 extern ADC_HandleTypeDef hadc;
 #else
-uint32_t mockBatteryRawADC{0};
-float mockBatteryVoltage{0};
+uint32_t battery::mockBatteryRawADC{0};
+float battery::mockBatteryVoltage{0};
 #endif
 
 batteryType battery::type{batteryType::liFePO4_700mAh};

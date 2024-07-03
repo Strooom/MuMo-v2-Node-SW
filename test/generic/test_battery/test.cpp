@@ -3,8 +3,6 @@
 #include <battery.hpp>
 #include <sensordevicecollection.hpp>
 
-extern uint32_t mockBatteryRawADC;
-extern float mockBatteryVoltage;
 
 void setUp(void) {        // before each test
 }
@@ -31,8 +29,8 @@ void test_sampling() {
     battery::startSampling();
     TEST_ASSERT_EQUAL(sensorDeviceState::sampling, battery::getState());
     TEST_ASSERT_TRUE(battery::samplingIsReady());
-    mockBatteryRawADC = 1234;
-    TEST_ASSERT_EQUAL(mockBatteryRawADC, battery::readSample());
+    battery::mockBatteryRawADC = 1234;
+    TEST_ASSERT_EQUAL(battery::mockBatteryRawADC, battery::readSample());
     TEST_ASSERT_EQUAL(0, battery::voltageFromRaw(0));
 }
 

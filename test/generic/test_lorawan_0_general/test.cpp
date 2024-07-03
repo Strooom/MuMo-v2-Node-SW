@@ -14,7 +14,7 @@ extern uint8_t mockSX126xDataBuffer[256];
 extern uint8_t mockSX126xRegisters[0x1000];
 extern uint8_t mockSX126xCommandData[256][8];
 
-extern uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
+
 
 void setUp(void) {        // before each test
 }
