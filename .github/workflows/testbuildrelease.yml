@@ -221,14 +221,14 @@ jobs:
   
       - name: Collect coverage into XML report
         run: |
-          gcovr --sonarqube > test/coverage/coverage.xml
+          gcovr --sonarqube > coverage.xml
 
       - name: Run sonar-scanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          sonar-scanner --define sonar.coverageReportPaths=test/coverage/coverage.xml
+          sonar-scanner --define sonar.coverageReportPaths=coverage.xml
 
       - name: Build
         run: |
