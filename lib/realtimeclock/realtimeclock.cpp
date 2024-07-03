@@ -93,12 +93,12 @@ time_t realTimeClock::get() {
 #endif
 }
 
-uint8_t* realTimeClock::bytesFromTime_t(time_t input) {
+uint8_t* realTimeClock::bytesFromTime_t(const time_t input) {
     convertor.asUint32 = static_cast<uint32_t>(input);
     return convertor.asBytes;
 }
 
-time_t realTimeClock::time_tFromBytes(uint8_t* input) {
+time_t realTimeClock::time_tFromBytes(const uint8_t* input) {
     convertor.asBytes[0] = input[0];
     convertor.asBytes[1] = input[1];
     convertor.asBytes[2] = input[2];

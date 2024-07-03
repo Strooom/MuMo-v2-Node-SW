@@ -6,8 +6,6 @@
 #include <macheader.hpp>
 #include <frametype.hpp>
 
-macHeader::macHeader(){};
-
 macHeader::macHeader(frameType theFrameType) : theFrameType{theFrameType} {};
 
 void macHeader::set(frameType newFrameType) {

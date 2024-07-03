@@ -15,7 +15,7 @@ class linearBuffer {
   public:
     static constexpr uint32_t length = toBeLength;
 
-    linearBuffer(){};
+    linearBuffer() = default;
     void initialize() { level = 0; };
 
     // ### Get the metadata of the buffer ###
@@ -127,6 +127,6 @@ class linearBuffer {
 
   private:
 #endif
-    uint32_t level{0};                        // how many bytes are in the buffer
+    uint32_t level{0};               // how many bytes are in the buffer
     uint8_t buffer[length]{};        // the array where the actual data is stored
 };

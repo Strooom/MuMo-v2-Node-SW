@@ -14,8 +14,8 @@ class realTimeClock {
     static void set(time_t unixTime = buildInfo::buildEpoch);
     static void set(tm brokenDownTime);
     static time_t get();
-    static uint8_t* bytesFromTime_t(time_t input);
-    static time_t time_tFromBytes(uint8_t* input);
+    static uint8_t* bytesFromTime_t(const time_t input);
+    static time_t time_tFromBytes(const uint8_t* input);
     static time_t unixTimeFromGpsTime(uint32_t gpsTime);
     static bool needsSync();
     static constexpr uint32_t rtcSyncPeriodInTicks = 2 * 60 * 24 * 7;

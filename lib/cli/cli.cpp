@@ -37,7 +37,7 @@ void cli::run() {
     }
 }
 
-uint32_t cli::countArguments(char* commandLine) {
+uint32_t cli::countArguments(const char* commandLine) {
     uint32_t count{0};
     uint32_t commandLineLength{0};
     commandLineLength = strnlen(commandLine, maxCommandLineLength);
@@ -52,7 +52,7 @@ uint32_t cli::countArguments(char* commandLine) {
     return count;
 }
 
-int32_t cli::getSeparatorPosition(char* commandLine, uint32_t separatorIndex) {
+int32_t cli::getSeparatorPosition(const char* commandLine, const uint32_t separatorIndex) {
     uint32_t slashCount{0};
     uint32_t dataLength = strnlen(commandLine, maxCommandLineLength);
     for (uint32_t position = 0; position < dataLength; position++) {
@@ -66,7 +66,7 @@ int32_t cli::getSeparatorPosition(char* commandLine, uint32_t separatorIndex) {
     return -1;
 }
 
-void cli::getSegment(char* destination, char* commandLine, uint32_t segmentIndex) {
+void cli::getSegment(char* destination, const char* commandLine, const uint32_t segmentIndex) {
     uint32_t startIndex;
     uint32_t endIndex;
     uint32_t nmbrOfArguments = countArguments(commandLine);
@@ -94,7 +94,7 @@ void cli::getSegment(char* destination, char* commandLine, uint32_t segmentIndex
     destination[endIndex - startIndex] = '\0';
 }
 
-void cli::splitCommandLine(char* commandLine) {
+void cli::splitCommandLine(const char* commandLine) {
     nmbrOfArguments = countArguments(commandLine);
     getSegment(command, commandLine, 0);
     for (uint32_t argumentIndex = 0; argumentIndex < cliCommand::maxNmbrOfArguments; argumentIndex++) {
@@ -118,7 +118,7 @@ int32_t cli::findCommandIndex() {
     return -1;
 }
 
-void cli::executeCommand(char* commandLine) {
+void cli::executeCommand(const char* commandLine) {
     splitCommandLine(commandLine);
     int32_t commandIndex = findCommandIndex();
     if (commandIndex >= 0) {

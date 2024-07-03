@@ -6,9 +6,9 @@
 #pragma once
 #include <stdint.h>
 
-int32_t integerPart(float value, uint32_t decimals);
-uint32_t fractionalPart(float value, uint32_t decimals);
-float factorFloat(uint32_t decimals);
-uint32_t factorInt(uint32_t decimals);
-uint8_t* floatToBytes(float value);
-float bytesToFloat(uint8_t bytes[4]);
+int32_t integerPart(const float value, const uint32_t decimals);
+uint32_t fractionalPart(const float value, const uint32_t decimals);
+float factorFloat(const uint32_t decimals);
+uint32_t factorInt(const uint32_t decimals);
+uint8_t* floatToBytes(const float value);
+float bytesToFloat(const uint8_t bytes[4]);

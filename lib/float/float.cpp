@@ -2,15 +2,15 @@
 #include <inttypes.h>
 #include <float.hpp>
 
-int32_t integerPart(float value, uint32_t decimals) {
+int32_t integerPart(const float value, const uint32_t decimals) {
     return (static_cast<int>(round(value * factorFloat(decimals))) / factorInt(decimals));
 }
 
-uint32_t fractionalPart(float value, uint32_t decimals) {
+uint32_t fractionalPart(const float value, const uint32_t decimals) {
     return static_cast<int>(round(value * factorFloat(decimals))) - (integerPart(value, decimals) * factorInt(decimals));
 }
 
-float factorFloat(uint32_t decimals) {
+float factorFloat(const uint32_t decimals) {
     float result{1.0F};
     for (uint32_t n = 0; n < decimals; n++) {
         result *= 10.0F;
@@ -18,7 +18,7 @@ float factorFloat(uint32_t decimals) {
     return result;
 }
 
-uint32_t factorInt(uint32_t decimals) {
+uint32_t factorInt(const uint32_t decimals) {
     uint32_t result{1U};
     for (uint32_t n = 0; n < decimals; n++) {
         result *= 10;
@@ -26,7 +26,7 @@ uint32_t factorInt(uint32_t decimals) {
     return result;
 }
 
-float bytesToFloat(uint8_t bytes[4]) {
+float bytesToFloat(const uint8_t bytes[4]) {
     static union {
         float asFloat;
         uint8_t asBytes[4];
@@ -38,7 +38,7 @@ float bytesToFloat(uint8_t bytes[4]) {
     return convertor.asFloat;
 }
 
-uint8_t* floatToBytes(float value) {
+uint8_t* floatToBytes(const float value) {
     static union {
         float asFloat;
         uint8_t asBytes[4];

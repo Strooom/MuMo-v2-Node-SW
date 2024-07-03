@@ -13,7 +13,7 @@ void loRaChannel::toBytes(uint8_t *bytes) {
     bytes[5] = minimumDataRateIndex;
 }
 
-void loRaChannel::fromBytes(uint8_t *bytes) {
+void loRaChannel::fromBytes(const uint8_t *bytes) {
     frequencyInHz = bytesToBigEndianWord(bytes[0], bytes[1], bytes[2], bytes[3]);
     maximumDataRateIndex = bytes[4];
     minimumDataRateIndex = bytes[5];
