@@ -1,8 +1,8 @@
 ![workflow](https://github.com/strooom/MuMo-v2-Node-SW/actions/workflows/testbuildrelease.yml/badge.svg)
 [![codecov](https://codecov.io/gh/Strooom/MuMo-v2-Node-SW/graph/badge.svg?token=7KF1NA1ACQ)](https://codecov.io/gh/Strooom/MuMo-v2-Node-SW)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Strooom_MuMo-v2-Node-SW&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Strooom_MuMo-v2-Node-SW)
 
-[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=Strooom_MuMo-v2-Node-SW)](https://sonarcloud.io/summary/new_code?id=Strooom_MuMo-v2-Node-SW)
 
 # LoRaWAN development for STM32WLE using PlatformIO and STM32CubeIDE
 

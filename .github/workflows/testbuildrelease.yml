@@ -169,6 +169,13 @@ jobs:
         with:
           python-version: "3.9"
 
+      - name: install gcovr 5.0
+        run: |
+          pip install gcovr==5.0
+
+      - name: Install sonar-scanner and build-wrapper
+        uses: SonarSource/sonarcloud-github-c-cpp@v2
+
       - name: Install PlatformIO Core
         run: |
           pip install --upgrade platformio
@@ -212,6 +219,17 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   
+      - name: Collect coverage into XML report
+        run: |
+          gcovr --sonarqube > test/coverage/coverage.xml
+
+      - name: Run sonar-scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner --define sonar.coverageReportPaths=test/coverage/coverage.xml
+
       - name: Build
         run: |
           pio run -e production
