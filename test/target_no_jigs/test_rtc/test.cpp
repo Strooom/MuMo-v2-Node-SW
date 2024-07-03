@@ -11,9 +11,9 @@
 #include <version.hpp>
 #include <realtimeclock.hpp>
 
-extern font roboto36bold;
-extern font tahoma24bold;
-extern font lucidaConsole12;
+extern const font roboto36bold;
+extern const font tahoma24bold;
+extern const font lucidaConsole12;
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 time_t testUnixTime  = 1707770588;

@@ -16,13 +16,12 @@ class cli {
   private:
 #endif
     static constexpr char commandArgumentSeparator{' '};
-    static constexpr uint32_t maxCommandLineLength{128};
     static constexpr uint32_t nmbrOfCommands{12};
     static cliCommand commands[nmbrOfCommands];
     static char command[cliCommand::maxLongNameLength];
     static uint32_t nmbrOfArguments;
     static char arguments[cliCommand::maxNmbrOfArguments][cliCommand::maxArgumentLength];
-    static char error[maxCommandLineLength];
+    static char error[cliCommand::maxCommandLineLength];
 
     static void splitCommandLine(const char* commandLine);
     static uint32_t countArguments(const char* commandLine);

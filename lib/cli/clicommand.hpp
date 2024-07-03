@@ -8,6 +8,7 @@
 
 class cliCommand {
   public:
+    static constexpr uint32_t maxCommandLineLength{128};
     static constexpr uint32_t maxShortNameLength{8};
     static constexpr uint32_t maxLongNameLength{20};
     static constexpr uint32_t maxArgumentLength{36};

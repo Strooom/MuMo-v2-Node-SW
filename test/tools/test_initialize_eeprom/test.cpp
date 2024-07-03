@@ -21,14 +21,14 @@
 // ###  Which settings to be written to EEPROM         ###
 // #######################################################
 
-bool resetBatteryType{true};
-bool resetMcuType{true};
-bool setName{true};
-bool fixDevAddr{false};
-bool overwriteExistingLoRaWANConfig{true};
-bool resetLoRaWANState{true};
-bool resetLoRaWANChannels{true};
-bool eraseMeasurementsInEeprom{false};
+const bool resetBatteryType{true};
+const bool resetMcuType{true};
+const bool setName{true};
+const bool fixDevAddr{false};
+const bool overwriteExistingLoRaWANConfig{true};
+const bool resetLoRaWANState{true};
+const bool resetLoRaWANChannels{true};
+const bool eraseMeasurementsInEeprom{false};
 
 // #######################################################
 // ###  Non-Volatile settings to be written to EEPROM  ###
@@ -40,11 +40,11 @@ batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
 
 powerVersion selectedPowerVersion{powerVersion::highPower};
 
-const char toBeName[mainController::maxNameLength + 1] = "029";
+const char toBeName[mainController::maxNameLength + 1] = "K007";
 
-uint32_t toBeDevAddr            = 0x260BF7F1;
-const char toBeNetworkKey[]     = "4353A27A7861A3F684C943A1E45B6536";
-const char toBeApplicationKey[] = "8F2C23EB05B8A2D7129E6D7FB6A064E8";
+uint32_t toBeDevAddr            = 0x260BD91E;
+const char toBeNetworkKey[]     = "56B5093D4E8BC208BF10B7CC50CF445E";
+const char toBeApplicationKey[] = "808397687E1801A97E217CAFF7651BFF";
 
 // #######################################################
 

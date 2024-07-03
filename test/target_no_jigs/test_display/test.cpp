@@ -10,10 +10,10 @@
 #include <gpio.hpp>
 #include <version.hpp>
 
-extern font roboto36bold;
-extern font tahoma24bold;
-extern font lucidaConsole12;
-extern bitmap usbIcon;
+extern const font roboto36bold;
+extern const font tahoma24bold;
+extern const font lucidaConsole12;
+extern const bitmap usbIcon;
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
