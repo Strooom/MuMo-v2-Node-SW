@@ -25,9 +25,6 @@ jobs:
       buildversion: ${{ steps.selectversion.outputs.buildversion }}
       buildversionfilename: ${{ steps.selectversion.outputs.buildversionfilename }}
 
-    env:
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
-
     steps:
       - name: Enable caching
         uses: actions/cache@v3
@@ -172,13 +169,6 @@ jobs:
         with:
           python-version: "3.9"
 
-      - name: install gcovr 5.0
-        run: |
-          pip install gcovr==5.0
-
-      - name: Install sonar-scanner and build-wrapper
-        uses: SonarSource/sonarcloud-github-c-cpp@v2
-
       - name: Install PlatformIO Core
         run: |
           pip install --upgrade platformio
@@ -210,12 +200,6 @@ jobs:
         run: |
           pio system info
   
-      - name: Run build-wrapper
-        run: |
-          mkdir build
-          cmake -S . -B build
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build build/ --config Release
-
       - name: Run all generic unit tests
         run: |
           pio test -e all_generic_unittests
@@ -228,20 +212,6 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   
-      - name: Collect coverage into XML report
-        run: |
-          gcovr --sonarqube > coverage.xml
-
-      - name: Run sonar-scanner
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-         sonar-scanner \
-            --define sonar.projectKey=Strooom_MuMo-v2-Node-SW \
-            --define sonar.organization=strooom-1 \
-            --define sonar.coverageReportPaths=coverage.xml
-
       - name: Build
         run: |
           pio run -e production
