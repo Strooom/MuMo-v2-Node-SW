@@ -1,5 +1,6 @@
+#pragma once
 #include <font.hpp>
-fontProperties tahoma24bProperties{27U, 3U, static_cast<uint8_t>('!'), static_cast<uint8_t>('~')};        // ~ is placeholder for degree symbol
+const fontProperties tahoma24bProperties{27U, 3U, static_cast<uint8_t>('!'), static_cast<uint8_t>('~')};        // ~ is placeholder for degree symbol
 const characterProperties tahoma24bCharacters[] =
     {
         {5, 0},            // !
@@ -1613,4 +1614,4 @@ const uint8_t tahoma24bPixelData[] =
         0x00, 0x00, 0xFE, 0x00,        //                 #######
         0x00, 0x00, 0x7C, 0x00,        //                  #####
 };
-font tahoma24bold{tahoma24bProperties, tahoma24bCharacters, tahoma24bPixelData};
+const font tahoma24bold{tahoma24bProperties, tahoma24bCharacters, tahoma24bPixelData};

@@ -1,6 +1,7 @@
+#pragma once
 #include <font.hpp>
 
-fontProperties lucidaConsole12Properties{16U, 2U, static_cast<uint8_t>('!'), static_cast<uint8_t>('~')};
+const fontProperties lucidaConsole12Properties{16U, 2U, static_cast<uint8_t>('!'), static_cast<uint8_t>('~')};
 
 const characterProperties lucidaConsole12Characters[] =
     {
@@ -935,4 +936,4 @@ const uint8_t lucidaConsole12PixelData[] =
 	0x02, 0x00, //       #         
 	0x01, 0x80, //        ##     
     };
-font lucidaConsole12{lucidaConsole12Properties, lucidaConsole12Characters, lucidaConsole12PixelData};
+const font lucidaConsole12{lucidaConsole12Properties, lucidaConsole12Characters, lucidaConsole12PixelData};

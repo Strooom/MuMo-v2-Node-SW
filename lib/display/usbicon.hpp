@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 #include <bitmap.hpp>
 
@@ -89,4 +90,4 @@ const uint8_t usbIconPixelData[] = {
 
 };
 
-bitmap usbIcon(16U, 42U, usbIconPixelData);
+const bitmap usbIcon(16U, 42U, usbIconPixelData);

@@ -1,5 +1,6 @@
+#pragma once
 #include <font.hpp>
-fontProperties roboto36boldProperties{34U, 4U, static_cast<uint8_t>('0'), static_cast<uint8_t>('9')};
+const fontProperties roboto36boldProperties{34U, 4U, static_cast<uint8_t>('0'), static_cast<uint8_t>('9')};
 const characterProperties roboto36boldCharacters[] =
     {
         {24, 0},           // 0
@@ -266,4 +267,4 @@ const uint8_t roboto36boldPixelData[] =
         0x00, 0x0F, 0xFF, 0xC0, 0x00,        //             ##############
 };
 
-font roboto36bold{roboto36boldProperties, roboto36boldCharacters, roboto36boldPixelData};
+const font roboto36bold{roboto36boldProperties, roboto36boldCharacters, roboto36boldPixelData};

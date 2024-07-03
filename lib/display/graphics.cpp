@@ -38,10 +38,30 @@ void graphics::drawLine(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_
     }
     // Hello Bresenham, it's been 35 years since I first saw you ;-)
     {
-        int dx  = xEnd - xStart >= 0 ? xEnd - xStart : xStart - xEnd;
-        int sx  = xStart < xEnd ? 1 : -1;
-        int dy  = yEnd - yStart <= 0 ? yEnd - yStart : yStart - yEnd;
-        int sy  = yStart < yEnd ? 1 : -1;
+        int dx;
+        if (xEnd >= xStart) {
+            dx = xEnd - xStart;
+        } else {
+            dx = xStart - xEnd;
+        }
+        int sx;
+        if (xStart < xEnd) {
+            sx = 1;
+        } else {
+            sx = -1;
+        }
+        int dy;
+        if (yEnd <= yStart) {
+            dy = yEnd - yStart;
+        } else {
+            dy = yStart - yEnd;
+        }
+        int sy;
+        if (yStart < yEnd) {
+            sy = 1;
+        } else {
+            sy = -1;
+        }
         int err = dx + dy;
 
         while ((xStart != xEnd) && (yStart != yEnd)) {

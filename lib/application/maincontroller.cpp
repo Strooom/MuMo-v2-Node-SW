@@ -176,7 +176,8 @@ void mainController::handleEvents() {
                     default:
                         break;
                 }
-
+                break;
+                
             default:
                 break;
         }
@@ -361,7 +362,7 @@ void mainController::showDeviceInfo() {
     screen::setText(3, name);
     screen::setText(4, toString(battery::type));
 
-// TODO : this does not work so well as lineindex is increased even if the sensor is not present, resutling in empty lines
+    // TODO : this does not work so well as lineindex is increased even if the sensor is not present, resutling in empty lines
 
     for (uint32_t sensorDeviceIndex = 2; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
         if (sensorDeviceCollection::isValid(sensorDeviceIndex)) {

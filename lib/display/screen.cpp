@@ -14,6 +14,10 @@
 #include <qrcode.hpp>
 #include <hexascii.hpp>
 #include <maincontroller.hpp>
+#include <lucidaconsole12.hpp>
+#include <roboto36b.hpp>
+#include <tahoma24b.hpp>
+#include <usbicon.hpp>
 
 bool screen::modified{false};
 screenType screen::currentScreenType{screenType::message};
@@ -25,11 +29,6 @@ char screen::consoleText[numberOfLines2][maxTextLength2 + 1]{};
 bool screen::hasUsbPower{false};
 uint32_t screen::netwerkStrength{0};
 uint32_t screen::batteryLevel{0};
-
-extern font roboto36bold;
-extern font tahoma24bold;
-extern font lucidaConsole12;
-extern bitmap usbIcon;
 
 void screen::update() {
     display::clearAllPixels();

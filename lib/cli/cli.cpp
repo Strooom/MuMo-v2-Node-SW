@@ -1,6 +1,7 @@
 #include <cli.hpp>
 #include <uart.hpp>
 #include <cstring>        // for strcmp
+#include <clicommand.hpp>
 
 void setDevAddr() {
     // TODO : implement this
@@ -13,7 +14,7 @@ void showHelp() {
 char cli::command[cliCommand::maxLongNameLength]{};
 uint32_t cli::nmbrOfArguments{0};
 char cli::arguments[cliCommand::maxNmbrOfArguments][cliCommand::maxArgumentLength]{};
-char cli::error[cli::maxCommandLineLength]{};
+char cli::error[cliCommand::maxCommandLineLength]{};
 
 cliCommand cli::commands[nmbrOfCommands]{
     {"?", "help", 0, showHelp},
@@ -30,7 +31,7 @@ cliCommand cli::commands[nmbrOfCommands]{
     {"res", "restart", 0, nullptr}};        // will restart the software and jump to the bootloader for firmware update
 
 void cli::run() {
-    char commandLine[maxCommandLineLength];
+    char commandLine[cliCommand::maxCommandLineLength];
     if (uart2::commandCount() > 0) {
         uart2::read(commandLine);
         executeCommand(commandLine);
@@ -40,7 +41,7 @@ void cli::run() {
 uint32_t cli::countArguments(const char* commandLine) {
     uint32_t count{0};
     uint32_t commandLineLength{0};
-    commandLineLength = strnlen(commandLine, maxCommandLineLength);
+    commandLineLength = strnlen(commandLine, cliCommand::maxCommandLineLength);
     for (uint32_t i{0}; i < commandLineLength; i++) {
         if (commandLine[i] == ' ') {
             count++;
@@ -54,7 +55,7 @@ uint32_t cli::countArguments(const char* commandLine) {
 
 int32_t cli::getSeparatorPosition(const char* commandLine, const uint32_t separatorIndex) {
     uint32_t slashCount{0};
-    uint32_t dataLength = strnlen(commandLine, maxCommandLineLength);
+    uint32_t dataLength = strnlen(commandLine, cliCommand::maxCommandLineLength);
     for (uint32_t position = 0; position < dataLength; position++) {
         if (commandLine[position] == commandArgumentSeparator) {
             if (slashCount == separatorIndex) {
@@ -83,7 +84,7 @@ void cli::getSegment(char* destination, const char* commandLine, const uint32_t 
     }
 
     if (segmentIndex == nmbrOfArguments) {
-        endIndex = strnlen(commandLine, maxCommandLineLength);
+        endIndex = strnlen(commandLine, cliCommand::maxCommandLineLength);
     } else {
         endIndex = getSeparatorPosition(commandLine, segmentIndex);
     }
