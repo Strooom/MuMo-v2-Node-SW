@@ -25,6 +25,9 @@ jobs:
       buildversion: ${{ steps.selectversion.outputs.buildversion }}
       buildversionfilename: ${{ steps.selectversion.outputs.buildversionfilename }}
 
+    env:
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+
     steps:
       - name: Enable caching
         uses: actions/cache@v3
@@ -207,6 +210,12 @@ jobs:
         run: |
           pio system info
   
+      - name: Run build-wrapper
+        run: |
+          mkdir build
+          cmake -S . -B build
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build build/ --config Release
+
       - name: Run all generic unit tests
         run: |
           pio test -e all_generic_unittests
