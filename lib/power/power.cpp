@@ -11,7 +11,7 @@ bool power::usbPower{false};
 #ifndef generic
 #include "main.h"
 #else
-bool mockUsbPower{false};
+bool power::mockUsbPower{false};
 #endif
 
 bool power::hasUsbPower() {

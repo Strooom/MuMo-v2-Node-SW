@@ -12,7 +12,7 @@
 #include <main.h>
 #define UID ((UID_typeDef *)UID64_BASE)
 #else
-uint64_t mockUniqueId{0x1234};
+uint64_t uniqueId::mockUniqueId{0x1234};
 #endif
 
 uint64_t uniqueId::get() {

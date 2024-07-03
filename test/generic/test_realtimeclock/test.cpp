@@ -6,19 +6,17 @@
 #include <realtimeclock.hpp>
 #include <ctime>
 
-extern time_t mockRealTimeClock;
-
 void setUp(void) {        // before each test
 }
 void tearDown(void) {        // after each test
 }
 
 void test_initialize() {
-    mockRealTimeClock = 0;
+    realTimeClock::mockRealTimeClock = 0;
     realTimeClock::initialize();
     TEST_ASSERT_EQUAL(buildInfo::buildEpoch, realTimeClock::get());
 
-    mockRealTimeClock = buildInfo::buildEpoch + 100;
+    realTimeClock::mockRealTimeClock = buildInfo::buildEpoch + 100;
     realTimeClock::initialize();
     TEST_ASSERT_EQUAL(buildInfo::buildEpoch + 100, realTimeClock::get());
 }
@@ -28,7 +26,7 @@ void test_convertGpsToUnix() {
 }
 
 void test_set() {   
-    mockRealTimeClock = buildInfo::buildEpoch;
+    realTimeClock::mockRealTimeClock = buildInfo::buildEpoch;
     realTimeClock::set(buildInfo::buildEpoch - 100);
     TEST_ASSERT_EQUAL(buildInfo::buildEpoch, realTimeClock::get());
     realTimeClock::set(buildInfo::buildEpoch + 100);

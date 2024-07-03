@@ -6,7 +6,6 @@
 #include <uniqueid.hpp>
 #include <ctime>
 
-extern uint64_t mockUniqueId;
 
 void setUp(void) {        // before each test
 }
@@ -14,7 +13,7 @@ void tearDown(void) {        // after each test
 }
 
 void test_get() {
-    TEST_ASSERT_EQUAL(mockUniqueId, uniqueId::get());
+    TEST_ASSERT_EQUAL(uniqueId::mockUniqueId, uniqueId::get());
 }
 
 void test_dump() {

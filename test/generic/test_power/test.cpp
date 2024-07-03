@@ -10,31 +10,29 @@ void setUp(void) {        // before each test
 void tearDown(void) {        // after each test
 }
 
-extern bool mockUsbPower;
-
 void test_initialize() {
     TEST_ASSERT_FALSE(power::usbPower);
 }
 
 void test_connect_and_removal_usb() {
-    mockUsbPower = false;
+    power::mockUsbPower = false;
     TEST_ASSERT_FALSE(power::hasUsbPower());
     TEST_ASSERT_FALSE(power::isUsbConnected());
     TEST_ASSERT_FALSE(power::isUsbRemoved());
     TEST_ASSERT_FALSE(power::isUsbConnected());
     TEST_ASSERT_FALSE(power::isUsbRemoved());
 
-    mockUsbPower = true;
+    power::mockUsbPower = true;
     TEST_ASSERT_TRUE(power::hasUsbPower());
     TEST_ASSERT_TRUE(power::isUsbConnected());
     TEST_ASSERT_FALSE(power::isUsbRemoved());
-    TEST_ASSERT_FALSE(power::isUsbConnected());        // only report connection once...
+    TEST_ASSERT_FALSE(power::isUsbConnected());
 
-    mockUsbPower = false;
+    power::mockUsbPower = false;
     TEST_ASSERT_FALSE(power::hasUsbPower());
     TEST_ASSERT_FALSE(power::isUsbConnected());
     TEST_ASSERT_TRUE(power::isUsbRemoved());
-    TEST_ASSERT_FALSE(power::isUsbRemoved());          // only report removal once...
+    TEST_ASSERT_FALSE(power::isUsbRemoved());
 }
 
 int main(int argc, char **argv) {

@@ -9,8 +9,6 @@
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-extern bool mockUsbPower;
-
 void setUp(void) {        // before each test
 }
 void tearDown(void) {        // after each test
@@ -84,13 +82,13 @@ void test_transitions_tick() {
 }
 
 void test_usb_detection() {
-    mockUsbPower = false;
+    power::mockUsbPower = false;
     mainController::run();
     mainController::handleEvents();
-    mockUsbPower = true;
+    power::mockUsbPower = true;
     mainController::run();
     mainController::handleEvents();
-    mockUsbPower = false;
+    power::mockUsbPower = false;
     mainController::run();
     mainController::handleEvents();
 }
