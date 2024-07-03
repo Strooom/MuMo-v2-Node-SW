@@ -11,7 +11,7 @@ class loRaChannel {
   public:
     loRaChannel(uint32_t frequency, uint8_t minimumDataRateIndex, uint8_t maximumDataRateIndex);
     void toBytes(uint8_t *bytes);
-    void fromBytes(uint8_t *bytes);
+    void fromBytes(const uint8_t *bytes);
 
     uint32_t frequencyInHz{0};        // NOTE : a frequency of 0 means the channel is not used
     uint8_t minimumDataRateIndex{0};

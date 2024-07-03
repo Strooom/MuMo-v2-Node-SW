@@ -21,13 +21,13 @@
 // ###  Which settings to be written to EEPROM         ###
 // #######################################################
 
-
-bool resetBatteryType{false};
-bool resetMcuType{false};
+bool resetBatteryType{true};
+bool resetMcuType{true};
 bool setName{true};
-bool overwriteExistingLoRaWANConfig{false};
-bool resetLoRaWANState{false};
-bool resetLoRaWANChannels{false};
+bool fixDevAddr{false};
+bool overwriteExistingLoRaWANConfig{true};
+bool resetLoRaWANState{true};
+bool resetLoRaWANChannels{true};
 bool eraseMeasurementsInEeprom{false};
 
 // #######################################################
@@ -40,12 +40,11 @@ batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
 
 powerVersion selectedPowerVersion{powerVersion::highPower};
 
-const char toBeName[mainController::maxNameLength + 1] = "000";
+const char toBeName[mainController::maxNameLength + 1] = "029";
 
 uint32_t toBeDevAddr            = 0x260BF7F1;
 const char toBeNetworkKey[]     = "4353A27A7861A3F684C943A1E45B6536";
 const char toBeApplicationKey[] = "8F2C23EB05B8A2D7129E6D7FB6A064E8";
-
 
 // #######################################################
 
@@ -93,6 +92,13 @@ void initializeName() {
         uint8_t isName[mainController::maxNameLength + 1]{0};
         settingsCollection::readByteArray(isName, settingsCollection::settingIndex::name);
         TEST_ASSERT_EQUAL_STRING(newName, isName);
+    }
+}
+
+void fixDevAddrEndianess() {
+    if (fixDevAddr) {
+        LoRaWAN::restoreConfig();
+        LoRaWAN::correctDevAddrEndianness();
     }
 }
 

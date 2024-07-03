@@ -24,10 +24,10 @@ class cli {
     static char arguments[cliCommand::maxNmbrOfArguments][cliCommand::maxArgumentLength];
     static char error[maxCommandLineLength];
 
-    static void splitCommandLine(char* commandLine);
-    static uint32_t countArguments(char* commandLine);
+    static void splitCommandLine(const char* commandLine);
+    static uint32_t countArguments(const char* commandLine);
     static int32_t findCommandIndex();
-    static int32_t getSeparatorPosition(char* commandLine, uint32_t separatorIndex);
-    static void getSegment(char* destination, char* commandLine, uint32_t segmentIndex);
-    static void executeCommand(char* commandLine);
+    static int32_t getSeparatorPosition(const char* commandLine, const uint32_t separatorIndex);
+    static void getSegment(char* destination, const char* commandLine, const uint32_t segmentIndex);
+    static void executeCommand(const char* commandLine);
 };

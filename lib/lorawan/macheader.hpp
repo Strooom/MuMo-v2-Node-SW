@@ -10,7 +10,7 @@
 
 class macHeader {
   public:
-    macHeader();                                               //
+    macHeader() = default;                                               //
     explicit macHeader(frameType theFrameType);                // construct a macHeader with the given frameType
     void set(frameType theFrameType);                          // set the macHeader with the given frameType
     uint8_t asUint8() const;                                   // return the macHeader as a byte
