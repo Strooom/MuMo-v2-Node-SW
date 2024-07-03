@@ -8,8 +8,10 @@
 extern uint8_t mockBME680Registers[256];
 extern uint8_t mockTSL2591Registers[256];
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_integerPart() {
     TEST_ASSERT_EQUAL_INT(10, integerPart(10.4, 0));

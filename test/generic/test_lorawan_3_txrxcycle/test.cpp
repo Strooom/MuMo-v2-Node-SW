@@ -15,8 +15,10 @@ extern uint8_t mockSX126xCommandData[256][8];        // unitTesting mock for cap
 
 uint8_t allZeroes[LoRaWAN::rawMessageLength];
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_messageTypeToString() {
     TEST_ASSERT_EQUAL_STRING("application", toString(messageType ::application));

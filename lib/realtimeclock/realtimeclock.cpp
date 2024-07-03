@@ -8,7 +8,7 @@
 extern RTC_HandleTypeDef hrtc;
 #else
 #include <ctime>
-time_t mockRealTimeClock;
+time_t realTimeClock::mockRealTimeClock{0};
 #endif
 
 union realTimeClock::convert realTimeClock::convertor;
@@ -42,7 +42,7 @@ void realTimeClock::set(time_t unixTime) {
     }
 }
 
-void realTimeClock::set(tm brokenDownTime) {
+void realTimeClock::set(const tm& brokenDownTime) {
 #ifndef generic
     RTC_TimeTypeDef stm32Time;
     RTC_DateTypeDef stm32Date;

@@ -4,10 +4,10 @@
 
 
 
-void setUp(void) {
+void setUp(void) {        // before each test
 }
-
-void tearDown(void) {}        // after test
+void tearDown(void) {        // after each test
+}
 
 void test_isPresent() {
 //    TEST_ASSERT_TRUE(scd40::isPresent());

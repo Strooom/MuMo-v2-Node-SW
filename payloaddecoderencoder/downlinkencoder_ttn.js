@@ -21,17 +21,3 @@ function encodeDownlink(input) {
     }
 }
 
-// function decodeDownlink(input) {
-//     switch (input.fPort) {
-//         case 4:
-//             return {
-//                 data: {
-//                     color: colors[input.bytes[0]],
-//                 },
-//             };
-//         default:
-//             return {
-//                 errors: ["unknown FPort"],
-//             };
-//     }
-// }

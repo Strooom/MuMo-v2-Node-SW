@@ -4,8 +4,10 @@
 #include "version.hpp"
 #include "buildinfo.hpp"
 
-void setUp() {}
-void tearDown() {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_initialize() {
     // Before initialization values...

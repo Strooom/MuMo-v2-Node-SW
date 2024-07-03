@@ -17,7 +17,11 @@ void setUp(void) {
     memset(allZeroes, 0, LoRaWAN::rawMessageLength);
     memset(allOnes, 0xFF, LoRaWAN::rawMessageLength);
 }
-void tearDown(void) {}
+
+void tearDown(void) {        // after each test
+}
+
+
 
 void test_constants() {
     TEST_ASSERT_EQUAL(16, LoRaWAN::b0BlockLength);

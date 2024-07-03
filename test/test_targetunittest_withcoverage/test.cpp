@@ -22,8 +22,10 @@ void initialise_monitor_handles(void);
 }
 #endif /* extern "C" */
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_isPresent() {
     TEST_ASSERT_TRUE(sht40::isPresent());

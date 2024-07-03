@@ -16,9 +16,10 @@ circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 static constexpr uint32_t applicationDataLength{16};
 const uint8_t applicationData[applicationDataLength]{};
 
-void setUp(void) {
+void setUp(void) {        // before each test
 }
-void tearDown(void) {}
+void tearDown(void) {        // after each test
+}
 
 void custom_handle_events() {
     while (applicationEventBuffer.hasEvents()) {

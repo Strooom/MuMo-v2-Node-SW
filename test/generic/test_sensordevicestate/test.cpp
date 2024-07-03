@@ -2,8 +2,10 @@
 #include <power.hpp>
 #include <sensordevicestate.hpp>
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_dummy_for_coverage() {
     TEST_ASSERT_EQUAL_STRING("unpowered", toString(sensorDeviceState::unpowered));

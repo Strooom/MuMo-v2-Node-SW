@@ -14,9 +14,10 @@
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {
+void setUp(void) {        // before each test
 }
-void tearDown(void) {}
+void tearDown(void) {        // after each test
+}
 
 void test_spare_IOs() {
     gpio::enableDisableGpio(gpio::group::other, true);

@@ -8,9 +8,10 @@
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {
+void setUp(void) {        // before each test
 }
-void tearDown(void) {}
+void tearDown(void) {        // after each test
+}
 
 void test_signature() {
     uint8_t isSignature[6];

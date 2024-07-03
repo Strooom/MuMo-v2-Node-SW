@@ -17,7 +17,9 @@ void setUp(void) {
     mockBME680Registers[static_cast<uint8_t>(bme680::registers::chipId)] = bme680::chipIdValue;
     mockTSL2591Registers[static_cast<uint8_t>(tsl2591::registers::id)]   = tsl2591::chipIdValue;
 }
-void tearDown(void) {}
+
+void tearDown(void) {        // after each test
+}
 
 void test_initalize() {
     for (auto index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {

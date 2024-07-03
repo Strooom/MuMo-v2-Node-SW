@@ -10,7 +10,10 @@ void setUp(void) {
     uint8_t testData[6]{0x80, 0x00, 0xA2, 0x80, 0x00, 0xA2};
     memcpy(mockSHT40Registers, testData, 6);
 }
-void tearDown(void) {}
+
+void tearDown(void) {        // after each test
+}
+
 
 void test_isPresent() {
     mockSHT40Present = false;

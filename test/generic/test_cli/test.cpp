@@ -1,8 +1,10 @@
 #include <unity.h>
 #include <cli.hpp>
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_countArguments() {
     char commandLine[] = "command arg1 arg2 arg3";
@@ -37,7 +39,7 @@ void test_getSeparatorPosition() {
 }
 
 void test_getSegment() {
-    char segment[cliCommand::maxArgumentLength]{};
+    char segment[cliCommand::maxCommandOrArgumentLength]{};
 
     char commandLine1[] = "command arg1 arg2";
     TEST_ASSERT_EQUAL(2, cli::countArguments(commandLine1));
@@ -112,6 +114,7 @@ void test_parseCommandLine() {
     char commandLine3[] = "unknown command";
     cli::executeCommand(commandLine3);
 }
+
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();

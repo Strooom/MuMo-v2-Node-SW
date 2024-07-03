@@ -12,7 +12,7 @@ class realTimeClock {
   public:
     static void initialize();
     static void set(time_t unixTime = buildInfo::buildEpoch);
-    static void set(tm brokenDownTime);
+    static void set(const tm& brokenDownTime);
     static time_t get();
     static uint8_t* bytesFromTime_t(const time_t input);
     static time_t time_tFromBytes(const uint8_t* input);
@@ -30,4 +30,7 @@ class realTimeClock {
         uint8_t asBytes[4];
     } convertor;
 
+#ifdef generic
+    static time_t mockRealTimeClock;
+#endif
 };

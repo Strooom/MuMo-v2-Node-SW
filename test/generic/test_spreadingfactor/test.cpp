@@ -1,8 +1,11 @@
 #include <unity.h>
 #include <power.hpp>
 #include <spreadingfactor.hpp>
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_dummy_for_coverage() {
     TEST_ASSERT_EQUAL_STRING("SF7", toString(spreadingFactor::SF7));

@@ -1,8 +1,10 @@
 #include <unity.h>
 #include <swaplittleandbigendian.hpp>
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_swapLittleBigEndian() {
     TEST_ASSERT_EQUAL_UINT32(0x12345678, swapLittleBigEndian(0x78563412));

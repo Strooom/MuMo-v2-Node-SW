@@ -9,8 +9,10 @@
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 static constexpr uint32_t nmbrTestLoops{3};        // I do a few test runs to make sure the MCU can go to sleep and wake up consistently and not just once
 

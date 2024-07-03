@@ -50,8 +50,10 @@ const char toBeApplicationKey[] = "808397687E1801A97E217CAFF7651BFF";
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void initializeNvsVersion() {
     settingsCollection::save(static_cast<uint8_t>(1U), settingsCollection::settingIndex::nvsMapVersion);

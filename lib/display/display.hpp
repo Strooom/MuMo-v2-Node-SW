@@ -6,8 +6,6 @@
 #pragma once
 #include <stdint.h>
 
-
-
 enum class displayRotation : uint32_t {        // rotation is clockwise
     rotation0,
     rotation90,
@@ -50,8 +48,6 @@ class display {
     static void dump();
     static constexpr uint32_t refreshPeriodInTicks{2 * 60 * 24};
 
-
-
 #ifndef unitTesting
 
   private:
@@ -89,26 +85,30 @@ class display {
     static displayRotation rotation;
     static displayMirroring mirroring;
 
-    static void hardwareReset();                      // drive display-reset line down for 10ms
-    static void softwareReset();                      // send software reset command to display
-    static void setDataOrCommand(bool isData);        // controls the D/C line
-    static void selectChip(bool active);              // controls the CS line
-    static bool isBusy();                             // checks the display busy line
+    static void hardwareReset();
+    static void softwareReset();
+    static void setDataOrCommand(const bool isData);
+    static void selectChip(const bool active);
+    static bool isBusy();
 
-    static void writeCommand(SSD1681Commands theCommand, uint8_t *data, uint32_t length);        // write a command with optionally some data parameters
-    static void writeData(uint8_t *data, uint32_t length);                                       //
-    static void writeData(uint8_t data);                                                         //
-    static void write(uint8_t *data, uint32_t length);                                           // write an array of bytes to the display
-    static void write(uint8_t data);                                                             // write a single byte to the display
+    static void writeCommand(const SSD1681Commands theCommand,  uint8_t *data, const uint32_t length);
+    static void writeData(uint8_t *data, const uint32_t length);
+    static void writeData(uint8_t data);
+    static void write(uint8_t *data, const uint32_t length);
+    static void write(uint8_t data);
 
     static void waitWhileBusy();
 
     static void rotateCoordinates(uint32_t &x, uint32_t &y);
     static void mirrorCoordinates(uint32_t &x, uint32_t &y);
     static void rotateAndMirrorCoordinates(uint32_t &x, uint32_t &y);
-    static bool isInBounds(uint32_t x, uint32_t y) { return ((x < display::widthInPixels) && (y < display::heightInPixels)); };
+    static bool isInBounds(const uint32_t x, const uint32_t y) { return ((x < display::widthInPixels) && (y < display::heightInPixels)); };
     static void swapCoordinates(uint32_t &c1, uint32_t &c2);
-    static void mirrorCoordinate(uint32_t &c, uint32_t maxC) { c = (maxC - 1) - c; };
-    static uint32_t getByteOffset(uint32_t x, uint32_t y) { return ((y * widthInBytes) + (x / 8)); };
-    static uint32_t getBitOffset(uint32_t x) { return (7 - (x % 8)); };
+    static void mirrorCoordinate(uint32_t &c, const uint32_t maxC) { c = (maxC - 1) - c; };
+    static uint32_t getByteOffset(const uint32_t x, const uint32_t y) { return ((y * widthInBytes) + (x / 8)); };
+    static uint32_t getBitOffset(const uint32_t x) { return (7 - (x % 8)); };
+
+#ifdef generic
+    static bool mockDisplayPresent;
+#endif
 };

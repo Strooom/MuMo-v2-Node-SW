@@ -17,6 +17,7 @@ class uniqueId {
   public:
     static void dump();
     static uint64_t get();
+#ifdef generic
+    static uint64_t mockUniqueId;
+#endif
 };
-
-

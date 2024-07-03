@@ -1,10 +1,9 @@
+#include <uart.hpp>
 #ifndef generic
 #include "main.h"
 #include "stm32wlxx_ll_usart.h"
 extern UART_HandleTypeDef huart2;
-#else
 #endif
-#include <uart.hpp>
 
 // ######################################################
 // ### Initialization                                 ###
@@ -23,7 +22,7 @@ void uart2::initialize() {
     HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
     __HAL_RCC_USART2_CLK_ENABLE();
 
-    uint32_t dummy = USART2->RDR;
+    (void)USART2->RDR;        // read RDR to clear it
 
     USART2->BRR = 0x8B;                                          // 115200 baud
     USART2->ICR = 0xFFFF;                                        // clear all pending interrupt flags
@@ -44,12 +43,8 @@ void uart2::initialize() {
 void uart2::rxNotEmpty() {
 #ifndef generic
     while (USART2->ISR & USART_CR1_RXNEIE_RXFNEIE) {
-        uint8_t receivedChar = USART2->RDR;
-        if (receivedChar == bootLoaderMagicValue) {
-            // jumpToBootLoader();
-        } else {
-            rxBuffer.push(receivedChar);
-        }
+        uint8_t receivedChar = static_cast<uint8_t>(USART2->RDR);
+        rxBuffer.push(receivedChar);
         if (receivedChar == commandTerminator) {
             commandCounter++;
         }

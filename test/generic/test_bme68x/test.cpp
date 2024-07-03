@@ -7,8 +7,10 @@
 extern uint8_t mockBME680Registers[256];
 extern bool mockBME680Present;
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_isPresent() {
     mockBME680Registers[static_cast<uint8_t>(bme680::registers::chipId)] = bme680::chipIdValue;

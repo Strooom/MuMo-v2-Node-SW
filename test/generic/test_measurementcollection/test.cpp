@@ -5,11 +5,12 @@
 #include <float.hpp>
 #include <ctime>
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 extern uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
-extern time_t mockRealTimeClock;
 
 void test_addressFromOffset() {
     static constexpr uint32_t blockSize{128};
@@ -208,7 +209,7 @@ void test_add() {
 }
 
 void test_save() {
-    mockRealTimeClock = 100;
+    realTimeClock::mockRealTimeClock = 100;
     measurementCollection::eraseAll();
     measurementCollection::initialize();
     measurementCollection::addMeasurement(1, 1, 10.0F);

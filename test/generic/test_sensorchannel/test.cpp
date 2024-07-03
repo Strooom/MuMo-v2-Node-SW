@@ -1,8 +1,10 @@
 #include <unity.h>
 #include <sensorchannel.hpp>
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_initalize() {
     sensorChannel testChannel = {0, "", ""};

@@ -8,12 +8,18 @@ void setDevAddr() {
 }
 
 void showHelp() {
-    // TODO : implement this
+    uart2::send("Available commands:\n");
+    for (uint32_t index = 0; index < cli::nmbrOfCommands; index++) {
+        uart2::send(cli::commands[index].longName);
+        uart2::send(" (");
+        uart2::send(cli::commands[index].shortName);
+        uart2::send(")\n");
+    }
 }
 
-char cli::command[cliCommand::maxLongNameLength]{};
+char cli::command[cliCommand::maxCommandOrArgumentLength]{};
 uint32_t cli::nmbrOfArguments{0};
-char cli::arguments[cliCommand::maxNmbrOfArguments][cliCommand::maxArgumentLength]{};
+char cli::arguments[cliCommand::maxNmbrOfArguments][cliCommand::maxCommandOrArgumentLength]{};
 char cli::error[cliCommand::maxCommandLineLength]{};
 
 cliCommand cli::commands[nmbrOfCommands]{

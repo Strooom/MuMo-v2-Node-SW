@@ -1,8 +1,10 @@
 #include <unity.h>
 #include <gpio.hpp>
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_enableDisable() {
     gpio::enableGpio(gpio::group::usbPresent);

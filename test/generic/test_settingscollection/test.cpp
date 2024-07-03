@@ -3,8 +3,10 @@
 #include <nvs.hpp>
 #include <stdio.h>
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_isValidBlockIndex() {
     TEST_ASSERT_TRUE(settingsCollection::isValidIndex(settingsCollection::settingIndex::nvsMapVersion));
