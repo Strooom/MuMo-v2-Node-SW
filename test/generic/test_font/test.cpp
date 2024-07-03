@@ -87,8 +87,10 @@ const uint8_t testRoboto16PixelData[] =
 };
 font testRoboto16{testRoboto16Properties, testRoboto16Characters, testRoboto16PixelData};
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_initialize() {
     TEST_ASSERT_EQUAL(15, testRoboto16.properties.heightInPixels);

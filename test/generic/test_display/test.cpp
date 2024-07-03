@@ -5,8 +5,10 @@
 #include <unity.h>
 #include "display.hpp"
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_isInBounds() {
     TEST_ASSERT_TRUE(display::isInBounds(0, 0));

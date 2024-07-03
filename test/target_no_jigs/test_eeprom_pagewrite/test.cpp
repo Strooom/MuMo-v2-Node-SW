@@ -13,8 +13,10 @@
 #include <gpio.hpp>
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_nvs_pagewrites() {
     uint8_t testData[384];

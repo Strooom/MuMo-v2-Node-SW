@@ -12,8 +12,10 @@
 extern uint8_t mockBME680Registers[256];
 extern uint8_t mockTSL2591Registers[256];
 
-void setUp(void) {}
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 // void test_buildBigTextString() {
 //     strncpy(screen::bigText[0], "", screen::maxTextLength);

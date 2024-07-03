@@ -104,7 +104,9 @@ void setUp(void) {
     display::rotation  = displayRotation::rotation0;
 }
 
-void tearDown(void) {}        // after test
+void tearDown(void) {        // after each test
+}
+
 
 void test_sort() {
     uint32_t ten{10};

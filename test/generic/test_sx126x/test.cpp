@@ -9,8 +9,10 @@ extern uint8_t mockSX126xDataBuffer[256];            // unitTesting mock for the
 extern uint8_t mockSX126xRegisters[0x1000];          // unitTesting mock for the config registers, inside the SX126x
 extern uint8_t mockSX126xCommandData[256][8];        // unitTesting mock for capturing the commands and their parameters to configure the SX126x
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_readWriteTxBuffer() {
     uint8_t dataIn[sx126x::rxTxBufferLength];

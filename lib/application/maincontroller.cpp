@@ -31,6 +31,7 @@
 #include <cli.hpp>
 #include <float.hpp>
 #include <inttypes.h>        // for PRIu32
+#include <uart.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -186,13 +187,12 @@ void mainController::handleEvents() {
 
 void mainController::runUsbPowerDetection() {
     if (power::isUsbConnected()) {
-        // enable uart2
-        // update display
+        uart2::initialize();
+        gpio::enableGpio(gpio::group::uart2);
         screen::setUsbStatus(true);
     }
     if (power::isUsbRemoved()) {
-        // disable uart2
-        // update display
+        gpio::disableGpioK(gpio::group::uart2);
         screen::setUsbStatus(false);
     }
 }

@@ -2,8 +2,10 @@
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_toString() {
     // for test coverage only

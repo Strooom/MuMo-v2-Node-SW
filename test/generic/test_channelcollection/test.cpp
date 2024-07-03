@@ -1,8 +1,10 @@
 #include <unity.h>
 #include <txchannelcollection.hpp>
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_initalize() {
     TEST_ASSERT_EQUAL_UINT32(868'100'000U, loRaTxChannelCollection::channel[0].frequencyInHz);

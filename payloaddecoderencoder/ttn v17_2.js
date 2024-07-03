@@ -27,7 +27,7 @@ function decodeUplink(input) {
                     channelIndex: 0,
                     value: 0
                 };
-                var byteOffset = (i * 5) + 5;
+                let byteOffset = (i * 5) + 5;
                 measurement.deviceIndex = (input.bytes[byteOffset] & 0xF8) >> 3;
                 measurement.channelIndex = (input.bytes[byteOffset] & 0x07);
                 measurement.value = bytesToFloat(input.bytes[byteOffset + 1], input.bytes[byteOffset + 2], input.bytes[byteOffset + 3], input.bytes[byteOffset + 4]);
@@ -45,11 +45,11 @@ function decodeUplink(input) {
 }
 
 function bytesToFloat(byte1, byte2, byte3, byte4) {
-    var bits = byte4 << 24 | byte3 << 16 | byte2 << 8 | byte1;
-    var sign = (bits >>> 31 === 0) ? 1.0 : -1.0;
-    var e = bits >>> 23 & 0xff;
-    var m = (e === 0) ? (bits & 0x7fffff) << 1 : (bits & 0x7fffff) | 0x800000;
-    var f = sign * m * Math.pow(2, e - 150);
+    let bits = byte4 << 24 | byte3 << 16 | byte2 << 8 | byte1;
+    let sign = (bits >>> 31 === 0) ? 1.0 : -1.0;
+    let e = bits >>> 23 & 0xff;
+    let m = (e === 0) ? (bits & 0x7fffff) << 1 : (bits & 0x7fffff) | 0x800000;
+    let f = sign * m * Math.pow(2, e - 150);
     return f;
 }
 

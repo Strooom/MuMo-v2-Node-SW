@@ -3,11 +3,10 @@
 
 extern uint8_t mockSPS30Registers[256];
 
-void setUp(void) {
-    //mockSPS30Registers[static_cast<uint8_t>(tsl2591::registers::id)]      = tsl2591::chipIdValue;
+void setUp(void) {        // before each test
 }
-
-void tearDown(void) {}        // after test
+void tearDown(void) {        // after each test
+}
 
 void test_isPresent() {
     TEST_ASSERT_TRUE(sps30::isPresent());

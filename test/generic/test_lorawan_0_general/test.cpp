@@ -16,8 +16,10 @@ extern uint8_t mockSX126xCommandData[256][8];
 
 extern uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_initialize() {
     uint8_t allZeroes[LoRaWAN::rawMessageLength];

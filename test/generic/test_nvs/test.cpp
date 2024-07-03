@@ -1,8 +1,10 @@
 #include <unity.h>
 #include <nvs.hpp>
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_isPresent() {
     TEST_ASSERT_TRUE(nonVolatileStorage::isPresent());        // on the desktop this calls a dummy which always returns true. Real test is on the target HW

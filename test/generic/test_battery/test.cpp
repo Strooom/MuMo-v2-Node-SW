@@ -6,8 +6,10 @@
 extern uint32_t mockBatteryRawADC;
 extern float mockBatteryVoltage;
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_initialization() {
     TEST_ASSERT_EQUAL(sensorDeviceState::unknown, battery::getState());

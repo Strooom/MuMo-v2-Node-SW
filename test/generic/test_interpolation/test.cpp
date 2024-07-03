@@ -1,9 +1,10 @@
 #include <unity.h>
 #include <chargefromvoltage.hpp>
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
-
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_checkVoltageVsCharge() {
     TEST_ASSERT_TRUE(chargeFromVoltage::checkVoltageVsCharge(0));

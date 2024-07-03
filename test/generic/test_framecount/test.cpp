@@ -1,8 +1,10 @@
 #include <unity.h>
 #include <framecount.hpp>
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_initialize() {
     frameCount testFrameCount1;

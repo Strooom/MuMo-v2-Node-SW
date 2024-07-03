@@ -10,8 +10,10 @@
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_initialize() {
     stm32wle5_aes::initialize(aesMode::EBC);

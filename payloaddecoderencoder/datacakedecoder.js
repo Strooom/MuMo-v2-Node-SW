@@ -4,13 +4,13 @@ function Decoder(payload, port) {
         case 17:
             var bytesConsumed = 0;
             while (bytesConsumed < payload.length) {
-                var nmbrOfMeasurements = payload[bytesConsumed + 0];
-                timestamp = payload[bytesConsumed + 4] << 24 | payload[bytesConsumed + 3] << 16 | payload[bytesConsumed + 2] << 8 | payload[bytesConsumed + 1];
-                for (var i = 0; i < nmbrOfMeasurements; i++) {
-                    var byteOffset = (i * 5) + 5;
-                    var deviceIndex = (payload[bytesConsumed + byteOffset] & 0xF8) >> 3;
-                    var channelIndex = (payload[bytesConsumed + byteOffset] & 0x07);
-                    var value = bytesToFloat(payload[bytesConsumed + byteOffset + 1], payload[bytesConsumed + byteOffset + 2], payload[bytesConsumed + byteOffset + 3], payload[bytesConsumed + byteOffset + 4]);
+                let nmbrOfMeasurements = payload[bytesConsumed + 0];
+                let timestamp = payload[bytesConsumed + 4] << 24 | payload[bytesConsumed + 3] << 16 | payload[bytesConsumed + 2] << 8 | payload[bytesConsumed + 1];
+                for (let i = 0; i < nmbrOfMeasurements; i++) {
+                    let byteOffset = (i * 5) + 5;
+                    let deviceIndex = (payload[bytesConsumed + byteOffset] & 0xF8) >> 3;
+                    let channelIndex = (payload[bytesConsumed + byteOffset] & 0x07);
+                    let value = bytesToFloat(payload[bytesConsumed + byteOffset + 1], payload[bytesConsumed + byteOffset + 2], payload[bytesConsumed + byteOffset + 3], payload[bytesConsumed + byteOffset + 4]);
                     decoded.push({
                         "field": getDeviceAndChannelName(deviceIndex, channelIndex),
                         "value": value,
@@ -66,11 +66,11 @@ function getDeviceAndChannelName(deviceIndex, channelIndex) {
 }
 
 function bytesToFloat(byte1, byte2, byte3, byte4) {
-    var bits = byte4 << 24 | byte3 << 16 | byte2 << 8 | byte1;
-    var sign = (bits >>> 31 === 0) ? 1.0 : -1.0;
-    var e = bits >>> 23 & 0xff;
-    var m = (e === 0) ? (bits & 0x7fffff) << 1 : (bits & 0x7fffff) | 0x800000;
-    var f = sign * m * Math.pow(2, e - 150);
+    let bits = byte4 << 24 | byte3 << 16 | byte2 << 8 | byte1;
+    let sign = (bits >>> 31 === 0) ? 1.0 : -1.0;
+    let e = bits >>> 23 & 0xff;
+    let m = (e === 0) ? (bits & 0x7fffff) << 1 : (bits & 0x7fffff) | 0x800000;
+    let f = sign * m * Math.pow(2, e - 150);
     return f;
 }
 

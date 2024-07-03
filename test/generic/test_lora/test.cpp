@@ -1,7 +1,9 @@
 #include <unity.h>
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_initialize() {
     TEST_IGNORE_MESSAGE("Implement me!");

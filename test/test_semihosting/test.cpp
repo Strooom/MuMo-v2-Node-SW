@@ -37,8 +37,10 @@ static inline int __attribute__ ((always_inline)) McuSemihost_HostRequest(int re
 }
 
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 int main(int argc, char **argv) {
     initialise_monitor_handles();

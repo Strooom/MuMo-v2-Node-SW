@@ -10,8 +10,10 @@
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_nvsPresent() {
     static constexpr uint32_t testDataLength{8};

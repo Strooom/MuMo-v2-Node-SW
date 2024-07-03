@@ -1,8 +1,10 @@
 #include <unity.h>
 #include <cli.hpp>
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_countArguments() {
     char commandLine[] = "command arg1 arg2 arg3";

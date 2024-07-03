@@ -9,7 +9,8 @@ void setUp(void) {
     mockTSL2591Registers[static_cast<uint8_t>(tsl2591::registers::id)]      = tsl2591::chipIdValue;
 }
 
-void tearDown(void) {}        // after test
+void tearDown(void) {        // after each test
+}
 
 void test_isPresent() {
     mockTSL2591Present = false;

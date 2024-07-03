@@ -17,22 +17,13 @@ extern const font lucidaConsole12;
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_screen0() {
     screen::show(screenType::measurements);
-    // display::initialize();
-
-    // version::initialize();
-    // graphics::drawText(4, 180, lucidaConsole12, version::getIsVersionAsString());
-    // graphics::drawText(4, 160, lucidaConsole12, "0080E11505474CAC");
-    // graphics::drawText(4, 140, lucidaConsole12, "2024-04-19  16:38");
-
-    // graphics::drawText(4, 40, tahoma24bold, "Tahoma 24 bold");
-    // graphics::drawText(4, 4, roboto36bold, "012345");
-
-    // display::update();
 }
 
 void test_screen1() {

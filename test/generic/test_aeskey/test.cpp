@@ -3,8 +3,10 @@
 #include <sbox.hpp>
 #include <rcon.hpp>
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_initialize() {
     aesKey aKey;

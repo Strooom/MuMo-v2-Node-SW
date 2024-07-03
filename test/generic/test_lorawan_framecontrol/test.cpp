@@ -1,8 +1,10 @@
 #include <unity.h>
 #include <framecontrol.hpp>
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_initialize() {
     frameControl ctrl1;

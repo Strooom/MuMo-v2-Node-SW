@@ -11,8 +11,10 @@ circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 extern bool mockUsbPower;
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_transitions_boot() {
     mainController::initialize();

@@ -5,8 +5,10 @@
 #include <unity.h>
 #include "power.hpp"
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 extern bool mockUsbPower;
 

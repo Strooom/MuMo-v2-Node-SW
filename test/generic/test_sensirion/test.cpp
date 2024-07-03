@@ -6,8 +6,10 @@
 #include <unity.h>
 #include <sensirion.hpp>
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_crc() {
     TEST_ASSERT_EQUAL(0x92, sensirion::crc(0xBE, 0xEF));        // testvector from SHT4X datasheet, page 11.

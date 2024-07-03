@@ -5,8 +5,10 @@
 #include <float.hpp>
 #include <ctime>
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 extern uint8_t mockEepromMemory[nonVolatileStorage::totalSize];
 extern time_t mockRealTimeClock;

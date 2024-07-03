@@ -1,7 +1,10 @@
 #include <unity.h>
 #include <datarate.hpp>
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_getDownlinkDataRateIndex() {
     for (int index = 0; index < dataRates::nmbrUsedDataRates; index++) {

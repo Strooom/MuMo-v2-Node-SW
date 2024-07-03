@@ -23,8 +23,10 @@ uint32_t testGpsTime = 1391805806;
 // GPS = 1391805806
 // unix = 1707770588
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_unixTimeFromGpsTime() {
     TEST_ASSERT_EQUAL(testUnixTime, static_cast<uint32_t>(realTimeClock::unixTimeFromGpsTime(testGpsTime)));

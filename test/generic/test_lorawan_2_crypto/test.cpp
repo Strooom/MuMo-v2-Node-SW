@@ -26,7 +26,9 @@ void setUp(void) {
         testClearText[index] = index;
     }
 }
-void tearDown(void) {}
+
+void tearDown(void) {        // after each test
+}
 
 void test_prepareBlockAiTx() {
     aesBlock testBlock;

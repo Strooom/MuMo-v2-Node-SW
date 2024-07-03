@@ -8,8 +8,10 @@
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_sleepAndWakeUp() {
     TEST_IGNORE_MESSAGE("Monitor the logging in the SWO. Check current consumption on Power Profiler");

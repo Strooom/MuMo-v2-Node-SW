@@ -5,8 +5,10 @@
 #include <unity.h>
 #include <bitmap.hpp>
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_bytesPerRow() {
     const uint8_t testPixelData[8] = {0, 0, 0, 0, 0, 0, 0, 0};

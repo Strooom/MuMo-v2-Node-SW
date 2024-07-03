@@ -2,8 +2,10 @@
 
 #include <circularbuffer.hpp>
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+void setUp(void) {        // before each test
+}
+void tearDown(void) {        // after each test
+}
 
 void test_initialize() {
     constexpr uint32_t testBufferLength{4};
