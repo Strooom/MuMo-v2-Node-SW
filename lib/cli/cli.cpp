@@ -11,9 +11,9 @@ void showHelp() {
     // TODO : implement this
 }
 
-char cli::command[cliCommand::maxLongNameLength]{};
+char cli::command[cliCommand::maxCommandOrArgumentLength]{};
 uint32_t cli::nmbrOfArguments{0};
-char cli::arguments[cliCommand::maxNmbrOfArguments][cliCommand::maxArgumentLength]{};
+char cli::arguments[cliCommand::maxNmbrOfArguments][cliCommand::maxCommandOrArgumentLength]{};
 char cli::error[cliCommand::maxCommandLineLength]{};
 
 cliCommand cli::commands[nmbrOfCommands]{
