@@ -228,7 +228,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          sonar-scanner --define sonar.coverageReportPaths=coverage.xml
+         sonar-scanner \
+            --define sonar.projectKey=Strooom_MuMo-v2-Node-SW \
+            --define sonar.organization=strooom-1 \
+            --define sonar.coverageReportPaths=coverage.xml
 
       - name: Build
         run: |
