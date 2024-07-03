@@ -10,14 +10,14 @@
 class cli {
   public:
     static void run();
+    static constexpr uint32_t nmbrOfCommands{12};
+    static cliCommand commands[nmbrOfCommands];
 
 #ifndef unitTesting
 
   private:
 #endif
     static constexpr char commandArgumentSeparator{' '};
-    static constexpr uint32_t nmbrOfCommands{12};
-    static cliCommand commands[nmbrOfCommands];
     static char command[cliCommand::maxCommandOrArgumentLength];
     static uint32_t nmbrOfArguments;
     static char arguments[cliCommand::maxNmbrOfArguments][cliCommand::maxCommandOrArgumentLength];

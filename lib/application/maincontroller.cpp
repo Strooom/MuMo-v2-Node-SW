@@ -192,7 +192,7 @@ void mainController::runUsbPowerDetection() {
         screen::setUsbStatus(true);
     }
     if (power::isUsbRemoved()) {
-        gpio::disableGpioK(gpio::group::uart2);
+        gpio::disableGpio(gpio::group::uart2);
         screen::setUsbStatus(false);
     }
 }

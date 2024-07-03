@@ -12,7 +12,7 @@
 #include "main.h"
 extern SPI_HandleTypeDef hspi2;
 #else
-bool mockDisplayPresent{true};
+bool display::mockDisplayPresent{true};
 #endif
 
 displayPresence display::displayPresent{displayPresence::unknown};
@@ -107,24 +107,21 @@ void display::setPixel(uint32_t x, uint32_t y) {
         rotateAndMirrorCoordinates(x, y);
         uint32_t byteOffset       = getByteOffset(x, y);
         uint32_t bitOffset        = getBitOffset(x);
-        displayBuffer[byteOffset] = displayBuffer[byteOffset] & ~(1 << bitOffset);
+        displayBuffer[byteOffset]  &= ~(static_cast<uint8_t>(1 << bitOffset));
     }
 }
 
 void display::clearPixel(uint32_t x, uint32_t y) {
     if (isInBounds(x, y)) {
         rotateAndMirrorCoordinates(x, y);
-        uint32_t byteOffset       = getByteOffset(x, y);
-        uint32_t bitOffset        = getBitOffset(x);
-        displayBuffer[byteOffset] = displayBuffer[byteOffset] | (1 << bitOffset);
+        uint32_t byteOffset = getByteOffset(x, y);
+        uint32_t bitOffset  = getBitOffset(x);
+        displayBuffer[byteOffset] |= static_cast<uint8_t>(1 << bitOffset);
     }
 }
 
 void display::clearAllPixels() {
     memset(displayBuffer, 0xFF, bufferSize);
-    // for (uint32_t i = 0; i < bufferSize; i++) {
-    //     displayBuffer[i] = 0xFF;
-    // }
 }
 
 bool display::getPixel(uint32_t x, uint32_t y) {
@@ -158,7 +155,6 @@ void display::rotateCoordinates(uint32_t& x, uint32_t& y) {
             swapCoordinates(x, y);
             mirrorCoordinate(x, display::widthInPixels);
             break;
-        case displayRotation::rotation0:
         default:
             break;
     }
@@ -176,7 +172,6 @@ void display::mirrorCoordinates(uint32_t& x, uint32_t& y) {
             mirrorCoordinate(x, display::widthInPixels);
             mirrorCoordinate(y, display::heightInPixels);
             break;
-        case displayMirroring::none:
         default:
             break;
     }
@@ -190,10 +185,8 @@ void display::rotateAndMirrorCoordinates(uint32_t& x, uint32_t& y) {
 void display::hardwareReset() {
 #ifndef generic
     HAL_GPIO_WritePin(GPIOA, displayReset_Pin, GPIO_PIN_RESET);
-    // PORTA_BSRR.write(1 << 0);               // reset = LOW
     HAL_Delay(10U);        // SSD1681 Datasheet Rev 0l.13, section 4.2
     HAL_GPIO_WritePin(GPIOA, displayReset_Pin, GPIO_PIN_SET);
-    // PORTA_BSRR.write(1 << (0 + 16));        // reset = HIGH
     HAL_Delay(10U);        //
 #endif
 }
@@ -205,26 +198,22 @@ void display::softwareReset() {
 #endif
 }
 
-void display::setDataOrCommand(bool isData) {
+void display::setDataOrCommand(const bool isData) {
 #ifndef generic
     if (isData) {
         HAL_GPIO_WritePin(GPIOB, displayDataCommand_Pin, GPIO_PIN_SET);
-        // PORTB_BSRR.write(1 << 14);               // data = HIGH
     } else {        //
         HAL_GPIO_WritePin(GPIOB, displayDataCommand_Pin, GPIO_PIN_RESET);
-        // PORTB_BSRR.write(1 << (14 + 16));        // command = LOW
     }
 #endif
 }
 
-void display::selectChip(bool active) {
+void display::selectChip(const bool active) {
 #ifndef generic
     if (active) {
         HAL_GPIO_WritePin(GPIOB, displayChipSelect_Pin, GPIO_PIN_RESET);
-        // PORTB_BSRR.write(1 << (5 + 16));        // active = LOW
     } else {        //
         HAL_GPIO_WritePin(GPIOB, displayChipSelect_Pin, GPIO_PIN_SET);
-        // PORTB_BSRR.write(1 << 5);               // release = HIGH
     }
 #endif
 }
@@ -236,13 +225,12 @@ bool display::isReady() {
 bool display::isBusy() {
 #ifndef generic
     return (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOB, displayBusy_Pin));
-// return (PORTB_IDR.readBit(10));
 #else
     return false;
 #endif
 }
 
-void display::write(uint8_t* data, uint32_t length) {
+void display::write( uint8_t* data, const uint32_t length) {
     selectChip(true);
 #ifndef generic
     HAL_SPI_Transmit(&hspi2, data, length, 1000);        // TODO : get the HAL timeout stuff right
@@ -250,20 +238,20 @@ void display::write(uint8_t* data, uint32_t length) {
     selectChip(false);
 }
 
-void display::write(uint8_t data) {
+void display::write( uint8_t data) {
     write(&data, 1);
 }
 
-void display::writeData(uint8_t* data, uint32_t length) {
+void display::writeData( uint8_t* data, const uint32_t length) {
     setDataOrCommand(true);
     write(data, length);
 }
 
-void display::writeData(uint8_t data) {
+void display::writeData( uint8_t data) {
     writeData(&data, 1);
 }
 
-void display::writeCommand(SSD1681Commands theCommand, uint8_t* theData, uint32_t dataLength) {
+void display::writeCommand(const SSD1681Commands theCommand,  uint8_t* theData, const uint32_t dataLength) {
     selectChip(true);
     setDataOrCommand(false);
 #ifndef generic
