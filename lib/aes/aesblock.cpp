@@ -30,7 +30,7 @@ uint8_t &aesBlock::operator[](std::size_t index) {
     return state.asByte[index];
 }
 
-bool aesBlock::operator==(const aesBlock &block) {
+bool aesBlock::operator==(const aesBlock &block) const {
     return (memcmp(state.asByte, block.state.asByte, lengthInBytes) == 0);
 }
 
@@ -115,6 +115,7 @@ void aesBlock::encrypt(aesKey &key) {
     stm32wle5_aes::enable();
     stm32wle5_aes::write(*this);
     while (!stm32wle5_aes::isComputationComplete()) {
+        asm("NOP");
     }
     stm32wle5_aes::clearComputationComplete();
     stm32wle5_aes::read(*this);
@@ -171,10 +172,10 @@ void aesBlock::shiftRows() {
 void aesBlock::mixColumns() {
     uint8_t tempState[4][4];
     vectorToMatrix(tempState, state.asByte);
-    uint8_t row, column;
-    uint8_t a[4], b[4];
-    for (column = 0; column < 4; column++) {
-        for (row = 0; row < 4; row++) {
+    uint8_t a[4];
+    uint8_t b[4];
+    for (uint8_t column = 0; column < 4; column++) {
+        for (uint8_t row = 0; row < 4; row++) {
             a[row] = tempState[row][column];
             b[row] = (tempState[row][column] << 1);
 
@@ -191,8 +192,7 @@ void aesBlock::mixColumns() {
 }
 
 void aesBlock::shiftLeft() {
-    uint32_t byteIndex;
-    for (byteIndex = 0; byteIndex < 16; byteIndex++) {
+    for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
         if (byteIndex < 15) {
             if ((state.asByte[byteIndex + 1] & 0x80) == 0x80) {
                 state.asByte[byteIndex] = (state.asByte[byteIndex] << 1) + 1;

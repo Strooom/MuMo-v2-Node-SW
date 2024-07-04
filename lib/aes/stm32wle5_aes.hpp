@@ -27,5 +27,4 @@ class stm32wle5_aes {
     static void read(uint32_t *wordsOut);
     static bool isComputationComplete();
     static void clearComputationComplete();
-  private:
 };

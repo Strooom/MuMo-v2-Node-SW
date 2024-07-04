@@ -9,7 +9,7 @@
 }
 
  uint32_t* aesKey::asWords() {
-    return key.asUin32;
+    return key.asUint32;
 }
 
 void aesKey::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
@@ -19,7 +19,7 @@ void aesKey::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
 
 void aesKey::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
     for (uint32_t wordIndex = 0; wordIndex < 4; wordIndex++) {
-        key.asUin32[wordIndex] = wordsIn[wordIndex];
+        key.asUint32[wordIndex] = wordsIn[wordIndex];
     }
 }
 

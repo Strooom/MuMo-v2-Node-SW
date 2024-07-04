@@ -11,7 +11,7 @@ void test_initalize() {
     TEST_ASSERT_EQUAL_UINT32(868'300'000U, loRaTxChannelCollection::channel[1].frequencyInHz);
     TEST_ASSERT_EQUAL_UINT32(868'500'000U, loRaTxChannelCollection::channel[2].frequencyInHz);
 
-    for (auto index = 3U; index < static_cast<uint32_t>(loRaTxChannelCollection::maxNmbrChannels); index++) {
+    for (auto index = 3U; index < loRaTxChannelCollection::maxNmbrChannels; index++) {
         TEST_ASSERT_EQUAL_UINT32(0U, loRaTxChannelCollection::channel[index].frequencyInHz);
     }
     TEST_ASSERT_EQUAL_UINT32(0U, loRaTxChannelCollection::getCurrentChannelIndex());

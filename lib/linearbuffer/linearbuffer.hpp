@@ -29,7 +29,7 @@ class linearBuffer {
 
     const uint8_t* asUint8Ptr(uint32_t offset = 0) const { return (buffer + offset); }        // WARNING : this accepts offsets pointing beyond the meaningful data, even beyond the whole buffer..
 
-    const uint8_t operator[](size_t index) {
+    uint8_t operator[](size_t index) {
         if (index < level) {
             return buffer[index];
         } else {

@@ -21,6 +21,4 @@ class deviceAddress {
         uint32_t asUint32{0};
         uint8_t asUint8[lengthInBytes];
     };
-
-  private:
 };
