@@ -42,8 +42,6 @@ class sensorChannel {
     float samples[maxOversampling + 1]{};
 
     void limitOversamplingAndPrescaler();
-    void limitPrescaleCounter(uint32_t prescaler);
-    void limitOversamplingCounter(uint32_t oversampling);
     bool isActive() const;
 
     const uint32_t decimals;

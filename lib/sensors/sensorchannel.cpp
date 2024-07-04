@@ -86,18 +86,6 @@ float sensorChannel::value() const {
     return (sum / static_cast<float>(nmbrOfSamples));
 }
 
-void sensorChannel::limitPrescaleCounter(uint32_t activePrescaler) {
-    if (prescaleCounter > activePrescaler) {
-        prescaleCounter = activePrescaler;
-    }
-}
-
-void sensorChannel::limitOversamplingCounter(uint32_t activeOversampling) {
-    if (oversamplingCounter > activeOversampling) {
-        oversamplingCounter = activeOversampling;
-    }
-}
-
 bool sensorChannel::isActive() const {
     return (prescaling > 0);
 }
