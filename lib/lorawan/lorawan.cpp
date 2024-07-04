@@ -292,6 +292,7 @@ void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirecti
         tmpBlock.setFromByteArray(tmpOffset);
         stm32wle5_aes::write(tmpBlock);
         while (!stm32wle5_aes::isComputationComplete()) {
+            asm("NOP");
         }
         stm32wle5_aes::read(tmpBlock);
         stm32wle5_aes::clearComputationComplete();
@@ -373,6 +374,7 @@ uint32_t LoRaWAN::calculateMic() {
         }
         stm32wle5_aes::write(tmpBlock);
         while (!stm32wle5_aes::isComputationComplete()) {
+            asm("NOP");
         }
         stm32wle5_aes::read(tmpBlock);
         stm32wle5_aes::clearComputationComplete();
@@ -457,22 +459,8 @@ void LoRaWAN::insertMic(uint32_t aMic) {
     rawMessage[micOffset + 3] = (aMic & 0xFF000000) >> 24;        // MSByte
 }
 
-// void LoRaWAN::padForEncryptDecrypt() {
-//     nmbrOfBytesToPad = aesBlock::calculateNmbrOfBytesToPad(framePayloadLength);
-//     for (uint32_t index = framePayloadOffset; index < (framePayloadOffset + nmbrOfBytesToPad); index++) {
-//         rawMessage[index] = 0x00;
-//     }
-// }
-
 #pragma endregion
 #pragma region 3 : TxRxCycle State Machine
-
-// void LoRaWAN::run() {
-//     if ((macOut.getLevel() > 15) && isIdle()) {        // if we have more than 15 bytes of MAC stuff, we need a separate uplink message (cannot piggyback on a data message), so we send the msg now
-//         sendUplink();                                  // start an uplink cycle with the MAC stuff on port 0
-//         removeNonStickyMacStuff();                     // after all MAC stuff was sent, remove it from the macOut buffer, except for the sticky MAC stuff, which is only removed after receiving a donwlink
-//     }
-// }
 
 txRxCycleState LoRaWAN::getState() {
     return state;
