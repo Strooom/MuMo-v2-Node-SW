@@ -17,15 +17,13 @@ class sensorChannel {
         sampleAndOutput
     };
 
-    action getNextAction();
-    bool needsSampling();
-    bool hasOutput();
+    action getNextAction() const;
+    bool needsSampling() const;
+    bool hasOutput() const;
     void updateCounters();
 
     void addSample(float theSample);
-    float value();
-    void buildBigTextString(char* destination, uint32_t maxLength);
-    void buildSmallTextString(char* destination, uint32_t maxLength);
+    float value() const;
 
 #ifndef unitTesting
 
