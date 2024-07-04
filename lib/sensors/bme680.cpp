@@ -198,7 +198,7 @@ float bme680::calculateBarometricPressure() {
     var2         = var2 + (var1 * (calibrationCoefficientPressure5) * 2.0f);
     var2         = (var2 / 4.0f) + ((calibrationCoefficientPressure4) * 65536.0f);
     var1         = ((((calibrationCoefficientPressure3 * var1 * var1) / 16384.0f) + (calibrationCoefficientPressure2 * var1)) / 524288.0f);
-    var1         = ((1.0f + (var1 / 32768.0f)) * ((float)calibrationCoefficientPressure1));
+    var1         = ((1.0f + (var1 / 32768.0f)) * calibrationCoefficientPressure1);
     float result = (1048576.0f - ((float)rawDataBarometricPressure));
 
     if ((int)var1 != 0) {

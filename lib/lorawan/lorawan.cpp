@@ -292,6 +292,7 @@ void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirecti
         tmpBlock.setFromByteArray(tmpOffset);
         stm32wle5_aes::write(tmpBlock);
         while (!stm32wle5_aes::isComputationComplete()) {
+            asm("NOP");
         }
         stm32wle5_aes::read(tmpBlock);
         stm32wle5_aes::clearComputationComplete();
@@ -373,6 +374,7 @@ uint32_t LoRaWAN::calculateMic() {
         }
         stm32wle5_aes::write(tmpBlock);
         while (!stm32wle5_aes::isComputationComplete()) {
+            asm("NOP");
         }
         stm32wle5_aes::read(tmpBlock);
         stm32wle5_aes::clearComputationComplete();
@@ -457,22 +459,8 @@ void LoRaWAN::insertMic(uint32_t aMic) {
     rawMessage[micOffset + 3] = (aMic & 0xFF000000) >> 24;        // MSByte
 }
 
-// void LoRaWAN::padForEncryptDecrypt() {
-//     nmbrOfBytesToPad = aesBlock::calculateNmbrOfBytesToPad(framePayloadLength);
-//     for (uint32_t index = framePayloadOffset; index < (framePayloadOffset + nmbrOfBytesToPad); index++) {
-//         rawMessage[index] = 0x00;
-//     }
-// }
-
 #pragma endregion
 #pragma region 3 : TxRxCycle State Machine
-
-// void LoRaWAN::run() {
-//     if ((macOut.getLevel() > 15) && isIdle()) {        // if we have more than 15 bytes of MAC stuff, we need a separate uplink message (cannot piggyback on a data message), so we send the msg now
-//         sendUplink();                                  // start an uplink cycle with the MAC stuff on port 0
-//         removeNonStickyMacStuff();                     // after all MAC stuff was sent, remove it from the macOut buffer, except for the sticky MAC stuff, which is only removed after receiving a donwlink
-//     }
-// }
 
 txRxCycleState LoRaWAN::getState() {
     return state;
@@ -610,8 +598,7 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                             goTo(txRxCycleState::idle);
                             return;
                             break;
-                        default:
-                        case messageType::invalid:
+                        default:        // case messageType::invalid:
                             goTo(txRxCycleState::idle);
                             return;
                             break;
@@ -693,7 +680,6 @@ void LoRaWAN::goTo(txRxCycleState newState) {
             break;
     }
 }
-
 
 #pragma endregion
 #pragma region 4 : MAC layer functions
@@ -940,7 +926,7 @@ void LoRaWAN::processTransmitParameterSetupRequest() {
 
 void LoRaWAN::processDownlinkChannelRequest() {
     uint8_t channelIndex = macIn[1];
-    uint32_t frequency   = (static_cast<uint8_t>(macIn[2]) + (static_cast<uint8_t>(macIn[3]) << 8) + (static_cast<uint8_t>(macIn[4]) << 16)) * 100;
+    uint32_t frequency   = (macIn[2] + (macIn[3] << 8) + (macIn[4] << 16)) * 100;
     macIn.consume(5);
     logging::snprintf(logging::source::lorawanMac, "DownlinkChannelRequest : 0x%02X, %u \n", channelIndex, frequency);
     // TODO : update channel info
@@ -1092,7 +1078,7 @@ messageType LoRaWAN::decodeMessage() {
 }
 
 uint32_t LoRaWAN::getReceiveTimeout(spreadingFactor aSpreadingFactor) {
-    static constexpr uint32_t baseTimeout{320}; // SX126x uses 64 KHz RTC, so 320 ticks is 5ms
+    static constexpr uint32_t baseTimeout{320};        // SX126x uses 64 KHz RTC, so 320 ticks is 5ms
     // See more info in SemTech document, we need 5ms for SF7, and then double for each higher SF
     switch (aSpreadingFactor) {
         case spreadingFactor::SF7:
@@ -1163,7 +1149,7 @@ void LoRaWAN::dumpConfig() {
         return;
     }
     logging::snprintf("LoRaWAN Config :\n");
-    logging::snprintf("  devAddr        = 0x%04X\n", DevAddr.asUint32); // TODO : I think this should be 0x%08X
+    logging::snprintf("  devAddr        = 0x%04X\n", DevAddr.asUint32);        // TODO : I think this should be 0x%08X
     char tmpKeyAsHexAscii[33];
     hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, applicationKey.asBytes(), 16);
     logging::snprintf("  applicationKey = %s\n", tmpKeyAsHexAscii);
