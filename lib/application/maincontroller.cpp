@@ -177,7 +177,7 @@ void mainController::handleEvents() {
                         break;
                 }
                 break;
-                
+
             default:
                 break;
         }
@@ -412,14 +412,12 @@ void mainController::showMeasurements() {
 
 void mainController::mcuStop2() {
 #ifndef generic
-    {
-        uint32_t currentPriMaskState = __get_PRIMASK();
-        __disable_irq();
-        HAL_SuspendTick();
-        HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
-        HAL_ResumeTick();
-        __set_PRIMASK(currentPriMaskState);
-    }
+    uint32_t currentPriMaskState = __get_PRIMASK();
+    __disable_irq();
+    HAL_SuspendTick();
+    HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
+    HAL_ResumeTick();
+    __set_PRIMASK(currentPriMaskState);
 #endif
 }
 
