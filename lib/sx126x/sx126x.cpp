@@ -6,6 +6,7 @@
 #include <sx126x.hpp>
 #include <logging.hpp>
 #include <settingscollection.hpp>
+#include <cstring>
 
 #ifndef generic
 #include "main.h"
