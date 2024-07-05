@@ -109,7 +109,7 @@ void screen::setText(uint32_t lineIndex, const char* text) {
     if (lineIndex < numberOfLines2) {
         setType(screenType::message);
         if (strncmp(consoleText[lineIndex], text, maxTextLength2) != 0) {
-            strncpy(consoleText[lineIndex], text, maxTextLength2);
+            strlcpy(consoleText[lineIndex], text, maxTextLength2);
             modified = true;
         }
     }
@@ -118,7 +118,7 @@ void screen::setText(uint32_t lineIndex, const char* text) {
 void screen::clearAllTexts() {
     for (uint32_t lineIndex = 0; lineIndex < numberOfLines2; lineIndex++) {
         if (strncmp(consoleText[lineIndex], "", maxTextLength2) != 0) {
-            strncpy(consoleText[lineIndex], "", maxTextLength2);
+            strlcpy(consoleText[lineIndex], "", maxTextLength2);
             modified = true;
         }
     }
@@ -131,11 +131,11 @@ void screen::setText(uint32_t lineIndex, const char* newBigText, const char* new
     if (lineIndex < numberOfLines) {
         setType(screenType::measurements);
         if (strncmp(bigText[lineIndex], newBigText, maxTextLength) != 0) {
-            strncpy(bigText[lineIndex], newBigText, maxTextLength);
+            strlcpy(bigText[lineIndex], newBigText, maxTextLength);
             modified = true;
         }
         if (strncmp(smallText[lineIndex], newSmallText, maxTextLength) != 0) {
-            strncpy(smallText[lineIndex], newSmallText, maxTextLength);
+            strlcpy(smallText[lineIndex], newSmallText, maxTextLength);
             modified = true;
         }
     }

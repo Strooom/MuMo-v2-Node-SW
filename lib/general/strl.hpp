@@ -7,7 +7,7 @@
 
 #if !defined strlcpy || !defined strlcat
 #include <stdint.h>        // required for uint8_t and similar type definitions
-#include <cstring>        // required for strncpy()
+#include <cstring>        // required for memcpy()
 #endif
 
 #ifndef strlcpy
