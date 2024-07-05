@@ -1,23 +1,23 @@
-#include <screen.hpp>
-#include <display.hpp>
-#include <graphics.hpp>
-#include <ux.hpp>
-#include <font.hpp>
-#include <stdio.h>                           // snprintf
-#include <sensordevicecollection.hpp>        //
-#include <cstring>                           // strncmp, strncpy
 #include <cmath>                             //
-#include <inttypes.h>                        // for PRIu32
+#include <cstring>                           // strncmp, strncpy
+#include <display.hpp>
 #include <float.hpp>
-#include <spi.hpp>
-#include <uniqueid.hpp>
-#include <qrcode.hpp>
+#include <font.hpp>
+#include <graphics.hpp>
 #include <hexascii.hpp>
-#include <maincontroller.hpp>
 #include <lucidaconsole12.hpp>
+#include <maincontroller.hpp>
+#include <qrcode.hpp>
 #include <roboto36b.hpp>
+#include <screen.hpp>
+#include <sensordevicecollection.hpp>        //
+#include <spi.hpp>
+#include <stdio.h>                           // snprintf
+#include <strl.hpp>                          // strlcpy
 #include <tahoma24b.hpp>
+#include <uniqueid.hpp>
 #include <usbicon.hpp>
+#include <ux.hpp>
 
 bool screen::modified{false};
 screenType screen::currentScreenType{screenType::message};
@@ -44,9 +44,9 @@ void screen::update() {
                 graphics::drawText(ux::mid60 + tahoma24bold.properties.spaceBetweenCharactersInPixels, ux::marginBottomSmall + ((3U - lineIndex) * 50U), tahoma24bold, smallText[lineIndex]);
             }
 
-            uint32_t batteryLevel = static_cast<uint32_t>(sensorDeviceCollection::value(1, 1) * 100.0F);
             uint32_t iconLeft;
             iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth);
+            batteryLevel = static_cast<uint32_t>(sensorDeviceCollection::value(1, 1) * 100.0F);
             graphics::drawBatteryIcon(iconLeft, 2, batteryLevel);
             iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth + ux::iconSpacing);
             graphics::drawNetworkSignalStrengthIcon(iconLeft, 2, netwerkStrength);
