@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstring>
 #include <inttypes.h>
 #include <float.hpp>
 
@@ -27,23 +28,14 @@ uint32_t factorInt(const uint32_t decimals) {
 }
 
 float bytesToFloat(const uint8_t bytes[4]) {
-    static union {
-        float asFloat;
-        uint8_t asBytes[4];
-    } convertor;
-
-    for (uint32_t n = 0; n < 4; n++) {
-        convertor.asBytes[n] = bytes[n];
-    }
-    return convertor.asFloat;
+    float result;
+    static_assert(sizeof(result) == 4);
+    std::memcpy(&result, bytes, sizeof(result));
+    return result;
 }
 
 uint8_t* floatToBytes(const float value) {
-    static union {
-        float asFloat;
-        uint8_t asBytes[4];
-    } convertor;
-
-    convertor.asFloat = value;
-    return convertor.asBytes;
+    static uint8_t bytes[4];
+    std::memcpy(bytes, &value, sizeof(value));
+    return bytes;
 }

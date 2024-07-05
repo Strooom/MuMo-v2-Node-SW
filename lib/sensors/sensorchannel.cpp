@@ -12,18 +12,14 @@ void sensorChannel::set(uint32_t newOversampling, uint32_t newPrescaler) {
     limitOversamplingAndPrescaler();
     oversamplingCounter = 0;
     prescaleCounter     = 0;
-
-    // for (uint32_t i = 0; i < (maxOversampling + 1); i++) {
-    //     samples[i] = initialSampleValue;
-    // }
 }
 
-bool sensorChannel::needsSampling() {
+bool sensorChannel::needsSampling()  const{
     action anAction = getNextAction();
     return ((anAction == action::sample) || (anAction == action::sampleAndOutput));
 };
 
-bool sensorChannel::hasOutput() {
+bool sensorChannel::hasOutput() const {
     return (getNextAction() == action::sampleAndOutput);
 };
 
@@ -36,7 +32,7 @@ void sensorChannel::limitOversamplingAndPrescaler() {
     }
 }
 
-sensorChannel::action sensorChannel::getNextAction() {
+sensorChannel::action sensorChannel::getNextAction() const {
     if (isActive()) {
         if (prescaleCounter > 0) {
             return action::prescale;
@@ -81,39 +77,15 @@ void sensorChannel::addSample(float theSample) {
     }
 }
 
-float sensorChannel::value() {
+float sensorChannel::value() const {
     uint32_t nmbrOfSamples = oversampling + 1;
     float sum{0.0F};
     for (uint32_t i = 0; i < nmbrOfSamples; i++) {
         sum += samples[i];
     }
-    return (sum / nmbrOfSamples);
-}
-
-void sensorChannel::limitPrescaleCounter(uint32_t activePrescaler) {
-    if (prescaleCounter > activePrescaler) {        // when switching between low power and high power mode, the prescaleCounter could need to be reset in the appropriate range
-        prescaleCounter = activePrescaler;
-    }
-}
-
-void sensorChannel::limitOversamplingCounter(uint32_t activeOversampling) {
-    if (oversamplingCounter > activeOversampling) {        // when switching between low power and high power mode, the oversamplingCounter could need to be reset in the appropriate range
-        oversamplingCounter = activeOversampling;
-    }
+    return (sum / static_cast<float>(nmbrOfSamples));
 }
 
 bool sensorChannel::isActive() const {
     return (prescaling > 0);
-}
-
-void sensorChannel::buildBigTextString(char* destination, uint32_t maxLength) {
-    snprintf(destination, maxLength, "%" PRId32, value());
-}
-
-void sensorChannel::buildSmallTextString(char* destination, uint32_t maxLength) {
-    if (decimals > 0) {
-        snprintf(destination, maxLength, "%" PRIu32 " %s", value(), unit);
-    } else {
-        snprintf(destination, maxLength, "%s", unit);
-    }
 }

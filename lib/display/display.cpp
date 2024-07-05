@@ -5,7 +5,7 @@
 
 #include <display.hpp>
 #include <logging.hpp>
-#include <cstring>        // needed for memset
+#include <cstring>
 #include <spi.hpp>
 
 #ifndef generic

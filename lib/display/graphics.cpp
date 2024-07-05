@@ -37,52 +37,51 @@ void graphics::drawLine(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_
         return;
     }
     // Hello Bresenham, it's been 35 years since I first saw you ;-)
-    {
-        int dx;
-        if (xEnd >= xStart) {
-            dx = xEnd - xStart;
-        } else {
-            dx = xStart - xEnd;
-        }
-        int sx;
-        if (xStart < xEnd) {
-            sx = 1;
-        } else {
-            sx = -1;
-        }
-        int dy;
-        if (yEnd <= yStart) {
-            dy = yEnd - yStart;
-        } else {
-            dy = yStart - yEnd;
-        }
-        int sy;
-        if (yStart < yEnd) {
-            sy = 1;
-        } else {
-            sy = -1;
-        }
-        int err = dx + dy;
 
-        while ((xStart != xEnd) && (yStart != yEnd)) {
-            drawPixel(xStart, yStart, theColor);
-            if (2 * err >= dy) {
-                err += dy;
-                xStart += sx;
-            }
-            if (2 * err <= dx) {
-                err += dx;
-                yStart += sy;
-            }
+    int dx;
+    if (xEnd >= xStart) {
+        dx = xEnd - xStart;
+    } else {
+        dx = xStart - xEnd;
+    }
+    int sx;
+    if (xStart < xEnd) {
+        sx = 1;
+    } else {
+        sx = -1;
+    }
+    int dy;
+    if (yEnd <= yStart) {
+        dy = yEnd - yStart;
+    } else {
+        dy = yStart - yEnd;
+    }
+    int sy;
+    if (yStart < yEnd) {
+        sy = 1;
+    } else {
+        sy = -1;
+    }
+    int err = dx + dy;
+
+    while ((xStart != xEnd) && (yStart != yEnd)) {
+        drawPixel(xStart, yStart, theColor);
+        if (2 * err >= dy) {
+            err += dy;
+            xStart += sx;
+        }
+        if (2 * err <= dx) {
+            err += dx;
+            yStart += sy;
         }
     }
 }
 
 void graphics::drawCircle(const uint32_t x, const uint32_t y, const uint32_t radius, const color theColor) {
     /* Bresenham algorithm */
-    int x_pos = -radius;
+    int x_pos = -1 * static_cast<int32_t>(radius);
     int y_pos = 0;
-    int err   = 2 - 2 * radius;
+    int err   = 2 - (2 * static_cast<int32_t>(radius));
     int e2;
 
     do {
@@ -104,9 +103,9 @@ void graphics::drawCircle(const uint32_t x, const uint32_t y, const uint32_t rad
 }
 
 void graphics::drawFilledCircle(const uint32_t x, const uint32_t y, const uint32_t radius, const color theColor) {
-    int x_pos = -radius;
+    int x_pos = -1 * static_cast<int32_t>(radius);
     int y_pos = 0;
-    int err   = 2 - 2 * radius;
+    int err   = 2 - (2 * static_cast<int32_t>(radius));
     int e2;
 
     do {

@@ -222,10 +222,6 @@ jobs:
         run: |
           pio run -e production
 
-      - name: Run Workaround
-        run: |
-          python .github/workflows/convert-compile-commands.py compile_commands.json
-
       - name: Collect coverage into XML report
         run: |
           gcovr --sonarqube > coverage.xml
