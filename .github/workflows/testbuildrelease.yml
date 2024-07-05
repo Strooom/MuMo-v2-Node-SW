@@ -172,7 +172,7 @@ jobs:
         with:
           python-version: "3.9"
 
-      - name: install gcovr 5.0
+      - name: Install gcovr 5.0
         run: |
           pip install gcovr==5.0
 

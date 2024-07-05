@@ -3,7 +3,6 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
-// #define noTransmit
 #include <applicationevent.hpp>
 #include <battery.hpp>
 #include <bme680.hpp>
@@ -232,7 +231,6 @@ void mainController::runStateMachine() {
 
     switch (state) {
         case mainState::boot:
-            // mcuStop2();
             break;
 
         case mainState::idle:
@@ -246,11 +244,6 @@ void mainController::runStateMachine() {
         } break;
 
         case mainState::networkCheck:
-            // if (LoRaWAN::isIdle()) {
-            //     if (!power::hasUsbPower()) {
-            //         mcuStop2();
-            //     }
-            // }
             break;
 
         case mainState::measuring:
@@ -331,14 +324,11 @@ void mainController::sleep() {
     switch (state) {
         case mainState::idle:
 #ifndef generic
-            // HAL_Delay(1000);
             MX_I2C2_Init();
             MX_ADC_Init();
             MX_AES_Init();
             MX_RNG_Init();
-            // MX_USART1_UART_Init();
 #endif
-            // HAL_Delay(1000);
             gpio::enableGpio(gpio::group::rfControl);
             gpio::enableGpio(gpio::group::usbPresent);
             gpio::enableGpio(gpio::group::i2c);

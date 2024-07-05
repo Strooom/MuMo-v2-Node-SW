@@ -46,25 +46,21 @@ void realTimeClock::set(const tm& brokenDownTime) {
 #ifndef generic
     RTC_TimeTypeDef stm32Time;
     RTC_DateTypeDef stm32Date;
-
-    stm32Time.Hours          = brokenDownTime.tm_hour;
-    stm32Time.Minutes        = brokenDownTime.tm_min;
-    stm32Time.Seconds        = brokenDownTime.tm_sec;
+    stm32Time.Hours          = static_cast<uint8_t>(brokenDownTime.tm_hour);
+    stm32Time.Minutes        = static_cast<uint8_t>(brokenDownTime.tm_min);
+    stm32Time.Seconds        = static_cast<uint8_t>(brokenDownTime.tm_sec);
     stm32Time.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     stm32Time.StoreOperation = RTC_STOREOPERATION_RESET;
-    stm32Date.Year           = brokenDownTime.tm_year - 100;        // tm_year is years since 1900, STM32 expects years since 2000
-    stm32Date.Month          = brokenDownTime.tm_mon + 1;           // tm_mon is 0..11 TODO : check if this is correct as it seems HAL uses BCD months...
-    stm32Date.Date           = brokenDownTime.tm_mday;
+    stm32Date.Year           = static_cast<uint8_t>(brokenDownTime.tm_year - 100);        // tm_year is years since 1900, STM32 expects years since 2000
+    stm32Date.Month          = static_cast<uint8_t>(brokenDownTime.tm_mon + 1);           // tm_mon is 0..11 TODO : check if this is correct as it seems HAL uses BCD months...
+    stm32Date.Date           = static_cast<uint8_t>(brokenDownTime.tm_mday);
     if (brokenDownTime.tm_wday == 0) {
-        stm32Date.WeekDay = 7;
+        stm32Date.WeekDay = 7U;
     } else {
-        stm32Date.WeekDay = brokenDownTime.tm_wday;
+        stm32Date.WeekDay = static_cast<uint8_t>(brokenDownTime.tm_wday);
     }
-
-    // HAL_PWR_EnableBkUpAccess(); This created a bug where the RTC would be set but not running - for further investigation
     HAL_RTC_SetTime(&hrtc, &stm32Time, RTC_FORMAT_BIN);
     HAL_RTC_SetDate(&hrtc, &stm32Date, RTC_FORMAT_BIN);
-    // HAL_PWR_DisableBkUpAccess(); This created a bug where the RTC would be set but not running - for further investigation
 #endif
 }
 
