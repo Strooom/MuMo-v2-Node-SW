@@ -36,7 +36,7 @@ uint8_t hexAscii::hexCharacterFromValue(const uint8_t valueToConvert) {
 }
 
 void hexAscii::hexStringToByteArray(uint8_t *byteArrayOut, const char *hexStringIn) {
-    uint32_t hexStringInLength = strlen(hexStringIn);
+    uint32_t hexStringInLength = strnlen(hexStringIn, maxStringLength);
     uint32_t nmbrBytes         = hexStringInLength / 2;
 
     for (uint32_t index = 0; index < nmbrBytes; index++) {
