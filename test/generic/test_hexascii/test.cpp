@@ -55,7 +55,7 @@ void test_hexStringToByteArray() {
     const char input[17] = "0123456789ABCDEF";
     uint8_t output[8];
     uint8_t expectedOutput[8] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
-    hexAscii::hexStringToByteArray(output, input);
+    hexAscii::hexStringToByteArray(output, input, 16U);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedOutput, output, 8);
 }
 
