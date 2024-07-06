@@ -1,6 +1,6 @@
 #include <hexascii.hpp>
-#include "cstring"
-
+#include <cstring>
+#include <logging.hpp>
 uint8_t hexAscii::toUpperCase(const uint8_t characterToConvert) {
     if (characterToConvert >= 'a' && characterToConvert <= 'z') {
         return characterToConvert - 'a' + 'A';
@@ -35,17 +35,17 @@ uint8_t hexAscii::hexCharacterFromValue(const uint8_t valueToConvert) {
         return '?';
 }
 
-void hexAscii::hexStringToByteArray(uint8_t *byteArrayOut, const char *hexStringIn) {
-    uint32_t hexStringInLength = strlen(hexStringIn);
-    uint32_t nmbrBytes         = hexStringInLength / 2;
+void hexAscii::hexStringToByteArray(uint8_t *byteArrayOut, const char *hexStringIn, const uint32_t stringInLength) {
+    uint32_t hexStringInLength = strnlen(hexStringIn, stringInLength);
+    uint32_t nmbrBytes = hexStringInLength / 2;
 
     for (uint32_t index = 0; index < nmbrBytes; index++) {
-        uint8_t leftCharacter  = hexStringIn[index * 2];
-        uint8_t rightCharacter = hexStringIn[(index * 2) + 1];
+        uint8_t leftCharacter  = static_cast<uint8_t>(hexStringIn[index * 2]);
+        uint8_t rightCharacter = static_cast<uint8_t>(hexStringIn[(index * 2) + 1]);
         leftCharacter          = toUpperCase(leftCharacter);
         rightCharacter         = toUpperCase(rightCharacter);
         if ((isHexCharacter(leftCharacter)) && (isHexCharacter(rightCharacter))) {
-            byteArrayOut[index] = (valueFromHexCharacter(leftCharacter) << 4) + valueFromHexCharacter(rightCharacter);
+            byteArrayOut[index] = (valueFromHexCharacter(leftCharacter) << 4U) + valueFromHexCharacter(rightCharacter);
         }
     }
 }

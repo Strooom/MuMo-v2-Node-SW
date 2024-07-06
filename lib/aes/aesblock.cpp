@@ -22,7 +22,7 @@ void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
 
 void aesBlock::setFromHexString(const char *string) {
     uint8_t tmpBytes[lengthInBytes];
-    hexAscii::hexStringToByteArray(tmpBytes, string);
+    hexAscii::hexStringToByteArray(tmpBytes, string, 32U);
     (void)memcpy(state.asByte, tmpBytes, lengthInBytes);
 }
 
@@ -177,7 +177,7 @@ void aesBlock::mixColumns() {
     for (uint8_t column = 0; column < 4; column++) {
         for (uint8_t row = 0; row < 4; row++) {
             a[row] = tempState[row][column];
-            b[row] = (tempState[row][column] << 1);
+            b[row] = (tempState[row][column] << 1U);
 
             if ((tempState[row][column] & 0x80) == 0x80) {
                 b[row] ^= 0x1B;
@@ -195,13 +195,13 @@ void aesBlock::shiftLeft() {
     for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
         if (byteIndex < 15) {
             if ((state.asByte[byteIndex + 1] & 0x80) == 0x80) {
-                state.asByte[byteIndex] = (state.asByte[byteIndex] << 1) + 1;
+                state.asByte[byteIndex] = (state.asByte[byteIndex] << 1U) + 1U;
 
             } else {
-                state.asByte[byteIndex] = (state.asByte[byteIndex] << 1);
+                state.asByte[byteIndex] = (state.asByte[byteIndex] << 1U);
             }
         } else {
-            state.asByte[byteIndex] = (state.asByte[byteIndex] << 1);
+            state.asByte[byteIndex] = (state.asByte[byteIndex] << 1U);
         }
     }
 }

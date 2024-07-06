@@ -85,12 +85,12 @@ void logging::write(uint32_t dataLength) {
     }
     if (isActive(destination::uart2usb)) {
 #ifndef generic
-        HAL_UART_Transmit(&huart2, (uint8_t *)buffer, dataLength, 1000);
+        HAL_UART_Transmit(&huart2, (uint8_t *)buffer, static_cast<const uint16_t>(dataLength), 1000);
 #endif
     }
     if (isActive(destination::uart1)) {
 #ifndef generic
-        HAL_UART_Transmit(&huart1, (uint8_t *)buffer, dataLength, 1000);
+        HAL_UART_Transmit(&huart1, (uint8_t *)buffer, static_cast<const uint16_t>(dataLength), 1000);
 #endif
     }
 }

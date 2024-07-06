@@ -30,6 +30,14 @@ void test_bigEndianWordToByte3() {
     TEST_ASSERT_EQUAL_UINT8(0x12, bigEndianWordToByte3(0x12345678));
 }
 
+void test_strlcpy() {
+    TEST_IGNORE_MESSAGE("implement me!");
+}
+
+void test_strlcat() {
+    TEST_IGNORE_MESSAGE("implement me!");
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_swapLittleBigEndian);
@@ -38,5 +46,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_bigEndianWordToByte1);
     RUN_TEST(test_bigEndianWordToByte2);
     RUN_TEST(test_bigEndianWordToByte3);
+    RUN_TEST(test_strlcpy);
+    RUN_TEST(test_strlcat);
     UNITY_END();
 }

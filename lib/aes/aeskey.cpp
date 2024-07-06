@@ -25,7 +25,7 @@ void aesKey::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
 
 void aesKey::setFromHexString(const char* string) {
     uint8_t tmpBytes[lengthInBytes];
-    hexAscii::hexStringToByteArray(tmpBytes, string);
+    hexAscii::hexStringToByteArray(tmpBytes, string, 32U);
     (void)memcpy(key.asByte, tmpBytes, lengthInBytes);
     expandKey();
 }
@@ -39,7 +39,7 @@ uint32_t aesKey::swapLittleBigEndian( uint32_t wordIn) {
 
 void aesKey::expandKey() {
     (void)memcpy(expandedKey, key.asByte, 16);
-    for (auto round = 1; round <= 10; round++) {
+    for (uint8_t round = 1; round <= 10; round++) {
         (void)memcpy(expandedKey + (round * 16), expandedKey + ((round - 1) * 16), 16);
         calculateRoundKey(round);
     }
