@@ -11,7 +11,7 @@ extern RTC_HandleTypeDef hrtc;
 time_t realTimeClock::mockRealTimeClock{0};
 #endif
 
-union realTimeClock::convert realTimeClock::convertor;
+uint8_t realTimeClock::asBytes[4];
 uint32_t realTimeClock::tickCounter{0};
 
 time_t realTimeClock::unixTimeFromGpsTime(uint32_t gpsTime) {
@@ -90,16 +90,16 @@ time_t realTimeClock::get() {
 }
 
 uint8_t* realTimeClock::bytesFromTime_t(const time_t input) {
-    convertor.asUint32 = static_cast<uint32_t>(input);
-    return convertor.asBytes;
+    auto asUint32 = static_cast<uint32_t>(input);
+    std::memcpy(asBytes, &asUint32, 4);
+    return asBytes;
 }
 
 time_t realTimeClock::time_tFromBytes(const uint8_t* input) {
-    convertor.asBytes[0] = input[0];
-    convertor.asBytes[1] = input[1];
-    convertor.asBytes[2] = input[2];
-    convertor.asBytes[3] = input[3];
-    return static_cast<time_t>(convertor.asUint32);
+    uint32_t asUint32;
+    std::memcpy(asBytes, input, 4);
+    std::memcpy(&asUint32, asBytes, 4);
+    return static_cast<time_t>(asUint32);
 }
 
 bool realTimeClock::needsSync() {
