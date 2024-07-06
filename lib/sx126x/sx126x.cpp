@@ -6,6 +6,7 @@
 #include <sx126x.hpp>
 #include <logging.hpp>
 #include <settingscollection.hpp>
+#include <cstring>
 
 #ifndef generic
 #include "main.h"
@@ -49,13 +50,10 @@ float sx126x::getPacketSnr() {
     uint8_t response[3];
     sx126x::executeGetCommand(sx126x::command::getPacketStatus, response, 3);
 
-    union {
-        uint8_t asUint8;
-        int8_t asInt8;
-    } converter;
+    int8_t snr;
+    std::memcpy(&snr, &response[1], 1);
 
-    converter.asUint8 = response[1];
-    return static_cast<float>(converter.asInt8) / 4.0f;
+    return (static_cast<float>(snr) / 4.0f);
 }
 
 void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t* payload, uint32_t payloadLength) {
@@ -64,7 +62,7 @@ void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t freq
     setRfSwitch(rfSwitchState::tx);
     setRfFrequency(frequency);
     setModulationParameters(theSpreadingFactor);
-    setPacketParametersTransmit(payloadLength);
+    setPacketParametersTransmit(static_cast<uint8_t>(payloadLength));
     writeBuffer(payload, payloadLength);
     uint8_t commandParameters[8];
     commandParameters[0] = 0x02;
@@ -188,14 +186,10 @@ void sx126x::setTxParameters(int8_t transmitPowerdBm) {        // caution - sign
     constexpr uint8_t nmbrCommandParameters{2};
     uint8_t commandParameters[nmbrCommandParameters];
 
-    union {
-        int8_t asInt8;
-        uint8_t asUint8;
-    } txPower;
+    uint8_t txPower;
+    std::memcpy(&txPower, &transmitPowerdBm, 1);
 
-    txPower.asInt8 = transmitPowerdBm;
-
-    commandParameters[0] = txPower.asUint8;
+    commandParameters[0] = txPower;
     commandParameters[1] = 0x02;        // rampTime 40 uS - no info why this value, but this was in the demo application from ST / Semtech, other examples use 200 uS ??
                                         // the remaining 4 bytes are empty 0x00 for LoRa
     executeSetCommand(command::setTxParams, commandParameters, nmbrCommandParameters);
@@ -235,7 +229,7 @@ void sx126x::initializeRadio() {
     commandParameters[1] = 0xDB;
     executeSetCommand(command::calibrateImage, commandParameters, 2);
 
-    commandParameters[0] = 0x01;        // packetType::LoRa;
+    commandParameters[0] = 0x01;
     executeSetCommand(command::setPacketType, commandParameters, 1);
 
     commandParameters[0] = 0x36;
@@ -268,10 +262,6 @@ void sx126x::initializeRadio() {
     commandParameters[0] = 0x34;        // LoRa Syncword MSB
     commandParameters[1] = 0x44;        // LoRa Syncword LSB
     writeRegisters(registerAddress ::LoRaSyncWordMSB, commandParameters, 2);
-
-    // goSleep();
-
-    // executeGetCommand(command::getStatus, commandParameters, 1);
 }
 
 void sx126x::initializeInterface() {

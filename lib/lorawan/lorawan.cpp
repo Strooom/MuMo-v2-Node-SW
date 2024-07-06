@@ -177,7 +177,7 @@ void LoRaWAN::insertPayload(const uint8_t data[], const uint32_t length) {
     (void)memcpy(rawMessage + framePayloadOffset, data, length);
 }
 
-void LoRaWAN::insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort) {
+void LoRaWAN::insertHeaders(const uint8_t* theFrameOptions, const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort) {
     rawMessage[macHeaderOffset]         = macHeader(frameType::unconfirmedDataUp).asUint8();
     rawMessage[deviceAddressOffset]     = DevAddr.asUint8[0];
     rawMessage[deviceAddressOffset + 1] = DevAddr.asUint8[1];
@@ -188,9 +188,9 @@ void LoRaWAN::insertHeaders(const uint8_t theFrameOptions[], const uint32_t theF
         logging::snprintf(logging::source::error, "Error : frameOptionsLength > 15\n");
         frameOptionsLength = 15;
     }
-    rawMessage[frameControlOffset] = frameOptionsLength & 0x0F;        // FCTRL : TODO : later we will need to add ACK etc..
+    rawMessage[frameControlOffset] = frameOptionsLength & 0x0F;
 
-    if (frameOptionsLength > 0) {
+    if ((frameOptionsLength > 0) && (theFrameOptions != nullptr)) {
         for (uint32_t index = 0; index < frameOptionsLength; index++) {
             rawMessage[frameOptionsOffset + index] = theFrameOptions[index];
         }

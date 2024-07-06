@@ -25,11 +25,7 @@ class realTimeClock {
 
   private:
 #endif
-    static union convert {
-        uint32_t asUint32;
-        uint8_t asBytes[4];
-    } convertor;
-
+    static uint8_t asBytes[4];
 #ifdef generic
     static time_t mockRealTimeClock;
 #endif

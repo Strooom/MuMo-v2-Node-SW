@@ -11,12 +11,12 @@ extern RTC_HandleTypeDef hrtc;
 time_t realTimeClock::mockRealTimeClock{0};
 #endif
 
-union realTimeClock::convert realTimeClock::convertor;
+uint8_t realTimeClock::asBytes[4];
 uint32_t realTimeClock::tickCounter{0};
 
 time_t realTimeClock::unixTimeFromGpsTime(uint32_t gpsTime) {
     static constexpr uint32_t unixToGpsOffset{315964800};
-    static constexpr uint32_t leapSecondsOffset{18};        // TODO : get this from nvs setting, so we can update it when needed
+    static constexpr uint32_t leapSecondsOffset{18};
     return (gpsTime + unixToGpsOffset - leapSecondsOffset);
 }
 
@@ -46,25 +46,21 @@ void realTimeClock::set(const tm& brokenDownTime) {
 #ifndef generic
     RTC_TimeTypeDef stm32Time;
     RTC_DateTypeDef stm32Date;
-
-    stm32Time.Hours          = brokenDownTime.tm_hour;
-    stm32Time.Minutes        = brokenDownTime.tm_min;
-    stm32Time.Seconds        = brokenDownTime.tm_sec;
+    stm32Time.Hours          = static_cast<uint8_t>(brokenDownTime.tm_hour);
+    stm32Time.Minutes        = static_cast<uint8_t>(brokenDownTime.tm_min);
+    stm32Time.Seconds        = static_cast<uint8_t>(brokenDownTime.tm_sec);
     stm32Time.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     stm32Time.StoreOperation = RTC_STOREOPERATION_RESET;
-    stm32Date.Year           = brokenDownTime.tm_year - 100;        // tm_year is years since 1900, STM32 expects years since 2000
-    stm32Date.Month          = brokenDownTime.tm_mon + 1;           // tm_mon is 0..11 TODO : check if this is correct as it seems HAL uses BCD months...
-    stm32Date.Date           = brokenDownTime.tm_mday;
+    stm32Date.Year           = static_cast<uint8_t>(brokenDownTime.tm_year - 100);        // tm_year is years since 1900, STM32 expects years since 2000
+    stm32Date.Month          = static_cast<uint8_t>(brokenDownTime.tm_mon + 1);           // tm_mon is 0..11.  HAL expects months in BCD format, from reviewing the code it seems it also handles binary. See stm32wlxx_hal_rtc.c line 924
+    stm32Date.Date           = static_cast<uint8_t>(brokenDownTime.tm_mday);
     if (brokenDownTime.tm_wday == 0) {
-        stm32Date.WeekDay = 7;
+        stm32Date.WeekDay = 7U;
     } else {
-        stm32Date.WeekDay = brokenDownTime.tm_wday;
+        stm32Date.WeekDay = static_cast<uint8_t>(brokenDownTime.tm_wday);
     }
-
-    // HAL_PWR_EnableBkUpAccess(); This created a bug where the RTC would be set but not running - for further investigation
     HAL_RTC_SetTime(&hrtc, &stm32Time, RTC_FORMAT_BIN);
     HAL_RTC_SetDate(&hrtc, &stm32Date, RTC_FORMAT_BIN);
-    // HAL_PWR_DisableBkUpAccess(); This created a bug where the RTC would be set but not running - for further investigation
 #endif
 }
 
@@ -94,16 +90,16 @@ time_t realTimeClock::get() {
 }
 
 uint8_t* realTimeClock::bytesFromTime_t(const time_t input) {
-    convertor.asUint32 = static_cast<uint32_t>(input);
-    return convertor.asBytes;
+    auto asUint32 = static_cast<uint32_t>(input);
+    std::memcpy(asBytes, &asUint32, 4);
+    return asBytes;
 }
 
 time_t realTimeClock::time_tFromBytes(const uint8_t* input) {
-    convertor.asBytes[0] = input[0];
-    convertor.asBytes[1] = input[1];
-    convertor.asBytes[2] = input[2];
-    convertor.asBytes[3] = input[3];
-    return static_cast<time_t>(convertor.asUint32);
+    uint32_t asUint32;
+    std::memcpy(asBytes, input, 4);
+    std::memcpy(&asUint32, asBytes, 4);
+    return static_cast<time_t>(asUint32);
 }
 
 bool realTimeClock::needsSync() {

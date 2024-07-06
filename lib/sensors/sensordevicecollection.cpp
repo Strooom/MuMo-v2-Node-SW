@@ -186,7 +186,7 @@ bool sensorDeviceCollection::hasNewMeasurements(uint32_t deviceIndex) {
             if (isValid(deviceIndex, channelIndex)) {
                 if (hasNewMeasurement(deviceIndex, channelIndex)) {
                     return true;
-                };
+                }
             }
         }
     }
@@ -287,7 +287,7 @@ uint32_t sensorDeviceCollection::nmbrOfNewMeasurements(uint32_t deviceIndex) {
             if (isValid(deviceIndex, channelIndex)) {
                 if (channel(deviceIndex, channelIndex).hasNewValue) {
                     result++;
-                };
+                }
             }
         }
     }
@@ -306,7 +306,7 @@ void sensorDeviceCollection::collectNewMeasurements(uint32_t deviceIndex) {
             if (isValid(deviceIndex, channelIndex)) {
                 if (channel(deviceIndex, channelIndex).hasNewValue) {
                     measurementCollection::addMeasurement(deviceIndex, channelIndex, channel(deviceIndex, channelIndex).value());
-                };
+                }
             }
         }
     }
@@ -323,7 +323,7 @@ void sensorDeviceCollection::clearNewMeasurements(uint32_t deviceIndex) {
         for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
             if (isValid(deviceIndex, channelIndex)) {
                 channel(deviceIndex, channelIndex).hasNewValue = false;
-            };
+            }
         }
     }
 }
