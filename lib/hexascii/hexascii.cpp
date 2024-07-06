@@ -45,7 +45,7 @@ void hexAscii::hexStringToByteArray(uint8_t *byteArrayOut, const char *hexString
         leftCharacter          = toUpperCase(leftCharacter);
         rightCharacter         = toUpperCase(rightCharacter);
         if ((isHexCharacter(leftCharacter)) && (isHexCharacter(rightCharacter))) {
-            byteArrayOut[index] = (valueFromHexCharacter(leftCharacter) << 4U) + valueFromHexCharacter(rightCharacter);
+            byteArrayOut[index] = static_cast<uint8_t>((valueFromHexCharacter(leftCharacter) << 4U) + valueFromHexCharacter(rightCharacter));
         }
     }
 }

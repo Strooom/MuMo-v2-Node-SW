@@ -68,7 +68,7 @@ void nonVolatileStorage::read(const uint32_t startAddress, uint8_t* data, const 
         i2c::wakeUp();
     }
 #ifndef generic
-    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_16BIT, data, dataLength, halTimeoutIsPresent);        //
+    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(startAddress), I2C_MEMADD_SIZE_16BIT, data, static_cast<uint16_t>(dataLength), halTimeoutIsPresent);        //
 #else
     (void)memcpy(data, mockEepromMemory + startAddress, dataLength);
 #endif
@@ -92,7 +92,7 @@ void nonVolatileStorage::write(const uint32_t startAddress, const uint8_t* data,
     while (remainingLength > 0) {
         uint32_t bytesInThisPage = bytesInCurrentPage(currentAddress, remainingLength);
 #ifndef generic
-        HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, currentAddress, I2C_MEMADD_SIZE_16BIT, remainingData, bytesInThisPage, halTimeoutIsPresent);        // my wrapper does not allow the to-be-written source data to be modified, but the STM32 HAL doesn't have a const uint8_t ptr
+        HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(currentAddress), I2C_MEMADD_SIZE_16BIT, remainingData, static_cast<uint16_t>(bytesInThisPage), halTimeoutIsPresent);        // my wrapper does not allow the to-be-written source data to be modified, but the STM32 HAL doesn't have a const uint8_t ptr
         HAL_Delay(writeCycleTime);                                                                                                                     // wait for the EEPROM to finish writing
 #else
         (void)memcpy(mockEepromMemory + currentAddress, remainingData, bytesInThisPage);

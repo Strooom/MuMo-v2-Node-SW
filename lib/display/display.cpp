@@ -261,7 +261,7 @@ void display::writeCommand(const SSD1681Commands theCommand,  uint8_t* theData, 
     if (dataLength > 0) {
         setDataOrCommand(true);
 #ifndef generic
-        HAL_SPI_Transmit(&hspi2, theData, dataLength, 1U);
+        HAL_SPI_Transmit(&hspi2, theData, static_cast<uint16_t>(dataLength), 1U);
 #endif
     }
     selectChip(false);
