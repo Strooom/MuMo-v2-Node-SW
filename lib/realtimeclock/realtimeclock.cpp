@@ -16,7 +16,7 @@ uint32_t realTimeClock::tickCounter{0};
 
 time_t realTimeClock::unixTimeFromGpsTime(uint32_t gpsTime) {
     static constexpr uint32_t unixToGpsOffset{315964800};
-    static constexpr uint32_t leapSecondsOffset{18};        // TODO : get this from nvs setting, so we can update it when needed
+    static constexpr uint32_t leapSecondsOffset{18};
     return (gpsTime + unixToGpsOffset - leapSecondsOffset);
 }
 
@@ -52,7 +52,7 @@ void realTimeClock::set(const tm& brokenDownTime) {
     stm32Time.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     stm32Time.StoreOperation = RTC_STOREOPERATION_RESET;
     stm32Date.Year           = static_cast<uint8_t>(brokenDownTime.tm_year - 100);        // tm_year is years since 1900, STM32 expects years since 2000
-    stm32Date.Month          = static_cast<uint8_t>(brokenDownTime.tm_mon + 1);           // tm_mon is 0..11 TODO : check if this is correct as it seems HAL uses BCD months...
+    stm32Date.Month          = static_cast<uint8_t>(brokenDownTime.tm_mon + 1);           // tm_mon is 0..11.  HAL expects months in BCD format, from reviewing the code it seems it also handles binary. See stm32wlxx_hal_rtc.c line 924
     stm32Date.Date           = static_cast<uint8_t>(brokenDownTime.tm_mday);
     if (brokenDownTime.tm_wday == 0) {
         stm32Date.WeekDay = 7U;
