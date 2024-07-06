@@ -241,7 +241,7 @@ void test_parse_1() {
     char testRawMessage[]                = "6011990b2600b000002261d02e6dc32e0495279335d16b41e109c11cb7d5df80232fd81280de42be47c964b382879a3f";
     uint32_t testRawMessageLength        = strlen(testRawMessage);
     uint32_t testRawMessageLengthInBytes = testRawMessageLength / 2;
-    hexAscii::hexStringToByteArray(mockSX126xDataBuffer, testRawMessage);
+    hexAscii::hexStringToByteArray(mockSX126xDataBuffer, testRawMessage, testRawMessageLength);
     mockSX126xCommandData[static_cast<uint8_t>(sx126x::command::getRxBufferStatus)][0] = testRawMessageLengthInBytes;
     LoRaWAN::DevAddr                                                                   = 0x260B9911;
     LoRaWAN::applicationKey.setFromHexString("E54E4411F4FE8955904197C8D824BC2C");
@@ -267,11 +267,11 @@ void test_construct_1() {
 
     static constexpr uint32_t testExpectedRawMessageLength{50};
     uint8_t testExpectedRawMessage[testExpectedRawMessageLength];
-    hexAscii::hexStringToByteArray(testExpectedRawMessage, "4011990b26008b3410a1b61bb7d0a47f5c1d42c7f292b5a34aa326f69bd6ac525c173b97010e49ff92a86d88e2db0184de4a");
+    hexAscii::hexStringToByteArray(testExpectedRawMessage, "4011990b26008b3410a1b61bb7d0a47f5c1d42c7f292b5a34aa326f69bd6ac525c173b97010e49ff92a86d88e2db0184de4a", 100U);
 
     static constexpr uint32_t testClearTextPayloadLength{37};
     uint8_t testClearTextPayload[testClearTextPayloadLength];
-    hexAscii::hexStringToByteArray(testClearTextPayload, "02017EC5536412835C40107EC553648D77A241117EC5536450424042127EC553645C897E44");
+    hexAscii::hexStringToByteArray(testClearTextPayload, "02017EC5536412835C40107EC553648D77A241117EC5536450424042127EC553645C897E44", 74U);
 
     LoRaWAN::DevAddr = 0x260B9911;
     LoRaWAN::applicationKey.setFromHexString("E54E4411F4FE8955904197C8D824BC2C");
@@ -308,11 +308,11 @@ void test_construct_2() {
 
     static constexpr uint32_t testExpectedRawMessageLength{29};
     uint8_t testExpectedRawMessage[testExpectedRawMessageLength];
-    hexAscii::hexStringToByteArray(testExpectedRawMessage, "401bc70b26000000074eaa794c99d25ebeffcee0463c3b34def5926d68");
+    hexAscii::hexStringToByteArray(testExpectedRawMessage, "401bc70b26000000074eaa794c99d25ebeffcee0463c3b34def5926d68", 58U);
 
     static constexpr uint32_t testClearTextPayloadLength{16};
     uint8_t testClearTextPayload[testClearTextPayloadLength];
-    hexAscii::hexStringToByteArray(testClearTextPayload, "00000000000000000000000000000000");
+    hexAscii::hexStringToByteArray(testClearTextPayload, "00000000000000000000000000000000",32U);
 
     LoRaWAN::DevAddr = 0x260BC71B;
     LoRaWAN::applicationKey.setFromHexString("ECF61A5B18BFBF81EF4FA7DBA764CE8B");

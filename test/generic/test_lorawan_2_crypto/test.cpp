@@ -166,9 +166,9 @@ void test_keyGeneration() {
     LoRaWAN::generateKeysK1K2();
 
     aesBlock toBeK1;
-    hexAscii::hexStringToByteArray(toBeK1.asBytes(), "fbeed618357133667c85e08f7236a8de");
+    hexAscii::hexStringToByteArray(toBeK1.asBytes(), "fbeed618357133667c85e08f7236a8de", 32U);
     aesBlock toBeK2;
-    hexAscii::hexStringToByteArray(toBeK2.asBytes(), "f7ddac306ae266ccf90bc11ee46d513b");
+    hexAscii::hexStringToByteArray(toBeK2.asBytes(), "f7ddac306ae266ccf90bc11ee46d513b", 32U);
 
     TEST_ASSERT_TRUE(toBeK1 == LoRaWAN::K1);
     TEST_ASSERT_TRUE(toBeK2 == LoRaWAN::K2);
@@ -184,7 +184,7 @@ void test_calculateMic() {
 
     static constexpr uint32_t clearText1Length{16};
     uint8_t clearText1[clearText1Length];
-    hexAscii::hexStringToByteArray(clearText1, "6bc1bee22e409f96e93d7e117393172a");        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
+    hexAscii::hexStringToByteArray(clearText1, "6bc1bee22e409f96e93d7e117393172a", 32U);        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
     LoRaWAN::clearRawMessage();
     memcpy(LoRaWAN::rawMessage, clearText1, clearText1Length);
     LoRaWAN::micOffset = clearText1Length;
@@ -192,7 +192,7 @@ void test_calculateMic() {
 
     static constexpr uint32_t clearText2Length{40};
     uint8_t clearText2[clearText2Length];
-    hexAscii::hexStringToByteArray(clearText2, "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411");        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
+    hexAscii::hexStringToByteArray(clearText2, "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411", 80U);        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
     LoRaWAN::clearRawMessage();
     memcpy(LoRaWAN::rawMessage, clearText2, clearText2Length);
     LoRaWAN::micOffset = clearText2Length;
@@ -200,7 +200,7 @@ void test_calculateMic() {
 
     static constexpr uint32_t clearText3Length{64};
     uint8_t clearText3[clearText3Length];
-    hexAscii::hexStringToByteArray(clearText3, "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710");        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
+    hexAscii::hexStringToByteArray(clearText3, "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710", 128U);        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
     LoRaWAN::clearRawMessage();
     memcpy(LoRaWAN::rawMessage, clearText3, clearText3Length);
     LoRaWAN::micOffset = clearText3Length;

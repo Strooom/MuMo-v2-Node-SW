@@ -233,7 +233,7 @@ bool display::isBusy() {
 void display::write( uint8_t* data, const uint32_t length) {
     selectChip(true);
 #ifndef generic
-    HAL_SPI_Transmit(&hspi2, data, length, 1000);        // TODO : get the HAL timeout stuff right
+    HAL_SPI_Transmit(&hspi2, data, static_cast<const uint16_t>(length), 1000);        // TODO : get the HAL timeout stuff right
 #endif
     selectChip(false);
 }

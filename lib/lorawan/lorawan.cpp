@@ -224,7 +224,7 @@ void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCount)
     rawMessage[12] = aFrameCount[2];
     rawMessage[13] = aFrameCount[3];
     rawMessage[14] = 0;
-    rawMessage[15] = macHeaderLength + frameHeaderLength + framePortLength + framePayloadLength;
+    rawMessage[15] = static_cast<uint8_t>(macHeaderLength + frameHeaderLength + framePortLength + framePayloadLength);
 }
 
 void LoRaWAN::padForMicCalculation(const uint32_t messageLength) {
@@ -236,15 +236,15 @@ void LoRaWAN::padForMicCalculation(const uint32_t messageLength) {
 }
 
 uint16_t LoRaWAN::receivedFramecount() {
-    return (static_cast<uint16_t>(rawMessage[frameCountOffset]) + (static_cast<uint16_t>(rawMessage[frameCountOffset + 1]) << 8));
+    return (static_cast<uint16_t>(rawMessage[frameCountOffset]) + (static_cast<uint16_t>(rawMessage[frameCountOffset + 1]) << 8U));
 }
 
 uint32_t LoRaWAN::receivedDeviceAddress() {
-    return (static_cast<uint32_t>(rawMessage[deviceAddressOffset]) + (static_cast<uint32_t>(rawMessage[deviceAddressOffset + 1]) << 8) + (static_cast<uint32_t>(rawMessage[deviceAddressOffset + 2]) << 16) + (static_cast<uint32_t>(rawMessage[deviceAddressOffset + 3]) << 24));
+    return (static_cast<uint32_t>(rawMessage[deviceAddressOffset]) + (static_cast<uint32_t>(rawMessage[deviceAddressOffset + 1]) << 8U) + (static_cast<uint32_t>(rawMessage[deviceAddressOffset + 2]) << 16U) + (static_cast<uint32_t>(rawMessage[deviceAddressOffset + 3]) << 24U));
 }
 
 uint32_t LoRaWAN::receivedMic() {
-    return (static_cast<uint32_t>(rawMessage[micOffset]) + (static_cast<uint32_t>(rawMessage[micOffset + 1]) << 8) + (static_cast<uint32_t>(rawMessage[micOffset + 2]) << 16) + (static_cast<uint32_t>(rawMessage[micOffset + 3]) << 24));
+    return (static_cast<uint32_t>(rawMessage[micOffset]) + (static_cast<uint32_t>(rawMessage[micOffset + 1]) << 8U) + (static_cast<uint32_t>(rawMessage[micOffset + 2]) << 16U) + (static_cast<uint32_t>(rawMessage[micOffset + 3]) << 24U));
 };
 
 #pragma endregion
@@ -273,7 +273,7 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
         theBlock[13] = downlinkFrameCount[3];           // MSByte
     }        //
     theBlock[14] = 0x00;              //
-    theBlock[15] = blockIndex;        // Blocks Ai are indexed from 1..k, where k is the number of blocks
+    theBlock[15] = static_cast<uint8_t>(blockIndex);        // Blocks Ai are indexed from 1..k, where k is the number of blocks
 }
 
 void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirection) {
@@ -454,9 +454,9 @@ void LoRaWAN::insertMic() {
 
 void LoRaWAN::insertMic(uint32_t aMic) {
     rawMessage[micOffset]     = aMic & 0x000000FF;                // LSByte
-    rawMessage[micOffset + 1] = (aMic & 0x0000FF00) >> 8;         //
-    rawMessage[micOffset + 2] = (aMic & 0x00FF0000) >> 16;        //
-    rawMessage[micOffset + 3] = (aMic & 0xFF000000) >> 24;        // MSByte
+    rawMessage[micOffset + 1] = (aMic & 0x0000FF00) >> 8U;         //
+    rawMessage[micOffset + 2] = (aMic & 0x00FF0000) >> 16U;        //
+    rawMessage[micOffset + 3] = (aMic & 0xFF000000) >> 24U;        // MSByte
 }
 
 #pragma endregion

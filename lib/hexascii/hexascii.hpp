@@ -8,11 +8,10 @@
 
 class hexAscii {
   public:
-    static void hexStringToByteArray(uint8_t *byteArrayOut, const char *hexStringIn);
+    static void hexStringToByteArray(uint8_t *byteArrayOut, const char *hexStringIn, const uint32_t stringInLength);
     static void byteArrayToHexString(char *hexStringOut, const uint8_t *byteArrayIn, const uint32_t binaryArrayInLength);
     static void uint64ToHexString(char *hexStringOut, const uint64_t dataIn);
 
-    static constexpr uint32_t maxStringLength{32};        // the longest thing we'll convert is an AES key, which is 32 characters when represented in hex
 #ifndef unitTesting
 
   private:
