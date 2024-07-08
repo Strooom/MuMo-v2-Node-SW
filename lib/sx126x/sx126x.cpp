@@ -111,8 +111,8 @@ void sx126x::goStandby(standbyMode theStandbyMode) {
 void sx126x::startTransmit(uint32_t timeOut) {
     constexpr uint8_t nmbrCommandParameters{3};
     uint8_t commandParameters[nmbrCommandParameters];
-    commandParameters[0] = static_cast<uint8_t>((timeOut >> 16) & 0xFF);
-    commandParameters[1] = static_cast<uint8_t>((timeOut >> 8) & 0xFF);
+    commandParameters[0] = static_cast<uint8_t>((timeOut >> 16U) & 0xFF);
+    commandParameters[1] = static_cast<uint8_t>((timeOut >> 8U) & 0xFF);
     commandParameters[2] = static_cast<uint8_t>(timeOut & 0xFF);
     executeSetCommand(command::setTx, commandParameters, nmbrCommandParameters);
 }
@@ -121,8 +121,8 @@ void sx126x::startReceive(uint32_t timeOut) {
     timeOut = 3840;        // TODO : make this a funtion of the DataRate.. currently it is fixed to 60 ms, which should be ok for DR5
     constexpr uint8_t nmbrCommandParameters{3};
     uint8_t commandParameters[nmbrCommandParameters];
-    commandParameters[0] = static_cast<uint8_t>((timeOut >> 16) & 0xFF);
-    commandParameters[1] = static_cast<uint8_t>((timeOut >> 8) & 0xFF);
+    commandParameters[0] = static_cast<uint8_t>((timeOut >> 16U) & 0xFF);
+    commandParameters[1] = static_cast<uint8_t>((timeOut >> 8U) & 0xFF);
     commandParameters[2] = static_cast<uint8_t>(timeOut & 0xFF);
     executeSetCommand(command::setRx, commandParameters, nmbrCommandParameters);
 }
@@ -131,10 +131,10 @@ void sx126x::setRfFrequency(uint32_t frequencyInHz) {
     constexpr uint8_t nmbrCommandParameters{4};
     uint32_t frequencyRegisterValue = calculateFrequencyRegisterValue(frequencyInHz);
     uint8_t commandParameters[nmbrCommandParameters];
-    commandParameters[0] = static_cast<uint8_t>((frequencyRegisterValue >> 24) & 0xFF);        //
-    commandParameters[1] = static_cast<uint8_t>((frequencyRegisterValue >> 16) & 0xFF);        //
-    commandParameters[2] = static_cast<uint8_t>((frequencyRegisterValue >> 8) & 0xFF);         //
-    commandParameters[3] = static_cast<uint8_t>((frequencyRegisterValue) & 0xFF);              //
+    commandParameters[0] = static_cast<uint8_t>((frequencyRegisterValue >> 24U) & 0xFF);        //
+    commandParameters[1] = static_cast<uint8_t>((frequencyRegisterValue >> 16U) & 0xFF);        //
+    commandParameters[2] = static_cast<uint8_t>((frequencyRegisterValue >> 8U) & 0xFF);         //
+    commandParameters[3] = static_cast<uint8_t>(frequencyRegisterValue & 0xFF);              //
     executeSetCommand(command::setRfFRequency, commandParameters, nmbrCommandParameters);
 }
 
@@ -177,7 +177,7 @@ void sx126x::setPacketParametersReceive() {
 
 uint32_t sx126x::calculateFrequencyRegisterValue(uint32_t rfFrequency) {
     uint64_t tmpResult;
-    tmpResult = static_cast<uint64_t>(rfFrequency) << 25;
+    tmpResult = static_cast<uint64_t>(rfFrequency) << 25U;
     tmpResult = tmpResult / TCXOfrequencyInHz;
     return static_cast<uint32_t>(tmpResult);
 }
@@ -294,7 +294,7 @@ void sx126x::setRfSwitch(rfSwitchState newState) {
 
 void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {
 #ifndef generic
-    HAL_SUBGHZ_WriteBuffer(&hsubghz, 0U, payload, payloadLength);        // copy the raw LoRa message into the transmitBuffer of the SX126
+    HAL_SUBGHZ_WriteBuffer(&hsubghz, 0U, payload, static_cast<uint16_t>(payloadLength));        // copy the raw LoRa message into the transmitBuffer of the SX126
 #else
     (void)memcpy(mockSX126xDataBuffer, payload, payloadLength);
 #endif
@@ -302,7 +302,7 @@ void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {
 
 void sx126x::readBuffer(uint8_t* payload, uint32_t payloadLength) {
 #ifndef generic
-    HAL_SUBGHZ_ReadBuffer(&hsubghz, 0U, payload, payloadLength);        // read the raw LoRa message which has been received from the SX126 into the receiveBuffer of the LoRaWAN stack
+    HAL_SUBGHZ_ReadBuffer(&hsubghz, 0U, payload, static_cast<uint16_t>(payloadLength));        // read the raw LoRa message which has been received from the SX126 into the receiveBuffer of the LoRaWAN stack
 #else
     (void)memcpy(payload, mockSX126xDataBuffer, payloadLength);
 #endif

@@ -4,7 +4,6 @@
 // ######################################################################################
 
 #include <display.hpp>
-#include <logging.hpp>
 #include <cstring>
 #include <spi.hpp>
 
@@ -288,12 +287,4 @@ void display::update() {
     waitWhileBusy();
     goSleep();
     spi::goSleep();
-}
-
-void display::dump() {
-    if (display::isPresent()) {
-        logging::snprintf("Display present\n");
-    } else {
-        logging::snprintf("Display not present\n");
-    }
 }

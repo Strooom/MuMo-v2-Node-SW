@@ -1,8 +1,6 @@
 #include <ux.hpp>
-#include "graphics.hpp"
-#include "display.hpp"
-
-// Initialize the static variables
+#include <graphics.hpp>
+#include <display.hpp>
 
 void graphics::drawPixel(const uint32_t x, const uint32_t y, const color theColor) {
     if (theColor == color::black) {
@@ -27,7 +25,6 @@ void graphics::drawVerticalLine(uint32_t x, uint32_t yStart, uint32_t yEnd, cons
 }
 
 void graphics::drawLine(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_t yEnd, const color theColor) {
-    // Catch vertical and horizontal lines and send them to the dedicated functions
     if (xStart == xEnd) {
         drawVerticalLine(xStart, yStart, yEnd, theColor);
         return;
@@ -36,6 +33,7 @@ void graphics::drawLine(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_
         drawHorizontalLine(xStart, xEnd, yStart, theColor);
         return;
     }
+
     // Hello Bresenham, it's been 35 years since I first saw you ;-)
 
     int dx;
@@ -78,7 +76,7 @@ void graphics::drawLine(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_
 }
 
 void graphics::drawCircle(const uint32_t x, const uint32_t y, const uint32_t radius, const color theColor) {
-    /* Bresenham algorithm */
+
     int x_pos = -1 * static_cast<int32_t>(radius);
     int y_pos = 0;
     int err   = 2 - (2 * static_cast<int32_t>(radius));
@@ -221,5 +219,15 @@ void graphics::sort(uint32_t &c1, uint32_t &c2) {
         uint32_t temp = c1;
         c1            = c2;
         c2            = temp;
+    }
+}
+
+void graphics::drawQrcode(const uint32_t xStart, const uint32_t yStart, QRCode &theQrCode) {
+    for (uint8_t y = 0; y < theQrCode.size; y++) {
+        for (uint8_t x = 0; x < theQrCode.size; x++) {
+            if (qrcode_getModule(&theQrCode, x, y)) {
+                graphics::drawFilledRectangle(xStart + (x * ux::qrCodeScale), yStart + (y * ux::qrCodeScale), ux::qrCodeOffset + ((x + 1) * ux::qrCodeScale), ux::qrCodeOffset + ((y + 1) * ux::qrCodeScale), graphics::color::black);
+            }
+        }
     }
 }

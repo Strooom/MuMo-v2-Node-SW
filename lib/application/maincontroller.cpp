@@ -54,7 +54,7 @@ uint32_t mainController::requestCounter{0};
 uint32_t mainController::answerCounter{0};
 uint32_t mainController::deviceIndex[screen::numberOfLines]{2, 2, 3};
 uint32_t mainController::channelIndex[screen::numberOfLines]{0, 1, 0};
-char mainController::name[mainController::maxNameLength + 1]{0};
+
 
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -88,99 +88,114 @@ void mainController::handleEvents() {
 
         switch (state) {
             case mainState::boot:
-                switch (theEvent) {
-                    case applicationEvent::lowPowerTimerExpired:
-                        lptim::stop();
-                        break;
-
-                    case applicationEvent::realTimeClockTick:
-                        if (!lptim::isRunning()) {
-                            showLoRaWanConfig();
-                            requestCounter++;
-                            LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
-                            LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
-                            LoRaWAN::sendUplink(0, nullptr, 0);
-                            goTo(mainState::networkCheck);
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
+                handleEventsStateBoot(theEvent);
                 break;
 
             case mainState::networkCheck:
-                switch (theEvent) {
-                    case applicationEvent::downlinkMacCommandReceived:
-                        answerCounter++;
-                        showLoRaWanStatus();
-                        if (answerCounter >= minNmbrAnswers) {
-                            goTo(mainState::idle);
-                        }
-                        break;
-
-                    case applicationEvent::realTimeClockTick:
-                        requestCounter++;
-                        miniAdr();
-                        showLoRaWanStatus();
-                        if (requestCounter >= maxNmbrRequests) {
-                            screen::setType(screenType::qrcode);
-                            goTo(mainState::networkError);
-                        } else {
-                            LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
-                            LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
-                            LoRaWAN::sendUplink(0, nullptr, 0);
-                        }
-                        break;
-
-                    case applicationEvent::lowPowerTimerExpired:
-                    case applicationEvent::sx126xTxComplete:
-                    case applicationEvent::sx126xRxComplete:
-                    case applicationEvent::sx126xTimeout:
-                        LoRaWAN::handleEvents(theEvent);
-                        break;
-
-                    default:
-                        break;
-                }
+                handleEventsStateNetworkCheck(theEvent);
                 break;
 
             case mainState::idle:
-                switch (theEvent) {
-                    case applicationEvent::realTimeClockTick:
-                        if (realTimeClock::needsSync()) {
-                            LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
-                        }
-                        if (sensorDeviceCollection::needsSampling()) {
-                            sensorDeviceCollection::startSampling();
-                            goTo(mainState::measuring);
-                        } else {
-                            sensorDeviceCollection::updateCounters();
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
+                handleEventsStateIdle(theEvent);
                 break;
 
             case mainState::networking:
-                switch (theEvent) {
-                    case applicationEvent::lowPowerTimerExpired:
-                    case applicationEvent::sx126xTxComplete:
-                    case applicationEvent::sx126xRxComplete:
-                    case applicationEvent::sx126xTimeout:
-                        LoRaWAN::handleEvents(theEvent);
-                        break;
-
-                    default:
-                        break;
-                }
+                handleEventsStateNetworking(theEvent);
                 break;
 
             default:
                 break;
         }
+    }
+}
+
+void mainController::handleEventsStateBoot(applicationEvent theEvent) {
+    switch (theEvent) {
+        case applicationEvent::lowPowerTimerExpired:
+            lptim::stop();
+            break;
+
+        case applicationEvent::realTimeClockTick:
+            if (!lptim::isRunning()) {
+                showLoRaWanConfig();
+                requestCounter++;
+                LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
+                LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
+                LoRaWAN::sendUplink(0, nullptr, 0);
+                goTo(mainState::networkCheck);
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
+void mainController::handleEventsStateNetworkCheck(applicationEvent theEvent) {
+    switch (theEvent) {
+        case applicationEvent::downlinkMacCommandReceived:
+            answerCounter++;
+            showLoRaWanStatus();
+            if (answerCounter >= minNmbrAnswers) {
+                goTo(mainState::idle);
+            }
+            break;
+
+        case applicationEvent::realTimeClockTick:
+            requestCounter++;
+            miniAdr();
+            showLoRaWanStatus();
+            if (requestCounter >= maxNmbrRequests) {
+                goTo(mainState::networkError);
+            } else {
+                LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
+                LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
+                LoRaWAN::sendUplink(0, nullptr, 0);
+            }
+            break;
+
+        case applicationEvent::lowPowerTimerExpired:
+        case applicationEvent::sx126xTxComplete:
+        case applicationEvent::sx126xRxComplete:
+        case applicationEvent::sx126xTimeout:
+            LoRaWAN::handleEvents(theEvent);
+            break;
+
+        default:
+            break;
+    }
+}
+
+void mainController::handleEventsStateIdle(applicationEvent theEvent) {
+    switch (theEvent) {
+        case applicationEvent::realTimeClockTick:
+            if (realTimeClock::needsSync()) {
+                LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
+            }
+            if (sensorDeviceCollection::needsSampling()) {
+                sensorDeviceCollection::startSampling();
+                goTo(mainState::measuring);
+            } else {
+                sensorDeviceCollection::updateCounters();
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
+void mainController::handleEventsStateNetworking(applicationEvent theEvent) {
+    switch (theEvent) {
+        case applicationEvent::lowPowerTimerExpired:
+        case applicationEvent::sx126xTxComplete:
+        case applicationEvent::sx126xRxComplete:
+        case applicationEvent::sx126xTimeout:
+            LoRaWAN::handleEvents(theEvent);
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -349,8 +364,7 @@ void mainController::showDeviceInfo() {
     screen::setText(1, "CC 4.0 BY-NC-SA");
     hexAscii::uint64ToHexString(tmpString, uniqueId::get());
     screen::setText(2, tmpString);
-    screen::setText(3, name);
-    screen::setText(4, toString(battery::type));
+    screen::setText(3, toString(battery::type));
 
     // TODO : this does not work so well as lineindex is increased even if the sensor is not present, resutling in empty lines
 
