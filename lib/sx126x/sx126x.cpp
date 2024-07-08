@@ -19,18 +19,20 @@ uint8_t mockSX126xCommandData[256][8];
 #include <cstring>
 #endif
 
-powerVersion sx126x::thePowerVersion{powerVersion::unknown};
+powerVersion sx126x::thePowerVersion{powerVersion::nmbrPowerVersions};
 
-void sx126x::initialize() {
-    if (thePowerVersion == powerVersion::unknown) {
-        uint8_t typeIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType);
-        if (typeIndex >= static_cast<uint8_t>(powerVersion::nmbrPowerVersions)) {
-            logging::snprintf(logging::source::error, "invalid settingsCollection::settingIndex::mcuType : %d\n", typeIndex);
-            thePowerVersion = powerVersion::highPower;
-        }
-        thePowerVersion = static_cast<powerVersion>(typeIndex);
+void sx126x::setType(uint8_t index) {
+    if (index < static_cast<uint8_t>(powerVersion::nmbrPowerVersions)) {
+        thePowerVersion = static_cast<powerVersion>(index);
     }
+}
 
+bool sx126x::isValidType() {
+    return (thePowerVersion < powerVersion::nmbrPowerVersions);
+}
+
+void sx126x::initialize(powerVersion isPowerVersion) {
+    thePowerVersion = isPowerVersion;
     initializeInterface();
     initializeRadio();
     goSleep();
@@ -134,7 +136,7 @@ void sx126x::setRfFrequency(uint32_t frequencyInHz) {
     commandParameters[0] = static_cast<uint8_t>((frequencyRegisterValue >> 24U) & 0xFF);        //
     commandParameters[1] = static_cast<uint8_t>((frequencyRegisterValue >> 16U) & 0xFF);        //
     commandParameters[2] = static_cast<uint8_t>((frequencyRegisterValue >> 8U) & 0xFF);         //
-    commandParameters[3] = static_cast<uint8_t>(frequencyRegisterValue & 0xFF);              //
+    commandParameters[3] = static_cast<uint8_t>(frequencyRegisterValue & 0xFF);                 //
     executeSetCommand(command::setRfFRequency, commandParameters, nmbrCommandParameters);
 }
 

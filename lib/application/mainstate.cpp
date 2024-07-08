@@ -25,8 +25,8 @@ const char *toString(mainState aState) {
         case mainState::networking:
             return "networking";
             break;
-        case mainState::networkError:
-            return "networkError";
+        case mainState::fatalError:
+            return "fatalError";
             break;
         case mainState::test:
             return "test";

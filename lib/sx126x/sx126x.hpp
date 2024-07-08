@@ -23,7 +23,10 @@ enum class rfSwitchState : uint8_t {
 class sx126x {
   public:
     sx126x() = delete;
-    static void initialize();
+    static void setType(uint8_t index);
+    static bool isValidType();
+
+    static void initialize(powerVersion isPowerVersion);
     static uint8_t getStatus();
     static void configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t *payload, uint32_t payloadLength);
     static void configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequency);

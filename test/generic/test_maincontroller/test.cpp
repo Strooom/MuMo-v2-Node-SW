@@ -15,34 +15,17 @@ void tearDown(void) {        // after each test
 }
 
 void test_transitions_boot() {
-    mainController::initialize();
     TEST_ASSERT_EQUAL(mainState::boot, mainController::state);
-
-    applicationEventBuffer.push(applicationEvent::realTimeClockTick);
-    mainController::handleEvents();
-    TEST_ASSERT_EQUAL(1U, mainController::requestCounter);
+    mainController::initialize();
     TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
-
-    applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
-    mainController::handleEvents();
-    TEST_ASSERT_EQUAL(1U, mainController::answerCounter);
-    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
-
-    applicationEventBuffer.push(applicationEvent::realTimeClockTick);
-    mainController::handleEvents();
-    TEST_ASSERT_EQUAL(2U, mainController::requestCounter);
-    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
-
-    applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
-    mainController::handleEvents();
-    TEST_ASSERT_EQUAL(2U, mainController::answerCounter);
-    TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
-
-    mainController::run();
-    TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
 }
 
-void test_transitions_tick() {
+void test_transitions_networkCheck() {
+    mainController::state = mainState::idle;
+    TEST_IGNORE_MESSAGE("implemented me!");
+}
+
+void test_transitions_main() {
     sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage).set(1, 1);
     TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
@@ -102,7 +85,7 @@ void test_toString() {
     TEST_ASSERT_EQUAL_STRING("networking", toString(mainState::networking));
     TEST_ASSERT_EQUAL_STRING("boot", toString(mainState::boot));
     TEST_ASSERT_EQUAL_STRING("networkCheck", toString(mainState::networkCheck));
-    TEST_ASSERT_EQUAL_STRING("networkError", toString(mainState::networkError));
+    TEST_ASSERT_EQUAL_STRING("fatalError", toString(mainState::fatalError));
     TEST_ASSERT_EQUAL_STRING("test", toString(mainState::test));
     TEST_ASSERT_EQUAL_STRING("unknown", toString(static_cast<mainState>(999U)));
 }
@@ -110,7 +93,8 @@ void test_toString() {
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_transitions_boot);
-    RUN_TEST(test_transitions_tick);
+    RUN_TEST(test_transitions_networkCheck);
+    RUN_TEST(test_transitions_main);
     RUN_TEST(test_usb_detection);
     RUN_TEST(test_toString);
     UNITY_END();

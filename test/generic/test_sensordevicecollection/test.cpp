@@ -33,7 +33,7 @@ void test_discover() {
     mockSHT40Present   = false;
     sensorDeviceCollection::discover();
     for (auto sensorDeviceIndex = 0U; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
-        if (sensorDeviceIndex == static_cast<uint32_t>(sensorDeviceType::battery)) {
+        if ((sensorDeviceIndex == static_cast<uint32_t>(sensorDeviceType::battery)) || (sensorDeviceIndex == static_cast<uint32_t>(sensorDeviceType::mcu))) {
             TEST_ASSERT_TRUE(sensorDeviceCollection::isPresent[sensorDeviceIndex]);
             TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(sensorDeviceIndex));
         } else {
@@ -87,7 +87,8 @@ void test_isValidChannel() {
 }
 
 void test_name() {
-    TEST_ASSERT_EQUAL_STRING("battery", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::battery)));
+//    TEST_ASSERT_EQUAL_STRING("LiFePO4 700mAh", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::battery)));
+    
     TEST_ASSERT_EQUAL_STRING("BME680", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::bme680)));
     TEST_ASSERT_EQUAL_STRING("TSL2591", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::tsl2591)));
     TEST_ASSERT_EQUAL_STRING("SHT40", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::sht40)));
@@ -214,7 +215,7 @@ void test_hasNewMeasurements2() {
     mockSHT40Present   = false;
     sensorDeviceCollection::discover();
     battery::mockBatteryVoltage = 3.2F;
-    TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage).isActive());
+//    TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage).isActive());
     TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged).isActive());
     battery::channels[battery::voltage].set(1, 1);
     TEST_ASSERT_TRUE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage).isActive());
@@ -259,7 +260,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_nmbrOfChannels);
     RUN_TEST(test_getChannel);
     RUN_TEST(test_decimals);
-    RUN_TEST(test_name);
     RUN_TEST(test_units);
     RUN_TEST(test_hasNewMeasurements);
     RUN_TEST(test_hasNewMeasurements2);

@@ -13,7 +13,7 @@ enum class mainState : uint32_t {
     measuring,
     logging,
     networking,
-    networkError,
+    fatalError,
     test
 };
 

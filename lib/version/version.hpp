@@ -12,6 +12,7 @@ class version {
     static buildEnvironment getBuildEnvironment() { return theBuildEnvironment; }
     static void initialize();
     static const char* getIsVersionAsString() { return isVersionString; }
+    static void dump();
 
 #ifndef unitTesting
   private:

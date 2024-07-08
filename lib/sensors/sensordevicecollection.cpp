@@ -1,5 +1,6 @@
 #include <sensordevicecollection.hpp>
 #include <logging.hpp>
+#include <sx126x.hpp>
 #include <battery.hpp>
 #include <bme680.hpp>
 #include <sht40.hpp>
@@ -12,8 +13,8 @@ bool sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::n
 sensorChannel sensorDeviceCollection::dummy = {0, "", ""};
 
 void sensorDeviceCollection::discover() {
+    isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)] = true;
     isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
-    battery::initalize();
 
     isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)] = bme680::isPresent();
     if (isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)]) {
@@ -29,7 +30,6 @@ void sensorDeviceCollection::discover() {
     if (isPresent[static_cast<uint32_t>(sensorDeviceType::tsl2591)]) {
         tsl2591::initialize();
     }
-
     // Add more types of sensors here
 }
 
@@ -202,8 +202,10 @@ bool sensorDeviceCollection::hasNewMeasurement(uint32_t deviceIndex, uint32_t ch
 
 const char* sensorDeviceCollection::name(uint32_t index) {
     switch (static_cast<sensorDeviceType>(index)) {
+        case sensorDeviceType::mcu:
+            return toString(sx126x::thePowerVersion);
         case sensorDeviceType::battery:
-            return "battery";
+            return toString(battery::type);
         case sensorDeviceType::bme680:
             return "BME680";
         case sensorDeviceType::sht40:

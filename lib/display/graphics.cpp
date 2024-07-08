@@ -226,7 +226,7 @@ void graphics::drawQrcode(const uint32_t xStart, const uint32_t yStart, QRCode &
     for (uint8_t y = 0; y < theQrCode.size; y++) {
         for (uint8_t x = 0; x < theQrCode.size; x++) {
             if (qrcode_getModule(&theQrCode, x, y)) {
-                graphics::drawFilledRectangle(xStart + (x * ux::qrCodeScale), yStart + (y * ux::qrCodeScale), ux::qrCodeOffset + ((x + 1) * ux::qrCodeScale), ux::qrCodeOffset + ((y + 1) * ux::qrCodeScale), graphics::color::black);
+                graphics::drawFilledRectangle(xStart + (x * ux::qrCodeScale), yStart + (y * ux::qrCodeScale), xStart + ((x + 1) * ux::qrCodeScale), yStart + ((y + 1) * ux::qrCodeScale), graphics::color::black);
             }
         }
     }

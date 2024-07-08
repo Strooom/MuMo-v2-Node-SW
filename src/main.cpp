@@ -142,54 +142,13 @@ int main(void) {
     MX_RNG_Init();
     MX_LPTIM1_Init();
     /* USER CODE BEGIN 2 */
-
-    logging::initialize();
-    logging::enable(logging::source::applicationEvents);
-
-    version::initialize();
-    uniqueId::dump();
-    realTimeClock::initialize();
-
-    spi::wakeUp();
-    display::detectPresence();
-    spi::goSleep();
-
-    i2c::wakeUp();
-    if (nonVolatileStorage::isPresent()) {
-            char name[screen::maxNameLength + 1]{0};
-        settingsCollection::readByteArray(reinterpret_cast<uint8_t*>(name), settingsCollection::settingIndex::name);
-        screen::setName(name);
-
-        if (!settingsCollection::isInitialized()) {
-            settingsCollection::initializeOnce();
-        }
-    }
-    sensorDeviceCollection::discover();
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 3, 720);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged, 3, 720);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 30);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 30);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 2, 10);
-    i2c::goSleep();
-
-    gpio::enableGpio(gpio::group::rfControl);
-    LoRaWAN::initialize();
-    measurementCollection::initialize();
-
-    mainController::showDeviceInfo();
-    lptim::start(5 * 4096);
-
-    // measurementCollection::dumpRaw(0, 128);
-    // measurementCollection::dumpAll();
-    // LoRaWAN::dumpConfig();
-    // LoRaWAN::dumpState();
-    // LoRaWAN::dumpChannels();
+    mainController ::initialize();
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
-    while (1) {
+    while (true) {
         mainController ::handleEvents();
         mainController ::run();
         /* USER CODE END WHILE */

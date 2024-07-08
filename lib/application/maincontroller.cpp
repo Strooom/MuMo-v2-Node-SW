@@ -8,12 +8,16 @@
 #include <bme680.hpp>
 #include <buildinfo.hpp>
 #include <circularbuffer.hpp>
+#include <cli.hpp>
 #include <display.hpp>
+#include <float.hpp>
 #include <gpio.hpp>
 #include <graphics.hpp>
 #include <hexascii.hpp>
+#include <i2c.hpp>
 #include <logging.hpp>
 #include <lorawan.hpp>
+#include <lptim.hpp>
 #include <maccommand.hpp>
 #include <maincontroller.hpp>
 #include <measurementcollection.hpp>
@@ -22,15 +26,14 @@
 #include <screen.hpp>
 #include <sensordevicecollection.hpp>
 #include <settingscollection.hpp>
+#include <spi.hpp>
 #include <stdio.h>        // snprintf
 #include <tsl2591.hpp>
+#include <uart.hpp>
 #include <uniqueid.hpp>
 #include <version.hpp>
-#include <lptim.hpp>
-#include <cli.hpp>
-#include <float.hpp>
-#include <inttypes.h>        // for PRIu32
-#include <uart.hpp>
+#include <powerversion.hpp>
+#include <sx126x.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -52,33 +55,130 @@ void MX_USART2_UART_Init(void);
 mainState mainController::state{mainState::boot};
 uint32_t mainController::requestCounter{0};
 uint32_t mainController::answerCounter{0};
-uint32_t mainController::deviceIndex[screen::numberOfLines]{2, 2, 3};
-uint32_t mainController::channelIndex[screen::numberOfLines]{0, 1, 0};
-
+const uint32_t mainController::deviceIndex[screen::nmbrOfMeasurementTextLines]{2, 2, 3};
+const uint32_t mainController::channelIndex[screen::nmbrOfMeasurementTextLines]{0, 1, 0};
 
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
-    if (nonVolatileStorage::isPresent()) {
-        if (!settingsCollection::isInitialized()) {
-            settingsCollection::initializeOnce();
-        }
+    logging::initialize();
+    realTimeClock::initialize();
+
+    spi::wakeUp();
+    display::detectPresence();
+    screen::setType(screenType::logo);
+    screen::update();
+    screen::waitForUserToRead();
+
+    version::initialize();
+    version::dump();
+    char tmpString[screen::maxConsoleTextLength + 1];
+    screen::clearAllTexts();
+    snprintf(tmpString, screen::maxConsoleTextLength, "MuMo %s", version::getIsVersionAsString());
+    screen::setText(0, tmpString);
+    screen::setText(1, "CC 4.0 BY-NC-SA");
+    screen::setText(2, buildInfo::buildTimeStamp);
+    screen::setType(screenType::version);
+    screen::update();
+    screen::waitForUserToRead();
+
+    uniqueId::dump();
+    screen::setType(screenType::uid);
+    screen::update();
+    screen::waitForUserToRead();
+
+    screen::clearAllTexts();
+    screen::setType(screenType::hwConfig);
+
+    i2c::wakeUp();
+    if (!nonVolatileStorage::isPresent()) {
+        logging::snprintf(logging::source::criticalError, "no EEPROM\n");
+        screen::setText(0, "no EEPROM");
+        screen::update();
+        state = mainState::fatalError;
+        spi::goSleep();
+        i2c::goSleep();
+        return;
     }
 
-    sensorDeviceCollection::discover();
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 4);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 4);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 4);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 4);
+    uint8_t powerVersionIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType);
+    sx126x::setType(powerVersionIndex);
+    if (!sx126x::isValidType()) {
+        logging::snprintf(logging::source::criticalError, "no RadioType\n");
+        screen::setText(1, "no RadioType");
+        screen::update();
+        state = mainState::fatalError;
+        spi::goSleep();
+        i2c::goSleep();
+        return;
+    }
+    sx126x::initialize(static_cast<powerVersion>(powerVersionIndex));
 
+    uint8_t batteryTypeIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType);
+    battery::setType(batteryTypeIndex);
+    if (!battery::isValidType()) {
+        logging::snprintf(logging::source::criticalError, "no BatteryType\n");
+        state = mainState::fatalError;
+        spi::goSleep();
+        i2c::goSleep();
+        return;
+    }
+    battery::initialize(static_cast<batteryType>(batteryTypeIndex));
+
+    sensorDeviceCollection::discover();
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 3, 720);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged, 3, 720);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 30);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 30);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 2, 10);
+    // TODO : more sensor settings to be read from NVS
+
+    uint32_t lineIndex{0};
+    for (uint32_t sensorDeviceIndex = 0; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
+        if (sensorDeviceCollection::isValid(sensorDeviceIndex)) {
+            screen::setText(lineIndex, sensorDeviceCollection::name(sensorDeviceIndex));
+            lineIndex++;
+        }
+    }
+    screen::update();
+    screen::waitForUserToRead();
+
+    screen::clearAllTexts();
+    screen::setType(screenType::measurements);
+    measurementCollection::initialize();
+    measurementCollection::findMeasurementsInEeprom();
+    screen::setText(0, "Measurements");
+    screen::update();
+    screen::waitForUserToRead();
+
+    screen::clearAllTexts();
+    screen::setType(screenType::loraConfig);
+    char name[screen::maxNodeNameLength + 1]{0};
+    settingsCollection::readByteArray(reinterpret_cast<uint8_t*>(name), settingsCollection::settingIndex::name);
+    screen::setName(name);
     gpio::enableGpio(gpio::group::rfControl);
     LoRaWAN::initialize();
+    screen::setText(0, "LoRaWAN");
 
-    gpio::enableGpio(gpio::group::spiDisplay);
-    showDeviceInfo();
-    measurementCollection::initialize();
+    uint16_t devAddrEnd        = static_cast<uint16_t>(LoRaWAN::DevAddr.asUint8[0] + (LoRaWAN::DevAddr.asUint8[1] << 8U));
+    uint16_t applicationKeyEnd = static_cast<uint16_t>(LoRaWAN::applicationKey.asBytes()[15] + (LoRaWAN::applicationKey.asBytes()[14] << 8U));
+    uint16_t networkKeyEnd     = static_cast<uint16_t>(LoRaWAN::networkKey.asBytes()[15] + (LoRaWAN::networkKey.asBytes()[14] << 8U));
+    snprintf(tmpString, screen::maxConsoleTextLength, "%04X %04X %04X", devAddrEnd, applicationKeyEnd, networkKeyEnd);
+    screen::setText(1, tmpString);
 
-    // measurementCollection::findMeasurementsInEeprom();
+    snprintf(tmpString, screen::maxConsoleTextLength, "DataRate : %u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex));
+    screen::setText(2, tmpString);
+    snprintf(tmpString, screen::maxConsoleTextLength, "rx1Delay : %u", static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
+    screen::setText(3, tmpString);
+
+    screen::update();
+    screen::waitForUserToRead();
+
+    applicationEventBuffer.initialize();        // clear RTCticks which may already have been generated
+    state = mainState::networkCheck;
+
+    spi::goSleep();
+    i2c::goSleep();
 }
 
 void mainController::handleEvents() {
@@ -87,10 +187,6 @@ void mainController::handleEvents() {
         logging::snprintf(logging::source::applicationEvents, "%s[%u] in %s[%u]\n", toString(theEvent), static_cast<uint8_t>(theEvent), toString(state), static_cast<uint32_t>(state));
 
         switch (state) {
-            case mainState::boot:
-                handleEventsStateBoot(theEvent);
-                break;
-
             case mainState::networkCheck:
                 handleEventsStateNetworkCheck(theEvent);
                 break;
@@ -109,28 +205,6 @@ void mainController::handleEvents() {
     }
 }
 
-void mainController::handleEventsStateBoot(applicationEvent theEvent) {
-    switch (theEvent) {
-        case applicationEvent::lowPowerTimerExpired:
-            lptim::stop();
-            break;
-
-        case applicationEvent::realTimeClockTick:
-            if (!lptim::isRunning()) {
-                showLoRaWanConfig();
-                requestCounter++;
-                LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
-                LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
-                LoRaWAN::sendUplink(0, nullptr, 0);
-                goTo(mainState::networkCheck);
-            }
-            break;
-
-        default:
-            break;
-    }
-}
-
 void mainController::handleEventsStateNetworkCheck(applicationEvent theEvent) {
     switch (theEvent) {
         case applicationEvent::downlinkMacCommandReceived:
@@ -146,7 +220,7 @@ void mainController::handleEventsStateNetworkCheck(applicationEvent theEvent) {
             miniAdr();
             showLoRaWanStatus();
             if (requestCounter >= maxNmbrRequests) {
-                goTo(mainState::networkError);
+                goTo(mainState::fatalError);
             } else {
                 LoRaWAN::appendMacCommand(macCommand::linkCheckRequest);
                 LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
@@ -240,16 +314,12 @@ void mainController::runCli() {
 }
 
 void mainController::runStateMachine() {
-    runUsbPowerDetection();
-    runDisplayUpdate();
-    runCli();
-
     switch (state) {
         case mainState::boot:
             break;
 
         case mainState::idle:
-        case mainState::networkError: {
+        case mainState::fatalError: {
             if (power::hasUsbPower()) {
                 cli::run();
             } else {
@@ -280,9 +350,7 @@ void mainController::runStateMachine() {
 
                 uint32_t payloadLength        = measurementCollection::nmbrOfBytesToTransmit();
                 const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
-#ifndef noTransmit
                 LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
-#endif
                 measurementCollection::setTransmitted(0, payloadLength);        // TODO : get correct frame counter *before* call to sendUplink
                 goTo(mainState::networking);
             } else {
@@ -292,7 +360,7 @@ void mainController::runStateMachine() {
 
         case mainState::networking:
             if (LoRaWAN::isIdle()) {
-                showMeasurements();
+                showMain();
                 goTo(mainState::idle);
             }
             break;
@@ -356,67 +424,35 @@ void mainController::sleep() {
     }
 }
 
-void mainController::showDeviceInfo() {
-    char tmpString[screen::maxTextLength2 + 1];
-    screen::clearAllTexts();
-    snprintf(tmpString, screen::maxTextLength2, "MuMo %s", version::getIsVersionAsString());
-    screen::setText(0, tmpString);
-    screen::setText(1, "CC 4.0 BY-NC-SA");
-    hexAscii::uint64ToHexString(tmpString, uniqueId::get());
-    screen::setText(2, tmpString);
-    screen::setText(3, toString(battery::type));
-
-    // TODO : this does not work so well as lineindex is increased even if the sensor is not present, resutling in empty lines
-
-    for (uint32_t sensorDeviceIndex = 2; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
-        if (sensorDeviceCollection::isValid(sensorDeviceIndex)) {
-            screen::setText(3U + sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
-        }
-    }
-}
-
-void mainController::showLoRaWanConfig() {
-    char tmpString[screen::maxTextLength2 + 1];
-    screen::clearAllTexts();
-    uint16_t devAddrEnd        = static_cast<uint16_t>(LoRaWAN::DevAddr.asUint8[0] + (LoRaWAN::DevAddr.asUint8[1] << 8U));
-    uint16_t applicationKeyEnd = static_cast<uint16_t>(LoRaWAN::applicationKey.asBytes()[15] + (LoRaWAN::applicationKey.asBytes()[14] << 8U));
-    uint16_t networkKeyEnd     = static_cast<uint16_t>(LoRaWAN::networkKey.asBytes()[15] + (LoRaWAN::networkKey.asBytes()[14] << 8U));
-    snprintf(tmpString, screen::maxTextLength2, "%04X %04X %04X", devAddrEnd, applicationKeyEnd, networkKeyEnd);
-    screen::setText(0, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "DataRate : %u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex));
-    screen::setText(2, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "rx1Delay : %u", static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
-    screen::setText(3, tmpString);
-}
-
 void mainController::showLoRaWanStatus() {
-    char tmpString[screen::maxTextLength2 + 1];
+    char tmpString[screen::maxConsoleTextLength + 1];
+    screen::setType(screenType::loraStatus);
     screen::clearAllTexts();
-    snprintf(tmpString, screen::maxTextLength2, "requests %u", static_cast<uint8_t>(requestCounter));
+    snprintf(tmpString, screen::maxConsoleTextLength, "requests %u", static_cast<uint8_t>(requestCounter));
     screen::setText(0, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "answers %u", static_cast<uint8_t>(answerCounter));
+    snprintf(tmpString, screen::maxConsoleTextLength, "answers %u", static_cast<uint8_t>(answerCounter));
     screen::setText(1, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "DataRate : %u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex));
+    snprintf(tmpString, screen::maxConsoleTextLength, "DataRate : %u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex));
     screen::setText(2, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "rx1Delay : %u", static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
+    snprintf(tmpString, screen::maxConsoleTextLength, "rx1Delay : %u", static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
     screen::setText(3, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "Margin : %u", static_cast<uint8_t>(LoRaWAN::margin));
+    snprintf(tmpString, screen::maxConsoleTextLength, "Margin : %u", static_cast<uint8_t>(LoRaWAN::margin));
     screen::setText(4, tmpString);
-    snprintf(tmpString, screen::maxTextLength2, "Gateways : %u", static_cast<uint8_t>(LoRaWAN::gatewayCount));
+    snprintf(tmpString, screen::maxConsoleTextLength, "Gateways : %u", static_cast<uint8_t>(LoRaWAN::gatewayCount));
     screen::setText(5, tmpString);
     time_t localTime = realTimeClock::get();
     screen::setText(6, ctime(&localTime));
 }
 
-void mainController::showMeasurements() {
-    for (uint32_t lineIndex = 0; lineIndex < screen::numberOfLines; lineIndex++) {
+void mainController::showMain() {
+    for (uint32_t lineIndex = 0; lineIndex < screen::nmbrOfMeasurementTextLines; lineIndex++) {
         float value       = sensorDeviceCollection::value(deviceIndex[lineIndex], channelIndex[lineIndex]);
         uint32_t decimals = sensorDeviceCollection::decimals(deviceIndex[lineIndex], channelIndex[lineIndex]);
         char textBig[8];
         char textSmall[8];
-        snprintf(textBig, 8, "%" PRId32, integerPart(value, decimals));
+        snprintf(textBig, 8, "%d", static_cast<int>(integerPart(value, decimals)));
         if (decimals > 0) {
-            snprintf(textSmall, 8, "%" PRIu32 " %s", fractionalPart(value, decimals), sensorDeviceCollection::units(deviceIndex[lineIndex], channelIndex[lineIndex]));
+            snprintf(textSmall, 8, "%d  %s", static_cast<int>(fractionalPart(value, decimals)), sensorDeviceCollection::units(deviceIndex[lineIndex], channelIndex[lineIndex]));
         } else {
             snprintf(textSmall, 8, "%s", sensorDeviceCollection::units(deviceIndex[lineIndex], channelIndex[lineIndex]));
         }

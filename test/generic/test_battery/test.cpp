@@ -11,10 +11,9 @@ void tearDown(void) {        // after each test
 
 void test_initialization() {
     TEST_ASSERT_EQUAL(sensorDeviceState::unknown, battery::getState());
-    TEST_ASSERT_EQUAL(batteryType::liFePO4_700mAh, battery::type);
+    TEST_ASSERT_EQUAL(batteryType::nmbrBatteryTypes, battery::type);
     batteryType testType = batteryType::saft_ls_14250;
-    settingsCollection::save<batteryType>(testType, settingsCollection::settingIndex::batteryType);
-    battery::initalize();
+    battery::initialize(testType);
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::getState());
     TEST_ASSERT_EQUAL(batteryType::saft_ls_14250, battery::type);
     for (uint32_t channelIndex = 0; channelIndex < battery::nmbrChannels; channelIndex++) {
@@ -24,7 +23,8 @@ void test_initialization() {
 }
 
 void test_sampling() {
-    battery::initalize();
+    batteryType testType = batteryType::saft_ls_14250;
+    battery::initialize(testType);
     TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, battery::getState());
     battery::startSampling();
     TEST_ASSERT_EQUAL(sensorDeviceState::sampling, battery::getState());
@@ -35,7 +35,8 @@ void test_sampling() {
 }
 
 void test_run() {
-    battery::initalize();
+    batteryType testType = batteryType::saft_ls_14250;
+    battery::initialize(testType);
     battery::channels[battery::voltage].set(1, 1);
     battery::channels[battery::percentCharged].set(1, 1);
     sensorDeviceCollection::discover();

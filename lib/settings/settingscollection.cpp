@@ -32,27 +32,11 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     {384, 16 * 6},        // 16 Tx channels : 6 bytes / channel [frequency, minDR, maxDR]
     {480, 6},             // Rx channel : [frequency, rx1DataRateOffset, rx2DataRateIndex]
     {486, 26},            // unusedLoRaWAN : extra settings can be inserted hereafter
-
-    // TODO : add the settings for the known sensors here
 };
 
 bool settingsCollection::isInitialized() {
     uint8_t settingsCollectionVersion = read<uint8_t>(settingIndex::nvsMapVersion);
     return (settingsCollectionVersion != nonVolatileStorage::blankEepromValue);
-}
-
-void settingsCollection::initializeOnce() {
-    // TODO : this is not a good approach : the unit should get settings before being deployed. If it did not get settings, we should just show the QR code
-    save<uint8_t>(0x01, settingsCollection::settingIndex::nvsMapVersion);
-
-    save<uint32_t>(0, settingsCollection::settingIndex::DevAddr);
-    save<uint32_t>(0, settingsCollection::settingIndex::uplinkFrameCounter);
-    save<uint32_t>(0, settingsCollection::settingIndex::downlinkFrameCounter);
-    save<uint8_t>(0, settingsCollection::settingIndex::rx1Delay);
-
-    uint8_t data[16]{0};
-    settingsCollection::save(data, settingIndex::applicationSessionKey);
-    settingsCollection::save(data, settingIndex::networkSessionKey);
 }
 
 void settingsCollection::saveByteArray(const uint8_t* dataIn, settingIndex theIndex) {
@@ -69,23 +53,3 @@ void settingsCollection::readByteArray(uint8_t* dataOut, settingIndex theIndex) 
         nonVolatileStorage::read(startAddress, dataOut, length);
     }
 }
-
-// void settingsCollection::dump() {
-//     if ((!logging::isActive()) || (!logging::isActive(logging::source::eepromData))) {
-//         return;
-//     }
-//     logging::snprintf("EEPROM dump");
-//     uint8_t settingsCollectionVersion = read<uint8_t>(settingIndex::nvsMapVersion);
-//     switch (settingsCollectionVersion) {
-//         case nonVolatileStorage::blankEepromValue:
-//             logging::snprintf("EEPROM is blank");
-//             return;
-//             break;
-//         default:
-//             logging::snprintf("%d : nvsMapVersion = %d", settings[static_cast<uint32_t>(settingIndex::nvsMapVersion)].startAddress, settingsCollectionVersion);
-//             break;
-//     }
-//     logging::snprintf("%d : displayType = %d", settings[static_cast<uint32_t>(settingIndex::displayType)].startAddress, read<uint8_t>(settingIndex::displayType));
-//     logging::snprintf("%d : batteryType = %d", settings[static_cast<uint32_t>(settingIndex::batteryType)].startAddress, read<uint8_t>(settingIndex::batteryType));
-//     logging::snprintf("%d : activeLoggingSources = %d", settings[static_cast<uint32_t>(settingIndex::activeLoggingSources)].startAddress, read<uint32_t>(settingIndex::activeLoggingSources));
-// }

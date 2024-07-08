@@ -9,33 +9,48 @@
 #include "font.hpp"
 #include <cstring>        // strncmp, strncpy
 
-extern uint8_t mockBME680Registers[256];
-extern uint8_t mockTSL2591Registers[256];
 
 void setUp(void) {        // before each test
 }
 void tearDown(void) {        // after each test
 }
 
-// void test_buildBigTextString() {
-//     strncpy(screen::bigText[0], "", screen::maxTextLength);
-//     screen::buildBigTextString(10, 0);
-//     TEST_ASSERT_EQUAL_STRING("10", screen::bigText[0]);
-// }
+void test_showLogo() {
+    screen::setType(screenType::logo);
+    screen::update();
+}
 
-// void test_buildSmallTextString() {
-//     strncpy(screen::smallText[0], "", screen::maxTextLength);
-//     screen::buildSmallTextString(5, 1, "lux", 0);
-//     TEST_ASSERT_EQUAL_STRING("5 lux", screen::smallText[0]);
+void test_showConsole() {
+    screen::setType(screenType::version);
+    screen::setText(0, "Hello, world!");
+    screen::setText(1, "Line 2");
+    screen::setText(2, "Line 3");
+    screen::setText(3, "Line 4");
+    screen::setText(4, "Line 5");
+    screen::setText(5, "Line 6");
+    screen::setText(6, "Line 7");
+    screen::setText(7, "Line 8");
+    screen::setText(8, "Line 9");
+    screen::setText(9, "Line 10");
+    screen::update();
+}
 
-//     strncpy(screen::smallText[1], "", screen::maxTextLength);
-//     screen::buildSmallTextString(0, 0, "hPa", 1);
-//     TEST_ASSERT_EQUAL_STRING("hPa", screen::smallText[1]);
-// }
+void test_showUid() {
+    screen::setType(screenType::uid);
+    screen::update();
+}
+
+void test_showMeasurements() {
+    screen::setType(screenType::measurements);
+    screen::update();
+}
+
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
-    // RUN_TEST(test_buildBigTextString);
-    // RUN_TEST(test_buildSmallTextString);
+    RUN_TEST(test_showLogo);
+    RUN_TEST(test_showConsole);
+    RUN_TEST(test_showUid);
+    RUN_TEST(test_showMeasurements);
     UNITY_END();
 }

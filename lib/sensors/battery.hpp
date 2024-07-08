@@ -12,7 +12,9 @@
 
 class battery {
   public:
-    static void initalize();
+    static void setType(uint8_t index);
+    static bool isValidType();
+    static void initialize(batteryType newBatteryType);
     static void run();
     static sensorDeviceState getState() { return state; };
     static constexpr uint32_t nmbrChannels{2};

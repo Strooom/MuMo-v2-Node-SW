@@ -3,13 +3,17 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 
-#pragma once
-#include <stdint.h>
+#include <powerversion.hpp>
 
-    enum class powerVersion : uint8_t {
-        lowPower,
-        highPower,
-        nmbrPowerVersions
-    };
+const char *toString(powerVersion theVersion) {
+    switch (theVersion) {
+        case powerVersion::highPower:
+            return "LoRa-E5-HF";
 
-const char *toString(powerVersion theVersion);
+        case powerVersion::lowPower:
+            return "LoRa-E5-LE-HF";
+
+        default:
+            return "unknown";
+    }
+}

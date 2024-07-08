@@ -23,11 +23,11 @@
 
 const bool resetBatteryType{true};
 const bool resetMcuType{true};
-const bool setName{true};
+const bool setName{false};
 const bool fixDevAddr{false};
-const bool overwriteExistingLoRaWANConfig{true};
-const bool resetLoRaWANState{true};
-const bool resetLoRaWANChannels{true};
+const bool overwriteExistingLoRaWANConfig{false};
+const bool resetLoRaWANState{false};
+const bool resetLoRaWANChannels{false};
 const bool eraseMeasurementsInEeprom{false};
 
 // #######################################################
@@ -37,10 +37,9 @@ const bool eraseMeasurementsInEeprom{false};
 eepromType selectedEepromType{eepromType::BR24G512};
 uint8_t selectedDisplayType{0};
 batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
-
 powerVersion selectedPowerVersion{powerVersion::highPower};
 
-const char toBeName[mainController::maxNameLength + 1] = "K007";
+const char toBeName[9] = "K007";
 
 uint32_t toBeDevAddr            = 0x260BD91E;
 const char toBeNetworkKey[]     = "56B5093D4E8BC208BF10B7CC50CF445E";
@@ -86,12 +85,12 @@ void initializeMcuType() {
 
 void initializeName() {
     if (setName) {
-        uint8_t newName[mainController::maxNameLength + 1]{0};
+        uint8_t newName[9]{0};
         for (uint32_t index = 0; index < strlen(toBeName); index++) {
             newName[index] = toBeName[index];
         }
         settingsCollection::saveByteArray(newName, settingsCollection::settingIndex::name);
-        uint8_t isName[mainController::maxNameLength + 1]{0};
+        uint8_t isName[9]{0};
         settingsCollection::readByteArray(isName, settingsCollection::settingIndex::name);
         TEST_ASSERT_EQUAL_STRING(newName, isName);
     }
@@ -125,9 +124,9 @@ void initializeLorawanConfig() {
 
         TEST_ASSERT_EQUAL_UINT32(toBeDevAddr, LoRaWAN::DevAddr.asUint32);
         uint8_t test[16];
-        hexAscii::hexStringToByteArray(test, toBeApplicationKey);
+        hexAscii::hexStringToByteArray(test, toBeApplicationKey, 32);
         TEST_ASSERT_EQUAL_UINT8_ARRAY(test, LoRaWAN::applicationKey.asBytes(), 16);
-        hexAscii::hexStringToByteArray(test, toBeNetworkKey);
+        hexAscii::hexStringToByteArray(test, toBeNetworkKey, 32);
         TEST_ASSERT_EQUAL_UINT8_ARRAY(test, LoRaWAN::networkKey.asBytes(), 16);
     } else {
         TEST_ASSERT_NOT_EQUAL_UINT32(0xFFFFFFFF, LoRaWAN::DevAddr.asUint32);

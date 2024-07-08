@@ -5,11 +5,10 @@
 
 #include <sensordevicetype.hpp>
 #include <battery.hpp>
-#include <settingscollection.hpp>
 #include <chargefromvoltage.hpp>
 #include <logging.hpp>
 #include <float.hpp>
-#include <measurementcollection.hpp>
+// #include <measurementcollection.hpp>
 
 #ifndef generic
 #include <main.h>
@@ -19,22 +18,26 @@ uint32_t battery::mockBatteryRawADC{0};
 float battery::mockBatteryVoltage{0};
 #endif
 
-batteryType battery::type{batteryType::liFePO4_700mAh};
+batteryType battery::type{batteryType::nmbrBatteryTypes};
 sensorDeviceState battery::state{sensorDeviceState::unknown};
 sensorChannel battery::channels[nmbrChannels] = {
     {2, "voltage", "V"},
     {0, "percentCharged", "%"},
 };
 
-void battery::initalize() {
-    uint8_t typeIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType);
-    if (typeIndex >= nmbrBatteryTypes) {
-        logging::snprintf(logging::source::error, "invalid settingsCollection::settingIndex::batteryType : %d\n", typeIndex);
-        typeIndex = 0;
+void battery::setType(uint8_t index) {
+    if (index < static_cast<uint8_t>(batteryType::nmbrBatteryTypes)) {
+        type = static_cast<batteryType>(index);
     }
-    type  = static_cast<batteryType>(typeIndex);
+}
+
+bool battery::isValidType() {
+    return (type < batteryType::nmbrBatteryTypes);
+}
+
+void battery::initialize(batteryType newBatteryType) {
+    type  = newBatteryType;
     state = sensorDeviceState::sleeping;
-    logging::snprintf(logging::source::settings, "batteryType : %s\n", toString(type));
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
         channels[channelIndex].set(0, 0);
         channels[channelIndex].hasNewValue = false;

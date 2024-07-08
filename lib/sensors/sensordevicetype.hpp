@@ -19,3 +19,5 @@ enum class sensorDeviceType : uint32_t {
     xa1110,
     nmbrOfKnownDevices
 };
+
+const char *toString(sensorDeviceType theDevice);
