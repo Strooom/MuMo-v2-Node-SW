@@ -7,20 +7,21 @@
 #include <stdint.h>
 #include <font.hpp>
 #include <bitmap.hpp>
+#include <qrcode.hpp>
 
 class graphics {
   public:
-    enum class color :  uint32_t { black = 0,          // when a pixel is 0 in the displayBuffer, it is black on the display
-                                        white = 1 };        // when a pixel is 1 in the displayBuffer, it is white on the display
+    enum class color : uint32_t { black = 0,          // when a pixel is 0 in the displayBuffer, it is black on the display
+                                  white = 1 };        // when a pixel is 1 in the displayBuffer, it is white on the display
 
-    enum class colorMode :  uint32_t { normal   = 0,          // black on white background
-                                            inverted = 1 };        // white on black background
+    enum class colorMode : uint32_t { normal   = 0,          // black on white background
+                                      inverted = 1 };        // white on black background
 
     static void drawPixel(const uint32_t x, const uint32_t y, const color theColor);
     static void drawHorizontalLine(const uint32_t xStart, const uint32_t xEnd, const uint32_t y, const color theColor);
     static void drawVerticalLine(const uint32_t x, const uint32_t yStart, const uint32_t yEnd, const color theColor);
     static void drawLine(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_t yEnd, const color theColor);
-    static void drawRectangle(uint32_t xStart, uint32_t, const uint32_t xEnd, uint32_t yEnd, const color theLineColor);
+    static void drawRectangle(uint32_t xStart, uint32_t yStart, const uint32_t xEnd, uint32_t yEnd, const color theLineColor);
     static void drawFilledRectangle(uint32_t xStart, uint32_t yStart, uint32_t xEnd, uint32_t yEnd, const color theFillColor);
     static void drawCircle(const uint32_t x, const uint32_t y, const uint32_t radius, const color theColor);
     static void drawFilledCircle(const uint32_t x, const uint32_t y, const uint32_t radius, const color theColor);
@@ -31,6 +32,8 @@ class graphics {
 
     static void drawBatteryIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level);                      // level goes from 0 to 100
     static void drawNetworkSignalStrengthIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level);        // level goes from 0 to 100
+    static void drawQrcode(const uint32_t xStart, const uint32_t yStart, QRCode &theQrCode);
+
 
 #ifndef unitTesting
 

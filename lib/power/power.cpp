@@ -6,13 +6,13 @@
 #include <power.hpp>
 #include <gpio.hpp>
 
-bool power::usbPower{false};
-
 #ifndef generic
 #include "main.h"
 #else
 bool power::mockUsbPower{false};
 #endif
+
+bool power::usbPower{false};
 
 bool power::hasUsbPower() {
 #ifndef generic

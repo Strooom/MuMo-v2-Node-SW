@@ -8,12 +8,18 @@
 #include <stdint.h>
 #include <mainstate.hpp>
 #include <screen.hpp>
+#include <applicationevent.hpp>
 
 class mainController {
   public:
     mainController() = delete;
     static void initialize();
     static void handleEvents();
+    static void handleEventsStateBoot(applicationEvent theEvent);
+    static void handleEventsStateNetworkCheck(applicationEvent theEvent);
+    static void handleEventsStateIdle(applicationEvent theEvent);
+    static void handleEventsStateNetworking(applicationEvent theEvent);
+
     static void run();
     static void runUsbPowerDetection();
     static void runDisplayUpdate();
@@ -27,8 +33,6 @@ class mainController {
     static constexpr uint32_t maxNmbrRequests{12};
     static uint32_t deviceIndex[screen::numberOfLines];
     static uint32_t channelIndex[screen::numberOfLines];
-    static constexpr uint32_t maxNameLength{8};
-    static char name[maxNameLength + 1];
 
 #ifndef unitTesting
 

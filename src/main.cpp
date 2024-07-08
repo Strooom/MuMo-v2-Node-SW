@@ -156,8 +156,9 @@ int main(void) {
 
     i2c::wakeUp();
     if (nonVolatileStorage::isPresent()) {
-        settingsCollection::readByteArray(reinterpret_cast<uint8_t*>(mainController::name), settingsCollection::settingIndex::name);
-        mainController::name[mainController::maxNameLength] = '\0';
+            char name[screen::maxNameLength + 1]{0};
+        settingsCollection::readByteArray(reinterpret_cast<uint8_t*>(name), settingsCollection::settingIndex::name);
+        screen::setName(name);
 
         if (!settingsCollection::isInitialized()) {
             settingsCollection::initializeOnce();

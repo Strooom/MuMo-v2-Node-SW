@@ -1,7 +1,7 @@
 #include "font.hpp"
 
 bool font::charIsInBounds(uint8_t asciiCode) const {
-    if ((asciiCode < properties.asciiStart || asciiCode > properties.asciiEnd)) {
+    if ((asciiCode < properties.asciiStart) || (asciiCode > properties.asciiEnd)) {
         return false;
     }
     if (characters[asciiCode - properties.asciiStart].widthInPixels == 0) {
@@ -11,7 +11,7 @@ bool font::charIsInBounds(uint8_t asciiCode) const {
 }
 
 uint32_t font::getCharacterWidthInPixels(uint8_t asciiCode) const {
-    if ((asciiCode < properties.asciiStart || asciiCode > properties.asciiEnd)) {
+    if ((asciiCode < properties.asciiStart) || (asciiCode > properties.asciiEnd)) {
         return 0;
     } else {
         return characters[asciiCode - properties.asciiStart].widthInPixels;
@@ -19,7 +19,7 @@ uint32_t font::getCharacterWidthInPixels(uint8_t asciiCode) const {
 }
 
 uint32_t font::getOffsetInBytes(uint8_t asciiCode) const {
-    if ((asciiCode < properties.asciiStart || asciiCode > properties.asciiEnd)) {
+    if ((asciiCode < properties.asciiStart) || (asciiCode > properties.asciiEnd)) {
         return 0;
     } else {
         return characters[asciiCode - properties.asciiStart].offsetInBytes;

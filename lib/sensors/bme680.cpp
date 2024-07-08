@@ -168,7 +168,7 @@ void bme680::readSample() {
 }
 
 float bme680::calculateTemperature() {
-    float var1                         = ((((float)rawDataTemperature / 16384.0f) - (calibrationCoefficientTemperature1 / 1024.0f)) * (calibrationCoefficientTemperature2));
+    float var1                         = ((((float)rawDataTemperature / 16384.0f) - (calibrationCoefficientTemperature1 / 1024.0f)) * calibrationCoefficientTemperature2);
     float var2                         = (((((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f)) * (((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f))) * (calibrationCoefficientTemperature3 * 16.0f));
     calibrationCoefficientTemperature4 = var1 + var2;
     return (calibrationCoefficientTemperature4 / 5120.0f);
@@ -177,7 +177,7 @@ float bme680::calculateTemperature() {
 float bme680::calculateRelativeHumidity() {
     float calc_hum;
 
-    float temp_comp = ((calibrationCoefficientTemperature4) / 5120.0f);
+    float temp_comp = (calibrationCoefficientTemperature4 / 5120.0f);
     float var1      = static_cast<float>(rawDataRelativeHumidity) - (calibrationCoefficientHumidity1 * 16.0f) + ((calibrationCoefficientHumidity3 / 2.0f) * temp_comp);
     float var2      = var1 * (calibrationCoefficientHumidity2 / 262144.0f) * (1.0f + ((calibrationCoefficientHumidity4 / 16384.0f) * temp_comp) + ((calibrationCoefficientHumidity5 / 1048576.0f) * temp_comp * temp_comp));
     float var3      = calibrationCoefficientHumidity6 / 16384.0f;
@@ -194,17 +194,17 @@ float bme680::calculateRelativeHumidity() {
 
 float bme680::calculateBarometricPressure() {
     float var1   = ((calibrationCoefficientTemperature4 / 2.0f) - 64000.0f);
-    float var2   = var1 * var1 * ((calibrationCoefficientPressure6) / (131072.0f));
-    var2         = var2 + (var1 * (calibrationCoefficientPressure5) * 2.0f);
-    var2         = (var2 / 4.0f) + ((calibrationCoefficientPressure4) * 65536.0f);
+    float var2   = var1 * var1 * ((calibrationCoefficientPressure6) / 131072.0f);
+    var2         = var2 + (var1 * calibrationCoefficientPressure5 * 2.0f);
+    var2         = (var2 / 4.0f) + (calibrationCoefficientPressure4 * 65536.0f);
     var1         = ((((calibrationCoefficientPressure3 * var1 * var1) / 16384.0f) + (calibrationCoefficientPressure2 * var1)) / 524288.0f);
     var1         = ((1.0f + (var1 / 32768.0f)) * calibrationCoefficientPressure1);
     float result = (1048576.0f - ((float)rawDataBarometricPressure));
 
     if ((int)var1 != 0) {
         result     = (((result - (var2 / 4096.0f)) * 6250.0f) / var1);
-        var1       = ((calibrationCoefficientPressure9)*result * result) / 2147483648.0f;
-        var2       = result * ((calibrationCoefficientPressure8) / 32768.0f);
+        var1       = (calibrationCoefficientPressure9*result * result) / 2147483648.0f;
+        var2       = result * (calibrationCoefficientPressure8 / 32768.0f);
         float var3 = ((result / 256.0f) * (result / 256.0f) * (result / 256.0f) * (calibrationCoefficientPressure10 / 131072.0f));
         result     = (result + (var1 + var2 + var3 + (calibrationCoefficientPressure7 * 128.0f)) / 16.0f);
     } else {
