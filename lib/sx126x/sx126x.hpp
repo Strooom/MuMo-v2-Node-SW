@@ -43,7 +43,7 @@ class sx126x {
 
 //  private:
 #endif
-    static mcuType thePowerVersion;
+    static mcuType theMcuType;
 
     static constexpr uint32_t rxTxBufferLength{256};
     static constexpr uint32_t TCXOfrequencyInHz{32000000U};

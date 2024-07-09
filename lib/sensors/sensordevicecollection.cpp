@@ -203,7 +203,7 @@ bool sensorDeviceCollection::hasNewMeasurement(uint32_t deviceIndex, uint32_t ch
 const char* sensorDeviceCollection::name(uint32_t index) {
     switch (static_cast<sensorDeviceType>(index)) {
         case sensorDeviceType::mcu:
-            return toString(sx126x::thePowerVersion);
+            return toString(sx126x::theMcuType);
         case sensorDeviceType::battery:
             return toString(battery::type);
         case sensorDeviceType::bme680:

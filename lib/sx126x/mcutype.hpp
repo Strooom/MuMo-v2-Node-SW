@@ -9,7 +9,8 @@
     enum class mcuType : uint8_t {
         lowPower,
         highPower,
-        nmbrPowerVersions
+        nmbrMcuTypes
     };
 
+constexpr uint32_t nmbrMcuTypes{static_cast<uint32_t>(mcuType::nmbrMcuTypes)};
 const char *toString(mcuType theVersion);

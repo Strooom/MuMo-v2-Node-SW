@@ -8,7 +8,6 @@
 #include <chargefromvoltage.hpp>
 #include <logging.hpp>
 #include <float.hpp>
-// #include <measurementcollection.hpp>
 
 #ifndef generic
 #include <main.h>

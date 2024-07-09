@@ -444,7 +444,7 @@ void mainController::showLoRaWanStatus() {
     snprintf(tmpString, screen::maxConsoleTextLength, "Gateways : %u", static_cast<uint8_t>(LoRaWAN::gatewayCount));
     screen::setText(5, tmpString);
     time_t rtcTime = realTimeClock::get();
-    struct tm* rtcTime2 = localtime(&rtcTime);
+    const struct tm* rtcTime2 = localtime(&rtcTime);
     strftime(tmpString, screen::maxConsoleTextLength, "Date : %Y-%b-%d", rtcTime2);
     screen::setText(6, tmpString);
     strftime(tmpString, screen::maxConsoleTextLength, "Time : %H:%M:%S", rtcTime2);

@@ -75,7 +75,6 @@ void LoRaWAN::initialize() {
     generateKeysK1K2();
     restoreState();
     restoreChannels();
-    // sx126x::initialize();
 }
 
 void LoRaWAN::saveConfig() {
