@@ -129,6 +129,20 @@ void LoRaWAN::restoreChannels() {
     rx2FrequencyInHz = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::rxChannel);
 }
 
+bool LoRaWAN::isValidConfig() {
+    if (DevAddr.asUint32 == 0xFFFFFFFF) {
+        return false;
+    }
+    uint8_t tmpKeyArray[aesKey::lengthInBytes]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    if (memcmp(applicationKey.asBytes(), tmpKeyArray, aesKey::lengthInBytes) == 0) {
+        return false;
+    }
+    if (memcmp(networkKey.asBytes(), tmpKeyArray, aesKey::lengthInBytes) == 0) {
+        return false;
+    }
+    return true;
+}
+
 #pragma endregion
 #pragma region 1 : managing the rawMessage Buffer
 
@@ -271,7 +285,7 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
         theBlock[12] = downlinkFrameCount[2];           //
         theBlock[13] = downlinkFrameCount[3];           // MSByte
     }        //
-    theBlock[14] = 0x00;              //
+    theBlock[14] = 0x00;                                    //
     theBlock[15] = static_cast<uint8_t>(blockIndex);        // Blocks Ai are indexed from 1..k, where k is the number of blocks
 }
 
@@ -452,7 +466,7 @@ void LoRaWAN::insertMic() {
 }
 
 void LoRaWAN::insertMic(uint32_t aMic) {
-    rawMessage[micOffset]     = aMic & 0x000000FF;                // LSByte
+    rawMessage[micOffset]     = aMic & 0x000000FF;                 // LSByte
     rawMessage[micOffset + 1] = (aMic & 0x0000FF00) >> 8U;         //
     rawMessage[micOffset + 2] = (aMic & 0x00FF0000) >> 16U;        //
     rawMessage[micOffset + 3] = (aMic & 0xFF000000) >> 24U;        // MSByte

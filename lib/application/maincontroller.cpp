@@ -173,10 +173,16 @@ void mainController::initialize() {
     screen::setText(4, tmpString1);
     snprintf(tmpString1, screen::maxConsoleTextLength, "rx1Delay : %u", static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
     screen::setText(5, tmpString1);
-
     screen::update();
-    screen::waitForUserToRead();
 
+    if (!LoRaWAN::isValidConfig()) {
+        state = mainState::fatalError;
+        spi::goSleep();
+        i2c::goSleep();
+        return;
+    }
+
+    screen::waitForUserToRead();
     applicationEventBuffer.initialize();        // clear RTCticks which may already have been generated
     state = mainState::networkCheck;
 
@@ -443,7 +449,7 @@ void mainController::showLoRaWanStatus() {
     screen::setText(4, tmpString);
     snprintf(tmpString, screen::maxConsoleTextLength, "Gateways : %u", static_cast<uint8_t>(LoRaWAN::gatewayCount));
     screen::setText(5, tmpString);
-    time_t rtcTime = realTimeClock::get();
+    time_t rtcTime            = realTimeClock::get();
     const struct tm* rtcTime2 = localtime(&rtcTime);
     strftime(tmpString, screen::maxConsoleTextLength, "Date : %Y-%b-%d", rtcTime2);
     screen::setText(6, tmpString);

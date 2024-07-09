@@ -32,9 +32,9 @@ void test_initialize_config() {
     TEST_ASSERT_EQUAL(1, LoRaWAN::rx1DelayInSeconds);
     char tmpKeyAsHexString[33];
     hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::applicationKey.asBytes(), 16);
-    TEST_ASSERT_EQUAL_STRING("00000000000000000000000000000000", tmpKeyAsHexString);
+    TEST_ASSERT_EQUAL_STRING("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", tmpKeyAsHexString);
     hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::networkKey.asBytes(), 16);
-    TEST_ASSERT_EQUAL_STRING("00000000000000000000000000000000", tmpKeyAsHexString);
+    TEST_ASSERT_EQUAL_STRING("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", tmpKeyAsHexString);
 }
 
 void test_initialize_state() {

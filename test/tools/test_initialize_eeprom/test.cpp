@@ -37,7 +37,7 @@ const bool eraseMeasurementsInEeprom{false};
 eepromType selectedEepromType{eepromType::BR24G512};
 uint8_t selectedDisplayType{0};
 batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
-powerVersion selectedPowerVersion{powerVersion::highPower};
+mcuType selectedPowerVersion{mcuType::highPower};
 
 const char toBeName[9] = "K007";
 
