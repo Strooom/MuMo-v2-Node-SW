@@ -14,6 +14,28 @@ void setUp(void) {        // before each test
 void tearDown(void) {        // after each test
 }
 
+void test_miniAdr() {
+    mainController::requestCounter = 0;
+    mainController::answerCounter  = 0;
+    mainController::miniAdr();
+    TEST_ASSERT_EQUAL(5, LoRaWAN::currentDataRateIndex);
+
+    mainController::requestCounter = 4;
+    mainController::answerCounter  = 0;
+    mainController::miniAdr();
+    TEST_ASSERT_EQUAL(3, LoRaWAN::currentDataRateIndex);
+
+    mainController::requestCounter = 6;
+    mainController::answerCounter  = 1;
+    mainController::miniAdr();
+    TEST_ASSERT_EQUAL(3, LoRaWAN::currentDataRateIndex);
+
+    mainController::requestCounter = 100;
+    mainController::answerCounter  = 0;
+    mainController::miniAdr();
+    TEST_ASSERT_EQUAL(0, LoRaWAN::currentDataRateIndex);
+}
+
 void test_transitions_boot() {
     TEST_ASSERT_EQUAL(mainState::boot, mainController::state);
     mainController::initialize();
@@ -77,8 +99,6 @@ void test_usb_detection() {
 }
 
 void test_toString() {
-    // for test coverage only
-
     TEST_ASSERT_EQUAL_STRING("idle", toString(mainState::idle));
     TEST_ASSERT_EQUAL_STRING("measuring", toString(mainState::measuring));
     TEST_ASSERT_EQUAL_STRING("logging", toString(mainState::logging));
@@ -88,6 +108,8 @@ void test_toString() {
     TEST_ASSERT_EQUAL_STRING("fatalError", toString(mainState::fatalError));
     TEST_ASSERT_EQUAL_STRING("test", toString(mainState::test));
     TEST_ASSERT_EQUAL_STRING("unknown", toString(static_cast<mainState>(999U)));
+
+    mainController::showLoRaWanStatus(); // Coverage only -> Use Target unit test to validate
 }
 
 int main(int argc, char **argv) {
@@ -97,5 +119,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_transitions_main);
     RUN_TEST(test_usb_detection);
     RUN_TEST(test_toString);
+    RUN_TEST(test_miniAdr);
     UNITY_END();
 }

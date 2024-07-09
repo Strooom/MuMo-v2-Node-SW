@@ -14,7 +14,7 @@
 #include <eepromtype.hpp>
 #include <measurementcollection.hpp>
 #include <sx126x.hpp>
-#include <powerversion.hpp>
+#include <mcutype.hpp>
 #include <maincontroller.hpp>
 
 // #######################################################

@@ -6,10 +6,10 @@
 #pragma once
 #include <stdint.h>
 
-    enum class powerVersion : uint8_t {
+    enum class mcuType : uint8_t {
         lowPower,
         highPower,
         nmbrPowerVersions
     };
 
-const char *toString(powerVersion theVersion);
+const char *toString(mcuType theVersion);

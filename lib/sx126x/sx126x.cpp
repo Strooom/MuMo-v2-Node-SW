@@ -19,19 +19,19 @@ uint8_t mockSX126xCommandData[256][8];
 #include <cstring>
 #endif
 
-powerVersion sx126x::thePowerVersion{powerVersion::nmbrPowerVersions};
+mcuType sx126x::thePowerVersion{mcuType::nmbrPowerVersions};
 
 void sx126x::setType(uint8_t index) {
-    if (index < static_cast<uint8_t>(powerVersion::nmbrPowerVersions)) {
-        thePowerVersion = static_cast<powerVersion>(index);
+    if (index < static_cast<uint8_t>(mcuType::nmbrPowerVersions)) {
+        thePowerVersion = static_cast<mcuType>(index);
     }
 }
 
 bool sx126x::isValidType() {
-    return (thePowerVersion < powerVersion::nmbrPowerVersions);
+    return (thePowerVersion < mcuType::nmbrPowerVersions);
 }
 
-void sx126x::initialize(powerVersion isPowerVersion) {
+void sx126x::initialize(mcuType isPowerVersion) {
     thePowerVersion = isPowerVersion;
     initializeInterface();
     initializeRadio();
@@ -241,7 +241,7 @@ void sx126x::initializeRadio() {
     executeSetCommand(command::setRfFRequency, commandParameters, 4);
 
     switch (thePowerVersion) {
-        case powerVersion::lowPower:        // lowPower Amp : Wio-E5-LE-HF 14 dBm
+        case mcuType::lowPower:        // lowPower Amp : Wio-E5-LE-HF 14 dBm
             commandParameters[0] = 0x04;
             commandParameters[1] = 0x00;
             commandParameters[2] = 0x01;

@@ -259,6 +259,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_name);
     RUN_TEST(test_nmbrOfChannels);
     RUN_TEST(test_getChannel);
+    RUN_TEST(test_channelName);
     RUN_TEST(test_decimals);
     RUN_TEST(test_units);
     RUN_TEST(test_hasNewMeasurements);

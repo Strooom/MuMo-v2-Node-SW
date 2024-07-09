@@ -12,7 +12,7 @@ class screen {
     static bool isModified() { return modified; }
     static void update();
     static void setText(uint32_t lineIndex, const char* text);
-    static void clearAllTexts();
+    static void clearConsole();
 
     static void setType(screenType newType);
 

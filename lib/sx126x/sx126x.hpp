@@ -12,7 +12,7 @@
 #pragma once
 #include <stdint.h>
 #include <spreadingfactor.hpp>
-#include <powerversion.hpp>
+#include <mcutype.hpp>
 
 enum class rfSwitchState : uint8_t {
     off,
@@ -26,7 +26,7 @@ class sx126x {
     static void setType(uint8_t index);
     static bool isValidType();
 
-    static void initialize(powerVersion isPowerVersion);
+    static void initialize(mcuType isPowerVersion);
     static uint8_t getStatus();
     static void configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t *payload, uint32_t payloadLength);
     static void configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequency);
@@ -43,7 +43,7 @@ class sx126x {
 
 //  private:
 #endif
-    static powerVersion thePowerVersion;
+    static mcuType thePowerVersion;
 
     static constexpr uint32_t rxTxBufferLength{256};
     static constexpr uint32_t TCXOfrequencyInHz{32000000U};

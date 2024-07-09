@@ -40,10 +40,6 @@ void logging::initialize() {
         gpio::disableGpio(gpio::group::debugPort);
     }
 
-    // #if !defined unitTesting && defined platformio        // when on platformio, we don't have SWO trace, so use UART1, except when unitTesting because then we need UART1 for test-results transport
-    //     logging::enable(logging::destination::uart1);
-    // #endif
-
     i2c::wakeUp();
     logging::setActiveSources(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));
     i2c::goSleep();

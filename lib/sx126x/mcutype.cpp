@@ -3,14 +3,14 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 
-#include <powerversion.hpp>
+#include <mcutype.hpp>
 
-const char *toString(powerVersion theVersion) {
+const char *toString(mcuType theVersion) {
     switch (theVersion) {
-        case powerVersion::highPower:
+        case mcuType::highPower:
             return "LoRa-E5-HF";
 
-        case powerVersion::lowPower:
+        case mcuType::lowPower:
             return "LoRa-E5-LE-HF";
 
         default:

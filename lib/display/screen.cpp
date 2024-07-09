@@ -85,7 +85,7 @@ void screen::setText(uint32_t lineIndex, const char* text) {
     }
 }
 
-void screen::clearAllTexts() {
+void screen::clearConsole() {
     for (uint32_t lineIndex = 0; lineIndex < nmbrOfConsoleTextLines; lineIndex++) {
         if (strncmp(consoleText[lineIndex], "", maxConsoleTextLength) != 0) {
             strlcpy(consoleText[lineIndex], "", maxConsoleTextLength);
