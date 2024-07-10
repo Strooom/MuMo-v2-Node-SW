@@ -1,9 +1,48 @@
 #include <unity.h>
 #include <cli.hpp>
+#include <uart.hpp>
 
 void setUp(void) {        // before each test
 }
 void tearDown(void) {        // after each test
+}
+
+void test_uart_rx() {
+    uart2::mockReceivedChar = '?';
+    uart2::rxNotEmpty();
+    TEST_ASSERT_EQUAL(0, uart2::commandCount());
+
+    uart2::mockReceivedChar = '\n';
+    uart2::rxNotEmpty();
+    TEST_ASSERT_EQUAL(1, uart2::commandCount());
+
+    char receivedData[32]{};
+    uart2::read(receivedData);
+    TEST_ASSERT_EQUAL_STRING("?", receivedData);
+    TEST_ASSERT_EQUAL(0, uart2::commandCount());
+}
+
+void test_uart_tx() {
+    uart2::initialize();        // for coverage only
+    uart2::send("12");
+    TEST_ASSERT_EQUAL(2, uart2::txBuffer.getLevel());
+    uart2::txEmpty();
+    TEST_ASSERT_EQUAL('1', uart2::mockTransmittedChar);
+    TEST_ASSERT_EQUAL(1, uart2::txBuffer.getLevel());
+    uart2::txEmpty();
+    TEST_ASSERT_EQUAL('2', uart2::mockTransmittedChar);
+    TEST_ASSERT_EQUAL(0, uart2::txBuffer.getLevel());
+
+    const uint8_t testSendData[4]{'1', '2', '3', '4'};
+
+    uart2::send(testSendData, 2);
+    TEST_ASSERT_EQUAL(2, uart2::txBuffer.getLevel());
+    uart2::txEmpty();
+    TEST_ASSERT_EQUAL('1', uart2::mockTransmittedChar);
+    TEST_ASSERT_EQUAL(1, uart2::txBuffer.getLevel());
+    uart2::txEmpty();
+    TEST_ASSERT_EQUAL('2', uart2::mockTransmittedChar);
+    TEST_ASSERT_EQUAL(0, uart2::txBuffer.getLevel());
 }
 
 void test_countArguments() {
@@ -115,9 +154,10 @@ void test_parseCommandLine() {
     cli::executeCommand(commandLine3);
 }
 
-
 int main(int argc, char **argv) {
     UNITY_BEGIN();
+    RUN_TEST(test_uart_rx);
+    RUN_TEST(test_uart_tx);
     RUN_TEST(test_countArguments);
     RUN_TEST(test_getSeparatorPosition);
     RUN_TEST(test_getSegment);

@@ -13,7 +13,7 @@ class uart2 {
     static void txEmpty();
     static constexpr uint32_t commandBufferLength{cliCommand::maxCommandLineLength};
     static constexpr uint32_t responseBufferLength{2048};
-    static constexpr uint8_t commandTerminator{0xD};
+    static constexpr uint8_t commandTerminator{'\n'};
     static constexpr uint8_t bootLoaderMagicValue{0x7F};
 
     static void send(const char* data);
@@ -26,9 +26,17 @@ class uart2 {
     static constexpr uint32_t transmitComplete{0b1000000};        // bit 6 in USART_ISR
     static constexpr uint32_t tdrEmpty{0b10000000};               // bit 7 in USART_ISR
 
+#ifndef unitTesting
+
   private:
+#endif
+
     static circularBuffer<uint8_t, commandBufferLength> rxBuffer;
     static circularBuffer<uint8_t, responseBufferLength> txBuffer;
     static uint32_t commandCounter;
+#ifdef generic
+    static uint8_t mockReceivedChar;
+    static uint8_t mockTransmittedChar;
+#endif
     friend class cli;
 };
