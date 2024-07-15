@@ -33,66 +33,6 @@ static const uint16_t NUM_RAW_DATA_MODULES[40] = {
 
 #endif
 
-static int max(int a, int b) {
-    if (a > b) {
-        return a;
-    }
-    return b;
-}
-
-#pragma mark - Mode testing and conversion
-
-static int8_t getAlphanumeric(char c) {
-    if (c >= '0' && c <= '9') {
-        return (c - '0');
-    }
-    if (c >= 'A' && c <= 'Z') {
-        return (c - 'A' + 10);
-    }
-
-    switch (c) {
-        case ' ':
-            return 36;
-        case '$':
-            return 37;
-        case '%':
-            return 38;
-        case '*':
-            return 39;
-        case '+':
-            return 40;
-        case '-':
-            return 41;
-        case '.':
-            return 42;
-        case '/':
-            return 43;
-        case ':':
-            return 44;
-    }
-
-    return -1;
-}
-
-static bool isAlphanumeric(const char *text, uint16_t length) {
-    while (length != 0) {
-        if (getAlphanumeric(text[--length]) == -1) {
-            return false;
-        }
-    }
-    return true;
-}
-
-static bool isNumeric(const char *text, uint16_t length) {
-    while (length != 0) {
-        char c = text[--length];
-        if (c < '0' || c > '9') {
-            return false;
-        }
-    }
-    return true;
-}
-
 #pragma mark - Counting
 
 // We store the following tightly packed (less 8) in modeInfo
@@ -266,7 +206,7 @@ static void drawFinderPattern(BitBucket *modules, BitBucket *isFunction, uint8_t
 
     for (int8_t i = -4; i <= 4; i++) {
         for (int8_t j = -4; j <= 4; j++) {
-            uint8_t dist = max(abs(i), abs(j));        // Chebyshev/infinity norm
+            uint8_t dist = qrCode::max(abs(i), abs(j));        // Chebyshev/infinity norm
             int16_t xx = x + j, yy = y + i;
             if (0 <= xx && xx < size && 0 <= yy && yy < size) {
                 setFunctionModule(modules, isFunction, xx, yy, dist != 2 && dist != 4);
@@ -279,7 +219,7 @@ static void drawFinderPattern(BitBucket *modules, BitBucket *isFunction, uint8_t
 static void drawAlignmentPattern(BitBucket *modules, BitBucket *isFunction, uint8_t x, uint8_t y) {
     for (int8_t i = -2; i <= 2; i++) {
         for (int8_t j = -2; j <= 2; j++) {
-            setFunctionModule(modules, isFunction, x + j, y + i, max(abs(i), abs(j)) != 1);
+            setFunctionModule(modules, isFunction, x + j, y + i, qrCode::max(abs(i), abs(j)) != 1);
         }
     }
 }
@@ -601,7 +541,7 @@ static void rs_getRemainder(uint8_t degree, uint8_t *coeff, uint8_t *data, uint8
 static int8_t encodeDataCodewords(BitBucket *dataCodewords, const uint8_t *text, uint16_t length, uint8_t version) {
     int8_t mode = MODE_BYTE;
 
-    if (isNumeric((char *)text, length)) {
+    if (qrCode::isNumeric((char *)text, length)) {
         mode = MODE_NUMERIC;
         bb_appendBits(dataCodewords, 1 << MODE_NUMERIC, 4);
         bb_appendBits(dataCodewords, length, getModeBits(version, MODE_NUMERIC));
@@ -623,7 +563,7 @@ static int8_t encodeDataCodewords(BitBucket *dataCodewords, const uint8_t *text,
             bb_appendBits(dataCodewords, accumData, accumCount * 3 + 1);
         }
 
-    } else if (isAlphanumeric((char *)text, length)) {
+    } else if (qrCode::isAlphanumeric((char *)text, length)) {
         mode = MODE_ALPHANUMERIC;
         bb_appendBits(dataCodewords, 1 << MODE_ALPHANUMERIC, 4);
         bb_appendBits(dataCodewords, length, getModeBits(version, MODE_ALPHANUMERIC));
@@ -631,7 +571,7 @@ static int8_t encodeDataCodewords(BitBucket *dataCodewords, const uint8_t *text,
         uint16_t accumData = 0;
         uint8_t accumCount = 0;
         for (uint16_t i = 0; i < length; i++) {
-            accumData = accumData * 45 + getAlphanumeric((char)(text[i]));
+            accumData = accumData * 45 + qrCode::getAlphanumeric((char)(text[i]));
             accumCount++;
             if (accumCount == 2) {
                 bb_appendBits(dataCodewords, accumData, 11);
@@ -873,9 +813,9 @@ int8_t qrCode::getAlphanumeric(char c) {
             return 43;
         case ':':
             return 44;
+        default:
+            return -1;
     }
-
-    return -1;
 }
 
 bool qrCode::isAlphanumeric(const char *text, uint16_t length) {
@@ -897,14 +837,13 @@ bool qrCode::isNumeric(const char *text, uint16_t length) {
     return true;
 }
 
- uint16_t qrCode::bb_getGridSizeBytes(uint8_t size) {
+uint16_t qrCode::bb_getGridSizeBytes(uint8_t size) {
     return (((size * size) + 7) / 8);
 }
 
- uint16_t qrCode::bb_getBufferSizeBytes(uint32_t bits) {
+uint16_t qrCode::bb_getBufferSizeBytes(uint32_t bits) {
     return ((bits + 7) / 8);
 }
-
 
 //  void qrCode::bb_setBit(BitBucket *bitGrid, uint8_t x, uint8_t y, bool on) {
 //     uint32_t offset = y * bitGrid->bitOffsetOrWidth + x;
