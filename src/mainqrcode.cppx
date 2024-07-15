@@ -184,7 +184,7 @@ int main(void) {
 
     char tmpKeyAsHexAscii[17];
     hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
-    qrcode_initText(&qrcode, qrcodeData, 2, ECC_MEDIUM, tmpKeyAsHexAscii);
+    qrcode_initText(&qrcode, qrcodeData, 2, static_cast<int8_t>(errorCorrectionLevel::medium), tmpKeyAsHexAscii);
 
     display::clearAllPixels();
 

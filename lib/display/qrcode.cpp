@@ -4,8 +4,6 @@
 
 #pragma mark - Error Correction Lookup tables
 
-#if LOCK_VERSION == 0
-
 static const uint16_t NUM_ERROR_CORRECTION_CODEWORDS[4][40] = {
     // 1,  2,  3,  4,  5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  20,  21,  22,  23,  24,   25,   26,   27,   28,   29,   30,   31,   32,   33,   34,   35,   36,   37,   38,   39,   40    Error correction level
     {10, 16, 26, 36, 48, 64, 72, 88, 110, 130, 150, 176, 198, 216, 240, 280, 308, 338, 364, 416, 442, 476, 504, 560, 588, 644, 700, 728, 784, 812, 868, 924, 980, 1036, 1064, 1120, 1204, 1260, 1316, 1372},                    // Medium
@@ -31,7 +29,6 @@ static const uint16_t NUM_RAW_DATA_MODULES[40] = {
     //    32,    33,    34,    35,    36,    37,    38,    39,    40
     19723, 20891, 22091, 23008, 24272, 25568, 26896, 28256, 29648};
 
-#endif
 
 #pragma mark - Counting
 
@@ -539,12 +536,12 @@ static void rs_getRemainder(uint8_t degree, uint8_t *coeff, uint8_t *data, uint8
 #pragma mark - QrCode
 
 static int8_t encodeDataCodewords(BitBucket *dataCodewords, const uint8_t *text, uint16_t length, uint8_t version) {
-    int8_t mode = MODE_BYTE;
+    int8_t mode = static_cast<int8_t>(encodingFormat::byte);
 
     if (qrCode::isNumeric((char *)text, length)) {
-        mode = MODE_NUMERIC;
-        bb_appendBits(dataCodewords, 1 << MODE_NUMERIC, 4);
-        bb_appendBits(dataCodewords, length, getModeBits(version, MODE_NUMERIC));
+        mode = static_cast<int8_t>(encodingFormat::numeric);
+        bb_appendBits(dataCodewords, 1 << static_cast<int8_t>(encodingFormat::numeric), 4);
+        bb_appendBits(dataCodewords, length, getModeBits(version, static_cast<int8_t>(encodingFormat::numeric)));
 
         uint16_t accumData = 0;
         uint8_t accumCount = 0;
@@ -564,9 +561,9 @@ static int8_t encodeDataCodewords(BitBucket *dataCodewords, const uint8_t *text,
         }
 
     } else if (qrCode::isAlphanumeric((char *)text, length)) {
-        mode = MODE_ALPHANUMERIC;
-        bb_appendBits(dataCodewords, 1 << MODE_ALPHANUMERIC, 4);
-        bb_appendBits(dataCodewords, length, getModeBits(version, MODE_ALPHANUMERIC));
+        mode = static_cast<int8_t>(encodingFormat::alphanumeric);
+        bb_appendBits(dataCodewords, 1 << static_cast<int8_t>(encodingFormat::alphanumeric), 4);
+        bb_appendBits(dataCodewords, length, getModeBits(version, static_cast<int8_t>(encodingFormat::alphanumeric)));
 
         uint16_t accumData = 0;
         uint8_t accumCount = 0;
@@ -586,8 +583,8 @@ static int8_t encodeDataCodewords(BitBucket *dataCodewords, const uint8_t *text,
         }
 
     } else {
-        bb_appendBits(dataCodewords, 1 << MODE_BYTE, 4);
-        bb_appendBits(dataCodewords, length, getModeBits(version, MODE_BYTE));
+        bb_appendBits(dataCodewords, 1 << static_cast<int8_t>(encodingFormat::byte), 4);
+        bb_appendBits(dataCodewords, length, getModeBits(version, static_cast<int8_t>(encodingFormat::byte)));
         for (uint16_t i = 0; i < length; i++) {
             bb_appendBits(dataCodewords, (char)(text[i]), 8);
         }
