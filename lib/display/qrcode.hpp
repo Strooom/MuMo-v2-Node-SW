@@ -27,6 +27,7 @@ class qrCode {
     static int8_t getAlphanumeric(char c);
     static bool isAlphanumeric(const char *text, uint16_t length);
     static bool isNumeric(const char *text, uint16_t length);
+    static char getModeBits(uint8_t version, encodingFormat theEncodingFormat);
     static uint16_t bb_getGridSizeBytes(uint8_t size);
     static uint16_t bb_getBufferSizeBytes(uint32_t bits);
     // static void bb_setBit(BitBucket *bitGrid, uint8_t x, uint8_t y, bool on);

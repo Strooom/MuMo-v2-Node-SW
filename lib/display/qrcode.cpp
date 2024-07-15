@@ -30,38 +30,6 @@ static const uint16_t NUM_RAW_DATA_MODULES[40] = {
     19723, 20891, 22091, 23008, 24272, 25568, 26896, 28256, 29648};
 
 
-#pragma mark - Counting
-
-// We store the following tightly packed (less 8) in modeInfo
-//               <=9  <=26  <= 40
-// NUMERIC      ( 10,   12,    14);
-// ALPHANUMERIC (  9,   11,    13);
-// BYTE         (  8,   16,    16);
-static char getModeBits(uint8_t version, uint8_t mode) {
-    // Note: We use 15 instead of 16; since 15 doesn't exist and we cannot store 16 (8 + 8) in 3 bits
-    // hex(int("".join(reversed([('00' + bin(x - 8)[2:])[-3:] for x in [10, 9, 8, 12, 11, 15, 14, 13, 15]])), 2))
-    unsigned int modeInfo = 0x7bbb80a;
-
-#if LOCK_VERSION == 0 || LOCK_VERSION > 9
-    if (version > 9) {
-        modeInfo >>= 9;
-    }
-#endif
-
-#if LOCK_VERSION == 0 || LOCK_VERSION > 26
-    if (version > 26) {
-        modeInfo >>= 9;
-    }
-#endif
-
-    char result = 8 + ((modeInfo >> (3 * mode)) & 0x07);
-    if (result == 15) {
-        result = 16;
-    }
-
-    return result;
-}
-
 #pragma mark - BitBucket
 
 typedef struct BitBucket {
@@ -541,7 +509,7 @@ static int8_t encodeDataCodewords(BitBucket *dataCodewords, const uint8_t *text,
     if (qrCode::isNumeric((char *)text, length)) {
         mode = static_cast<int8_t>(encodingFormat::numeric);
         bb_appendBits(dataCodewords, 1 << static_cast<int8_t>(encodingFormat::numeric), 4);
-        bb_appendBits(dataCodewords, length, getModeBits(version, static_cast<int8_t>(encodingFormat::numeric)));
+        bb_appendBits(dataCodewords, length, qrCode::getModeBits(version, encodingFormat::numeric));
 
         uint16_t accumData = 0;
         uint8_t accumCount = 0;
@@ -563,7 +531,7 @@ static int8_t encodeDataCodewords(BitBucket *dataCodewords, const uint8_t *text,
     } else if (qrCode::isAlphanumeric((char *)text, length)) {
         mode = static_cast<int8_t>(encodingFormat::alphanumeric);
         bb_appendBits(dataCodewords, 1 << static_cast<int8_t>(encodingFormat::alphanumeric), 4);
-        bb_appendBits(dataCodewords, length, getModeBits(version, static_cast<int8_t>(encodingFormat::alphanumeric)));
+        bb_appendBits(dataCodewords, length, qrCode::getModeBits(version, encodingFormat::alphanumeric));
 
         uint16_t accumData = 0;
         uint8_t accumCount = 0;
@@ -584,7 +552,7 @@ static int8_t encodeDataCodewords(BitBucket *dataCodewords, const uint8_t *text,
 
     } else {
         bb_appendBits(dataCodewords, 1 << static_cast<int8_t>(encodingFormat::byte), 4);
-        bb_appendBits(dataCodewords, length, getModeBits(version, static_cast<int8_t>(encodingFormat::byte)));
+        bb_appendBits(dataCodewords, length, qrCode::getModeBits(version, encodingFormat::byte));
         for (uint16_t i = 0; i < length; i++) {
             bb_appendBits(dataCodewords, (char)(text[i]), 8);
         }
@@ -840,6 +808,33 @@ uint16_t qrCode::bb_getGridSizeBytes(uint8_t size) {
 
 uint16_t qrCode::bb_getBufferSizeBytes(uint32_t bits) {
     return ((bits + 7) / 8);
+}
+
+char qrCode::getModeBits(uint8_t version, encodingFormat theEncodingFormat) {
+    // We store the following tightly packed (less 8) in modeInfo
+    //               <=9  <=26  <= 40
+    // NUMERIC      ( 10,   12,    14);
+    // ALPHANUMERIC (  9,   11,    13);
+    // BYTE         (  8,   16,    16);
+
+    // Note: We use 15 instead of 16; since 15 doesn't exist and we cannot store 16 (8 + 8) in 3 bits
+    // hex(int("".join(reversed([('00' + bin(x - 8)[2:])[-3:] for x in [10, 9, 8, 12, 11, 15, 14, 13, 15]])), 2))
+
+    auto nmbrOfShifts     = 3U * static_cast<uint32_t>(theEncodingFormat);
+    unsigned int modeInfo = 0x7bbb80a;
+
+    if (version > 9) {
+        modeInfo >>= 9;
+    }
+    if (version > 26) {
+        modeInfo >>= 9;
+    }
+    char result = 8 + ((modeInfo >> nmbrOfShifts) & 0x07);
+    if (result == 15) {
+        result = 16;
+    }
+
+    return result;
 }
 
 //  void qrCode::bb_setBit(BitBucket *bitGrid, uint8_t x, uint8_t y, bool on) {

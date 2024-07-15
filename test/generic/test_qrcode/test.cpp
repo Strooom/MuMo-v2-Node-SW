@@ -61,6 +61,29 @@ void test_isNumeric() {
     TEST_ASSERT_FALSE(qrCode::isNumeric("000 000", 7));
 }
 
+void test_getModeBits() {
+    TEST_ASSERT_EQUAL(10, qrCode::getModeBits(1, encodingFormat::numeric));
+    TEST_ASSERT_EQUAL(9, qrCode::getModeBits(1, encodingFormat::alphanumeric));
+    TEST_ASSERT_EQUAL(8, qrCode::getModeBits(1, encodingFormat::byte));
+    TEST_ASSERT_EQUAL(10, qrCode::getModeBits(9, encodingFormat::numeric));
+    TEST_ASSERT_EQUAL(9, qrCode::getModeBits(9, encodingFormat::alphanumeric));
+    TEST_ASSERT_EQUAL(8, qrCode::getModeBits(9, encodingFormat::byte));
+
+    TEST_ASSERT_EQUAL(12, qrCode::getModeBits(10, encodingFormat::numeric));
+    TEST_ASSERT_EQUAL(11, qrCode::getModeBits(10, encodingFormat::alphanumeric));
+    TEST_ASSERT_EQUAL(16, qrCode::getModeBits(10, encodingFormat::byte));
+    TEST_ASSERT_EQUAL(12, qrCode::getModeBits(26, encodingFormat::numeric));
+    TEST_ASSERT_EQUAL(11, qrCode::getModeBits(26, encodingFormat::alphanumeric));
+    TEST_ASSERT_EQUAL(16, qrCode::getModeBits(26, encodingFormat::byte));
+
+    TEST_ASSERT_EQUAL(14, qrCode::getModeBits(27, encodingFormat::numeric));
+    TEST_ASSERT_EQUAL(13, qrCode::getModeBits(27, encodingFormat::alphanumeric));
+    TEST_ASSERT_EQUAL(16, qrCode::getModeBits(27, encodingFormat::byte));
+    TEST_ASSERT_EQUAL(14, qrCode::getModeBits(40, encodingFormat::numeric));
+    TEST_ASSERT_EQUAL(13, qrCode::getModeBits(40, encodingFormat::alphanumeric));
+    TEST_ASSERT_EQUAL(16, qrCode::getModeBits(40, encodingFormat::byte));
+}
+
 void test_getGridSizeBytes() {
     TEST_IGNORE_MESSAGE("to be continued");
     // TEST_ASSERT_EQUAL(1, qrCode::bb_getGridSizeBytes(0));
@@ -220,6 +243,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_getAlphanumeric);
     RUN_TEST(test_isAlphanumeric);
     RUN_TEST(test_isNumeric);
+    RUN_TEST(test_getModeBits);
     RUN_TEST(test_getGridSizeBytes);
     RUN_TEST(test_getBufferSizeBytes);
     RUN_TEST(test_max);
