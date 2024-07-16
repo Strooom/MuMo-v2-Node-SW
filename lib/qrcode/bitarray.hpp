@@ -18,8 +18,8 @@ class bitArray {
     uint8_t data[((tobeWidthHeightInBits * tobeWidthHeightInBits) + 7) / 8]{0};
 
     void clearAllBits() { memset(data, 0, sizeInBytes); }
-    void setOrClearBit(uint32_t x, uint32_t y, bool on) {
-        if (on) {
+    void setOrClearBit(uint32_t x, uint32_t y, bool newBitState) {
+        if (newBitState) {
             data[byteOffset(x, y)] |= bitMask(x, y);
         } else {
             data[byteOffset(x, y)] &= ~bitMask(x, y);

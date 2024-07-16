@@ -7,6 +7,7 @@
 #include <hexascii.hpp>
 #include <lucidaconsole12.hpp>
 #include <logo.hpp>
+#include <errorcorrection.hpp>
 #include <qrcode2.hpp>
 #include <roboto36b.hpp>
 #include <screen.hpp>
