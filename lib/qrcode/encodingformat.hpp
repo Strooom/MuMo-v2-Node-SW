@@ -9,7 +9,10 @@
 #include <stdint.h>
 
 enum class encodingFormat {
-    numeric      = 0,
-    alphanumeric = 1,
-    byte         = 2
+    numeric,
+    alphanumeric,
+    byte,
+    nmbrOfEncodingFormats
 };
+
+static constexpr uint32_t nmbrOfEncodingFormats{static_cast<uint32_t>(encodingFormat::nmbrOfEncodingFormats)};

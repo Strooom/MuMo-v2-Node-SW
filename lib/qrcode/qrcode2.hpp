@@ -76,12 +76,22 @@ typedef struct BitBucket {
     uint8_t *data;
 } BitBucket;
 
+void print_bitbucket(BitBucket *aBucket);
+
 void bb_initGrid(BitBucket *bitGrid, uint8_t *data, uint8_t size);
- int8_t getAlphanumeric(char c);
- bool isAlphanumeric(const char *text, uint16_t length);
- bool isNumeric(const char *text, uint16_t length);
- int max(int a, int b);
- char getModeBits(uint8_t version, uint8_t mode);
+int8_t getAlphanumeric(char c);
+bool isAlphanumeric(const char *text, uint16_t length);
+bool isNumeric(const char *text, uint16_t length);
+int max(int a, int b);
+char getModeBits(uint8_t version, uint8_t mode);
+uint16_t bb_getGridSizeBytes(uint8_t size);
+uint16_t bb_getBufferSizeBytes(uint32_t bits);
+void bb_initBuffer(BitBucket *bitBuffer, uint8_t *data, int32_t capacityBytes);
+void bb_setBit(BitBucket *bitGrid, uint8_t x, uint8_t y, bool on);
+void bb_invertBit(BitBucket *bitGrid, uint8_t x, uint8_t y, bool invert);
+bool bb_getBit(BitBucket *bitGrid, uint8_t x, uint8_t y);
+void bb_appendBits(BitBucket *bitBuffer, uint32_t val, uint8_t length);
+void applyMask(BitBucket *modules, BitBucket *isFunction, uint8_t mask);
 
 #ifdef __cplusplus
 extern "C" {
