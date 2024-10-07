@@ -114,7 +114,12 @@ void test_characterCountIndicatorLength() {
 
 void test_calculatePayloadLength() {
     TEST_ASSERT_EQUAL(41, qrCode::payloadLengthInBits(8, 1, encodingFormat::numeric));
-    TEST_ASSERT_EQUAL(41, qrCode::payloadLengthInBits(5, 1, encodingFormat::alphanumeric));
+    TEST_ASSERT_EQUAL(57, qrCode::payloadLengthInBits(8, 1, encodingFormat::alphanumeric));
+    TEST_ASSERT_EQUAL(76, qrCode::payloadLengthInBits(8, 1, encodingFormat::byte));
+
+    TEST_ASSERT_EQUAL(151, qrCode::payloadLengthInBits(41, 1, encodingFormat::numeric));
+    TEST_ASSERT_EQUAL(151, qrCode::payloadLengthInBits(25, 1, encodingFormat::alphanumeric));
+    TEST_ASSERT_EQUAL(148, qrCode::payloadLengthInBits(17, 1, encodingFormat::byte));
 }
 
 void test_encodeDataNumeric() {
@@ -151,6 +156,87 @@ void test_encodeDataAlphaNumeric() {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedStorage, storage, testPayloadLengthInBytes);
 }
 
+void test_nmbrOfAlignmentPatterns() {
+    TEST_ASSERT_EQUAL(0, qrCode::nmbrOfAlignmentPatterns(1));
+    TEST_ASSERT_EQUAL(1, qrCode::nmbrOfAlignmentPatterns(2));
+    TEST_ASSERT_EQUAL(1, qrCode::nmbrOfAlignmentPatterns(6));
+    TEST_ASSERT_EQUAL(6, qrCode::nmbrOfAlignmentPatterns(7));
+    TEST_ASSERT_EQUAL(6, qrCode::nmbrOfAlignmentPatterns(13));
+    TEST_ASSERT_EQUAL(13, qrCode::nmbrOfAlignmentPatterns(14));
+    TEST_ASSERT_EQUAL(13, qrCode::nmbrOfAlignmentPatterns(20));
+    TEST_ASSERT_EQUAL(22, qrCode::nmbrOfAlignmentPatterns(21));
+    TEST_ASSERT_EQUAL(22, qrCode::nmbrOfAlignmentPatterns(27));
+    TEST_ASSERT_EQUAL(33, qrCode::nmbrOfAlignmentPatterns(28));
+    TEST_ASSERT_EQUAL(33, qrCode::nmbrOfAlignmentPatterns(34));
+    TEST_ASSERT_EQUAL(46, qrCode::nmbrOfAlignmentPatterns(35));
+    TEST_ASSERT_EQUAL(46, qrCode::nmbrOfAlignmentPatterns(40));
+}
+void test_nmbrOfrawDataModules() {
+    TEST_ASSERT_EQUAL(208, qrCode::nmbrOfDataModules(1));
+    TEST_ASSERT_EQUAL(359, qrCode::nmbrOfDataModules(2));
+    TEST_ASSERT_EQUAL(567, qrCode::nmbrOfDataModules(3));
+    TEST_ASSERT_EQUAL(807, qrCode::nmbrOfDataModules(4));
+    TEST_ASSERT_EQUAL(1079, qrCode::nmbrOfDataModules(5));
+    TEST_ASSERT_EQUAL(1383, qrCode::nmbrOfDataModules(6));
+    TEST_ASSERT_EQUAL(1568, qrCode::nmbrOfDataModules(7));
+    TEST_ASSERT_EQUAL(1936, qrCode::nmbrOfDataModules(8));
+    TEST_ASSERT_EQUAL(2336, qrCode::nmbrOfDataModules(9));
+    TEST_ASSERT_EQUAL(2768, qrCode::nmbrOfDataModules(10));
+    TEST_ASSERT_EQUAL(3232, qrCode::nmbrOfDataModules(11));
+    TEST_ASSERT_EQUAL(3728, qrCode::nmbrOfDataModules(12));
+    TEST_ASSERT_EQUAL(4256, qrCode::nmbrOfDataModules(13));
+    TEST_ASSERT_EQUAL(4651, qrCode::nmbrOfDataModules(14));
+    TEST_ASSERT_EQUAL(5243, qrCode::nmbrOfDataModules(15));
+    TEST_ASSERT_EQUAL(5867, qrCode::nmbrOfDataModules(16));
+}
+
+void test_versionNeeded() {
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(encodingFormat::numeric, 41, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(encodingFormat::numeric, 42, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(encodingFormat::alphanumeric, 25, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(encodingFormat::alphanumeric, 26, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(encodingFormat::byte, 17, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(encodingFormat::byte, 18, errorCorrectionLevel::low));
+
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(encodingFormat::numeric, 34, errorCorrectionLevel::medium));
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(encodingFormat::numeric, 35, errorCorrectionLevel::medium));
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(encodingFormat::alphanumeric, 20, errorCorrectionLevel::medium));
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(encodingFormat::alphanumeric, 21, errorCorrectionLevel::medium));
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(encodingFormat::byte, 14, errorCorrectionLevel::medium));
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(encodingFormat::byte, 15, errorCorrectionLevel::medium));
+
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(encodingFormat::numeric, 27, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(encodingFormat::numeric, 28, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(encodingFormat::alphanumeric, 16, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(encodingFormat::alphanumeric, 17, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(encodingFormat::byte, 11, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(encodingFormat::byte, 12, errorCorrectionLevel::quartile));
+
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(encodingFormat::numeric, 17, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(encodingFormat::numeric, 18, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(encodingFormat::alphanumeric, 10, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(encodingFormat::alphanumeric, 11, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(encodingFormat::byte, 7, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(encodingFormat::byte, 8, errorCorrectionLevel::high));
+}
+
+void test_nmbrOfErrorCorrectionModules() {
+    TEST_ASSERT_EQUAL(7 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(1, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(10 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(1, errorCorrectionLevel::medium));
+    TEST_ASSERT_EQUAL(13 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(1, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(17 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(1, errorCorrectionLevel::high));
+
+    TEST_ASSERT_EQUAL(10 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(2, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(16 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(2, errorCorrectionLevel::medium));
+    TEST_ASSERT_EQUAL(22 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(2, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(28 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(2, errorCorrectionLevel::high));
+
+    TEST_ASSERT_EQUAL(15 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(26 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::medium));
+    TEST_ASSERT_EQUAL(18 * 2 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(22 * 2 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::high));
+}
+
 #pragma endregion
 
 #pragma region testHelpers
@@ -169,23 +255,9 @@ int main(int argc, char **argv) {
     RUN_TEST(test_calculatePayloadLength);
     RUN_TEST(test_encodeDataNumeric);
     RUN_TEST(test_encodeDataAlphaNumeric);
+    RUN_TEST(test_nmbrOfAlignmentPatterns);
+    RUN_TEST(test_nmbrOfrawDataModules);
+    RUN_TEST(test_nmbrOfErrorCorrectionModules);
+    RUN_TEST(test_versionNeeded);
     UNITY_END();
 }
-
-// void test_nmbrDataModulesAvailable() {
-//     // Based on info from https://www.qrcode.com/en/about/version.html
-//     TEST_ASSERT_EQUAL(152, qrCode::nmbrDataModulesAvailable(1, errorCorrectionLevel::low));
-//     TEST_ASSERT_EQUAL(128, qrCode::nmbrDataModulesAvailable(1, errorCorrectionLevel::medium));
-//     TEST_ASSERT_EQUAL(104, qrCode::nmbrDataModulesAvailable(1, errorCorrectionLevel::quartile));
-//     TEST_ASSERT_EQUAL(72, qrCode::nmbrDataModulesAvailable(1, errorCorrectionLevel::high));
-
-//     TEST_ASSERT_EQUAL(272, qrCode::nmbrDataModulesAvailable(2, errorCorrectionLevel::low));
-//     TEST_ASSERT_EQUAL(224, qrCode::nmbrDataModulesAvailable(2, errorCorrectionLevel::medium));
-//     TEST_ASSERT_EQUAL(176, qrCode::nmbrDataModulesAvailable(2, errorCorrectionLevel::quartile));
-//     TEST_ASSERT_EQUAL(128, qrCode::nmbrDataModulesAvailable(2, errorCorrectionLevel::high));
-
-//     TEST_ASSERT_EQUAL(2192, qrCode::nmbrDataModulesAvailable(10, errorCorrectionLevel::low));
-//     TEST_ASSERT_EQUAL(1728, qrCode::nmbrDataModulesAvailable(10, errorCorrectionLevel::medium));
-//     TEST_ASSERT_EQUAL(1232, qrCode::nmbrDataModulesAvailable(10, errorCorrectionLevel::quartile));
-//     TEST_ASSERT_EQUAL(976, qrCode::nmbrDataModulesAvailable(10, errorCorrectionLevel::high));
-// }

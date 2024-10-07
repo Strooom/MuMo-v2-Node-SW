@@ -19,6 +19,7 @@ void spi::wakeUp() {
 #ifndef generic
         MX_SPI2_Init();
 #endif
+        gpio::enableGpio(gpio::group::enableDisplayPower);
         gpio::enableGpio(gpio::group::spiDisplay);
         initialized = true;
     }
@@ -30,6 +31,7 @@ void spi::goSleep() {
         HAL_SPI_DeInit(&hspi2);
 #endif
         gpio::disableGpio(gpio::group::spiDisplay);
+        gpio::disableGpio(gpio::group::enableDisplayPower);
         initialized = false;
     }
 }

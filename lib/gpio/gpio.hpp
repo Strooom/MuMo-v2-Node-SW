@@ -14,14 +14,15 @@ class gpio {
         rfControl,           // PP output
         i2c,                 // bidirectional
         writeProtect,        // PP output
-        i2cSensors,
-        i2cEeprom,
-        spiDisplay,        // output + inputs
-        debugPort,         // output + inputs
-        uart1,             // output + inputs
-        uart2,             // output + inputs
-        usbPresent,        // input
-        vddEnable,         // output
+        // i2cSensors,
+        // i2cEeprom,
+        spiDisplay,                      // output + inputs
+        debugPort,                       // output + inputs
+        uart1,                           // output + inputs
+        uart2,                           // output + inputs
+        usbPresent,                      // input
+        enableDisplayPower,              // output
+        enableSensorsEepromPower,        // output
         other
     };
 

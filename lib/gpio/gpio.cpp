@@ -89,14 +89,16 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
             }
             break;
 
-        case gpio::group::i2cSensors:
-            enableDisableGpio(gpio::group::i2c, enable);
-            break;
+        // case gpio::group::i2cSensors:
+        //     enableDisableGpio(gpio::group::enableSensorsEepromPower, enable);
+        //     enableDisableGpio(gpio::group::i2c, enable);
+        //     break;
 
-        case gpio::group::i2cEeprom:
-            enableDisableGpio(gpio::group::i2c, enable);
-            enableDisableGpio(gpio::group::writeProtect, enable);
-            break;
+        // case gpio::group::i2cEeprom:
+        //     enableDisableGpio(gpio::group::enableSensorsEepromPower, enable);
+        //     enableDisableGpio(gpio::group::i2c, enable);
+        //     enableDisableGpio(gpio::group::writeProtect, enable);
+        //     break;
 
         case gpio::group::spiDisplay:
             if (enable) {
@@ -203,23 +205,35 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
             }
             break;
 
-        case gpio::group::vddEnable:
-
+        case gpio::group::enableDisplayPower:
             if (enable) {
                 GPIO_InitTypeDef GPIO_InitStruct{0};
-
-                // PA9 = Wio-E5 pin 21 - switches the 3.3V towards sensors and eeprom
-                GPIO_InitStruct.Pin   = vddEnable_Pin;
+                // PC0 = Wio-E5 pin 13 - switches the 3.3V towards the epaper display
+                GPIO_InitStruct.Pin   = GPIO_PIN_0;
                 GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
                 GPIO_InitStruct.Pull  = GPIO_NOPULL;
                 GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-                HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
+                HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+                HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_RESET);
             } else {
-                HAL_GPIO_DeInit(GPIOA, vddEnable_Pin);
+                HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0);
             }
             break;
 
+        case gpio::group::enableSensorsEepromPower:
+            if (enable) {
+                GPIO_InitTypeDef GPIO_InitStruct{0};
+                // PC1 = Wio-E5 pin 12 - switches the 3.3V towards sensors and eeprom
+                GPIO_InitStruct.Pin   = GPIO_PIN_1;
+                GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+                GPIO_InitStruct.Pull  = GPIO_NOPULL;
+                GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+                HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+                HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_RESET);
+            } else {
+                HAL_GPIO_DeInit(GPIOC, GPIO_PIN_1);
+            }
+            break;
 
         case gpio::group::other:
             // A set of unassigned, spare pins. Can be used for experimenting

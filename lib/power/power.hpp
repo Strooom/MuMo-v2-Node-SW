@@ -7,8 +7,8 @@
 
 class power {
   public:
-    static bool isUsbConnected();        // detect insertion of USB cable event
-    static bool isUsbRemoved();          // detect removal of USB cable event
+    static bool isUsbConnected();
+    static bool isUsbRemoved();
     static bool hasUsbPower();
 
 #ifndef unitTesting

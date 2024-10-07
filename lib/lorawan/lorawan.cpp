@@ -979,7 +979,7 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
     if (theFramePort == 0) {
         setOffsetsAndLengthsTx(macOut.getLevel());
         insertHeaders(nullptr, 0, macOut.getLevel(), 0);
-        insertPayload(macOut.asUint8Ptr(), macOut.getLevel());        // TODO : test the length of the MAC stuff we are going to send, so it does not exceed the maximum allowed length
+        insertPayload(macOut.asUint8Ptr(), macOut.getLevel());
         encryptDecryptPayload(networkKey, linkDirection::uplink);
     } else {
         setOffsetsAndLengthsTx(applicationDataLength, macOut.getLevel());

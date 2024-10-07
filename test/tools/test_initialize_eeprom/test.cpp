@@ -16,14 +16,16 @@
 #include <sx126x.hpp>
 #include <mcutype.hpp>
 #include <maincontroller.hpp>
+#include <uniqueid.hpp>
+#include <i2c.hpp>
 
 // #######################################################
 // ###  Which settings to be written to EEPROM         ###
 // #######################################################
 
-const bool resetBatteryType{true};
-const bool resetMcuType{true};
-const bool setName{false};
+const bool resetBatteryType{false};
+const bool resetMcuType{false};
+const bool setName{true};
 const bool fixDevAddr{false};
 const bool overwriteExistingLoRaWANConfig{false};
 const bool resetLoRaWANState{false};
@@ -34,16 +36,16 @@ const bool eraseMeasurementsInEeprom{false};
 // ###  Non-Volatile settings to be written to EEPROM  ###
 // #######################################################
 
-eepromType selectedEepromType{eepromType::BR24G512};
+eepromType selectedEepromType{eepromType::M24M01E};
 uint8_t selectedDisplayType{0};
-batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
+batteryType selectedBatteryType{batteryType::alkaline_1200mAh};
 mcuType selectedPowerVersion{mcuType::highPower};
 
-const char toBeName[9] = "K007";
+const char toBeName[9] = "TTC";
 
-uint32_t toBeDevAddr            = 0x260BD91E;
-const char toBeNetworkKey[]     = "56B5093D4E8BC208BF10B7CC50CF445E";
-const char toBeApplicationKey[] = "808397687E1801A97E217CAFF7651BFF";
+uint32_t toBeDevAddr            = 0x260BA90C;
+const char toBeNetworkKey[]     = "00DC8F01A6661926B84EDE29C273330E";
+const char toBeApplicationKey[] = "DBA40D12067C5DBB684F883312F02A31";
 
 // #######################################################
 
@@ -52,6 +54,13 @@ circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 void setUp(void) {        // before each test
 }
 void tearDown(void) {        // after each test
+}
+
+void showUid() {
+    uint64_t uid = uniqueId::get();
+    char output[17];
+    hexAscii::uint64ToHexString(output, uid);
+    TEST_MESSAGE(output);
 }
 
 void initializeNvsVersion() {
@@ -177,12 +186,12 @@ void test_eraseMeasurementsInEeprom() {
 
 int main(int argc, char **argv) {
     HAL_Init();
-    HAL_Delay(2000);
+    HAL_Delay(3000);
     SystemClock_Config();
-    MX_I2C2_Init();
-    gpio::enableGpio(gpio::group::i2cEeprom);
+    i2c::wakeUp();
 
     UNITY_BEGIN();
+    RUN_TEST(showUid);    
     RUN_TEST(initializeNvsVersion);
     RUN_TEST(initializeDisplayType);
     RUN_TEST(initializeBatteryType);

@@ -42,6 +42,9 @@ void logging::initialize() {
 
     i2c::wakeUp();
     logging::setActiveSources(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));
+    logging::enable(logging::source::sensorData);
+    logging::enable(logging::source::sensorEvents);
+    logging::enable(logging::source::applicationEvents);
     i2c::goSleep();
 }
 

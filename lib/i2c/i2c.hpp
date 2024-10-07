@@ -3,6 +3,7 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 
+#pragma once
 #include <stdint.h>
 
 class i2c {

@@ -123,7 +123,7 @@ int main(void) {
 
     /* Configure the system clock */
     SystemClock_Config();
-    HAL_Delay(3000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
+    HAL_Delay(5000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
 
     if (power::hasUsbPower()) {        // If USB is present on reboot, we jump to bootloader for firmware update
         HAL_RCC_DeInit();
@@ -147,7 +147,6 @@ int main(void) {
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-
     while (true) {
         mainController ::handleEvents();
         mainController ::run();
@@ -424,7 +423,8 @@ static void MX_RTC_Init(void) {
 
     /** Enable the WakeUp
      */
-    if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
+//    if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
+    if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 10000, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
         Error_Handler();
     }
     /* USER CODE BEGIN RTC_Init 2 */

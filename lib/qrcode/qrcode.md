@@ -21,3 +21,18 @@ vocabulary :
 Uses two bitArrays : 
 * one with the resulting data of the QR code : called modules
 * one with 1's for every non-data pixel : isFunction : so no data will be written in locations where these functions are needed
+
+
+
+Coordinates :
+top-left is (0,0)
+x runs horizontal left to right
+y runs vertical top to bottom
+0,0 ..... x,0
+.           .
+.           .
+.           .
+.           .
+.           .
+0,y ..... x,y
+

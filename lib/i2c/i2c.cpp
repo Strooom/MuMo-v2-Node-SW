@@ -19,8 +19,9 @@ void i2c::wakeUp() {
 #ifndef generic
         MX_I2C2_Init();
 #endif
-        gpio::enableGpio(gpio::group::i2c);
+        gpio::enableGpio(gpio::group::enableSensorsEepromPower);
         gpio::enableGpio(gpio::group::writeProtect);
+        gpio::enableGpio(gpio::group::i2c);
         initalized = true;
     }
 }
@@ -32,6 +33,7 @@ void i2c::goSleep() {
 #endif
         gpio::disableGpio(gpio::group::i2c);
         gpio::disableGpio(gpio::group::writeProtect);
+        gpio::disableGpio(gpio::group::enableSensorsEepromPower);
         initalized = false;
     }
 }

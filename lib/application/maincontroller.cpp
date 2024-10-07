@@ -6,6 +6,7 @@
 #include <applicationevent.hpp>
 #include <battery.hpp>
 #include <bme680.hpp>
+#include <sht40.hpp>
 #include <buildinfo.hpp>
 #include <circularbuffer.hpp>
 #include <cli.hpp>
@@ -61,32 +62,36 @@ const uint32_t mainController::channelIndex[screen::nmbrOfMeasurementTextLines]{
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
-    char tmpString1[64];
-    char tmpString2[64];
-
     logging::initialize();
     realTimeClock::initialize();
+    version::initialize();
+    version::dump();
+    uniqueId::dump();
 
     spi::wakeUp();
     display::detectPresence();
-    screen::setType(screenType::logo);
-    screen::update();
-    screen::waitForUserToRead();
 
-    version::initialize();
-    version::dump();
-    screen::clearConsole();
-    snprintf(tmpString1, screen::maxConsoleTextLength, "MuMo %s", version::getIsVersionAsString());
-    screen::setText(0, tmpString1);
-    screen::setText(1, "CC 4.0 BY-NC-SA");
-    screen::setText(2, buildInfo::buildTimeStamp);
-    screen::setType(screenType::version);
-    screen::update();
-    screen::waitForUserToRead();
+    if (display::isPresent()) {
+        screen::setType(screenType::logo);
+        screen::update();
+        screen::waitForUserToRead();
 
-    screen::setType(screenType::uid);
-    screen::update();
-    screen::waitForUserToRead();
+        char tmpString1[64];
+        char tmpString2[64];
+
+        screen::clearConsole();
+        snprintf(tmpString1, screen::maxConsoleTextLength, "MuMo %s", version::getIsVersionAsString());
+        screen::setText(0, tmpString1);
+        screen::setText(1, "CC 4.0 BY-NC-SA");
+        screen::setText(2, buildInfo::buildTimeStamp);
+        screen::setType(screenType::version);
+        screen::update();
+        screen::waitForUserToRead();
+
+        screen::setType(screenType::uid);
+        screen::update();
+        screen::waitForUserToRead();
+    }
 
     screen::clearConsole();
     screen::setType(screenType::hwConfig);
@@ -128,10 +133,9 @@ void mainController::initialize() {
     sensorDeviceCollection::discover();
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 3, 720);
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged, 3, 720);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 30);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 30);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, 30);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, 30);
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 2, 10);
-    // TODO : more sensor settings to be read from NVS
 
     uint32_t lineIndex{0};
     for (uint32_t sensorDeviceIndex = 0; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
@@ -143,14 +147,14 @@ void mainController::initialize() {
     screen::update();
     screen::waitForUserToRead();
 
-    screen::clearConsole();
-    screen::setType(screenType::measurements);
-    measurementCollection::initialize();
-    measurementCollection::findMeasurementsInEeprom();
-    screen::setText(0, "Measurements");
+    // screen::clearConsole();
+    // screen::setType(screenType::measurements);
+    // measurementCollection::initialize();
+    // measurementCollection::findMeasurementsInEeprom();
+    // screen::setText(0, "Measurements");
     // TODO : add more detail about the measurements in EEPROM
-    screen::update();
-    screen::waitForUserToRead();
+    // screen::update();
+    // screen::waitForUserToRead();
 
     screen::clearConsole();
     screen::setType(screenType::loraConfig);
@@ -184,7 +188,8 @@ void mainController::initialize() {
 
     screen::waitForUserToRead();
     applicationEventBuffer.initialize();        // clear RTCticks which may already have been generated
-    state = mainState::networkCheck;
+                                                //    state = mainState::networkCheck;
+    state = mainState::idle;
 
     spi::goSleep();
     i2c::goSleep();
@@ -332,7 +337,7 @@ void mainController::runStateMachine() {
             if (power::hasUsbPower()) {
                 cli::run();
             } else {
-                sleep();
+                // sleep();
             }
 
         } break;
