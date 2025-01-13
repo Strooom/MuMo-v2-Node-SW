@@ -36,15 +36,14 @@ bool display::isPresent() {
 #ifdef generic
     if (mockDisplayPresent) {
         displayPresent = displayPresence::present;
-        return true;
     } else {
         displayPresent = displayPresence::notPresent;
-        return false;
     }
-#endif
+#else
     if (displayPresent == displayPresence::unknown) {
         detectPresence();
     }
+#endif
     return (displayPresent == displayPresence::present);
 }
 
@@ -104,9 +103,9 @@ void display::goSleep() {
 void display::setPixel(uint32_t x, uint32_t y) {
     if (isInBounds(x, y)) {
         rotateAndMirrorCoordinates(x, y);
-        uint32_t byteOffset       = getByteOffset(x, y);
-        uint32_t bitOffset        = getBitOffset(x);
-        displayBuffer[byteOffset]  &= ~(static_cast<uint8_t>(1 << bitOffset));
+        uint32_t byteOffset = getByteOffset(x, y);
+        uint32_t bitOffset  = getBitOffset(x);
+        displayBuffer[byteOffset] &= ~(static_cast<uint8_t>(1 << bitOffset));
     }
 }
 
@@ -229,7 +228,7 @@ bool display::isBusy() {
 #endif
 }
 
-void display::write( uint8_t* data, const uint32_t length) {
+void display::write(uint8_t* data, const uint32_t length) {
     selectChip(true);
 #ifndef generic
     HAL_SPI_Transmit(&hspi2, data, static_cast<const uint16_t>(length), spi::spiDisplayTimeout);
@@ -237,20 +236,20 @@ void display::write( uint8_t* data, const uint32_t length) {
     selectChip(false);
 }
 
-void display::write( uint8_t data) {
+void display::write(uint8_t data) {
     write(&data, 1);
 }
 
-void display::writeData( uint8_t* data, const uint32_t length) {
+void display::writeData(uint8_t* data, const uint32_t length) {
     setDataOrCommand(true);
     write(data, length);
 }
 
-void display::writeData( uint8_t data) {
+void display::writeData(uint8_t data) {
     writeData(&data, 1);
 }
 
-void display::writeCommand(const SSD1681Commands theCommand,  uint8_t* theData, const uint32_t dataLength) {
+void display::writeCommand(const SSD1681Commands theCommand, uint8_t* theData, const uint32_t dataLength) {
     selectChip(true);
     setDataOrCommand(false);
 #ifndef generic
