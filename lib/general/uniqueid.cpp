@@ -23,8 +23,3 @@ uint64_t uniqueId::get() {
 #endif
 }
 
-void uniqueId::dump() {
-    char tmpKeyAsHexAscii[17];
-    hexAscii::uint64ToHexString(tmpKeyAsHexAscii, get());
-    logging::snprintf("Device UID:  %s\n", tmpKeyAsHexAscii);
-}

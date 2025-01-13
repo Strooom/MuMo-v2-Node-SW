@@ -65,19 +65,25 @@ void mainController::initialize() {
     logging::initialize();
     realTimeClock::initialize();
     version::initialize();
-    version::dump();
-    uniqueId::dump();
+
+    logging::snprintf("https://github.com/Strooom - %s\n", version::getIsVersionAsString());
+    logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
+    logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
+
+    char tmpKeyAsHexAscii[17];
+    hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
+    logging::snprintf("Device UID:  %s\n", tmpKeyAsHexAscii);
 
     spi::wakeUp();
     display::detectPresence();
+
+    char tmpString1[64];
+    char tmpString2[64];
 
     if (display::isPresent()) {
         screen::setType(screenType::logo);
         screen::update();
         screen::waitForUserToRead();
-
-        char tmpString1[64];
-        char tmpString2[64];
 
         screen::clearConsole();
         snprintf(tmpString1, screen::maxConsoleTextLength, "MuMo %s", version::getIsVersionAsString());

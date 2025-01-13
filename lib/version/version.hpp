@@ -1,7 +1,7 @@
 #pragma once
-#include "cstdint"
-#include "buildtype.hpp"
-#include "buildenvironment.hpp"
+#include <cstdint>
+#include <buildtype.hpp>
+#include <buildenvironment.hpp>
 
 class version {
   public:

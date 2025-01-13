@@ -14,6 +14,4 @@ class buildInfo {
     static const char* lastCommitTag;
     static const char* buildTimeStamp;
     static const time_t buildEpoch;
-
-    static void dump();
 };
