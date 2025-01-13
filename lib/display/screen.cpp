@@ -32,7 +32,7 @@ char screen::smallText[nmbrOfMeasurementTextLines][maxMeasurementTextLength + 1]
 char screen::consoleText[nmbrOfConsoleTextLines][maxConsoleTextLength + 1]{};
 
 bool screen::hasUsbPower{false};
-uint32_t screen::netwerkStrength{0};
+uint32_t screen::networkStrength{0};
 uint32_t screen::batteryLevel{0};
 char screen::uidAsHex[17]{0};
 char screen::name[screen::maxNodeNameLength + 1]{0};
@@ -127,8 +127,8 @@ void screen::setUsbStatus(const bool newHasUsbPower) {
 }
 
 void screen::setNetworkStatus(const uint32_t newNetworkSignalStrength) {
-    if (netwerkStrength != newNetworkSignalStrength) {
-        netwerkStrength = newNetworkSignalStrength;
+    if (networkStrength != newNetworkSignalStrength) {
+        networkStrength = newNetworkSignalStrength;
         modified        = true;
     }
 }
@@ -195,7 +195,7 @@ void screen::showMeasurements() {
     batteryLevel = static_cast<uint32_t>(sensorDeviceCollection::value(1, 1) * 100.0F);
     graphics::drawBatteryIcon(iconLeft, 2, batteryLevel);
     iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth + ux::iconSpacing);
-    graphics::drawNetworkSignalStrengthIcon(iconLeft, 2, netwerkStrength);
+    graphics::drawNetworkSignalStrengthIcon(iconLeft, 2, networkStrength);
     if (hasUsbPower) {
         iconLeft = display::widthInPixels - (ux::marginLeft + ux::iconWidth + ux::iconSpacing + ux::iconSpacing);
         graphics::drawBitMap(iconLeft, 2, usbIcon);

@@ -19,7 +19,7 @@ class screen {
     static void setText(uint32_t lineIndex, const char* textBig, const char* textSmall);
     static void setUsbStatus(const bool hasUsbPower);
     static void setNetworkStatus(const uint32_t networkSignalStrength);
-    static void setBatteryStatus(uint32_t batterylevel);
+    static void setBatteryStatus(uint32_t batteryLevel);
     static void setName(const char* newName);
     static void setUidAsHex(const char* newUidAsHex);
 
@@ -42,7 +42,7 @@ class screen {
     static char bigText[nmbrOfMeasurementTextLines][maxMeasurementTextLength + 1U];
     static char smallText[nmbrOfMeasurementTextLines][maxMeasurementTextLength + 1U];
     static bool hasUsbPower;
-    static uint32_t netwerkStrength;
+    static uint32_t networkStrength;
     static uint32_t batteryLevel;
     static char uidAsHex[17];
     static char name[maxNodeNameLength + 1U];
