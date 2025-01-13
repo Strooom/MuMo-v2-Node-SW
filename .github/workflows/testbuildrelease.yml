@@ -29,13 +29,13 @@ jobs:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
 
     steps:
-      - name: Enable caching
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/pip
-            ~/.platformio/.cache
-          key: ${{ runner.os }}-pio
+      # - name: Enable caching
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       ~/.cache/pip
+      #       ~/.platformio/.cache
+      #     key: ${{ runner.os }}-pio
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -169,12 +169,12 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v4
-        with:
-          python-version: "3.9"
+#        with:
+#          python-version: "3.9"
 
-      - name: Install gcovr 5.0
+      - name: Install gcovr
         run: |
-          pip install gcovr==5.0
+          pip install gcovr
 
       - name: Install sonar-scanner and build-wrapper
         uses: sonarsource/sonarcloud-github-c-cpp@v3
@@ -224,7 +224,7 @@ jobs:
 
       - name: Collect coverage into XML report
         run: |
-          gcovr --sonarqube > coverage.xml
+          gcovr --sonarqube --gcov-ignore-parse-errors > coverage.xml
 
       - name: Run sonar-scanner
         env:
