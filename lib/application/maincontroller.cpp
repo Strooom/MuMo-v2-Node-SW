@@ -75,7 +75,7 @@ void mainController::initialize() {
     logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
     char tmpKeyAsHexAscii[17];
     hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
-    logging::snprintf("Device UID:  %s\n", tmpKeyAsHexAscii);
+    logging::snprintf("UID     : %s\n", tmpKeyAsHexAscii);
 
     spi::wakeUp();
     display::detectPresence();
@@ -84,7 +84,7 @@ void mainController::initialize() {
 
     i2c::wakeUp();
     if (nonVolatileStorage::isPresent()) {
-        logging::snprintf(logging::source::settings, "EEPROM : present\n");
+        logging::snprintf(logging::source::settings, "EEPROM  : present\n");
     } else {
         logging::snprintf(logging::source::criticalError, "no EEPROM\n");
         state = mainState::fatalError;
@@ -92,19 +92,19 @@ void mainController::initialize() {
     }
 
     batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
-    if (battery::isValidType()) {
+    if (battery::isValidType(theBatteryType)) {
         battery::initialize(theBatteryType);
-        logging::snprintf(logging::source::settings, "Battery : %s\n", toString(theBatteryType));
+        logging::snprintf(logging::source::settings, "Battery : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
     } else {
-        logging::snprintf(logging::source::criticalError, "no BatteryType\n");
+        logging::snprintf(logging::source::criticalError, "invalid BatteryType %d\n", static_cast<uint8_t>(theBatteryType));
     }
 
     mcuType theMcuType = static_cast<mcuType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
     if (sx126x::isValidType(theMcuType)) {
         sx126x::initialize(theMcuType);
-        logging::snprintf(logging::source::settings, "Radio : %s\n", toString(theMcuType));
+        logging::snprintf(logging::source::settings, "Radio   : %s (%d)\n", toString(theMcuType), static_cast<uint8_t>(theMcuType));
     } else {
-        logging::snprintf(logging::source::criticalError, "no RadioType\n");
+        logging::snprintf(logging::source::criticalError, "invalid RadioType %d\n", static_cast<uint8_t>(theMcuType));
         state = mainState::fatalError;
         return;
     }

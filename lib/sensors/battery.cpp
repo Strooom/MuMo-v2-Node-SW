@@ -30,8 +30,8 @@ void battery::setType(uint8_t index) {
     }
 }
 
-bool battery::isValidType() {
-    return (type < batteryType::nmbrBatteryTypes);
+bool battery::isValidType(batteryType newBatteryType) {
+    return (newBatteryType < batteryType::nmbrBatteryTypes);
 }
 
 void battery::initialize(batteryType newBatteryType) {

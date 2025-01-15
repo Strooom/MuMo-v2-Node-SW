@@ -124,7 +124,7 @@ int main(void) {
     /* Configure the system clock */
     SystemClock_Config();
     HAL_Delay(1000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
-//    HAL_Delay(5000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
+                            //    HAL_Delay(5000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
 
     if (power::hasUsbPower()) {        // If USB is present on reboot, we jump to bootloader for firmware update
         HAL_RCC_DeInit();
@@ -142,6 +142,7 @@ int main(void) {
     MX_AES_Init();
     MX_RNG_Init();
     MX_LPTIM1_Init();
+    MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
     mainController ::initialize();
     /* USER CODE END 2 */
@@ -149,11 +150,11 @@ int main(void) {
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     while (true) {
-        //mainController::runUsbPowerDetection();
+        // mainController::runUsbPowerDetection();
         mainController::runStateMachine();
-        //mainController::runDisplayUpdate();
-        //mainController::runCli();
-        
+        // mainController::runDisplayUpdate();
+        // mainController::runCli();
+
         mainController::handleEvents();
         /* USER CODE END WHILE */
 

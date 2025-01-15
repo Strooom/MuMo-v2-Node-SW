@@ -13,7 +13,7 @@
 class battery {
   public:
     static void setType(uint8_t index);
-    static bool isValidType();
+    static bool isValidType(batteryType newBatteryType);
     static void initialize(batteryType newBatteryType);
     static void run();
     static sensorDeviceState getState() { return state; };
