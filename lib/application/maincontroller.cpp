@@ -65,6 +65,7 @@ void mainController::initialize() {
     logging::enable(logging::destination::uart1);
     logging::enable(logging::source::applicationEvents);
     logging::enable(logging::source::settings);
+    logging::enable(logging::source::sensorData);
     logging::enable(logging::source::error);
     logging::enable(logging::source::criticalError);
     realTimeClock::initialize();
@@ -83,8 +84,9 @@ void mainController::initialize() {
     spi::goSleep();
 
     i2c::wakeUp();
-    if (nonVolatileStorage::isPresent()) {
-        logging::snprintf(logging::source::settings, "EEPROM  : present\n");
+    uint32_t nmbr64KBlocks = nonVolatileStorage::isPresent();
+    if (nmbr64KBlocks > 0) {
+        logging::snprintf(logging::source::settings, "EEPROM  : %d * 64K present\n", nmbr64KBlocks);
     } else {
         logging::snprintf(logging::source::criticalError, "no EEPROM\n");
         state = mainState::fatalError;
@@ -109,17 +111,16 @@ void mainController::initialize() {
         return;
     }
 
-
     sensorDeviceCollection::discover();
     logging::snprintf("BME680  : %s\n", bme680::isPresent() ? "present" : "not present");
     logging::snprintf("SHT40   : %s\n", sht40::isPresent() ? "present" : "not present");
     logging::snprintf("TSL2591 : %s\n", tsl2591::isPresent() ? "present" : "not present");
 
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 3, 720);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged, 3, 720);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, 30);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, 30);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 2, 10);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 2);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged, 0, 2);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, 2);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, 2);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 2);
 
     // TODO : initialize measurementCollection
 
@@ -219,6 +220,7 @@ void mainController::handleEventsStateIdle(applicationEvent theEvent) {
                 LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
             }
             if (sensorDeviceCollection::needsSampling()) {
+                i2c::wakeUp();
                 sensorDeviceCollection::startSampling();
                 goTo(mainState::measuring);
             } else {
@@ -256,6 +258,7 @@ void mainController::runStateMachine() {
         case mainState::measuring:
             sensorDeviceCollection::run();
             if (sensorDeviceCollection::isSamplingReady()) {
+                i2c::goSleep();
                 sensorDeviceCollection::updateCounters();
                 goTo(mainState::logging);
             }

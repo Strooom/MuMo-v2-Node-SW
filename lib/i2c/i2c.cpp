@@ -22,7 +22,9 @@ void i2c::wakeUp() {
         gpio::enableGpio(gpio::group::enableSensorsEepromPower);
         gpio::enableGpio(gpio::group::writeProtect);
         gpio::enableGpio(gpio::group::i2c);
-        HAL_Delay(1); // Some HW testing revealed that the I2C bus needs a little time to stabilize before using it...
+#ifndef generic
+        HAL_Delay(1); // Some HW testing revealed that the I2C bus needs a little time to stabilize after powering on...
+#endif
         initalized = true;
     }
 }

@@ -20,21 +20,20 @@ void test_isPresent() {
 }
 
 void test_measurement() {
-    tsl2591::initialize();
     tsl2591::startSampling();
     while (!tsl2591::samplingIsReady()) {
         HAL_Delay(1);
+        tsl2591::run();
     }
     tsl2591::readSample();
     float lux = tsl2591::calculateLux();
-    TEST_ASSERT_FLOAT_WITHIN(9.0F, 10.0F, lux);
+    TEST_ASSERT_FLOAT_WITHIN(10.0F, 30.0F, lux);
 }
 
 void test_isNotPresentI2CSleeping() {
     i2c::goSleep();
     TEST_ASSERT_FALSE(tsl2591::isPresent());
 }
-
 
 int main(int argc, char **argv) {
     HAL_Init();

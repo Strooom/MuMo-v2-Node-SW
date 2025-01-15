@@ -9,7 +9,7 @@
 class nonVolatileStorage {
   public:
     nonVolatileStorage() = delete;
-    static bool isPresent();
+    static uint32_t isPresent();
 
     static constexpr uint32_t totalSize{64 * 1024};        // TODO : make this configurable from eeprom type
     static constexpr uint32_t pageSize{128};               // TODO : idem
