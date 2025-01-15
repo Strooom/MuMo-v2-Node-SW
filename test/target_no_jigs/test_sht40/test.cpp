@@ -11,12 +11,11 @@
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_isPresent() {
+    i2c::wakeUp();
     TEST_ASSERT_TRUE(sht40::isPresent());
 }
 
@@ -32,15 +31,21 @@ void test_measurement() {
     TEST_ASSERT_FLOAT_WITHIN(10.0F, 50.0F, relativeHumidity);
 }
 
+void test_isNotPresentI2CSleeping() {
+    i2c::goSleep();
+    TEST_ASSERT_FALSE(sht40::isPresent());
+}
+
+
 int main(int argc, char **argv) {
     HAL_Init();
     HAL_Delay(2000);
     SystemClock_Config();
 
-    i2c::wakeUp();
 
     UNITY_BEGIN();
     RUN_TEST(test_isPresent);
     RUN_TEST(test_measurement);
+    RUN_TEST(test_isNotPresentI2CSleeping);
     UNITY_END();
 }
