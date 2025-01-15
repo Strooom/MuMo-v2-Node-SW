@@ -18,7 +18,7 @@ class sensorDeviceCollection {
     static void log();
     static void log(uint32_t deviceIndex);
     static void log(uint32_t deviceIndex, uint32_t channelIndex);
-    static bool isSleeping();
+    static bool isSamplingReady();
 
     static float value(uint32_t deviceIndex, uint32_t channelIndex);
     static uint32_t decimals(uint32_t deviceIndex, uint32_t channelIndex);

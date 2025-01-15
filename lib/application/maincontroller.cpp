@@ -122,37 +122,30 @@ void mainController::initialize() {
 
     gpio::enableGpio(gpio::group::rfControl);
     LoRaWAN::initialize();
-
-    screen::setText(0, "LoRaWAN");
-    hexAscii::uint32ToHexString(tmpString2, LoRaWAN::DevAddr.asUint32);
-    snprintf(tmpString1, screen::maxConsoleTextLength, "DevAdrr : %s", tmpString2);
-    screen::setText(1, tmpString1);
-    hexAscii::byteArrayToHexString(tmpString2, LoRaWAN::applicationKey.asBytes(), 2);
-    snprintf(tmpString1, screen::maxConsoleTextLength, "AppSKey : %s...", tmpString2);
-    screen::setText(2, tmpString1);
-    hexAscii::byteArrayToHexString(tmpString2, LoRaWAN::networkKey.asBytes(), 2);
-    snprintf(tmpString1, screen::maxConsoleTextLength, "NwkSKey : %s...", tmpString2);
-    screen::setText(3, tmpString1);
-    snprintf(tmpString1, screen::maxConsoleTextLength, "DataRate : %u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex));
-    screen::setText(4, tmpString1);
-    snprintf(tmpString1, screen::maxConsoleTextLength, "rx1Delay : %u", static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
-    screen::setText(5, tmpString1);
-    screen::update();
-
-    if (!LoRaWAN::isValidConfig()) {
+    if (LoRaWAN::isValidConfig()) {
+        char tmpString1[64];
+        char tmpString2[64];
+        hexAscii::uint32ToHexString(tmpString2, LoRaWAN::DevAddr.asUint32);
+        snprintf(tmpString1, screen::maxConsoleTextLength, "DevAdrr : %s", tmpString2);
+        logging::snprintf("%s\n", tmpString1);
+        hexAscii::byteArrayToHexString(tmpString2, LoRaWAN::applicationKey.asBytes(), 16);
+        snprintf(tmpString1, screen::maxConsoleTextLength, "AppSKey : %s", tmpString2);
+        logging::snprintf("%s\n", tmpString1);
+        hexAscii::byteArrayToHexString(tmpString2, LoRaWAN::networkKey.asBytes(), 16);
+        snprintf(tmpString1, screen::maxConsoleTextLength, "NwkSKey : %s", tmpString2);
+        logging::snprintf("%s\n", tmpString1);
+        snprintf(tmpString1, screen::maxConsoleTextLength, "DataRate: %u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex));
+        logging::snprintf("%s\n", tmpString1);
+        snprintf(tmpString1, screen::maxConsoleTextLength, "rx1Delay: %u", static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
+        logging::snprintf("%s\n", tmpString1);
+    } else {
+        logging::snprintf(logging::source::criticalError, "no valid LoRaWAN config\n");
         state = mainState::fatalError;
-        spi::goSleep();
-        i2c::goSleep();
         return;
     }
-
-    screen::waitForUserToRead();
     applicationEventBuffer.initialize();        // clear RTCticks which may already have been generated
-                                                //    state = mainState::networkCheck;
-    state = mainState::idle;
-
-    spi::goSleep();
-    i2c::goSleep();
+    // goTo(mainState::networkCheck);
+    goTo(mainState::idle);
 }
 
 void mainController::handleEvents() {
@@ -247,67 +240,17 @@ void mainController::handleEventsStateNetworking(applicationEvent theEvent) {
     }
 }
 
-void mainController::runUsbPowerDetection() {
-    if (power::isUsbConnected()) {
-        uart2::initialize();
-        gpio::enableGpio(gpio::group::uart2);
-        screen::setUsbStatus(true);
-    }
-    if (power::isUsbRemoved()) {
-        gpio::disableGpio(gpio::group::uart2);
-        screen::setUsbStatus(false);
-    }
-}
-
-void mainController::runDisplayUpdate() {
-    switch (state) {
-        case mainState::networking:
-            break;
-
-        default:
-            if (display::isPresent()) {
-                if (screen::isModified() || ((realTimeClock::tickCounter % display::refreshPeriodInTicks) == (display::refreshPeriodInTicks - 1))) {
-                    screen::update();
-                }
-            }
-            break;
-    }
-}
-
-void mainController::runCli() {
-    switch (state) {
-        case mainState::networking:
-            break;
-
-        default:
-            if (power::hasUsbPower()) {
-                cli::run();
-            }
-            break;
-    }
-}
-
 void mainController::runStateMachine() {
     switch (state) {
         case mainState::boot:
-            break;
-
         case mainState::idle:
-        case mainState::fatalError: {
-            if (power::hasUsbPower()) {
-                cli::run();
-            } else {
-                // sleep();
-            }
-
-        } break;
-
+        case mainState::fatalError:
         case mainState::networkCheck:
             break;
 
         case mainState::measuring:
             sensorDeviceCollection::run();
-            if (sensorDeviceCollection::isSleeping()) {
+            if (sensorDeviceCollection::isSamplingReady()) {
                 sensorDeviceCollection::updateCounters();
                 goTo(mainState::logging);
             }
@@ -320,11 +263,11 @@ void mainController::runStateMachine() {
                 }
 
                 sensorDeviceCollection::collectNewMeasurements();
-                measurementCollection::saveNewMeasurementsToEeprom();
+                // measurementCollection::saveNewMeasurementsToEeprom();
 
                 uint32_t payloadLength        = measurementCollection::nmbrOfBytesToTransmit();
                 const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
-                LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
+                // LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength); temporarily disabled TODO : enable again
                 measurementCollection::setTransmitted(0, payloadLength);        // TODO : get correct frame counter *before* call to sendUplink
                 goTo(mainState::networking);
             } else {
@@ -334,7 +277,7 @@ void mainController::runStateMachine() {
 
         case mainState::networking:
             if (LoRaWAN::isIdle()) {
-                showMain();
+                // showMain();
                 goTo(mainState::idle);
             }
             break;
@@ -342,13 +285,6 @@ void mainController::runStateMachine() {
         default:
             break;
     }
-}
-
-void mainController::run() {
-    runUsbPowerDetection();
-    runDisplayUpdate();
-    runCli();
-    runStateMachine();
 }
 
 void mainController::goTo(mainState newState) {
@@ -456,5 +392,47 @@ void mainController::miniAdr() {
             newDataRateIndex = 0;
         }
         LoRaWAN::currentDataRateIndex = newDataRateIndex;
+    }
+}
+
+void mainController::runDisplayUpdate() {
+    switch (state) {
+        case mainState::networking:
+            break;
+
+        default:
+            if (display::isPresent()) {
+                if (screen::isModified() || ((realTimeClock::tickCounter % display::refreshPeriodInTicks) == (display::refreshPeriodInTicks - 1))) {
+                    screen::update();
+                }
+            }
+            break;
+    }
+}
+
+void mainController::runCli() {
+    switch (state) {
+        case mainState::networking:
+            break;
+
+        default:
+            if (power::hasUsbPower()) {
+                cli::run();
+            }
+            break;
+    }
+}
+
+void mainController::runUsbPowerDetection() {
+    if (power::isUsbConnected()) {
+        applicationEventBuffer.push(applicationEvent::usbConnected);
+        // uart2::initialize();
+        // gpio::enableGpio(gpio::group::uart2);
+        // screen::setUsbStatus(true);
+    }
+    if (power::isUsbRemoved()) {
+        applicationEventBuffer.push(applicationEvent::usbRemoved);
+        // gpio::disableGpio(gpio::group::uart2);
+        // screen::setUsbStatus(false);
     }
 }

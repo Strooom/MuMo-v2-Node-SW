@@ -89,7 +89,7 @@ void sensorDeviceCollection::run() {
     }
 }
 
-bool sensorDeviceCollection::isSleeping() {
+bool sensorDeviceCollection::isSamplingReady() {
     for (auto index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
         if (isPresent[index]) {
             switch (static_cast<sensorDeviceType>(index)) {

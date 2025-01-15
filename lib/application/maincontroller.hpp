@@ -19,7 +19,6 @@ class mainController {
     static void handleEventsStateIdle(applicationEvent theEvent);
     static void handleEventsStateNetworking(applicationEvent theEvent);
 
-    static void run();
     static void runUsbPowerDetection();
     static void runDisplayUpdate();
     static void runCli();
@@ -42,7 +41,6 @@ class mainController {
 
     static void showLoRaWanStatus();
     static void showMain();
-
 
     static uint32_t requestCounter;
     static uint32_t answerCounter;
