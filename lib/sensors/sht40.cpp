@@ -8,6 +8,7 @@
 #include <float.hpp>
 #include <logging.hpp>
 #include <measurementcollection.hpp>
+#include <i2c.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -126,7 +127,14 @@ bool sht40::testI2cAddress(uint8_t addressToTest) {
 void sht40::write(command aCommand) {
     uint8_t pCommand = static_cast<uint8_t>(aCommand);
 #ifndef generic
+    bool i2cState = i2c::isInitialized();
+    if (!i2cState) {
+        i2c::wakeUp();
+    }
     HAL_I2C_Master_Transmit(&hi2c2, i2cAddress << 1, &pCommand, 1, halTimeout);
+    if (!i2cState) {
+        i2c::goSleep();
+    }
 #else
 // TODO add mock for generic Unit testing
 #endif
@@ -134,7 +142,14 @@ void sht40::write(command aCommand) {
 
 void sht40::read(uint8_t* response, uint32_t responseLength) {
 #ifndef generic
+    bool i2cState = i2c::isInitialized();
+    if (!i2cState) {
+        i2c::wakeUp();
+    }
     HAL_I2C_Master_Receive(&hi2c2, i2cAddress << 1, response, responseLength, halTimeout);
+    if (!i2cState) {
+        i2c::goSleep();
+    }
 #else
     (void)memcpy(response, mockSHT40Registers, responseLength);
 #endif
