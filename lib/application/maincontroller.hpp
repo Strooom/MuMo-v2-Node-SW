@@ -43,6 +43,7 @@ class mainController {
     static void showLoRaWanStatus();
     static void showMain();
 
+
     static uint32_t requestCounter;
     static uint32_t answerCounter;
 };

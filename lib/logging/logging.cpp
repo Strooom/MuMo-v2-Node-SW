@@ -39,13 +39,6 @@ void logging::initialize() {
     if (!logging::isActive(logging::destination::debugProbe)) {
         gpio::disableGpio(gpio::group::debugPort);
     }
-
-    i2c::wakeUp();
-    logging::setActiveSources(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));
-    logging::enable(logging::source::sensorData);
-    logging::enable(logging::source::sensorEvents);
-    logging::enable(logging::source::applicationEvents);
-    i2c::goSleep();
 }
 
 uint32_t logging::snprintf(const char *format, ...) {

@@ -28,7 +28,7 @@
 #include <sensordevicecollection.hpp>
 #include <settingscollection.hpp>
 #include <spi.hpp>
-#include <stdio.h>        // snprintf
+#include <stdio.h>
 #include <tsl2591.hpp>
 #include <uart.hpp>
 #include <uniqueid.hpp>
@@ -62,79 +62,54 @@ const uint32_t mainController::channelIndex[screen::nmbrOfMeasurementTextLines]{
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
-    logging::initialize();
+    logging::enable(logging::destination::uart1);
+    logging::enable(logging::source::applicationEvents);
+    logging::enable(logging::source::settings);
+    logging::enable(logging::source::error);
+    logging::enable(logging::source::criticalError);
     realTimeClock::initialize();
     version::initialize();
 
     logging::snprintf("https://github.com/Strooom - %s\n", version::getIsVersionAsString());
     logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
     logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
-
     char tmpKeyAsHexAscii[17];
     hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
     logging::snprintf("Device UID:  %s\n", tmpKeyAsHexAscii);
 
     spi::wakeUp();
     display::detectPresence();
+    logging::snprintf(logging::source::settings, "Display : %s\n", display::isPresent() ? "present" : "not present");
+    spi::goSleep();
 
-    char tmpString1[64];
-    char tmpString2[64];
-
-    if (display::isPresent()) {
-        screen::setType(screenType::logo);
-        screen::update();
-        screen::waitForUserToRead();
-
-        screen::clearConsole();
-        snprintf(tmpString1, screen::maxConsoleTextLength, "MuMo %s", version::getIsVersionAsString());
-        screen::setText(0, tmpString1);
-        screen::setText(1, "CC 4.0 BY-NC-SA");
-        screen::setText(2, buildInfo::buildTimeStamp);
-        screen::setType(screenType::version);
-        screen::update();
-        screen::waitForUserToRead();
-
-        screen::setType(screenType::uid);
-        screen::update();
-        screen::waitForUserToRead();
-    }
-
-    screen::clearConsole();
-    screen::setType(screenType::hwConfig);
     i2c::wakeUp();
-    if (!nonVolatileStorage::isPresent()) {
+    if (nonVolatileStorage::isPresent()) {
+        logging::snprintf(logging::source::settings, "EEPROM : present\n");
+    } else {
         logging::snprintf(logging::source::criticalError, "no EEPROM\n");
-        screen::setText(0, "no EEPROM");
-        screen::update();
         state = mainState::fatalError;
-        spi::goSleep();
-        i2c::goSleep();
         return;
     }
 
-    uint8_t mcuTypeIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType);
-    sx126x::setType(mcuTypeIndex);
-    if (!sx126x::isValidType()) {
-        logging::snprintf(logging::source::criticalError, "no RadioType\n");
-        screen::setText(1, "no RadioType");
-        screen::update();
-        state = mainState::fatalError;
-        spi::goSleep();
-        i2c::goSleep();
-        return;
-    }
-    sx126x::initialize(static_cast<mcuType>(mcuTypeIndex));
-
-    uint8_t batteryTypeIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType);
-    battery::setType(batteryTypeIndex);
-    if (!battery::isValidType()) {
+    batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
+    if (battery::isValidType()) {
+        battery::initialize(theBatteryType);
+        logging::snprintf(logging::source::settings, "Battery : %s\n", toString(theBatteryType));
+    } else {
         logging::snprintf(logging::source::criticalError, "no BatteryType\n");
+    }
+
+    mcuType theMcuType = static_cast<mcuType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
+    if (sx126x::isValidType(theMcuType)) {
+        sx126x::initialize(theMcuType);
+        logging::snprintf(logging::source::settings, "Radio : %s\n", toString(theMcuType));
+    } else {
+        logging::snprintf(logging::source::criticalError, "no RadioType\n");
         state = mainState::fatalError;
-        spi::goSleep();
-        i2c::goSleep();
         return;
     }
-    battery::initialize(static_cast<batteryType>(batteryTypeIndex));
+
+    i2c::goSleep();
 
     sensorDeviceCollection::discover();
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 3, 720);
@@ -143,32 +118,11 @@ void mainController::initialize() {
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, 30);
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 2, 10);
 
-    uint32_t lineIndex{0};
-    for (uint32_t sensorDeviceIndex = 0; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
-        if (sensorDeviceCollection::isValid(sensorDeviceIndex)) {
-            screen::setText(lineIndex, sensorDeviceCollection::name(sensorDeviceIndex));
-            lineIndex++;
-        }
-    }
-    screen::update();
-    screen::waitForUserToRead();
+    // TODO : initialize measurementCollection
 
-    // screen::clearConsole();
-    // screen::setType(screenType::measurements);
-    // measurementCollection::initialize();
-    // measurementCollection::findMeasurementsInEeprom();
-    // screen::setText(0, "Measurements");
-    // TODO : add more detail about the measurements in EEPROM
-    // screen::update();
-    // screen::waitForUserToRead();
-
-    screen::clearConsole();
-    screen::setType(screenType::loraConfig);
-    char name[screen::maxNodeNameLength + 1]{0};
-    settingsCollection::readByteArray(reinterpret_cast<uint8_t*>(name), settingsCollection::settingIndex::name);
-    screen::setName(name);
     gpio::enableGpio(gpio::group::rfControl);
     LoRaWAN::initialize();
+
     screen::setText(0, "LoRaWAN");
     hexAscii::uint32ToHexString(tmpString2, LoRaWAN::DevAddr.asUint32);
     snprintf(tmpString1, screen::maxConsoleTextLength, "DevAdrr : %s", tmpString2);
@@ -398,7 +352,7 @@ void mainController::run() {
 }
 
 void mainController::goTo(mainState newState) {
-    logging::snprintf(logging::source::applicationEvents, "MainController stateChange : %s[%u] -> %s[%u]\n", toString(state), static_cast<uint32_t>(state), toString(newState), static_cast<uint32_t>(newState));
+    logging::snprintf(logging::source::applicationEvents, "mainController stateChange : %s[%u] -> %s[%u]\n", toString(state), static_cast<uint32_t>(state), toString(newState), static_cast<uint32_t>(newState));
     state = newState;
 }
 

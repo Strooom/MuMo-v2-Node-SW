@@ -21,14 +21,8 @@ uint8_t mockSX126xCommandData[256][8];
 
 mcuType sx126x::theMcuType{mcuType::nmbrMcuTypes};
 
-void sx126x::setType(uint8_t index) {
-    if (index < nmbrMcuTypes) {
-        theMcuType = static_cast<mcuType>(index);
-    }
-}
-
-bool sx126x::isValidType() {
-    return (theMcuType < mcuType::nmbrMcuTypes);
+bool sx126x::isValidType(mcuType someMcuType) {
+    return (someMcuType < mcuType::nmbrMcuTypes);
 }
 
 void sx126x::initialize(mcuType isPowerVersion) {
