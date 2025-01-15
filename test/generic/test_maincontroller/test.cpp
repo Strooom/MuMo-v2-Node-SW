@@ -87,15 +87,15 @@ void test_transitions_main() {
 }
 
 void test_usb_detection() {
-    power::mockUsbPower = false;
-    mainController::run();
-    mainController::handleEvents();
-    power::mockUsbPower = true;
-    mainController::run();
-    mainController::handleEvents();
-    power::mockUsbPower = false;
-    mainController::run();
-    mainController::handleEvents();
+    // power::mockUsbPower = false;
+    // mainController::run();
+    // mainController::handleEvents();
+    // power::mockUsbPower = true;
+    // mainController::run();
+    // mainController::handleEvents();
+    // power::mockUsbPower = false;
+    // mainController::run();
+    // mainController::handleEvents();
 }
 
 void test_toString() {

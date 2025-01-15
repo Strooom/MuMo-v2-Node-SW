@@ -109,9 +109,12 @@ void mainController::initialize() {
         return;
     }
 
-    i2c::goSleep();
 
     sensorDeviceCollection::discover();
+    logging::snprintf("BME680  : %s\n", bme680::isPresent() ? "present" : "not present");
+    logging::snprintf("SHT40   : %s\n", sht40::isPresent() ? "present" : "not present");
+    logging::snprintf("TSL2591 : %s\n", tsl2591::isPresent() ? "present" : "not present");
+
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 3, 720);
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged, 3, 720);
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, 30);
@@ -119,6 +122,8 @@ void mainController::initialize() {
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 2, 10);
 
     // TODO : initialize measurementCollection
+
+    i2c::goSleep();
 
     gpio::enableGpio(gpio::group::rfControl);
     LoRaWAN::initialize();

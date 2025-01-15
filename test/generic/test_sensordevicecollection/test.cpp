@@ -197,7 +197,7 @@ void test_hasNewMeasurements() {
 
     sensorDeviceCollection::startSampling();
     sensorDeviceCollection::run();
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isSleeping());
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isSamplingReady());
     TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements());
     TEST_ASSERT_EQUAL(1, sensorDeviceCollection::nmbrOfNewMeasurements());
     TEST_ASSERT_TRUE(sensorDeviceCollection::hasNewMeasurements(static_cast<uint32_t>(sensorDeviceType::battery)));
