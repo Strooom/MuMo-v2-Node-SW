@@ -4,10 +4,8 @@
 #include <sensordevicecollection.hpp>
 
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_initialization() {
     TEST_ASSERT_EQUAL(sensorDeviceState::unknown, battery::getState());
@@ -38,7 +36,7 @@ void test_run() {
     batteryType testType = batteryType::saft_ls_14250;
     battery::initialize(testType);
     battery::channels[battery::voltage].set(1, 1);
-    battery::channels[battery::percentCharged].set(1, 1);
+    battery::channels[battery::stateOfCharge].set(1, 1);
     sensorDeviceCollection::discover();
     sensorDeviceCollection::updateCounters(static_cast<uint32_t>(sensorDeviceType::battery));
     battery::startSampling();

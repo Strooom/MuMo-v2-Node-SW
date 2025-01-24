@@ -62,10 +62,16 @@ const uint32_t mainController::channelIndex[screen::nmbrOfMeasurementTextLines]{
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
+    gpio::disableGpio(gpio::group::debugPort);        // test for getting low power
+
+    // LL_DBGMCU_DisableDBGStopMode();
+
     logging::enable(logging::destination::uart1);
     logging::enable(logging::source::applicationEvents);
     logging::enable(logging::source::settings);
     logging::enable(logging::source::sensorData);
+    logging::enable(logging::source::lorawanMac);
+    logging::enable(logging::source::lorawanData);
     logging::enable(logging::source::error);
     logging::enable(logging::source::criticalError);
     realTimeClock::initialize();
@@ -116,15 +122,13 @@ void mainController::initialize() {
     logging::snprintf("SHT40   : %s\n", sht40::isPresent() ? "present" : "not present");
     logging::snprintf("TSL2591 : %s\n", tsl2591::isPresent() ? "present" : "not present");
 
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 2);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged, 0, 2);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, 2);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, 2);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 2);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 120);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, 120);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, 20);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, 20);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 20);
 
     // TODO : initialize measurementCollection
-
-    i2c::goSleep();
 
     gpio::enableGpio(gpio::group::rfControl);
     LoRaWAN::initialize();
@@ -150,8 +154,8 @@ void mainController::initialize() {
         return;
     }
     applicationEventBuffer.initialize();        // clear RTCticks which may already have been generated
-    // goTo(mainState::networkCheck);
-    goTo(mainState::idle);
+    goTo(mainState::networkCheck);
+    i2c::goSleep();
 }
 
 void mainController::handleEvents() {
@@ -182,7 +186,8 @@ void mainController::handleEventsStateNetworkCheck(applicationEvent theEvent) {
     switch (theEvent) {
         case applicationEvent::downlinkMacCommandReceived:
             answerCounter++;
-            showLoRaWanStatus();
+            logging::snprintf(logging::source::lorawanMac, "answer : %u\n", static_cast<uint8_t>(answerCounter));
+            // showLoRaWanStatus();
             if (answerCounter >= minNmbrAnswers) {
                 goTo(mainState::idle);
             }
@@ -190,8 +195,9 @@ void mainController::handleEventsStateNetworkCheck(applicationEvent theEvent) {
 
         case applicationEvent::realTimeClockTick:
             requestCounter++;
+            logging::snprintf(logging::source::lorawanMac, "request : %u\n", static_cast<uint8_t>(requestCounter));
             miniAdr();
-            showLoRaWanStatus();
+            // showLoRaWanStatus();
             if (requestCounter >= maxNmbrRequests) {
                 goTo(mainState::fatalError);
             } else {
@@ -258,7 +264,6 @@ void mainController::runStateMachine() {
         case mainState::measuring:
             sensorDeviceCollection::run();
             if (sensorDeviceCollection::isSamplingReady()) {
-                i2c::goSleep();
                 sensorDeviceCollection::updateCounters();
                 goTo(mainState::logging);
             }
@@ -271,14 +276,15 @@ void mainController::runStateMachine() {
                 }
 
                 sensorDeviceCollection::collectNewMeasurements();
-                // measurementCollection::saveNewMeasurementsToEeprom();
+                measurementCollection::saveNewMeasurementsToEeprom();
 
                 uint32_t payloadLength        = measurementCollection::nmbrOfBytesToTransmit();
                 const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
-                // LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength); temporarily disabled TODO : enable again
+                LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
                 measurementCollection::setTransmitted(0, payloadLength);        // TODO : get correct frame counter *before* call to sendUplink
                 goTo(mainState::networking);
             } else {
+                i2c::goSleep();
                 goTo(mainState::idle);
             }
             break;
@@ -286,6 +292,7 @@ void mainController::runStateMachine() {
         case mainState::networking:
             if (LoRaWAN::isIdle()) {
                 // showMain();
+                i2c::goSleep();
                 goTo(mainState::idle);
             }
             break;
@@ -300,7 +307,7 @@ void mainController::goTo(mainState newState) {
     state = newState;
 }
 
-void mainController::sleep() {
+void mainController::manageSleep() {
     // Prepare before going to sleep
     switch (state) {
         case mainState::idle:
@@ -329,11 +336,13 @@ void mainController::sleep() {
             MX_ADC_Init();
             MX_AES_Init();
             MX_RNG_Init();
+            MX_USART1_UART_Init();        // Should only do this when UART0 is being used for logging...
 #endif
             gpio::enableGpio(gpio::group::rfControl);
             gpio::enableGpio(gpio::group::usbPresent);
             gpio::enableGpio(gpio::group::i2c);
             gpio::enableGpio(gpio::group::writeProtect);
+            gpio::enableGpio(gpio::group::uart1);
             logging::snprintf("...wakeUp\n");
             break;
 
@@ -374,7 +383,7 @@ void mainController::showMain() {
         char textSmall[8];
         snprintf(textBig, 8, "%d", static_cast<int>(integerPart(value, decimals)));
         if (decimals > 0) {
-            snprintf(textSmall, 8, "%d  %s", static_cast<int>(fractionalPart(value, decimals)), sensorDeviceCollection::units(deviceIndex[lineIndex], channelIndex[lineIndex]));
+            snprintf(textSmall, 8, "%0*d  %s", static_cast<int>(decimals), static_cast<int>(fractionalPart(value, decimals)), sensorDeviceCollection::units(deviceIndex[lineIndex], channelIndex[lineIndex]));
         } else {
             snprintf(textSmall, 8, "%s", sensorDeviceCollection::units(deviceIndex[lineIndex], channelIndex[lineIndex]));
         }

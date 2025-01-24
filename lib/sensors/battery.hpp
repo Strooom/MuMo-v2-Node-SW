@@ -19,7 +19,7 @@ class battery {
     static sensorDeviceState getState() { return state; };
     static constexpr uint32_t nmbrChannels{2};
     static constexpr uint32_t voltage{0};
-    static constexpr uint32_t percentCharged{1};
+    static constexpr uint32_t stateOfCharge{1};
     static batteryType type;
 
 #ifndef unitTesting

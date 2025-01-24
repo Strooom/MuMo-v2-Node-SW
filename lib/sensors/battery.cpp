@@ -21,7 +21,7 @@ batteryType battery::type{batteryType::nmbrBatteryTypes};
 sensorDeviceState battery::state{sensorDeviceState::unknown};
 sensorChannel battery::channels[nmbrChannels] = {
     {2, "voltage", "V"},
-    {0, "percentCharged", "%"},
+    {2, "stateOfCharge", ""},
 };
 
 void battery::setType(uint8_t index) {
@@ -55,10 +55,10 @@ void battery::run() {
                 channels[voltage].hasNewValue = true;
             }
         }
-        if (channels[percentCharged].needsSampling()) {
-            channels[percentCharged].addSample(batteryPercentCharged);
-            if (channels[percentCharged].hasOutput()) {
-                channels[percentCharged].hasNewValue = true;
+        if (channels[stateOfCharge].needsSampling()) {
+            channels[stateOfCharge].addSample(batteryPercentCharged);
+            if (channels[stateOfCharge].hasOutput()) {
+                channels[stateOfCharge].hasNewValue = true;
             }
         }
         state = sensorDeviceState::sleeping;

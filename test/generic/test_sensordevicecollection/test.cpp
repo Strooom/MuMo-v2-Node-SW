@@ -70,7 +70,7 @@ void test_isValidChannel() {
     sensorDeviceCollection::discover();
 
     TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
-    TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
+    TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge));
     TEST_ASSERT_FALSE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::battery), 2));
 
     TEST_ASSERT_TRUE(sensorDeviceCollection::isValid(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
@@ -133,7 +133,7 @@ void test_getChannel() {
 
 void test_decimals() {
     TEST_ASSERT_EQUAL(2, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
-    TEST_ASSERT_EQUAL(0, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
+    TEST_ASSERT_EQUAL(2, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge));
 
     TEST_ASSERT_EQUAL(1, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
     TEST_ASSERT_EQUAL(0, sensorDeviceCollection::decimals(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
@@ -149,7 +149,7 @@ void test_decimals() {
 
 void test_channelName() {
     TEST_ASSERT_EQUAL_STRING("voltage", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
-    TEST_ASSERT_EQUAL_STRING("percentCharged", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
+    TEST_ASSERT_EQUAL_STRING("stateOfCharge", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge));
 
     TEST_ASSERT_EQUAL_STRING("temperature", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
     TEST_ASSERT_EQUAL_STRING("relativeHumidity", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
@@ -165,7 +165,7 @@ void test_channelName() {
 
 void test_units() {
     TEST_ASSERT_EQUAL_STRING("V", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
-    TEST_ASSERT_EQUAL_STRING("%", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged));
+    TEST_ASSERT_EQUAL_STRING("", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge));
 
     TEST_ASSERT_EQUAL_STRING("~C", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
     TEST_ASSERT_EQUAL_STRING("%RH", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
@@ -216,10 +216,10 @@ void test_hasNewMeasurements2() {
     sensorDeviceCollection::discover();
     battery::mockBatteryVoltage = 3.2F;
 //    TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage).isActive());
-    TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged).isActive());
+    TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge).isActive());
     battery::channels[battery::voltage].set(1, 1);
     TEST_ASSERT_TRUE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage).isActive());
-    TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged).isActive());
+    TEST_ASSERT_FALSE(sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge).isActive());
     TEST_ASSERT_EQUAL_FLOAT(battery::mockBatteryVoltage, sensorDeviceCollection::value(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage));
     TEST_ASSERT_TRUE(sensorDeviceCollection::needsSampling());
     sensorDeviceCollection::startSampling();

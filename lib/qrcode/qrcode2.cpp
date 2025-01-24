@@ -906,10 +906,10 @@ void qrcode_getHex(QRCode *qrcode, char *result) {
 
 void print_bitbucket(BitBucket *aBucket) {
     char output[1024U];
-    snprintf(output, 1024U, "nmbrOfBits %d", aBucket->bitOffsetOrWidth);
+    snprintf(output, 1024U, "nmbrOfBits %d", static_cast<int>(aBucket->bitOffsetOrWidth));
     //TEST_MESSAGE(output);
     uint32_t bytesUsed = (aBucket->bitOffsetOrWidth + 7) / 8;
-    snprintf(output, 1024U, "nmbrOfBytes %d", bytesUsed);
+    snprintf(output, 1024U, "nmbrOfBytes %d", static_cast<int>(bytesUsed));
     //TEST_MESSAGE(output);
     uint32_t charsUsed{0};
     for (uint32_t i = 0; i < bytesUsed; i++) {

@@ -13,7 +13,7 @@ bool sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::n
 sensorChannel sensorDeviceCollection::dummy = {0, "", ""};
 
 void sensorDeviceCollection::discover() {
-    isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)] = true;
+    isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)]     = true;
     isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
 
     isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)] = bme680::isPresent();
@@ -149,8 +149,6 @@ bool sensorDeviceCollection::needsSampling(uint32_t deviceIndex, uint32_t channe
     return false;
 }
 
-
-
 void sensorDeviceCollection::updateCounters() {
     for (auto deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
         updateCounters(deviceIndex);
@@ -262,17 +260,18 @@ void sensorDeviceCollection::log(uint32_t deviceIndex) {
 
 void sensorDeviceCollection::log(uint32_t deviceIndex, uint32_t channelIndex) {
     if (hasNewMeasurement(deviceIndex, channelIndex)) {
-        float fvalue       = value(deviceIndex, channelIndex);
-        uint32_t ddecimals = decimals(deviceIndex, channelIndex);
-        uint32_t intPart   = integerPart(fvalue, ddecimals);
-        if (ddecimals > 0) {
-            uint32_t fracPart = fractionalPart(fvalue, ddecimals);
-            logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", name(deviceIndex, channelIndex), intPart, fracPart, units(deviceIndex, channelIndex));
+        float value       = sensorDeviceCollection::value(deviceIndex, channelIndex);
+        uint32_t decimals = sensorDeviceCollection::decimals(deviceIndex, channelIndex);
+        uint32_t intPart  = integerPart(value, decimals);
+        if (decimals > 0) {
+            uint32_t fracPart = fractionalPart(value, decimals);
+            logging::snprintf(logging::source::sensorData, "%s = %d.%0*d %s\n", name(deviceIndex, channelIndex), intPart, static_cast<int>(decimals), fracPart, units(deviceIndex, channelIndex));
         } else {
             logging::snprintf(logging::source::sensorData, "%s = %d %s\n", name(deviceIndex, channelIndex), intPart, units(deviceIndex, channelIndex));
         }
     }
 }
+
 
 uint32_t sensorDeviceCollection::nmbrOfNewMeasurements() {
     uint32_t result{0};

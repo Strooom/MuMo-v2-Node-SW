@@ -23,9 +23,9 @@
 // ###  Which settings to be written to EEPROM         ###
 // #######################################################
 
-const bool resetBatteryType{false};
-const bool resetMcuType{false};
-const bool setName{true};
+const bool resetBatteryType{true};
+const bool resetMcuType{true};
+const bool setName{false};
 const bool fixDevAddr{false};
 const bool overwriteExistingLoRaWANConfig{false};
 const bool resetLoRaWANState{false};
@@ -38,23 +38,21 @@ const bool eraseMeasurementsInEeprom{false};
 
 eepromType selectedEepromType{eepromType::M24M01E};
 uint8_t selectedDisplayType{0};
-batteryType selectedBatteryType{batteryType::alkaline_1200mAh};
-mcuType selectedPowerVersion{mcuType::highPower};
+batteryType selectedBatteryType{batteryType::fdk_cr14250se};
+mcuType selectedPowerVersion{mcuType::lowPower};
 
-const char toBeName[9] = "TTC";
+const char toBeName[9] = "mini001";
 
-uint32_t toBeDevAddr            = 0x260BA90C;
-const char toBeNetworkKey[]     = "00DC8F01A6661926B84EDE29C273330E";
-const char toBeApplicationKey[] = "DBA40D12067C5DBB684F883312F02A31";
+uint32_t toBeDevAddr            = 0x260BC064;
+const char toBeNetworkKey[]     = "A9C998E31E5217C61BE94606436BFD45";
+const char toBeApplicationKey[] = "45F68164F26E08E4EC846C36E07A5A88";
 
 // #######################################################
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void showUid() {
     uint64_t uid = uniqueId::get();
@@ -192,6 +190,7 @@ int main(int argc, char **argv) {
 
     UNITY_BEGIN();
     RUN_TEST(showUid);    
+    RUN_TEST(test_eraseMeasurementsInEeprom);
     RUN_TEST(initializeNvsVersion);
     RUN_TEST(initializeDisplayType);
     RUN_TEST(initializeBatteryType);
@@ -202,6 +201,5 @@ int main(int argc, char **argv) {
     RUN_TEST(initializeLorawanConfig);
     RUN_TEST(initializeLorawanState);
     RUN_TEST(initializeLorawanChannels);
-    RUN_TEST(test_eraseMeasurementsInEeprom);
     UNITY_END();
 }
