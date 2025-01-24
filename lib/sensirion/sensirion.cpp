@@ -25,7 +25,7 @@ const uint8_t sensirion::substitute[256] = {
 uint8_t sensirion::generateCRCGeneric(const uint8_t* data, uint8_t count, uint8_t init, uint8_t polynomial) {
     uint8_t crc = init;
 
-    for (size_t current_byte = 0; current_byte < count; ++current_byte) {
+    for (uint8_t current_byte = 0; current_byte < count; ++current_byte) {
         crc ^= (data[current_byte]);
         for (uint8_t crc_bit = 8; crc_bit > 0; --crc_bit) {
             if (crc & 0x80)
