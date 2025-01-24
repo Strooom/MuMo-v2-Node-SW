@@ -11,9 +11,21 @@ void setUp(void) {        // before each test
 void tearDown(void) {        // after each test
 }
 
+void test_compare_crc_algorithms() {
+    uint8_t testData[2];
+    for (uint8_t byte0 = 0; byte0 < 255; ++byte0) {
+        for (uint8_t byte1 = 0; byte1 < 255; ++byte1) {
+            testData[0] = byte0;
+            testData[1] = byte1;
+            TEST_ASSERT_EQUAL(sensirion::crc(byte0, byte1), sensirion::generateCRCGeneric(testData, 2, 0xFF, 0x31));
+        }
+    }
+}
+
 void test_crc() {
     TEST_ASSERT_EQUAL(0x92, sensirion::crc(0xBE, 0xEF));        // testvector from SHT4X datasheet, page 11.
                                                                 // testvectors from SCD4x datasheet
+    // TEST_ASSERT_EQUAL(0x7B, sensirion::crc(0x01, 0xF4)); // Wrong example due to error in datasheet ??
     TEST_ASSERT_EQUAL(0xA2, sensirion::crc(0x66, 0x67));
     TEST_ASSERT_EQUAL(0x3C, sensirion::crc(0x5E, 0xB9));
     TEST_ASSERT_EQUAL(0x48, sensirion::crc(0x07, 0xE6));
@@ -60,6 +72,7 @@ void test_asFloat() {
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
+    RUN_TEST(test_compare_crc_algorithms);
     RUN_TEST(test_crc);
     RUN_TEST(test_Checkcrc);
     RUN_TEST(test_insertCrc);

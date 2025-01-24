@@ -22,15 +22,20 @@ const uint8_t sensirion::substitute[256] = {
     0x1a, 0x2b, 0xbc, 0x8d, 0xde, 0xef, 0x82, 0xb3, 0xe0, 0xd1, 0x46, 0x77, 0x24,
     0x15, 0x3b, 0x0a, 0x59, 0x68, 0xff, 0xce, 0x9d, 0xac};
 
-// This algorithm is an alternative to the lookup table.
-// void sensirion::substitute(uint8_t& aByte) {
-//     for (uint8_t bitIndex = 0; bitIndex < 8; bitIndex++) {
-//         if (aByte & 0x80)
-//             aByte = (aByte << 1) ^ crcPolynome;
-//         else
-//             aByte = (aByte << 1);
-//     }
-// }
+uint8_t sensirion::generateCRCGeneric(const uint8_t* data, size_t count, uint8_t init, uint8_t polynomial) {
+    uint8_t crc = init;
+
+    for (size_t current_byte = 0; current_byte < count; ++current_byte) {
+        crc ^= (data[current_byte]);
+        for (uint8_t crc_bit = 8; crc_bit > 0; --crc_bit) {
+            if (crc & 0x80)
+                crc = (crc << 1) ^ polynomial;
+            else
+                crc = (crc << 1);
+        }
+    }
+    return crc;
+}
 
 uint8_t sensirion::crc(const uint8_t byte0, const uint8_t byte1) {
     uint8_t result = crcInit;
