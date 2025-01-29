@@ -23,13 +23,13 @@
 // ###  Which settings to be written to EEPROM         ###
 // #######################################################
 
-const bool resetBatteryType{true};
-const bool resetMcuType{true};
+const bool resetBatteryType{false};
+const bool resetMcuType{false};
 const bool setName{false};
 const bool fixDevAddr{false};
 const bool overwriteExistingLoRaWANConfig{false};
-const bool resetLoRaWANState{false};
-const bool resetLoRaWANChannels{false};
+const bool resetLoRaWANState{true};
+const bool resetLoRaWANChannels{true};
 const bool eraseMeasurementsInEeprom{false};
 
 // #######################################################
@@ -145,7 +145,12 @@ void initializeLorawanConfig() {
 
 void initializeLorawanState() {
     if (resetLoRaWANState) {
-        LoRaWAN::currentDataRateIndex = 5;
+        LoRaWAN::currentDataRateIndex        = 5;
+        LoRaWAN::rx1DataRateOffset           = 0;
+        LoRaWAN::rx2DataRateIndex            = 3;
+        LoRaWAN::rx1DelayInSeconds           = 1;
+        LoRaWAN::uplinkFrameCount.asUint32   = 1;
+        LoRaWAN::downlinkFrameCount.asUint32 = 0;
         LoRaWAN::saveState();
         LoRaWAN::restoreState();
 
@@ -189,7 +194,7 @@ int main(int argc, char **argv) {
     i2c::wakeUp();
 
     UNITY_BEGIN();
-    RUN_TEST(showUid);    
+    RUN_TEST(showUid);
     RUN_TEST(test_eraseMeasurementsInEeprom);
     RUN_TEST(initializeNvsVersion);
     RUN_TEST(initializeDisplayType);
