@@ -384,6 +384,11 @@ static void MX_RTC_Init(void) {
         Error_Handler();
     }
 
+   if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
+        // if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 10000, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
+        Error_Handler();
+    }
+
     /* USER CODE BEGIN Check_RTC_BKUP */
     HAL_NVIC_SetPriority(RTC_WKUP_IRQn, 10, 0);
     HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
@@ -542,8 +547,8 @@ void MX_GPIO_Init(void) {
 
     /*Configure GPIO pin : PB3 */
     GPIO_InitStruct.Pin  = GPIO_PIN_3;
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /* EXTI interrupt init*/

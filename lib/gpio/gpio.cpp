@@ -162,7 +162,8 @@ void gpio::enableDisableGpio(group theGroup, bool enable) {
                 // NOTE : This resets the SWD AND JTAG pins to analog inputs (lowest power consumption).
                 // We don't use JTAG, but we assigned PIN PB4 another function (usbPowerPresent). Disabling all debug pins, also disables PB4 as usbPowerPresent.
                 HAL_GPIO_DeInit(GPIOA, GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15);
-                HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3 | GPIO_PIN_4);
+                HAL_GPIO_DeInit(GPIOB, GPIO_PIN_4);
+                // HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3);
             }
             break;
 
