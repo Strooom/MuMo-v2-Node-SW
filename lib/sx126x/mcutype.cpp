@@ -14,6 +14,6 @@ const char *toString(mcuType theVersion) {
             return "LoRa-E5-LE-HF";
 
         default:
-            return "unknown";
+            return "unknown radio type";
     }
 }

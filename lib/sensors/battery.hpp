@@ -22,15 +22,17 @@ class battery {
     static constexpr uint32_t stateOfCharge{1};
     static batteryType type;
 
+    static void startSampling();
+    static bool samplingIsReady();
+    static uint32_t readSample();
+    static float voltageFromRaw(uint32_t rawADC);
+
+
 #ifndef unitTesting
 
   private:
 #endif
     static sensorDeviceState state;
-    static void startSampling();
-    static bool samplingIsReady();
-    static uint32_t readSample();
-    static float voltageFromRaw(uint32_t rawADC);
 #ifdef generic
     static uint32_t mockBatteryRawADC;
     static float mockBatteryVoltage;

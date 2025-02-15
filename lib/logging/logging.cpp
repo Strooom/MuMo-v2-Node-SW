@@ -12,6 +12,7 @@
 #include <power.hpp>
 #include <settingscollection.hpp>
 #include <i2c.hpp>
+#include <uart1.hpp>
 #ifndef generic
 #include "main.h"
 extern UART_HandleTypeDef huart1;
@@ -81,9 +82,7 @@ void logging::write(uint32_t dataLength) {
 #endif
     }
     if (isActive(destination::uart1)) {
-#ifndef generic
-        HAL_UART_Transmit(&huart1, (uint8_t *)buffer, static_cast<const uint16_t>(dataLength), 1000);
-#endif
+        uart1::transmit(buffer, dataLength);
     }
 }
 

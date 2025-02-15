@@ -16,10 +16,10 @@ bool spi::initialized{false};
 
 void spi::wakeUp() {
     if (!initialized) {
+        gpio::enableGpio(gpio::group::enableDisplayPower);
 #ifndef generic
         MX_SPI2_Init();
 #endif
-        gpio::enableGpio(gpio::group::enableDisplayPower);
         gpio::enableGpio(gpio::group::spiDisplay);
         initialized = true;
     }

@@ -55,14 +55,12 @@ void display::wakeUp() {
 
     uint8_t commandData[4]{0};
 
-    commandData[0] = 0xC7;        // this seems to be (height - 1) % 256
-    commandData[1] = 0x00;        // this seems to be (height - 1) / 256
-    commandData[2] = 0x00;
-    writeCommand(SSD1681Commands::DRIVER_OUTPUT_CONTROL, commandData, 3);
-    waitWhileBusy();
+    // DRIVER_OUTPUT_CONTROL : uses PowerOnReset defaults
+    // DATA_ENTRY_MODE_SETTING : uses PowerOnReset defaults
+    // BORDER_WAVEFORM_CONTROL : uses PowerOnReset defaults : // commandData[0] = 0x05; is also working
 
-    commandData[0] = 0x11;        // from example - don't know what this does
-    writeCommand(SSD1681Commands::DATA_ENTRY_MODE_SETTING, commandData, 1);
+    commandData[0] = 0x80;        // Selects internal temperature sensor - required as this is not the powerOn default
+    writeCommand(SSD1681Commands::TEMPERATURE_SENSOR_SELECTION, commandData, 1);
     waitWhileBusy();
 
     commandData[0] = 0x00;
@@ -77,18 +75,9 @@ void display::wakeUp() {
     writeCommand(SSD1681Commands::SET_RAM_Y_ADDRESS_START_END_POSITION, commandData, 4);
     waitWhileBusy();
 
-    commandData[0] = 0x05;
-    writeCommand(SSD1681Commands::BORDER_WAVEFORM_CONTROL, commandData, 1);
-    waitWhileBusy();
+    // SET_RAM_X_ADDRESS_COUNTER : uses PowerOnReset defaults
 
-    commandData[0] = 0x80;        // Selects internal temperature sensor
-    writeCommand(SSD1681Commands::TEMPERATURE_SENSOR_SELECTION, commandData, 1);
-    waitWhileBusy();
-
-    commandData[0] = 0x0;
-    writeCommand(SSD1681Commands::SET_RAM_X_ADDRESS_COUNTER, commandData, 1);
-    waitWhileBusy();
-
+    // TODO : strange that we seem to count down, where data entry mode says increment Y
     commandData[0] = 0xC7;        // this seems to be (height - 1) % 256
     commandData[1] = 0x00;        // this seems to be (height - 1) / 256
     writeCommand(SSD1681Commands::SET_RAM_Y_ADDRESS_COUNTER, commandData, 2);
@@ -275,15 +264,14 @@ void display::waitWhileBusy() {
 }
 
 void display::update() {
-    spi::wakeUp();
     wakeUp();
     uint8_t commandData[4]{0};
     writeCommand(SSD1681Commands::WRITE_RAM, nullptr, 0);
     writeData(displayBuffer, bufferSize);
     commandData[0] = 0xF7;        // SSD1681 Datasheet Rev 0l.13 - Full update Display Mode 1
+    // commandData[0] = 0xC7;        // SSD1681 Datasheet Rev 0l.13
     writeCommand(SSD1681Commands::DISPLAY_UPDATE_CONTROL_2, commandData, 1);
     writeCommand(SSD1681Commands::MASTER_ACTIVATION, nullptr, 0);
     waitWhileBusy();
     goSleep();
-    spi::goSleep();
 }

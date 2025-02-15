@@ -11,6 +11,7 @@ class nonVolatileStorage {
     nonVolatileStorage() = delete;
     static uint32_t isPresent();
 
+    static constexpr uint32_t maxNmbr64KPages{8};
     static constexpr uint32_t totalSize{64 * 1024};        // TODO : make this configurable from eeprom type
     static constexpr uint32_t pageSize{128};               // TODO : idem
     static constexpr uint8_t i2cAddress{0x50};
@@ -30,6 +31,7 @@ class nonVolatileStorage {
 
   private:
 #endif
+    static uint32_t nmbr64KPages;
     static void read(const uint32_t startAddress, uint8_t* data, const uint32_t dataLength);
     static void write(const uint32_t startAddress, const uint8_t* data, const uint32_t dataLength);
     static uint32_t pageNumber(uint32_t address) { return address / pageSize; };

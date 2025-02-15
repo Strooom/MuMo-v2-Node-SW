@@ -14,6 +14,8 @@ uint8_t nonVolatileStorage::mockEepromMemory[nonVolatileStorage::totalSize];
 #include <cstring>
 #endif
 
+uint32_t nonVolatileStorage::nmbr64KPages{0};
+
 uint32_t nonVolatileStorage::bytesInCurrentPage(uint32_t address, uint32_t dataLength) {
     uint32_t startPage{pageNumber(address)};
     uint32_t endPage{pageNumber(address + dataLength)};
@@ -44,16 +46,15 @@ void nonVolatileStorage::fill(uint8_t value) {
 }
 
 uint32_t nonVolatileStorage::isPresent() {
-    uint32_t nmbr64Kblocks{0};
+    nmbr64KPages = 0;
+    for (uint8_t blockIndex = 0; blockIndex < maxNmbr64KPages; blockIndex++) {
 #ifndef generic
-    if (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, i2cAddress << 1, halTrialsIsPresent, halTimeoutIsPresent)) {        // testing presence of the first bank of 64K (U7)
-        nmbr64Kblocks++;
-    }
-    if (HAL_OK != HAL_I2C_IsDeviceReady(&hi2c2, (i2cAddress + 1) << 1 + 1, halTrialsIsPresent, halTimeoutIsPresent)) {        // testing presence of the second bank of 64K (U8)
-        nmbr64Kblocks++;
-    }
+        if (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, static_cast<uint16_t>((i2cAddress + blockIndex) << 1), halTrialsIsPresent, halTimeoutIsPresent)) {
+            nmbr64KPages++;
+        }
 #endif
-    return nmbr64Kblocks;
+    }
+    return nmbr64KPages;
 }
 
 void nonVolatileStorage::read(const uint32_t startAddress, uint8_t* data, const uint32_t dataLength) {

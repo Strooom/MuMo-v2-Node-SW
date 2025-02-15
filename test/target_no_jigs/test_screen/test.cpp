@@ -8,6 +8,7 @@
 #include <display.hpp>
 #include <graphics.hpp>
 #include <gpio.hpp>
+#include <spi.hpp>
 #include <version.hpp>
 #include <screen.hpp>
 
@@ -17,9 +18,11 @@ extern const font lucidaConsole12;
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
+void setUp(void) {}
+void tearDown(void) {}
+
+void test_displayPresent() {
+    TEST_ASSERT_TRUE(display::isPresent());
 }
 
 void test_showLogo() {
@@ -56,19 +59,17 @@ int main(int argc, char **argv) {
     HAL_Init();
     HAL_Delay(2000);
     SystemClock_Config();
-
-    MX_SPI2_Init();
-    gpio::enableGpio(gpio::group::spiDisplay);
+    spi::wakeUp();
 
     UNITY_BEGIN();
-    if (display::isPresent()) {
-        RUN_TEST(test_showLogo);
-        HAL_Delay(3000);
-        RUN_TEST(test_showConsole);
-        HAL_Delay(3000);
-        RUN_TEST(test_showUid);
-        HAL_Delay(3000);
-        RUN_TEST(test_showMeasurements);
-    }
+    RUN_TEST(test_displayPresent);
+    RUN_TEST(test_showLogo);
+    HAL_Delay(3000);
+    RUN_TEST(test_showConsole);
+    HAL_Delay(3000);
+    RUN_TEST(test_showUid);
+    HAL_Delay(3000);
+    RUN_TEST(test_showMeasurements);
+
     UNITY_END();
 }

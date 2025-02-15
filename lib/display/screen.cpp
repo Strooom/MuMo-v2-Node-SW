@@ -38,34 +38,32 @@ char screen::uidAsHex[17]{0};
 char screen::name[screen::maxNodeNameLength + 1]{0};
 
 void screen::update() {
-    if (display::isPresent()) {
-        switch (activeScreenType) {
-            case screenType::logo:
-                showLogo();
-                break;
+    switch (activeScreenType) {
+        case screenType::logo:
+            showLogo();
+            break;
 
-            case screenType::main:
-                showMeasurements();
-                break;
+        case screenType::main:
+            showMeasurements();
+            break;
 
-            case screenType::version:             // intentional fallthrough - all these screenTypes use a console style
-            case screenType::hwConfig:            // intentional fallthrough - all these screenTypes use a console style
-            case screenType::loraConfig:          // intentional fallthrough - all these screenTypes use a console style
-            case screenType::measurements:        // intentional fallthrough - all these screenTypes use a console style
-            case screenType::loraStatus:          // intentional fallthrough - all these screenTypes use a console style
-                showConsole();
-                break;
+        case screenType::version:             // intentional fallthrough - all these screenTypes use a console style
+        case screenType::hwConfig:            // intentional fallthrough - all these screenTypes use a console style
+        case screenType::loraConfig:          // intentional fallthrough - all these screenTypes use a console style
+        case screenType::measurements:        // intentional fallthrough - all these screenTypes use a console style
+        case screenType::loraStatus:          // intentional fallthrough - all these screenTypes use a console style
+            showConsole();
+            break;
 
-            case screenType::uid:
-                showUid();
-                break;
+        case screenType::uid:
+            showUid();
+            break;
 
-            default:
-                break;
-        }
-        modified = false;
-        display::update();
+        default:
+            break;
     }
+    modified = false;
+    display::update();
 }
 
 void screen::setType(screenType newType) {
@@ -204,9 +202,7 @@ void screen::showMeasurements() {
 }
 
 void screen::waitForUserToRead() {
-    if (display::isPresent()) {
 #ifndef generic
-        HAL_Delay(ux::timeToReaddisplay);
+    HAL_Delay(ux::timeToReaddisplay);
 #endif
-    }
 }

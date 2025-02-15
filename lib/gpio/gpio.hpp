@@ -9,13 +9,13 @@
 class gpio {
   public:
     gpio() = delete;
+    static void initialize();
+    static bool isDebugProbePresent();
     enum class group : uint32_t {
         none = 0,
-        rfControl,           // PP output
-        i2c,                 // bidirectional
-        writeProtect,        // PP output
-        // i2cSensors,
-        // i2cEeprom,
+        rfControl,                       // PP output
+        i2c,                             // bidirectional
+        writeProtect,                    // PP output
         spiDisplay,                      // output + inputs
         debugPort,                       // output + inputs
         uart1,                           // output + inputs

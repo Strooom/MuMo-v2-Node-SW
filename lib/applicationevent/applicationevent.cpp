@@ -17,6 +17,9 @@ const char* toString(applicationEvent anEvent) {
         case applicationEvent::lowPowerTimerExpired:
             return "lowPowerTimerExpired";
 
+        case applicationEvent::applicationButtonPressed:
+            return "applicationButtonPressed";
+
         case applicationEvent::downlinkApplicationPayloadReceived:
             return "downlinkApplicationPayloadReceived";
 

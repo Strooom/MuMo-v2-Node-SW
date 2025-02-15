@@ -36,12 +36,10 @@ void test_isNotPresentI2CSleeping() {
     TEST_ASSERT_FALSE(sht40::isPresent());
 }
 
-
 int main(int argc, char **argv) {
     HAL_Init();
     HAL_Delay(2000);
     SystemClock_Config();
-
 
     UNITY_BEGIN();
     RUN_TEST(test_isPresent);
