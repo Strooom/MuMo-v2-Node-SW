@@ -48,7 +48,7 @@ circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-// static void MX_GPIO_Init(void);
+void MX_GPIO_Init(void);
 static void MX_RTC_Init(void);
 void MX_USART2_UART_Init(void);
 void MX_SPI2_Init(void);
@@ -65,10 +65,11 @@ void executeRomBootloader();
 int main(void) {
     HAL_Init();
     SystemClock_Config();
+    MX_GPIO_Init();
     __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
     gpio::initialize();
     if (gpio::isDebugProbePresent()) {
-        HAL_Delay(1000);
+        HAL_Delay(3000);
     } else {
         gpio::disableGpio(gpio::group::debugPort);
     }
@@ -387,51 +388,6 @@ static void MX_RTC_Init(void) {
     HAL_NVIC_SetPriority(RTC_WKUP_IRQn, 10, 0);
     HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
     /* USER CODE END Check_RTC_BKUP */
-
-    /** Initialize RTC and set the Time and Date
-     */
-    // sTime.Hours          = 0x0;
-    // sTime.Minutes        = 0x0;
-    // sTime.Seconds        = 0x0;
-    // sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-    // sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-    // if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
-    //     Error_Handler();
-    // }
-    // sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-    // sDate.Month   = RTC_MONTH_JANUARY;
-    // sDate.Date    = 0x1;
-    // sDate.Year    = 0x0;
-
-    // if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
-    //     Error_Handler();
-    // }
-
-    /** Enable the WakeUp
-     */
-    if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
-        Error_Handler();
-    }
-
-    /** Enable the RTC Tamper 3
-     */
-    sTamper.Tamper                     = RTC_TAMPER_3;
-    sTamper.Trigger                    = RTC_TAMPERTRIGGER_FALLINGEDGE;
-    sTamper.NoErase                    = RTC_TAMPER_ERASE_BACKUP_DISABLE;
-    sTamper.MaskFlag                   = RTC_TAMPERMASK_FLAG_DISABLE;
-    sTamper.Filter                     = RTC_TAMPERFILTER_DISABLE;
-    sTamper.SamplingFrequency          = RTC_TAMPERSAMPLINGFREQ_RTCCLK_DIV1024;
-    sTamper.PrechargeDuration          = RTC_TAMPERPRECHARGEDURATION_1RTCCLK;
-    sTamper.TamperPullUp               = RTC_TAMPER_PULLUP_ENABLE;
-    sTamper.TimeStampOnTamperDetection = RTC_TIMESTAMPONTAMPERDETECTION_DISABLE;
-    if (HAL_RTCEx_SetTamper_IT(&hrtc, &sTamper) != HAL_OK) {
-        Error_Handler();
-    }
-    /* USER CODE BEGIN RTC_Init 2 */
-    HAL_NVIC_SetPriority(TAMP_STAMP_LSECSS_SSRU_IRQn, 8, 0);
-    HAL_NVIC_EnableIRQ(TAMP_STAMP_LSECSS_SSRU_IRQn);
-
-    /* USER CODE END RTC_Init 2 */
 }
 
 /**
@@ -574,23 +530,29 @@ void MX_USART2_UART_Init(void) {
     /* USER CODE END USART2_Init 2 */
 }
 
-// /**
-//  * @brief GPIO Initialization Function
-//  * @param None
-//  * @retval None
-//  */
-// static void MX_GPIO_Init(void) {
-//     /* USER CODE BEGIN MX_GPIO_Init_1 */
-//     /* USER CODE END MX_GPIO_Init_1 */
+void MX_GPIO_Init(void) {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    /* USER CODE BEGIN MX_GPIO_Init_1 */
+    /* USER CODE END MX_GPIO_Init_1 */
 
-//     /* GPIO Ports Clock Enable */
-//     __HAL_RCC_GPIOA_CLK_ENABLE();
-//     __HAL_RCC_GPIOB_CLK_ENABLE();
-//     __HAL_RCC_GPIOC_CLK_ENABLE();
+    /* GPIO Ports Clock Enable */
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
 
-//     /* USER CODE BEGIN MX_GPIO_Init_2 */
-//     /* USER CODE END MX_GPIO_Init_2 */
-// }
+    /*Configure GPIO pin : PB3 */
+    GPIO_InitStruct.Pin  = GPIO_PIN_3;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /* EXTI interrupt init*/
+    HAL_NVIC_SetPriority(EXTI3_IRQn, 7, 0);
+    HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
+    /* USER CODE BEGIN MX_GPIO_Init_2 */
+    /* USER CODE END MX_GPIO_Init_2 */
+}
 
 /* USER CODE BEGIN 4 */
 void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
@@ -606,6 +568,9 @@ void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
 }
 
 void HAL_RTCEx_Tamper3EventCallback(RTC_HandleTypeDef *hrtc) {
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     applicationEventBuffer.push(applicationEvent::applicationButtonPressed);
 }
 

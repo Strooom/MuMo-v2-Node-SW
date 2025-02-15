@@ -207,6 +207,18 @@ void TAMP_STAMP_LSECSS_SSRU_IRQHandler(void) {
     /* USER CODE END TAMP_STAMP_LSECSS_SSRU_IRQn 1 */
 }
 
+
+void EXTI3_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI3_IRQn 0 */
+
+  /* USER CODE END EXTI3_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
+  /* USER CODE BEGIN EXTI3_IRQn 1 */
+
+  /* USER CODE END EXTI3_IRQn 1 */
+}
+
 /**
  * @brief This function handles RTC Wakeup Interrupt.
  */

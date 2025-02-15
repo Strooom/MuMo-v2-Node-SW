@@ -56,6 +56,7 @@ void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
 void TAMP_STAMP_LSECSS_SSRU_IRQHandler(void);
+void EXTI3_IRQHandler(void);
 void RTC_WKUP_IRQHandler(void);
 void USART2_IRQHandler(void);
 void LPTIM1_IRQHandler(void);
