@@ -2,10 +2,8 @@
 #include <cli.hpp>
 #include <uart.hpp>
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_uart_rx() {
     uart2::mockReceivedChar = '?';

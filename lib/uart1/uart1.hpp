@@ -9,7 +9,14 @@
 class uart1 {
   public:
     uart1() = delete;
-    static void initialize();
+    static void wakeUp();
+    static bool isInitialized() { return initalized; }
     static void goSleep();
     static void transmit(const char *data, uint32_t dataLength);
+
+#ifndef unitTesting
+
+  private:
+#endif
+    static bool initalized;
 };

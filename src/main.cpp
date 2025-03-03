@@ -81,7 +81,7 @@ int main(void) {
     }
 
     version::initialize();
-    uart1::initialize();
+    uart1::wakeUp();
     logging::enable(logging::destination::uart1);
     gpio::enableGpio(gpio::group::other);
 
@@ -132,7 +132,7 @@ int main(void) {
         logging::snprintf("goSleep...\n");
         uart1::goSleep();
         mainController::mcuStop2();
-        uart1::initialize();
+        uart1::wakeUp();
         logging::snprintf("... wakeUp\n");
 
         loopCount++;
@@ -362,7 +362,7 @@ static void MX_RTC_Init(void) {
 
     // RTC_TimeTypeDef sTime     = {0};
     // RTC_DateTypeDef sDate     = {0};
-    RTC_TamperTypeDef sTamper = {0};
+    // RTC_TamperTypeDef sTamper = {0};
 
     /* USER CODE BEGIN RTC_Init 1 */
 
