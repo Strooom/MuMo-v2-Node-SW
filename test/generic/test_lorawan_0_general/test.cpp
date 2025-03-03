@@ -46,15 +46,15 @@ void test_initialize_state() {
 }
 
 void test_initialize_channels() {
-    TEST_ASSERT_EQUAL(868'100'000U, LoRaWAN::txChannels.channel[0].frequencyInHz);
-    TEST_ASSERT_EQUAL(868'300'000U, LoRaWAN::txChannels.channel[1].frequencyInHz);
-    TEST_ASSERT_EQUAL(868'500'000U, LoRaWAN::txChannels.channel[2].frequencyInHz);
-    TEST_ASSERT_EQUAL(0U, LoRaWAN::txChannels.channel[3].frequencyInHz);
-    TEST_ASSERT_EQUAL(0U, LoRaWAN::txChannels.channel[4].frequencyInHz);
-    TEST_ASSERT_EQUAL(0U, LoRaWAN::txChannels.channel[5].frequencyInHz);
-    TEST_ASSERT_EQUAL(0U, LoRaWAN::txChannels.channel[6].frequencyInHz);
-    TEST_ASSERT_EQUAL(0U, LoRaWAN::txChannels.channel[7].frequencyInHz);
-    TEST_ASSERT_EQUAL(0U, LoRaWAN::txChannels.channel[8].frequencyInHz);
+    TEST_ASSERT_EQUAL(868'100'000U, loRaTxChannelCollection::channel[0].frequencyInHz);
+    TEST_ASSERT_EQUAL(868'300'000U, loRaTxChannelCollection::channel[1].frequencyInHz);
+    TEST_ASSERT_EQUAL(868'500'000U, loRaTxChannelCollection::channel[2].frequencyInHz);
+    TEST_ASSERT_EQUAL(0U, loRaTxChannelCollection::channel[3].frequencyInHz);
+    TEST_ASSERT_EQUAL(0U, loRaTxChannelCollection::channel[4].frequencyInHz);
+    TEST_ASSERT_EQUAL(0U, loRaTxChannelCollection::channel[5].frequencyInHz);
+    TEST_ASSERT_EQUAL(0U, loRaTxChannelCollection::channel[6].frequencyInHz);
+    TEST_ASSERT_EQUAL(0U, loRaTxChannelCollection::channel[7].frequencyInHz);
+    TEST_ASSERT_EQUAL(0U, loRaTxChannelCollection::channel[8].frequencyInHz);
     TEST_ASSERT_EQUAL(869'525'000U, LoRaWAN::rx2FrequencyInHz);
 }
 
@@ -100,18 +100,18 @@ void test_save_restore_state() {
 
 void test_save_restore_channels() {
     for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
-        LoRaWAN::txChannels.channel[channelIndex].frequencyInHz = channelIndex * 100U;
+        loRaTxChannelCollection::channel[channelIndex].frequencyInHz = channelIndex * 100U;
     }
     LoRaWAN::rx2FrequencyInHz = 0x12345678;
     LoRaWAN::saveChannels();
     for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
-        LoRaWAN::txChannels.channel[channelIndex].frequencyInHz = 0;
+        loRaTxChannelCollection::channel[channelIndex].frequencyInHz = 0;
     }
     LoRaWAN::rx2FrequencyInHz = 0;
     LoRaWAN::restoreChannels();
 
     for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
-        TEST_ASSERT_EQUAL(channelIndex * 100U, LoRaWAN::txChannels.channel[channelIndex].frequencyInHz);
+        TEST_ASSERT_EQUAL(channelIndex * 100U, loRaTxChannelCollection::channel[channelIndex].frequencyInHz);
     }
     TEST_ASSERT_EQUAL(0x12345678, LoRaWAN::rx2FrequencyInHz);
 }

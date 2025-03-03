@@ -30,10 +30,15 @@ class LoRaWAN {
     static void restoreState();
     static void restoreChannels();
     static bool isValidConfig();
-    
+
     static void saveConfig();
     static void saveState();
     static void saveChannels();
+
+    static void resetState();
+    static void resetChannels();
+
+    static void resetMacLayer();
 
     static void handleEvents(applicationEvent theEvent);
     static uint32_t getMaxApplicationPayloadLength();
@@ -86,11 +91,10 @@ class LoRaWAN {
     static txRxCycleState state;
     static void goTo(txRxCycleState newState);
 
-    static dataRates theDataRates;
+    static dataRates theDataRates;        // TODO : get rid of the object, as class is static
     static uint32_t rx1DataRateOffset;
     static uint32_t rx2DataRateIndex;
     static uint32_t rx2FrequencyInHz;
-    static loRaTxChannelCollection txChannels;
     static constexpr uint32_t maxRandomDelayBeforeTx{4096U};
 
     // #################################################

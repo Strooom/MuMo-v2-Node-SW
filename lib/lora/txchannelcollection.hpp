@@ -12,8 +12,9 @@ class loRaTxChannelCollection {
     static void selectRandomChannelIndex();
     static uint32_t getCurrentChannelIndex();
     static constexpr uint32_t maxNmbrChannels{16};        // Regional Parameters 1.0.3 line 320
-
+    static uint32_t nmbrActiveChannels();
     static loRaChannel channel[maxNmbrChannels];
+    static void reset();
 
 #ifndef unitTesting
   private:
