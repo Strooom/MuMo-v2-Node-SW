@@ -238,7 +238,7 @@ jobs:
 
       - name: Attach Binary to Workflow run
         id: attachbinarytoworkflowrun
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.selectversion.outputs.buildversionfilename }}.bin
           path: .pio/build/production/firmware.bin
