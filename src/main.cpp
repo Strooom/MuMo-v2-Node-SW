@@ -1,28 +1,6 @@
-/* USER CODE BEGIN Header */
-/**
- ******************************************************************************
- * @file           : main.c
- * @brief          : Main program body
- ******************************************************************************
- * @attention
- *
- * Copyright (c) 2024 STMicroelectronics.
- * All rights reserved.
- *
- * This software is licensed under terms that can be found in the LICENSE file
- * in the root directory of this software component.
- * If no LICENSE file comes with this software, it is provided AS-IS.
- *
- ******************************************************************************
- */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 #include <gpio.hpp>
-#include <logging.hpp>        // logging to SWO and/or UART
+#include <logging.hpp>
 #include <power.hpp>
 #include <display.hpp>
 #include <graphics.hpp>
@@ -46,24 +24,6 @@
 #include <lptim.hpp>
 #include <qrcode.hpp>
 
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc;
 CRYP_HandleTypeDef hcryp;
 __ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {0x00000000, 0x00000000, 0x00000000, 0x00000000};
@@ -76,13 +36,9 @@ SUBGHZ_HandleTypeDef hsubghz;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
-/* USER CODE BEGIN PV */
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
-/* USER CODE END PV */
 
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-// static void MX_GPIO_Init(void);
 static void MX_RTC_Init(void);
 void MX_USART2_UART_Init(void);
 void MX_SPI2_Init(void);
@@ -91,63 +47,35 @@ void MX_I2C2_Init(void);
 void MX_AES_Init(void);
 void MX_RNG_Init(void);
 static void MX_LPTIM1_Init(void);
-// static void MX_SUBGHZ_Init(void);
 void MX_USART1_UART_Init(void);
-/* USER CODE BEGIN PFP */
 void executeRomBootloader();
-/* USER CODE END PFP */
 
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
-/**
- * @brief  The application entry point.
- * @retval int
- */
 int main(void) {
-    /* USER CODE BEGIN 1 */
-
-    /* USER CODE END 1 */
-
-    /* MCU Configuration--------------------------------------------------------*/
-
-    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     HAL_Init();
-
-    /* USER CODE BEGIN Init */
-
-    /* USER CODE END Init */
-
-    /* Configure the system clock */
     SystemClock_Config();
-    HAL_Delay(1000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
-                            //    HAL_Delay(5000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
+    __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
+    gpio::initialize();
+    if (gpio::isDebugProbePresent()) {
+        LL_DBGMCU_DisableDBGStopMode();
+        HAL_Delay(3000);
+    } else {
+        gpio::disableGpio(gpio::group::debugPort);
+    }
 
-    if (power::hasUsbPower()) {        // If USB is present on reboot, we jump to bootloader for firmware update
+    if (power::hasUsbPower()) {
         HAL_RCC_DeInit();
         HAL_DeInit();
         executeRomBootloader();
     }
 
-    /* USER CODE BEGIN SysInit */
-    __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
-    /* USER CODE END SysInit */
-
-    /* Initialize all configured peripherals */
     MX_RTC_Init();
     MX_ADC_Init();
     MX_AES_Init();
     MX_RNG_Init();
     MX_LPTIM1_Init();
     MX_USART1_UART_Init();
-    /* USER CODE BEGIN 2 */
-    mainController ::initialize();
-    /* USER CODE END 2 */
 
-    /* Infinite loop */
-    /* USER CODE BEGIN WHILE */
+    mainController ::initialize();
     while (true) {
         // mainController::runUsbPowerDetection();
         mainController::runStateMachine();
@@ -155,11 +83,7 @@ int main(void) {
         // mainController::runCli();
         mainController::handleEvents();
         mainController::manageSleep();
-        /* USER CODE END WHILE */
-
-        /* USER CODE BEGIN 3 */
     }
-    /* USER CODE END 3 */
 }
 
 /**

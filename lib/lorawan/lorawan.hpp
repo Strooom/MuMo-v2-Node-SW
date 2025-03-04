@@ -30,6 +30,7 @@ class LoRaWAN {
     static void restoreState();
     static void restoreChannels();
     static bool isValidConfig();
+    static bool isValidState();
 
     static void saveConfig();
     static void saveState();
@@ -83,6 +84,9 @@ class LoRaWAN {
     static frameCount uplinkFrameCount;
     static frameCount downlinkFrameCount;
     static uint32_t rx1DelayInSeconds;
+    static uint32_t rx1DataRateOffset;
+    static uint32_t rx2DataRateIndex;
+    static uint32_t rx2FrequencyInHz;
 
 #ifndef unitTesting
   private:
@@ -92,9 +96,6 @@ class LoRaWAN {
     static void goTo(txRxCycleState newState);
 
     static dataRates theDataRates;        // TODO : get rid of the object, as class is static
-    static uint32_t rx1DataRateOffset;
-    static uint32_t rx2DataRateIndex;
-    static uint32_t rx2FrequencyInHz;
     static constexpr uint32_t maxRandomDelayBeforeTx{4096U};
 
     // #################################################

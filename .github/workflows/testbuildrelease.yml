@@ -156,9 +156,9 @@ jobs:
             #include <buildinfo.hpp>
             const buildEnvironment buildInfo::theBuildEnvironment{buildEnvironment::ci};
             const buildType buildInfo::theBuildType{buildType::production};
-            const int buildInfo::mainVersionDigit   = ${{ steps.selectversion.outputs.nextmajordigit }};
-            const int buildInfo::minorVersionDigit  = ${{ steps.selectversion.outputs.nextminordigit }};
-            const int buildInfo::patchVersionDigit  = ${{ steps.selectversion.outputs.nextpatchdigit }};
+            const unsigned int buildInfo::mainVersionDigit   = ${{ steps.selectversion.outputs.nextmajordigit }};
+            const unsigned int buildInfo::minorVersionDigit  = ${{ steps.selectversion.outputs.nextminordigit }};
+            const unsigned int buildInfo::patchVersionDigit  = ${{ steps.selectversion.outputs.nextpatchdigit }};
             const char* buildInfo::lastCommitTag    = "${{ steps.versioninfo.outputs.commithash }}";
             const char* buildInfo::buildTimeStamp   = "${{ steps.versioninfo.outputs.buildtimestamp }}";
             const time_t buildInfo::buildEpoch      = ${{ steps.versioninfo.outputs.buildEpoch }};

@@ -62,10 +62,6 @@ const uint32_t mainController::channelIndex[screen::nmbrOfMeasurementTextLines]{
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
-    gpio::disableGpio(gpio::group::debugPort);        // test for getting low power
-
-    // LL_DBGMCU_DisableDBGStopMode();
-
     logging::enable(logging::destination::uart1);
     logging::enable(logging::source::applicationEvents);
     logging::enable(logging::source::settings);
@@ -76,34 +72,38 @@ void mainController::initialize() {
     logging::enable(logging::source::criticalError);
     realTimeClock::initialize();
 
-
     logging::snprintf("\n\n\nhttps://github.com/Strooom\n");
-    logging::snprintf("v%s.%s.%s - %s\n", buildInfo::mainVersionDigit, buildInfo::minorVersionDigit, buildInfo::patchVersionDigit, buildInfo::lastCommitTag);
+    logging::snprintf("v%u.%u.%u - #%s\n", buildInfo::mainVersionDigit, buildInfo::minorVersionDigit, buildInfo::patchVersionDigit, buildInfo::lastCommitTag);
     logging::snprintf("%s %s build - %s\n", toString(buildInfo::theBuildEnvironment), toString(buildInfo::theBuildType), buildInfo::buildTimeStamp);
     logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
+
     char tmpKeyAsHexAscii[17];
     hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
-    logging::snprintf("UID     : %s\n", tmpKeyAsHexAscii);
+    logging::snprintf("\n");
+    logging::snprintf("UID      : %s\n", tmpKeyAsHexAscii);
 
     spi::wakeUp();
     display::detectPresence();
-    logging::snprintf(logging::source::settings, "Display : %s\n", display::isPresent() ? "present" : "not present");
+    logging::snprintf(logging::source::settings, "Display  : %s\n", display::isPresent() ? "present" : "not present");
     spi::goSleep();
 
     i2c::wakeUp();
     uint32_t nmbr64KBlocks = nonVolatileStorage::isPresent();
     if (nmbr64KBlocks > 0) {
-        logging::snprintf(logging::source::settings, "EEPROM  : %d * 64K present\n", nmbr64KBlocks);
+        logging::snprintf(logging::source::settings, "EEPROM   : %d * 64K present\n", nmbr64KBlocks);
     } else {
         logging::snprintf(logging::source::criticalError, "no EEPROM\n");
         state = mainState::fatalError;
         return;
     }
 
+    // settingsCollection::save(static_cast<uint8_t>(batteryType::liFePO4_700mAh), settingsCollection::settingIndex::batteryType);
+    // settingsCollection::save(static_cast<uint8_t>(mcuType::highPower), settingsCollection::settingIndex::mcuType);
+
     batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
     if (battery::isValidType(theBatteryType)) {
         battery::initialize(theBatteryType);
-        logging::snprintf(logging::source::settings, "Battery : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
+        logging::snprintf(logging::source::settings, "Battery  : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
     } else {
         logging::snprintf(logging::source::criticalError, "invalid BatteryType %d\n", static_cast<uint8_t>(theBatteryType));
     }
@@ -111,17 +111,17 @@ void mainController::initialize() {
     mcuType theMcuType = static_cast<mcuType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
     if (sx126x::isValidType(theMcuType)) {
         sx126x::initialize(theMcuType);
-        logging::snprintf(logging::source::settings, "Radio   : %s (%d)\n", toString(theMcuType), static_cast<uint8_t>(theMcuType));
+        logging::snprintf(logging::source::settings, "Radio    : %s (%d)\n", toString(theMcuType), static_cast<uint8_t>(theMcuType));
     } else {
         logging::snprintf(logging::source::criticalError, "invalid RadioType %d\n", static_cast<uint8_t>(theMcuType));
-        state = mainState::fatalError;
+        goTo(mainState::fatalError);
         return;
     }
 
     sensorDeviceCollection::discover();
-    logging::snprintf("BME680  : %s\n", bme680::isPresent() ? "present" : "not present");
-    logging::snprintf("SHT40   : %s\n", sht40::isPresent() ? "present" : "not present");
-    logging::snprintf("TSL2591 : %s\n", tsl2591::isPresent() ? "present" : "not present");
+    logging::snprintf("BME680   : %s\n", bme680::isPresent() ? "present" : "not present");
+    logging::snprintf("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
+    logging::snprintf("TSL2591  : %s\n", tsl2591::isPresent() ? "present" : "not present");
 
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 120);
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, 120);
@@ -133,28 +133,44 @@ void mainController::initialize() {
 
     gpio::enableGpio(gpio::group::rfControl);
     LoRaWAN::initialize();
-    if (LoRaWAN::isValidConfig()) {
-        char tmpString1[64];
-        char tmpString2[64];
-        hexAscii::uint32ToHexString(tmpString2, LoRaWAN::DevAddr.asUint32);
-        snprintf(tmpString1, screen::maxConsoleTextLength, "DevAdrr : %s", tmpString2);
-        logging::snprintf("%s\n", tmpString1);
-        hexAscii::byteArrayToHexString(tmpString2, LoRaWAN::applicationKey.asBytes(), 16);
-        snprintf(tmpString1, screen::maxConsoleTextLength, "AppSKey : %s", tmpString2);
-        logging::snprintf("%s\n", tmpString1);
-        hexAscii::byteArrayToHexString(tmpString2, LoRaWAN::networkKey.asBytes(), 16);
-        snprintf(tmpString1, screen::maxConsoleTextLength, "NwkSKey : %s", tmpString2);
-        logging::snprintf("%s\n", tmpString1);
-        snprintf(tmpString1, screen::maxConsoleTextLength, "DataRate: %u", static_cast<uint8_t>(LoRaWAN::currentDataRateIndex));
-        logging::snprintf("%s\n", tmpString1);
-        snprintf(tmpString1, screen::maxConsoleTextLength, "rx1Delay: %u", static_cast<uint8_t>(LoRaWAN::rx1DelayInSeconds));
-        logging::snprintf("%s\n", tmpString1);
-    } else {
-        logging::snprintf(logging::source::criticalError, "no valid LoRaWAN config\n");
-        state = mainState::fatalError;
+
+    static constexpr uint32_t tmpStringLength{64};
+    char tmpString[tmpStringLength];
+    logging::snprintf("\n");
+    hexAscii::uint32ToHexString(tmpString, LoRaWAN::DevAddr.asUint32);
+    logging::snprintf("DevAddr  : %s\n", tmpString);
+    hexAscii::byteArrayToHexString(tmpString, LoRaWAN::applicationKey.asBytes(), 16);
+    logging::snprintf("AppSKey  : %s\n", tmpString);
+    hexAscii::byteArrayToHexString(tmpString, LoRaWAN::networkKey.asBytes(), 16);
+    logging::snprintf("NwkSKey  : %s\n", tmpString);
+
+    if (!LoRaWAN::isValidConfig()) {
+        logging::snprintf(logging::source::criticalError, "invalid LoRaWAN config\n");
+        goTo(mainState::fatalError);
         return;
     }
-    applicationEventBuffer.initialize();        // clear RTCticks which may already have been generated
+
+    logging::snprintf("\n");
+    logging::snprintf("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());
+    logging::snprintf("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.toUint32());
+    logging::snprintf("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
+    logging::snprintf("DataRate : %u\n", LoRaWAN::currentDataRateIndex);
+    logging::snprintf("rx1DROff : %u\n", LoRaWAN::rx1DataRateOffset);
+    logging::snprintf("rx2DRIdx : %u\n", LoRaWAN::rx2DataRateIndex);
+
+    if (!LoRaWAN::isValidState()) {
+        logging::snprintf(logging::source::criticalError, "invalid LoRaWAN state\n");
+        goTo(mainState::fatalError);
+        return;
+    }
+
+    logging::snprintf("\n");
+    logging::snprintf("ActiveCh : %u\n", loRaTxChannelCollection::nmbrActiveChannels());
+    for (uint32_t loRaTxChannelIndex = 0; loRaTxChannelIndex < loRaTxChannelCollection::maxNmbrChannels; loRaTxChannelIndex++) {
+        logging::snprintf("Chan[%02u] : %u Hz, %u, %u\n", loRaTxChannelIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].frequencyInHz, loRaTxChannelCollection::channel[loRaTxChannelIndex].minimumDataRateIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].maximumDataRateIndex);
+    }
+
+    applicationEventBuffer.initialize();        // clears RTCticks which may already have been generated
     goTo(mainState::networkCheck);
     i2c::goSleep();
 }

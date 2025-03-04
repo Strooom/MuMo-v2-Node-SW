@@ -142,6 +142,22 @@ bool LoRaWAN::isValidConfig() {
     return true;
 }
 
+bool LoRaWAN::isValidState() {
+    if (!dataRates::isValidIndex(currentDataRateIndex)) {
+        return false;
+    }
+    if (rx1DelayInSeconds > 15U) {
+        return false;
+    }
+    if (rx1DataRateOffset > 7U) {        // TODO : research the maximum value for rx1DataRateOffset
+        return false;
+    }
+    if (!dataRates::isValidIndex(rx2DataRateIndex)) {
+        return false;
+    }
+    return true;
+}
+
 void LoRaWAN::resetMacLayer() {
     resetState();
     resetChannels();
@@ -151,10 +167,9 @@ void LoRaWAN::resetState() {
     uplinkFrameCount   = 0;
     downlinkFrameCount = 0;
     rx1DelayInSeconds  = 1;
-    // settingsCollection::save(static_cast<uint8_t>(currentDataRateIndex), settingsCollection::settingIndex::dataRate);
-    // settingsCollection::save(static_cast<uint8_t>(rx1DataRateOffset), settingsCollection::settingIndex::rx1DataRateOffset);
-    // settingsCollection::save(static_cast<uint8_t>(rx2DataRateIndex), settingsCollection::settingIndex::rx2DataRateIndex);
-
+    currentDataRateIndex = 5;
+    rx1DataRateOffset    = 0;
+    rx2DataRateIndex     = 3;
     // Note : state is reset, but not yet saved in the non-volatile memory
 }
 
