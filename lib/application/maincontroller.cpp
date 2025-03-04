@@ -85,6 +85,10 @@ void mainController::initialize() {
     spi::wakeUp();
     display::detectPresence();
     logging::snprintf(logging::source::settings, "Display  : %s\n", display::isPresent() ? "present" : "not present");
+    if (display::isPresent()) {
+        screen::setType(screenType::logo);
+        screen::update();
+    }
     spi::goSleep();
 
     i2c::wakeUp();
@@ -96,9 +100,6 @@ void mainController::initialize() {
         state = mainState::fatalError;
         return;
     }
-
-    // settingsCollection::save(static_cast<uint8_t>(batteryType::liFePO4_700mAh), settingsCollection::settingIndex::batteryType);
-    // settingsCollection::save(static_cast<uint8_t>(mcuType::highPower), settingsCollection::settingIndex::mcuType);
 
     batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
     if (battery::isValidType(theBatteryType)) {

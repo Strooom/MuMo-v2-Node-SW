@@ -132,6 +132,9 @@ bool LoRaWAN::isValidConfig() {
     if (DevAddr.asUint32 == 0xFFFFFFFF) {
         return false;
     }
+    if ((DevAddr.asUint8[0] == 0x26) && (DevAddr.asUint8[1] == 0x0B)) { // This detects an old incorrectly stored DevAddr
+        return false;
+    }
     uint8_t tmpKeyArray[aesKey::lengthInBytes]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     if (memcmp(applicationKey.asBytes(), tmpKeyArray, aesKey::lengthInBytes) == 0) {
         return false;
