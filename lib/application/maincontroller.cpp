@@ -32,7 +32,7 @@
 #include <tsl2591.hpp>
 #include <uart.hpp>
 #include <uniqueid.hpp>
-#include <version.hpp>
+#include <buildinfo.hpp>
 #include <mcutype.hpp>
 #include <sx126x.hpp>
 
@@ -75,10 +75,11 @@ void mainController::initialize() {
     logging::enable(logging::source::error);
     logging::enable(logging::source::criticalError);
     realTimeClock::initialize();
-    version::initialize();
 
-    logging::snprintf("https://github.com/Strooom - %s\n", version::getIsVersionAsString());
-    logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
+
+    logging::snprintf("\n\n\nhttps://github.com/Strooom\n");
+    logging::snprintf("v%s.%s.%s - %s\n", buildInfo::mainVersionDigit, buildInfo::minorVersionDigit, buildInfo::patchVersionDigit, buildInfo::lastCommitTag);
+    logging::snprintf("%s %s build - %s\n", toString(buildInfo::theBuildEnvironment), toString(buildInfo::theBuildType), buildInfo::buildTimeStamp);
     logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
     char tmpKeyAsHexAscii[17];
     hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());

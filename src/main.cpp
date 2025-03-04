@@ -1,8 +1,29 @@
+/* USER CODE BEGIN Header */
+/**
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2024 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
 #include <gpio.hpp>
 #include <logging.hpp>        // logging to SWO and/or UART
 #include <power.hpp>
-#include <version.hpp>
 #include <display.hpp>
 #include <graphics.hpp>
 #include <ux.hpp>
@@ -17,19 +38,32 @@
 #include <uniqueid.hpp>
 #include <settingscollection.hpp>
 #include <measurementcollection.hpp>
-#include <uart1.hpp>
 #include <spi.hpp>
 #include <i2c.hpp>
 #include <bme680.hpp>
 #include <tsl2591.hpp>
-#include <sht40.hpp>
 #include <battery.hpp>
 #include <lptim.hpp>
 #include <qrcode.hpp>
-#include <hexascii.hpp>
-#include <mcutype.hpp>
-#include <sx126x.hpp>
 
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc;
 CRYP_HandleTypeDef hcryp;
 __ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {0x00000000, 0x00000000, 0x00000000, 0x00000000};
@@ -48,7 +82,7 @@ circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-void MX_GPIO_Init(void);
+// static void MX_GPIO_Init(void);
 static void MX_RTC_Init(void);
 void MX_USART2_UART_Init(void);
 void MX_SPI2_Init(void);
@@ -61,82 +95,71 @@ static void MX_LPTIM1_Init(void);
 void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void executeRomBootloader();
+/* USER CODE END PFP */
 
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/**
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void) {
-    HAL_Init();
-    SystemClock_Config();
-    MX_GPIO_Init();
-    __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
-    gpio::initialize();
-    if (gpio::isDebugProbePresent()) {
-        HAL_Delay(3000);
-    } else {
-        gpio::disableGpio(gpio::group::debugPort);
-    }
+    /* USER CODE BEGIN 1 */
 
-    if (power::hasUsbPower()) {
+    /* USER CODE END 1 */
+
+    /* MCU Configuration--------------------------------------------------------*/
+
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+    HAL_Init();
+
+    /* USER CODE BEGIN Init */
+
+    /* USER CODE END Init */
+
+    /* Configure the system clock */
+    SystemClock_Config();
+    HAL_Delay(1000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
+                            //    HAL_Delay(5000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
+
+    if (power::hasUsbPower()) {        // If USB is present on reboot, we jump to bootloader for firmware update
         HAL_RCC_DeInit();
         HAL_DeInit();
         executeRomBootloader();
     }
 
-    version::initialize();
-    uart1::wakeUp();
-    logging::enable(logging::destination::uart1);
-    gpio::enableGpio(gpio::group::other);
+    /* USER CODE BEGIN SysInit */
+    __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
+    /* USER CODE END SysInit */
 
+    /* Initialize all configured peripherals */
     MX_RTC_Init();
     MX_ADC_Init();
+    MX_AES_Init();
+    MX_RNG_Init();
+    MX_LPTIM1_Init();
+    MX_USART1_UART_Init();
+    /* USER CODE BEGIN 2 */
+    mainController ::initialize();
+    /* USER CODE END 2 */
 
-    // MX_SPI2_Init();
-    // MX_AES_Init();
-    // MX_RNG_Init();
-    // MX_LPTIM1_Init();
-
-    uint32_t loopCount{0};
-
+    /* Infinite loop */
+    /* USER CODE BEGIN WHILE */
     while (true) {
-        // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+        // mainController::runUsbPowerDetection();
+        mainController::runStateMachine();
+        mainController::runDisplayUpdate();
+        // mainController::runCli();
+        mainController::handleEvents();
+        mainController::manageSleep();
+        /* USER CODE END WHILE */
 
-        logging::snprintf("\n\n\n%d\n", loopCount);
-        logging::snprintf("https://github.com/Strooom - %s\n", version::getIsVersionAsString());
-        logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
-        logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n\n");
-        char tmpKeyAsHexAscii[17];
-        hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
-        logging::snprintf("UID     : %s\n", tmpKeyAsHexAscii);
-
-        spi::wakeUp();
-        display::detectPresence();
-        logging::snprintf("Display : %s\n", display::isPresent() ? "present" : "not present");
-        spi::goSleep();
-
-        i2c::wakeUp();
-        logging::snprintf("EEPROM  : %d * 64K present\n", nonVolatileStorage::isPresent());
-        logging::snprintf("BME68X  : %s\n", bme680::isPresent() ? "present" : "not present");
-        logging::snprintf("TSL2591 : %s\n", tsl2591::isPresent() ? "present" : "not present");
-        logging::snprintf("SHT40   : %s\n", sht40::isPresent() ? "present" : "not present");
-        batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
-        logging::snprintf("Battery : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
-        mcuType theMcuType = static_cast<mcuType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
-        logging::snprintf("Radio   : %s (%d)\n", toString(theMcuType), static_cast<uint8_t>(theMcuType));
-        i2c::goSleep();
-
-        if (display::isPresent()) {
-            spi::wakeUp();
-            screen::setType(screenType::logo);
-            screen::update();
-            spi::goSleep();
-        }
-
-        logging::snprintf("goSleep...\n");
-        uart1::goSleep();
-        mainController::mcuStop2();
-        uart1::wakeUp();
-        logging::snprintf("... wakeUp\n");
-
-        loopCount++;
+        /* USER CODE BEGIN 3 */
     }
+    /* USER CODE END 3 */
 }
 
 /**
@@ -360,10 +383,6 @@ static void MX_RTC_Init(void) {
 
     /* USER CODE END RTC_Init 0 */
 
-    // RTC_TimeTypeDef sTime     = {0};
-    // RTC_DateTypeDef sDate     = {0};
-    // RTC_TamperTypeDef sTamper = {0};
-
     /* USER CODE BEGIN RTC_Init 1 */
 
     /* USER CODE END RTC_Init 1 */
@@ -384,15 +403,38 @@ static void MX_RTC_Init(void) {
         Error_Handler();
     }
 
-   if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
+    /* USER CODE BEGIN Check_RTC_BKUP */
+
+    /* USER CODE END Check_RTC_BKUP */
+
+    /** Initialize RTC and set the Time and Date
+     */
+    // sTime.Hours          = 0x0;
+    // sTime.Minutes        = 0x0;
+    // sTime.Seconds        = 0x0;
+    // sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+    // sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+    // if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
+    //     Error_Handler();
+    // }
+    // sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+    // sDate.Month   = RTC_MONTH_JANUARY;
+    // sDate.Date    = 0x1;
+    // sDate.Year    = 0x0;
+
+    // if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
+    //     Error_Handler();
+    // }
+
+    /** Enable the WakeUp
+     */
+    if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
         // if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 10000, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
         Error_Handler();
     }
+    /* USER CODE BEGIN RTC_Init 2 */
 
-    /* USER CODE BEGIN Check_RTC_BKUP */
-    HAL_NVIC_SetPriority(RTC_WKUP_IRQn, 10, 0);
-    HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
-    /* USER CODE END Check_RTC_BKUP */
+    /* USER CODE END RTC_Init 2 */
 }
 
 /**
@@ -471,7 +513,7 @@ void MX_USART1_UART_Init(void) {
     huart1.Init.WordLength             = UART_WORDLENGTH_8B;
     huart1.Init.StopBits               = UART_STOPBITS_1;
     huart1.Init.Parity                 = UART_PARITY_NONE;
-    huart1.Init.Mode                   = UART_MODE_TX;
+    huart1.Init.Mode                   = UART_MODE_TX_RX;
     huart1.Init.HwFlowCtl              = UART_HWCONTROL_NONE;
     huart1.Init.OverSampling           = UART_OVERSAMPLING_16;
     huart1.Init.OneBitSampling         = UART_ONE_BIT_SAMPLE_DISABLE;
@@ -535,29 +577,23 @@ void MX_USART2_UART_Init(void) {
     /* USER CODE END USART2_Init 2 */
 }
 
-void MX_GPIO_Init(void) {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    /* USER CODE BEGIN MX_GPIO_Init_1 */
-    /* USER CODE END MX_GPIO_Init_1 */
+// /**
+//  * @brief GPIO Initialization Function
+//  * @param None
+//  * @retval None
+//  */
+// static void MX_GPIO_Init(void) {
+//     /* USER CODE BEGIN MX_GPIO_Init_1 */
+//     /* USER CODE END MX_GPIO_Init_1 */
 
-    /* GPIO Ports Clock Enable */
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
+//     /* GPIO Ports Clock Enable */
+//     __HAL_RCC_GPIOA_CLK_ENABLE();
+//     __HAL_RCC_GPIOB_CLK_ENABLE();
+//     __HAL_RCC_GPIOC_CLK_ENABLE();
 
-    /*Configure GPIO pin : PB3 */
-    GPIO_InitStruct.Pin  = GPIO_PIN_3;
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-    /* EXTI interrupt init*/
-    HAL_NVIC_SetPriority(EXTI3_IRQn, 7, 0);
-    HAL_NVIC_EnableIRQ(EXTI3_IRQn);
-
-    /* USER CODE BEGIN MX_GPIO_Init_2 */
-    /* USER CODE END MX_GPIO_Init_2 */
-}
+//     /* USER CODE BEGIN MX_GPIO_Init_2 */
+//     /* USER CODE END MX_GPIO_Init_2 */
+// }
 
 /* USER CODE BEGIN 4 */
 void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
@@ -570,13 +606,6 @@ void HAL_SUBGHZ_RxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
 
 void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
     applicationEventBuffer.push(applicationEvent::sx126xTimeout);
-}
-
-void HAL_RTCEx_Tamper3EventCallback(RTC_HandleTypeDef *hrtc) {
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-    applicationEventBuffer.push(applicationEvent::applicationButtonPressed);
 }
 
 void executeRomBootloader() {
