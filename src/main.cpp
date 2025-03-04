@@ -53,11 +53,12 @@ void executeRomBootloader();
 int main(void) {
     HAL_Init();
     SystemClock_Config();
+    HAL_Delay(10000);
     __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
     gpio::initialize();
     if (gpio::isDebugProbePresent()) {
         LL_DBGMCU_DisableDBGStopMode();
-        HAL_Delay(3000);
+        HAL_Delay(6000);
     } else {
         gpio::disableGpio(gpio::group::debugPort);
     }
@@ -77,12 +78,12 @@ int main(void) {
 
     mainController ::initialize();
     while (true) {
-        // mainController::runUsbPowerDetection();
+        mainController::runUsbPowerDetection();
         mainController::runStateMachine();
         // mainController::runCli();
         mainController::handleEvents();
         mainController::runDisplayUpdate();
-        // mainController::manageSleep();
+        mainController::manageSleep();
     }
 }
 

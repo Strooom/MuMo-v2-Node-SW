@@ -7,7 +7,7 @@ extern UART_HandleTypeDef huart2;
 #endif
 #include <gpio.hpp>
 
-void uart2::initialize() {
+void uart2x::initialize() {
     // TODO : initialize the UART1 peripheral in STM32 registers
     // TODO : initialize the related GPIO pins
     huart2.Instance                    = USART1;
@@ -29,7 +29,7 @@ void uart2::initialize() {
 }
 
 
-void uart2::goSleep() {
+void uart2x::goSleep() {
     HAL_UART_DeInit(&huart2);
     gpio::disableGpio(gpio::group::uart2);
 }

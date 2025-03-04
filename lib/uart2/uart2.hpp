@@ -6,9 +6,9 @@
 #pragma once
 #include <stdint.h>
 
-class uart2 {
+class uart2x {
   public:
-    uart2() = delete;
+    uart2x() = delete;
     static void initialize();
     static void goSleep();
     // TODO : add an equivalent to HAL_UART_Transmit();
