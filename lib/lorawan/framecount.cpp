@@ -1,8 +1,8 @@
 #include <framecount.hpp>
 
-frameCount::frameCount() : asUint32(0){};
+frameCount::frameCount() : asUint32(0) {};
 
-frameCount::frameCount(uint32_t initialValue) : asUint32(initialValue){};
+frameCount::frameCount(uint32_t initialValue) : asUint32(initialValue) {};
 
 frameCount& frameCount::operator=(const uint32_t theFrameCount) {
     asUint32 = theFrameCount;
@@ -14,15 +14,15 @@ frameCount& frameCount::operator=(const frameCount& theFrameCount) {
     return *this;
 }
 
-bool frameCount::operator==(const frameCount& theFrameCount) {
+bool frameCount::operator==(const frameCount& theFrameCount) const {
     return (asUint32 == theFrameCount.asUint32);
 }
 
-bool frameCount::operator!=(const frameCount& theFrameCount) {
+bool frameCount::operator!=(const frameCount& theFrameCount) const {
     return (asUint32 != theFrameCount.asUint32);
 }
 
-bool frameCount::operator>(const frameCount& theFrameCount) {
+bool frameCount::operator>(const frameCount& theFrameCount) const {
     return (asUint32 > theFrameCount.asUint32);
 }
 
@@ -43,4 +43,3 @@ void frameCount::guessFromUint16(uint16_t frameCount16Lsb) {
         }
     }
 }
-
