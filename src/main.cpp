@@ -261,7 +261,6 @@ void MX_SPI2_Init(void) {
     }
 }
 
-
 void MX_USART1_UART_Init(void) {
     huart1.Instance                    = USART1;
     huart1.Init.BaudRate               = 115200;
@@ -326,7 +325,7 @@ void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
     applicationEventBuffer.push(applicationEvent::sx126xTimeout);
 }
 
-void executeRomBootloader() {
+__attribute__((noreturn)) void executeRomBootloader() {
     void (*SysMemBootJump)(void);
     volatile uint32_t BootAddr = 0x1FFF0000;
 
@@ -344,14 +343,12 @@ void executeRomBootloader() {
     __set_MSP(*(uint32_t *)BootAddr);        // Set the main stack pointer to the boot loader stack
 
     SysMemBootJump();
-    while (1) {
+    while (true) {
     }
 }
 
-void Error_Handler(void) {
+__attribute__((noreturn)) void Error_Handler(void) {
     __disable_irq();
-    while (1) {
+    while (true) {
     }
-
 }
-
