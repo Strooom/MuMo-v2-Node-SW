@@ -1300,15 +1300,6 @@ void LoRaWAN::dumpTransmitParameterSetupRequest() {}
 void LoRaWAN::dumpDownlinkChannelRequest() {}
 void LoRaWAN::dumpDeviceTimeAnswer() {}
 
-// if (logging::isActive(logging::source::lorawanMac)) {
-//     logging::snprintf("Received Downlink : framePayloadLength = %u, frameOptionsLength = %u\n", framePayloadLength, frameOptionsLength);
-//     logging::snprintf("  LoRa msg = ");
-//     for (uint8_t i = 0; i < loRaPayloadLength; i++) {
-//         logging::snprintf("%02X ", rawMessage[i + b0BlockLength]);
-//     }
-//     logging::snprintf("\n");
-// }
-
 void LoRaWAN::appendMacCommand(macCommand theMacCommand) {
     LoRaWAN::macOut.append(static_cast<uint8_t>(theMacCommand));
 }

@@ -13,9 +13,6 @@ bool sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::n
 sensorChannel sensorDeviceCollection::dummy = {0, "", ""};
 
 void sensorDeviceCollection::discover() {
-    isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)]     = true;
-    isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
-
     isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)] = bme680::isPresent();
     if (isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)]) {
         bme680::initialize();

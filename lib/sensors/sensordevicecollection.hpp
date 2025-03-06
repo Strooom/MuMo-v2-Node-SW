@@ -48,11 +48,11 @@ class sensorDeviceCollection {
     static bool isValid(uint32_t deviceIndex);
     static bool isValid(uint32_t deviceIndex, uint32_t channelIndex);
 
+    static bool isPresent[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)];
 #ifndef unitTesting
 
   private:
 #endif
 
-    static bool isPresent[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)];
     static sensorChannel dummy;        // dummy, so we can return a valid reference to a channel in edge cases
 };

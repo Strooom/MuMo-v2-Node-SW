@@ -53,7 +53,7 @@ void executeRomBootloader();
 int main(void) {
     HAL_Init();
     SystemClock_Config();
-    HAL_Delay(10000);
+    // HAL_Delay(10000);
     __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
     gpio::initialize();
     if (gpio::isDebugProbePresent()) {
@@ -83,7 +83,9 @@ int main(void) {
         // mainController::runCli();
         mainController::handleEvents();
         mainController::runDisplayUpdate();
-        mainController::manageSleep();
+        mainController::prepareSleep();
+        mainController::goSleep();
+        mainController::wakeUp();
     }
 }
 
@@ -327,7 +329,6 @@ static void MX_RTC_Init(void) {
     if (HAL_RTC_Init(&hrtc) != HAL_OK) {
         Error_Handler();
     }
-
 
     /** Enable the WakeUp
      */

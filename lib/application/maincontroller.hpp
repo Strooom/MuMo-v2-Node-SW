@@ -23,7 +23,10 @@ class mainController {
     static void runDisplayUpdate();
     static void runCli();
     static void runStateMachine();
-    static void manageSleep();
+    static void prepareSleep();
+    static void goSleep();
+    static void wakeUp();
+
     static void mcuStop2();
     static void miniAdr();
 

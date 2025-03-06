@@ -65,7 +65,7 @@ void mainController::initialize() {
     logging::enable(logging::destination::uart1);
     logging::enable(logging::source::applicationEvents);
     logging::enable(logging::source::settings);
-    logging::enable(logging::source::sensorData);
+    // logging::enable(logging::source::sensorData);
     logging::enable(logging::source::lorawanMac);
     logging::enable(logging::source::lorawanData);
     logging::enable(logging::source::error);
@@ -105,6 +105,10 @@ void mainController::initialize() {
     if (battery::isValidType(theBatteryType)) {
         battery::initialize(theBatteryType);
         logging::snprintf(logging::source::settings, "Battery  : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
+        sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
+
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 20);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, 20);
     } else {
         logging::snprintf(logging::source::criticalError, "invalid BatteryType %d\n", static_cast<uint8_t>(theBatteryType));
     }
@@ -113,6 +117,7 @@ void mainController::initialize() {
     if (sx126x::isValidType(theMcuType)) {
         sx126x::initialize(theMcuType);
         logging::snprintf(logging::source::settings, "Radio    : %s (%d)\n", toString(theMcuType), static_cast<uint8_t>(theMcuType));
+        sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)] = true;
     } else {
         logging::snprintf(logging::source::criticalError, "invalid RadioType %d\n", static_cast<uint8_t>(theMcuType));
         goTo(mainState::fatalError);
@@ -120,20 +125,37 @@ void mainController::initialize() {
     }
 
     sensorDeviceCollection::discover();
+
+    if (bme680::isPresent()) {
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 20);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 20);
+    }
     logging::snprintf("BME680   : %s\n", bme680::isPresent() ? "present" : "not present");
-    logging::snprintf("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
+
+    if (tsl2591::isPresent()) {
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 20);
+    }
     logging::snprintf("TSL2591  : %s\n", tsl2591::isPresent() ? "present" : "not present");
 
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 120);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, 120);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, 20);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, 20);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 20);
+    if (sht40::isPresent()) {
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, 20);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, 20);
+    }
+    logging::snprintf("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
 
     // TODO : initialize measurementCollection
 
     gpio::enableGpio(gpio::group::rfControl);
+
     LoRaWAN::initialize();
+
+    // Uncomment to reset MacLayer state and/or channels in the device
+    // Needs a matching MacLayer reset at the LoRaWAN Network Server
+    // LoRaWAN::resetState();           // TEST
+    // LoRaWAN::saveState();            // TEST
+    // LoRaWAN::resetChannels();        // TEST
+    // LoRaWAN::saveChannels();         // TEST
+    // LoRaWAN::initialize();           // TEST
 
     static constexpr uint32_t tmpStringLength{64};
     char tmpString[tmpStringLength];
@@ -173,7 +195,7 @@ void mainController::initialize() {
 
     applicationEventBuffer.initialize();        // clears RTCticks which may already have been generated
     goTo(mainState::networkCheck);
-    i2c::goSleep();
+    // i2c::goSleep(); // TODO / BUG : this is a problem, as the I2C now sleeps during the networkCheck state... and so new settings cannot be stored in NVS
 }
 
 void mainController::handleEvents() {
@@ -325,10 +347,11 @@ void mainController::goTo(mainState newState) {
     state = newState;
 }
 
-void mainController::manageSleep() {
-    // Prepare before going to sleep
+void mainController::prepareSleep() {
     switch (state) {
-        case mainState::idle:
+        case mainState::idle:        // Intentional fallthrough
+                                     // case mainState::networkCheck:
+
             logging::snprintf("goSleep...\n");
             gpio::disableAllGpio();
             break;
@@ -336,19 +359,23 @@ void mainController::manageSleep() {
         default:
             break;
     }
-    // Sleep mode depending on state we are in
+}
+void mainController::goSleep() {
     switch (state) {
-        case mainState::idle:
+        case mainState::idle:        // Intentional fallthrough
+                                     // case mainState::networkCheck:
             mcuStop2();
             break;
 
         default:
             break;
     }
+}
 
-    // Repair after waking up
+void mainController::wakeUp() {
     switch (state) {
-        case mainState::idle:
+        case mainState::idle:        // Intentional fallthrough
+                                     // case mainState::networkCheck:
 #ifndef generic
             MX_I2C2_Init();
             MX_ADC_Init();
