@@ -32,7 +32,7 @@ void reedSolomon::initialize(uint8_t degree, uint8_t *coeff) {
     }
 }
 
-void reedSolomon::remainder(uint8_t degree, uint8_t *coeff, uint8_t *data, uint8_t length, uint8_t *result, uint8_t stride) {
+void reedSolomon::remainder(const uint8_t degree, const uint8_t *coeff, const uint8_t *data, const uint8_t length, uint8_t *result, const uint8_t stride) {
     // Compute the remainder by performing polynomial division
     for (uint8_t i = 0; i < length; i++) {
         uint8_t factor = data[i] ^ result[0];

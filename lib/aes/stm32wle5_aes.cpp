@@ -67,7 +67,7 @@ void stm32wle5_aes::read(aesBlock& theBlock) {
 #endif
 }
 
-void stm32wle5_aes::write(uint32_t* wordsIn) {
+void stm32wle5_aes::write(const uint32_t* wordsIn) {
 #ifndef generic
     AES->DINR = wordsIn[0];
     AES->DINR = wordsIn[1];

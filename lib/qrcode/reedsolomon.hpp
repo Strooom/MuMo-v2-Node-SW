@@ -22,5 +22,5 @@ class reedSolomon {
   public:
     static void initialize(uint8_t degree, uint8_t *coeff);
     static uint8_t multiply(uint8_t x, uint8_t y);
-    static void remainder(uint8_t degree, uint8_t *coeff, uint8_t *data, uint8_t length, uint8_t *result, uint8_t stride);
+    static void remainder(const uint8_t degree, const uint8_t *coeff, const uint8_t *data, const uint8_t length, uint8_t *result, const uint8_t stride);
 };
