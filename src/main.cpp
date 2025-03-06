@@ -325,7 +325,7 @@ void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
     applicationEventBuffer.push(applicationEvent::sx126xTimeout);
 }
 
-__attribute__((noreturn)) void executeRomBootloader() {
+void executeRomBootloader() {
     void (*SysMemBootJump)(void);
     volatile uint32_t BootAddr = 0x1FFF0000;
 
@@ -347,7 +347,7 @@ __attribute__((noreturn)) void executeRomBootloader() {
     }
 }
 
-__attribute__((noreturn)) void Error_Handler(void) {
+void Error_Handler(void) {
     __disable_irq();
     while (true) {
     }
