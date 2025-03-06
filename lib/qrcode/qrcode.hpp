@@ -27,10 +27,13 @@ class qrCode {
     static bool isNumeric(const char data);
     static bool isNumeric(const char *data);
     static bool isNumeric(const char *data, uint32_t length);
+    static constexpr uint32_t maxNumericLength{7089};
 
     static bool isAlphanumeric(const char data);
     static bool isAlphanumeric(const char *data);
     static bool isAlphanumeric(const char *data, uint32_t length);
+    static constexpr uint32_t maxAlphanumericLength{4296};
+    static constexpr uint32_t maxByteLength{2953};
 
     static bool isValid(uint32_t theVersion);
     static uint32_t size(uint32_t theVersion);

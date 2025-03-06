@@ -22,7 +22,7 @@ bool qrCode::isNumeric(const char data) {
 }
 
 bool qrCode::isNumeric(const char *data) {
-    uint32_t length = strlen(data);
+    uint32_t length = strnlen(data, maxNumericLength);
     return isNumeric(data, length);
 }
 
@@ -49,7 +49,7 @@ bool qrCode::isAlphanumeric(const char data) {
 }
 
 bool qrCode::isAlphanumeric(const char *data) {
-    uint32_t length = strlen(data);
+    uint32_t length = strnlen(data, maxAlphanumericLength);
     return isAlphanumeric(data, length);
 }
 
@@ -176,7 +176,21 @@ uint32_t qrCode::payloadLengthInBits(uint32_t dataLengthInBytes, uint32_t theVer
 }
 
 void qrCode::encodeData(bitVector &theBitVector, const char *text, uint32_t theVersion, encodingFormat theEncodingFormat) {
-    uint32_t length = strlen(text);
+    uint32_t maxLength;
+    switch (theEncodingFormat) {
+        case encodingFormat::numeric:
+            maxLength = maxNumericLength;
+            break;
+
+        case encodingFormat::alphanumeric:
+            maxLength = maxAlphanumericLength;
+            break;
+        case encodingFormat::byte:        // intentional fallthrough
+        default:
+            maxLength = maxByteLength;
+            break;
+    }
+    uint32_t length = strnlen(text, maxLength);
     theBitVector.appendBits(modeIndicator(theEncodingFormat), 4);
     theBitVector.appendBits(length, characterCountIndicatorLength(theVersion, theEncodingFormat));
 
@@ -347,7 +361,6 @@ uint32_t qrCode::nmbrOfDataModules(uint32_t theVersion) {
 uint32_t qrCode::nmbrOfErrorCorrectionModules(uint32_t theVersion, errorCorrectionLevel theErrorCorrectionLevel) {
     return versionProperties[theVersion - 1].nmbrErrorCorrectionCodewords[static_cast<uint32_t>(theErrorCorrectionLevel)] * versionProperties[theVersion - 1].nmbrErrorCorrectionBlocks[static_cast<uint32_t>(theErrorCorrectionLevel)] * 8;
 }
-
 
 uint32_t qrCode::nmbrOfAlignmentPatterns(uint32_t theVersion) {
     if (theVersion == 1) {
