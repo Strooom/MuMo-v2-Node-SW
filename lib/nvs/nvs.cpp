@@ -70,7 +70,6 @@ void nonVolatileStorage::write(const uint32_t startAddress, const uint8_t* data,
     uint8_t* remainingData{const_cast<uint8_t*>(data)};
     uint32_t remainingLength{dataLength};
     uint32_t currentAddress{startAddress};
-    bool i2cState = i2c::isInitialized();
 #ifndef generic
     HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_RESET);        // Drive writeProtect LOW = enable write
 #endif
