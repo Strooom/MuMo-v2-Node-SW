@@ -33,7 +33,6 @@ void nonVolatileStorage::erase() {
 
 void nonVolatileStorage::fill(uint8_t value) {
     uint8_t data[128];        // writing data in chunks of 128 bytes as this is optimized for the EEPROM device TODO : make this work for different EEPROM sizes / page sizes
-    constexpr uint32_t pageSize{128};
     constexpr uint32_t nmbrOfPages{totalSize / pageSize};
 
     for (uint32_t i = 0; i < pageSize; i++) {

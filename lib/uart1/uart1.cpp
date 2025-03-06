@@ -1,11 +1,11 @@
 #include <uart1.hpp>
+#include <gpio.hpp>
 
 #ifndef generic
 #include "main.h"
 extern UART_HandleTypeDef huart1;
 #else
 #endif
-#include <gpio.hpp>
 
 bool uart1::initalized{false};
 

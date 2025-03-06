@@ -29,9 +29,9 @@ uint8_t sensirion::generateCRCGeneric(const uint8_t* data, uint8_t count, uint8_
         crc ^= (data[current_byte]);
         for (uint8_t crc_bit = 8; crc_bit > 0; --crc_bit) {
             if (crc & 0x80)
-                crc = (crc << 1) ^ polynomial;
+                crc = static_cast<uint8_t>((crc << 1) ^ polynomial);
             else
-                crc = (crc << 1);
+                crc = static_cast<uint8_t>(crc << 1);
         }
     }
     return crc;
@@ -81,5 +81,5 @@ uint32_t sensirion::asUint32(const uint8_t* bytes) {
 }
 
 uint16_t sensirion::asUint16(const uint8_t* bytes) {
-    return (static_cast<uint16_t>(bytes[0]) << 8) + static_cast<uint16_t>(bytes[1]);
+    return static_cast<uint16_t>(static_cast<uint16_t>(bytes[0]) << 8) + static_cast<uint16_t>(bytes[1]);
 }

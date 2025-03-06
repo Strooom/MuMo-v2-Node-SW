@@ -34,3 +34,6 @@
 * report number of measurements on bootscreen
 * merge hw aes tests into 1, in order to not have too many target unit tests
 * Put some of the aesKey stuff, only needed for SW-AES in conditional compilation, eg key expansion
+
+# ST HAL
+  * remove HAL code from C++ wrapper
