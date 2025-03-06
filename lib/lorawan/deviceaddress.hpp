@@ -18,7 +18,7 @@ class deviceAddress {
     bool operator!=(const deviceAddress& theDeviceAddress);
 
     union {
-        uint32_t asUint32{0};
+        uint32_t asUint32{0xFFFFFFFF};
         uint8_t asUint8[lengthInBytes];
     };
 };

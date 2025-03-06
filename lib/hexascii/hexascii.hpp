@@ -10,7 +10,8 @@ class hexAscii {
   public:
     static void hexStringToByteArray(uint8_t *byteArrayOut, const char *hexStringIn, const uint32_t stringInLength);
     static void byteArrayToHexString(char *hexStringOut, const uint8_t *byteArrayIn, const uint32_t binaryArrayInLength);
-    static void uint64ToHexString(char *hexStringOut, const uint64_t dataIn);
+    static void uint32ToHexString(char *hexStringOut, const uint32_t dataIn);
+        static void uint64ToHexString(char *hexStringOut, const uint64_t dataIn);
 
 #ifndef unitTesting
 

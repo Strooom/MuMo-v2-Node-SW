@@ -37,7 +37,7 @@ uint8_t hexAscii::hexCharacterFromValue(const uint8_t valueToConvert) {
 
 void hexAscii::hexStringToByteArray(uint8_t *byteArrayOut, const char *hexStringIn, const uint32_t stringInLength) {
     uint32_t hexStringInLength = strnlen(hexStringIn, stringInLength);
-    uint32_t nmbrBytes = hexStringInLength / 2;
+    uint32_t nmbrBytes         = hexStringInLength / 2;
 
     for (uint32_t index = 0; index < nmbrBytes; index++) {
         uint8_t leftCharacter  = static_cast<uint8_t>(hexStringIn[index * 2]);
@@ -56,6 +56,13 @@ void hexAscii::byteArrayToHexString(char *hexStringOut, const uint8_t *byteArray
         hexStringOut[(index * 2) + 1] = hexCharacterFromValue(byteArrayIn[index] & 0x0F);
     }
     hexStringOut[binaryArrayInLength * 2] = 0x00;
+}
+
+void hexAscii::uint32ToHexString(char *hexStringOut, const uint32_t dataIn) {
+    for (uint32_t index = 0; index < 8; index++) {        // 32 bits = 4 bytes = 8 nibbles = 8 hex characters
+        hexStringOut[index] = hexCharacterFromValue((dataIn >> (28 - (index * 4))) & 0x0F);
+    }
+    hexStringOut[8] = 0x00;
 }
 
 void hexAscii::uint64ToHexString(char *hexStringOut, const uint64_t dataIn) {

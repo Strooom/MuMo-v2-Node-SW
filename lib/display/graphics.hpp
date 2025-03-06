@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <font.hpp>
 #include <bitmap.hpp>
-#include <qrcode.hpp>
+#include <qrcode2.hpp>
 
 class graphics {
   public:

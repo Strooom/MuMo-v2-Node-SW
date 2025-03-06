@@ -12,6 +12,7 @@ enum class applicationEvent : uint8_t {
     usbRemoved,
     realTimeClockTick,
     lowPowerTimerExpired,
+    applicationButtonPressed,
     downlinkApplicationPayloadReceived,
     downlinkMacCommandReceived,
     sx126xCadEnd,

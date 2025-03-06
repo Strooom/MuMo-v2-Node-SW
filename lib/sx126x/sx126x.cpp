@@ -19,18 +19,14 @@ uint8_t mockSX126xCommandData[256][8];
 #include <cstring>
 #endif
 
-powerVersion sx126x::thePowerVersion{powerVersion::unknown};
+mcuType sx126x::theMcuType{mcuType::nmbrMcuTypes};
 
-void sx126x::initialize() {
-    if (thePowerVersion == powerVersion::unknown) {
-        uint8_t typeIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType);
-        if (typeIndex >= static_cast<uint8_t>(powerVersion::nmbrPowerVersions)) {
-            logging::snprintf(logging::source::error, "invalid settingsCollection::settingIndex::mcuType : %d\n", typeIndex);
-            thePowerVersion = powerVersion::highPower;
-        }
-        thePowerVersion = static_cast<powerVersion>(typeIndex);
-    }
+bool sx126x::isValidType(mcuType someMcuType) {
+    return (someMcuType < mcuType::nmbrMcuTypes);
+}
 
+void sx126x::initialize(mcuType isPowerVersion) {
+    theMcuType = isPowerVersion;
     initializeInterface();
     initializeRadio();
     goSleep();
@@ -134,7 +130,7 @@ void sx126x::setRfFrequency(uint32_t frequencyInHz) {
     commandParameters[0] = static_cast<uint8_t>((frequencyRegisterValue >> 24U) & 0xFF);        //
     commandParameters[1] = static_cast<uint8_t>((frequencyRegisterValue >> 16U) & 0xFF);        //
     commandParameters[2] = static_cast<uint8_t>((frequencyRegisterValue >> 8U) & 0xFF);         //
-    commandParameters[3] = static_cast<uint8_t>(frequencyRegisterValue & 0xFF);              //
+    commandParameters[3] = static_cast<uint8_t>(frequencyRegisterValue & 0xFF);                 //
     executeSetCommand(command::setRfFRequency, commandParameters, nmbrCommandParameters);
 }
 
@@ -238,8 +234,8 @@ void sx126x::initializeRadio() {
     commandParameters[3] = 0x99;
     executeSetCommand(command::setRfFRequency, commandParameters, 4);
 
-    switch (thePowerVersion) {
-        case powerVersion::lowPower:        // lowPower Amp : Wio-E5-LE-HF 14 dBm
+    switch (theMcuType) {
+        case mcuType::lowPower:        // lowPower Amp : Wio-E5-LE-HF 14 dBm
             commandParameters[0] = 0x04;
             commandParameters[1] = 0x00;
             commandParameters[2] = 0x01;

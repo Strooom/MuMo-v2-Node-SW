@@ -14,18 +14,20 @@
 #include <eepromtype.hpp>
 #include <measurementcollection.hpp>
 #include <sx126x.hpp>
-#include <powerversion.hpp>
+#include <mcutype.hpp>
 #include <maincontroller.hpp>
+#include <uniqueid.hpp>
+#include <i2c.hpp>
 
 // #######################################################
 // ###  Which settings to be written to EEPROM         ###
 // #######################################################
 
-const bool resetBatteryType{true};
-const bool resetMcuType{true};
-const bool setName{true};
+const bool resetBatteryType{false};
+const bool resetMcuType{false};
+const bool setName{false};
 const bool fixDevAddr{false};
-const bool overwriteExistingLoRaWANConfig{true};
+const bool overwriteExistingLoRaWANConfig{false};
 const bool resetLoRaWANState{true};
 const bool resetLoRaWANChannels{true};
 const bool eraseMeasurementsInEeprom{false};
@@ -34,25 +36,29 @@ const bool eraseMeasurementsInEeprom{false};
 // ###  Non-Volatile settings to be written to EEPROM  ###
 // #######################################################
 
-eepromType selectedEepromType{eepromType::BR24G512};
+eepromType selectedEepromType{eepromType::M24M01E};
 uint8_t selectedDisplayType{0};
-batteryType selectedBatteryType{batteryType::liFePO4_700mAh};
+batteryType selectedBatteryType{batteryType::fdk_cr14250se};
+mcuType selectedPowerVersion{mcuType::lowPower};
 
-powerVersion selectedPowerVersion{powerVersion::highPower};
+const char toBeName[9] = "mini001";
 
-const char toBeName[mainController::maxNameLength + 1] = "K007";
-
-uint32_t toBeDevAddr            = 0x260BD91E;
-const char toBeNetworkKey[]     = "56B5093D4E8BC208BF10B7CC50CF445E";
-const char toBeApplicationKey[] = "808397687E1801A97E217CAFF7651BFF";
+uint32_t toBeDevAddr            = 0x260BC064;
+const char toBeNetworkKey[]     = "A9C998E31E5217C61BE94606436BFD45";
+const char toBeApplicationKey[] = "45F68164F26E08E4EC846C36E07A5A88";
 
 // #######################################################
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
+void setUp(void) {}
+void tearDown(void) {}
+
+void showUid() {
+    uint64_t uid = uniqueId::get();
+    char output[17];
+    hexAscii::uint64ToHexString(output, uid);
+    TEST_MESSAGE(output);
 }
 
 void initializeNvsVersion() {
@@ -86,12 +92,12 @@ void initializeMcuType() {
 
 void initializeName() {
     if (setName) {
-        uint8_t newName[mainController::maxNameLength + 1]{0};
+        uint8_t newName[9]{0};
         for (uint32_t index = 0; index < strlen(toBeName); index++) {
             newName[index] = toBeName[index];
         }
         settingsCollection::saveByteArray(newName, settingsCollection::settingIndex::name);
-        uint8_t isName[mainController::maxNameLength + 1]{0};
+        uint8_t isName[9]{0};
         settingsCollection::readByteArray(isName, settingsCollection::settingIndex::name);
         TEST_ASSERT_EQUAL_STRING(newName, isName);
     }
@@ -125,9 +131,9 @@ void initializeLorawanConfig() {
 
         TEST_ASSERT_EQUAL_UINT32(toBeDevAddr, LoRaWAN::DevAddr.asUint32);
         uint8_t test[16];
-        hexAscii::hexStringToByteArray(test, toBeApplicationKey);
+        hexAscii::hexStringToByteArray(test, toBeApplicationKey, 32);
         TEST_ASSERT_EQUAL_UINT8_ARRAY(test, LoRaWAN::applicationKey.asBytes(), 16);
-        hexAscii::hexStringToByteArray(test, toBeNetworkKey);
+        hexAscii::hexStringToByteArray(test, toBeNetworkKey, 32);
         TEST_ASSERT_EQUAL_UINT8_ARRAY(test, LoRaWAN::networkKey.asBytes(), 16);
     } else {
         TEST_ASSERT_NOT_EQUAL_UINT32(0xFFFFFFFF, LoRaWAN::DevAddr.asUint32);
@@ -139,7 +145,12 @@ void initializeLorawanConfig() {
 
 void initializeLorawanState() {
     if (resetLoRaWANState) {
-        LoRaWAN::currentDataRateIndex = 5;
+        LoRaWAN::currentDataRateIndex        = 5;
+        LoRaWAN::rx1DataRateOffset           = 0;
+        LoRaWAN::rx2DataRateIndex            = 3;
+        LoRaWAN::rx1DelayInSeconds           = 1;
+        LoRaWAN::uplinkFrameCount.asUint32   = 1;
+        LoRaWAN::downlinkFrameCount.asUint32 = 0;
         LoRaWAN::saveState();
         LoRaWAN::restoreState();
 
@@ -178,12 +189,13 @@ void test_eraseMeasurementsInEeprom() {
 
 int main(int argc, char **argv) {
     HAL_Init();
-    HAL_Delay(2000);
+    HAL_Delay(3000);
     SystemClock_Config();
-    MX_I2C2_Init();
-    gpio::enableGpio(gpio::group::i2cEeprom);
+    i2c::wakeUp();
 
     UNITY_BEGIN();
+    RUN_TEST(showUid);
+    RUN_TEST(test_eraseMeasurementsInEeprom);
     RUN_TEST(initializeNvsVersion);
     RUN_TEST(initializeDisplayType);
     RUN_TEST(initializeBatteryType);
@@ -194,6 +206,5 @@ int main(int argc, char **argv) {
     RUN_TEST(initializeLorawanConfig);
     RUN_TEST(initializeLorawanState);
     RUN_TEST(initializeLorawanChannels);
-    RUN_TEST(test_eraseMeasurementsInEeprom);
     UNITY_END();
 }

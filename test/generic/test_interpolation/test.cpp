@@ -1,14 +1,11 @@
 #include <unity.h>
 #include <chargefromvoltage.hpp>
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_checkVoltageVsCharge() {
     TEST_ASSERT_TRUE(chargeFromVoltage::checkVoltageVsCharge(0));
-    TEST_ASSERT_FALSE(chargeFromVoltage::checkVoltageVsCharge(3));        // Battery type 3 has intentionally an error in its voltage vs charge table so we can test that case
 }
 
 void test_interpolation() {

@@ -7,6 +7,12 @@
 #include <stdint.h>
 
 enum class screenType : uint32_t {
+    logo,
+    version,
+    uid,
+    hwConfig,
     measurements,
-    message
+    loraConfig,
+    loraStatus,
+    main
 };

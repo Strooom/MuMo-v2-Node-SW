@@ -1,30 +1,7 @@
-/* USER CODE BEGIN Header */
-/**
- ******************************************************************************
- * @file           : main.c
- * @brief          : Main program body
- ******************************************************************************
- * @attention
- *
- * Copyright (c) 2024 STMicroelectronics.
- * All rights reserved.
- *
- * This software is licensed under terms that can be found in the LICENSE file
- * in the root directory of this software component.
- * If no LICENSE file comes with this software, it is provided AS-IS.
- *
- ******************************************************************************
- */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 #include <gpio.hpp>
-#include <logging.hpp>        // logging to SWO and/or UART
+#include <logging.hpp>
 #include <power.hpp>
-#include <version.hpp>
 #include <display.hpp>
 #include <graphics.hpp>
 #include <ux.hpp>
@@ -47,24 +24,6 @@
 #include <lptim.hpp>
 #include <qrcode.hpp>
 
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc;
 CRYP_HandleTypeDef hcryp;
 __ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {0x00000000, 0x00000000, 0x00000000, 0x00000000};
@@ -77,13 +36,9 @@ SUBGHZ_HandleTypeDef hsubghz;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
-/* USER CODE BEGIN PV */
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
-/* USER CODE END PV */
 
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-// static void MX_GPIO_Init(void);
 static void MX_RTC_Init(void);
 void MX_USART2_UART_Init(void);
 void MX_SPI2_Init(void);
@@ -92,111 +47,46 @@ void MX_I2C2_Init(void);
 void MX_AES_Init(void);
 void MX_RNG_Init(void);
 static void MX_LPTIM1_Init(void);
-// static void MX_SUBGHZ_Init(void);
 void MX_USART1_UART_Init(void);
-/* USER CODE BEGIN PFP */
 void executeRomBootloader();
-/* USER CODE END PFP */
 
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
-/**
- * @brief  The application entry point.
- * @retval int
- */
 int main(void) {
-    /* USER CODE BEGIN 1 */
-
-    /* USER CODE END 1 */
-
-    /* MCU Configuration--------------------------------------------------------*/
-
-    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     HAL_Init();
-
-    /* USER CODE BEGIN Init */
-
-    /* USER CODE END Init */
-
-    /* Configure the system clock */
     SystemClock_Config();
-    HAL_Delay(3000);        // This delay is awful but without it, the debugger can't connect to the target in a reliable way
+    // HAL_Delay(10000);
+    __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
+    gpio::initialize();
+    if (gpio::isDebugProbePresent()) {
+        LL_DBGMCU_DisableDBGStopMode();
+        HAL_Delay(6000);
+    } else {
+        gpio::disableGpio(gpio::group::debugPort);
+    }
 
-    if (power::hasUsbPower()) {        // If USB is present on reboot, we jump to bootloader for firmware update
+    if (power::hasUsbPower()) {
         HAL_RCC_DeInit();
         HAL_DeInit();
         executeRomBootloader();
     }
 
-    /* USER CODE BEGIN SysInit */
-    __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
-    /* USER CODE END SysInit */
-
-    /* Initialize all configured peripherals */
     MX_RTC_Init();
     MX_ADC_Init();
     MX_AES_Init();
     MX_RNG_Init();
     MX_LPTIM1_Init();
-    /* USER CODE BEGIN 2 */
+    MX_USART1_UART_Init();
 
-    logging::initialize();
-    logging::enable(logging::source::applicationEvents);
-
-    version::initialize();
-    uniqueId::dump();
-    realTimeClock::initialize();
-
-    spi::wakeUp();
-    display::detectPresence();
-    spi::goSleep();
-
-    i2c::wakeUp();
-    if (nonVolatileStorage::isPresent()) {
-            char name[screen::maxNameLength + 1]{0};
-        settingsCollection::readByteArray(reinterpret_cast<uint8_t*>(name), settingsCollection::settingIndex::name);
-        screen::setName(name);
-
-        if (!settingsCollection::isInitialized()) {
-            settingsCollection::initializeOnce();
-        }
+    mainController ::initialize();
+    while (true) {
+        mainController::runUsbPowerDetection();
+        mainController::runStateMachine();
+        // mainController::runCli();
+        mainController::handleEvents();
+        mainController::runDisplayUpdate();
+        mainController::prepareSleep();
+        mainController::goSleep();
+        mainController::wakeUp();
     }
-    sensorDeviceCollection::discover();
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 3, 720);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::percentCharged, 3, 720);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 30);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 30);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 2, 10);
-    i2c::goSleep();
-
-    gpio::enableGpio(gpio::group::rfControl);
-    LoRaWAN::initialize();
-    measurementCollection::initialize();
-
-    mainController::showDeviceInfo();
-    lptim::start(5 * 4096);
-
-    // measurementCollection::dumpRaw(0, 128);
-    // measurementCollection::dumpAll();
-    // LoRaWAN::dumpConfig();
-    // LoRaWAN::dumpState();
-    // LoRaWAN::dumpChannels();
-    /* USER CODE END 2 */
-
-    /* Infinite loop */
-    /* USER CODE BEGIN WHILE */
-
-    while (1) {
-        mainController ::handleEvents();
-        mainController ::run();
-        /* USER CODE END WHILE */
-
-        /* USER CODE BEGIN 3 */
-    }
-    /* USER CODE END 3 */
 }
 
 /**
@@ -439,29 +329,6 @@ static void MX_RTC_Init(void) {
     if (HAL_RTC_Init(&hrtc) != HAL_OK) {
         Error_Handler();
     }
-
-    /* USER CODE BEGIN Check_RTC_BKUP */
-
-    /* USER CODE END Check_RTC_BKUP */
-
-    /** Initialize RTC and set the Time and Date
-     */
-    // sTime.Hours          = 0x0;
-    // sTime.Minutes        = 0x0;
-    // sTime.Seconds        = 0x0;
-    // sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-    // sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-    // if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
-    //     Error_Handler();
-    // }
-    // sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-    // sDate.Month   = RTC_MONTH_JANUARY;
-    // sDate.Date    = 0x1;
-    // sDate.Year    = 0x0;
-
-    // if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
-    //     Error_Handler();
-    // }
 
     /** Enable the WakeUp
      */

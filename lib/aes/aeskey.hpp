@@ -27,8 +27,8 @@ class aesKey {
 #endif
 
     union {
-        uint8_t asByte[lengthInBytes]{};        // interprete the data as 16 bytes
-        uint32_t asUint32[lengthInWords];         // interprete the data as 4 32bit words
+        uint8_t asByte[lengthInBytes]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};        // interprete the data as 16 bytes
+        uint32_t asUint32[lengthInWords];           // interprete the data as 4 32bit words
     } key;
 
     void expandKey();

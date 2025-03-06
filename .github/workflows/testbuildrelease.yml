@@ -29,13 +29,13 @@ jobs:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
 
     steps:
-      - name: Enable caching
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/pip
-            ~/.platformio/.cache
-          key: ${{ runner.os }}-pio
+      # - name: Enable caching
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       ~/.cache/pip
+      #       ~/.platformio/.cache
+      #     key: ${{ runner.os }}-pio
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -156,9 +156,9 @@ jobs:
             #include <buildinfo.hpp>
             const buildEnvironment buildInfo::theBuildEnvironment{buildEnvironment::ci};
             const buildType buildInfo::theBuildType{buildType::production};
-            const int buildInfo::mainVersionDigit   = ${{ steps.selectversion.outputs.nextmajordigit }};
-            const int buildInfo::minorVersionDigit  = ${{ steps.selectversion.outputs.nextminordigit }};
-            const int buildInfo::patchVersionDigit  = ${{ steps.selectversion.outputs.nextpatchdigit }};
+            const unsigned int buildInfo::mainVersionDigit   = ${{ steps.selectversion.outputs.nextmajordigit }};
+            const unsigned int buildInfo::minorVersionDigit  = ${{ steps.selectversion.outputs.nextminordigit }};
+            const unsigned int buildInfo::patchVersionDigit  = ${{ steps.selectversion.outputs.nextpatchdigit }};
             const char* buildInfo::lastCommitTag    = "${{ steps.versioninfo.outputs.commithash }}";
             const char* buildInfo::buildTimeStamp   = "${{ steps.versioninfo.outputs.buildtimestamp }}";
             const time_t buildInfo::buildEpoch      = ${{ steps.versioninfo.outputs.buildEpoch }};
@@ -169,12 +169,12 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v4
-        with:
-          python-version: "3.9"
+#        with:
+#          python-version: "3.9"
 
-      - name: Install gcovr 5.0
+      - name: Install gcovr
         run: |
-          pip install gcovr==5.0
+          pip install gcovr
 
       - name: Install sonar-scanner and build-wrapper
         uses: sonarsource/sonarcloud-github-c-cpp@v3
@@ -224,7 +224,7 @@ jobs:
 
       - name: Collect coverage into XML report
         run: |
-          gcovr --sonarqube > coverage.xml
+          gcovr --sonarqube --gcov-ignore-parse-errors > coverage.xml
 
       - name: Run sonar-scanner
         env:
@@ -238,7 +238,7 @@ jobs:
 
       - name: Attach Binary to Workflow run
         id: attachbinarytoworkflowrun
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.selectversion.outputs.buildversionfilename }}.bin
           path: .pio/build/production/firmware.bin

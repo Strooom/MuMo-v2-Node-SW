@@ -1,4 +1,4 @@
-#include "bitmap.hpp"
+#include <bitmap.hpp>
 
 bool bitmap::getPixel(uint32_t x, uint32_t y) const {
     if (isInBounds(x, y)) {

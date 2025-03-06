@@ -8,6 +8,7 @@
 #include <float.hpp>
 #include <logging.hpp>
 #include <measurementcollection.hpp>
+#include <i2c.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -83,7 +84,8 @@ void sht40::startSampling() {
 
 bool sht40::samplingIsReady() {
 #ifndef generic
-    return (HAL_GetTick() - measurementStartTick) > measurementDurationInTicks;
+    bool ready = ((HAL_GetTick() - measurementStartTick) > measurementDurationInTicks);
+    return ready;
 #else
     return true;
 #endif

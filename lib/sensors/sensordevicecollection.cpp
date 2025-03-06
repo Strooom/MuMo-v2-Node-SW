@@ -1,5 +1,6 @@
 #include <sensordevicecollection.hpp>
 #include <logging.hpp>
+#include <sx126x.hpp>
 #include <battery.hpp>
 #include <bme680.hpp>
 #include <sht40.hpp>
@@ -12,9 +13,6 @@ bool sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::n
 sensorChannel sensorDeviceCollection::dummy = {0, "", ""};
 
 void sensorDeviceCollection::discover() {
-    isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
-    battery::initalize();
-
     isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)] = bme680::isPresent();
     if (isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)]) {
         bme680::initialize();
@@ -29,7 +27,6 @@ void sensorDeviceCollection::discover() {
     if (isPresent[static_cast<uint32_t>(sensorDeviceType::tsl2591)]) {
         tsl2591::initialize();
     }
-
     // Add more types of sensors here
 }
 
@@ -89,7 +86,7 @@ void sensorDeviceCollection::run() {
     }
 }
 
-bool sensorDeviceCollection::isSleeping() {
+bool sensorDeviceCollection::isSamplingReady() {
     for (auto index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
         if (isPresent[index]) {
             switch (static_cast<sensorDeviceType>(index)) {
@@ -149,8 +146,6 @@ bool sensorDeviceCollection::needsSampling(uint32_t deviceIndex, uint32_t channe
     return false;
 }
 
-
-
 void sensorDeviceCollection::updateCounters() {
     for (auto deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
         updateCounters(deviceIndex);
@@ -202,8 +197,10 @@ bool sensorDeviceCollection::hasNewMeasurement(uint32_t deviceIndex, uint32_t ch
 
 const char* sensorDeviceCollection::name(uint32_t index) {
     switch (static_cast<sensorDeviceType>(index)) {
+        case sensorDeviceType::mcu:
+            return toString(sx126x::theMcuType);
         case sensorDeviceType::battery:
-            return "battery";
+            return toString(battery::type);
         case sensorDeviceType::bme680:
             return "BME680";
         case sensorDeviceType::sht40:
@@ -260,17 +257,18 @@ void sensorDeviceCollection::log(uint32_t deviceIndex) {
 
 void sensorDeviceCollection::log(uint32_t deviceIndex, uint32_t channelIndex) {
     if (hasNewMeasurement(deviceIndex, channelIndex)) {
-        float fvalue       = value(deviceIndex, channelIndex);
-        uint32_t ddecimals = decimals(deviceIndex, channelIndex);
-        uint32_t intPart   = integerPart(fvalue, ddecimals);
-        if (ddecimals > 0) {
-            uint32_t fracPart = fractionalPart(fvalue, ddecimals);
-            logging::snprintf(logging::source::sensorData, "%s = %d.%d %s\n", name(deviceIndex, channelIndex), intPart, fracPart, units(deviceIndex, channelIndex));
+        float value       = sensorDeviceCollection::value(deviceIndex, channelIndex);
+        uint32_t decimals = sensorDeviceCollection::decimals(deviceIndex, channelIndex);
+        uint32_t intPart  = integerPart(value, decimals);
+        if (decimals > 0) {
+            uint32_t fracPart = fractionalPart(value, decimals);
+            logging::snprintf(logging::source::sensorData, "%s = %d.%0*d %s\n", name(deviceIndex, channelIndex), intPart, static_cast<int>(decimals), fracPart, units(deviceIndex, channelIndex));
         } else {
             logging::snprintf(logging::source::sensorData, "%s = %d %s\n", name(deviceIndex, channelIndex), intPart, units(deviceIndex, channelIndex));
         }
     }
 }
+
 
 uint32_t sensorDeviceCollection::nmbrOfNewMeasurements() {
     uint32_t result{0};

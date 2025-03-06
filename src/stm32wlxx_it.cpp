@@ -6,7 +6,7 @@
  ******************************************************************************
  * @attention
  *
- * Copyright (c) 2024 STMicroelectronics.
+ * Copyright (c) 2025 STMicroelectronics.
  * All rights reserved.
  *
  * This software is licensed under terms that can be found in the LICENSE file
@@ -65,7 +65,6 @@
 extern LPTIM_HandleTypeDef hlptim1;
 extern RTC_HandleTypeDef hrtc;
 extern SUBGHZ_HandleTypeDef hsubghz;
-extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
@@ -196,6 +195,31 @@ void SysTick_Handler(void) {
 /******************************************************************************/
 
 /**
+ * @brief This function handles RTC Tamper, RTC TimeStamp, LSECSS and RTC SSRU Interrupts.
+ */
+void TAMP_STAMP_LSECSS_SSRU_IRQHandler(void) {
+    /* USER CODE BEGIN TAMP_STAMP_LSECSS_SSRU_IRQn 0 */
+
+    /* USER CODE END TAMP_STAMP_LSECSS_SSRU_IRQn 0 */
+    HAL_RTCEx_TamperIRQHandler(&hrtc);
+    /* USER CODE BEGIN TAMP_STAMP_LSECSS_SSRU_IRQn 1 */
+
+    /* USER CODE END TAMP_STAMP_LSECSS_SSRU_IRQn 1 */
+}
+
+
+void EXTI3_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI3_IRQn 0 */
+
+  /* USER CODE END EXTI3_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
+  /* USER CODE BEGIN EXTI3_IRQn 1 */
+
+  /* USER CODE END EXTI3_IRQn 1 */
+}
+
+/**
  * @brief This function handles RTC Wakeup Interrupt.
  */
 void RTC_WKUP_IRQHandler(void) {
@@ -207,19 +231,6 @@ void RTC_WKUP_IRQHandler(void) {
     realTimeClock::tickCounter++;
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
     /* USER CODE END RTC_WKUP_IRQn 1 */
-}
-
-/**
- * @brief This function handles USART1 Interrupt.
- */
-void USART1_IRQHandler(void) {
-    /* USER CODE BEGIN USART1_IRQn 0 */
-
-    /* USER CODE END USART1_IRQn 0 */
-    HAL_UART_IRQHandler(&huart1);
-    /* USER CODE BEGIN USART1_IRQn 1 */
-
-    /* USER CODE END USART1_IRQn 1 */
 }
 
 /**

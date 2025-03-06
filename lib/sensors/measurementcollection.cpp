@@ -35,8 +35,6 @@ void measurementCollection::eraseAll() {
     }
 }
 
-// void measurementCollection::eraseOne(uint32_t offset) {}
-
 void measurementCollection::findMeasurementsInEeprom() {
     int32_t offsetDataBackward = findDataByteBackward();
     if (offsetDataBackward == -1) {

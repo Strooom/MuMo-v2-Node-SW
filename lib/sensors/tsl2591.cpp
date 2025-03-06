@@ -27,6 +27,7 @@ sensorChannel tsl2591::channels[nmbrChannels]{
 
 int32_t tsl2591::rawChannel0{0};
 int32_t tsl2591::rawChannel1{0};
+uint32_t tsl2591::cleaningSampleIndex{0};
 
 bool tsl2591::isPresent() {
     // 1. Check if something is connected to the I2C bus at the address of the bme680
@@ -46,18 +47,6 @@ void tsl2591::initialize() {
         channels[channelIndex].set(0, 0);
         channels[channelIndex].hasNewValue = false;
     }
-    // The first measurements after power on are not reliable. So we do a few dummy measurements
-    static constexpr uint32_t nmbrOfCleaningSamples{4};
-    for (uint32_t sampleIndex = 0; sampleIndex < nmbrOfCleaningSamples;
-         sampleIndex++) {
-        startSampling();
-        while (!samplingIsReady()) {
-#ifndef generic
-            asm("NOP");
-#endif
-        }
-        readSample();
-    }
     goSleep();
 }
 
@@ -67,13 +56,18 @@ void tsl2591::goSleep() {
 }
 
 void tsl2591::startSampling() {
+    cleaningSampleIndex = 0;
+    writeRegister(registers::enable, powerOn);
+    writeRegister(registers::config, 0x11);
     writeRegister(registers::enable, 0x03);
     state = sensorDeviceState::sampling;
 }
 
 bool tsl2591::samplingIsReady() {
 #ifndef generic
-    return (readRegister(registers::status) & 0x01) == 0x01;
+    bool deviceIsReady   = (readRegister(registers::status) & 0x01) == 0x01;
+    bool cleaningIsReady = cleaningSampleIndex >= nmbrOfCleaningSamples;
+    return deviceIsReady && cleaningIsReady;
 #else
     return true;
 #endif
@@ -86,21 +80,13 @@ void tsl2591::readSample() {
 }
 
 float tsl2591::calculateLux() {
-    return (static_cast<float>(rawChannel0) * coefficient1) + (static_cast<float>(rawChannel0) * coefficient2);
+    float lux = (static_cast<float>(rawChannel0) * coefficient1) + (static_cast<float>(rawChannel0) * coefficient2);
+    return lux;
 }
 
 bool tsl2591::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
-    bool i2cState = i2c::isInitialized();
-    if (!i2cState) {
-        i2c::wakeUp();
-    }
-    bool result = (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials,
-                                                   halTimeout));
-    if (!i2cState) {
-        i2c::goSleep();
-    }
-    return result;
+    return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
 #else
     return mockTSL2591Present;
 #endif
@@ -111,15 +97,7 @@ uint8_t tsl2591::readRegister(registers registerAddress) {
     uint8_t result;
 
 #ifndef generic
-    bool i2cState = i2c::isInitialized();
-    if (!i2cState) {
-        i2c::wakeUp();
-    }
-    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, command, I2C_MEMADD_SIZE_8BIT,
-                     &result, 1, halTimeout);
-    if (!i2cState) {
-        i2c::goSleep();
-    }
+    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, command, I2C_MEMADD_SIZE_8BIT, &result, 1, halTimeout);
 #else
     result = mockTSL2591Registers[static_cast<uint8_t>(registerAddress)];
 #endif
@@ -129,29 +107,28 @@ uint8_t tsl2591::readRegister(registers registerAddress) {
 void tsl2591::writeRegister(registers registerAddress, uint8_t value) {
     uint16_t command = commandMask | static_cast<uint16_t>(registerAddress);
 #ifndef generic
-    bool i2cState = i2c::isInitialized();
-    if (!i2cState) {
-        i2c::wakeUp();
-    }
-    HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, command, I2C_MEMADD_SIZE_8BIT,
-                      &value, 1, halTimeout);
-    if (!i2cState) {
-        i2c::goSleep();
-    }
+    HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, command, I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
 #else
     mockTSL2591Registers[static_cast<uint8_t>(registerAddress)] = value;
 #endif
 }
 
 void tsl2591::run() {
-    if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
-        readSample();
-        if (channels[visibleLight].needsSampling()) {
-            channels[visibleLight].addSample(calculateLux());
-            if (channels[visibleLight].hasOutput()) {
-                channels[visibleLight].hasNewValue = true;
+    bool deviceIsReady = (readRegister(registers::status) & 0x01) == 0x01;
+    if ((state == sensorDeviceState::sampling) && deviceIsReady) {
+        if (cleaningSampleIndex < nmbrOfCleaningSamples) {
+            readSample();
+            writeRegister(registers::enable, 0x03);
+            cleaningSampleIndex++;
+        } else {
+            readSample();
+            if (channels[visibleLight].needsSampling()) {
+                channels[visibleLight].addSample(calculateLux());
+                if (channels[visibleLight].hasOutput()) {
+                    channels[visibleLight].hasNewValue = true;
+                }
             }
+            goSleep();
         }
-        goSleep();
     }
 }

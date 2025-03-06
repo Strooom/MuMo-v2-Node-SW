@@ -76,7 +76,7 @@ int32_t cli::getSeparatorPosition(const char* commandLine, const uint32_t separa
 void cli::getSegment(char* destination, const char* commandLine, const uint32_t segmentIndex) {
     uint32_t startIndex;
     uint32_t endIndex;
-    uint32_t nmbrOfArguments = countArguments(commandLine);
+    nmbrOfArguments = countArguments(commandLine);
 
     if (segmentIndex > nmbrOfArguments) {
         destination[0] = '\0';

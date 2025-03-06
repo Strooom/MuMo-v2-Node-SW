@@ -19,9 +19,12 @@ class tsl2591 {
     static constexpr uint32_t visibleLight{0};
     static sensorChannel channels[nmbrChannels];
 
+    static constexpr uint32_t nmbrOfCleaningSamples{1}; // The first measurement after power-on is not reliable. So we do a dummy sampling before doing a real one.
+    static uint32_t cleaningSampleIndex;
+
 #ifndef unitTesting
 
-  //private:
+    // private:
 #endif
     static sensorDeviceState state;
     static void startSampling();

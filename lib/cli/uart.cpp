@@ -12,6 +12,10 @@ extern UART_HandleTypeDef huart2;
 circularBuffer<uint8_t, uart2::commandBufferLength> uart2::rxBuffer;
 circularBuffer<uint8_t, uart2::responseBufferLength> uart2::txBuffer;
 uint32_t uart2::commandCounter{0};
+#ifdef generic
+uint8_t uart2::mockReceivedChar;
+uint8_t uart2::mockTransmittedChar;
+#endif
 
 void uart2::initialize() {
 #ifndef generic
@@ -44,10 +48,14 @@ void uart2::rxNotEmpty() {
 #ifndef generic
     while (USART2->ISR & USART_CR1_RXNEIE_RXFNEIE) {
         uint8_t receivedChar = static_cast<uint8_t>(USART2->RDR);
+#else
+    uint8_t receivedChar = mockReceivedChar;
+#endif
         rxBuffer.push(receivedChar);
         if (receivedChar == commandTerminator) {
             commandCounter++;
         }
+#ifndef generic
     }
 #endif
 }
@@ -76,7 +84,13 @@ void uart2::txEmpty() {
     if (txBuffer.isEmpty()) {
         USART2->CR1 &= ~tdrEmpty;
     } else {
+#endif
+#ifndef generic
         USART2->TDR = txBuffer.pop();
+#else
+    mockTransmittedChar = txBuffer.pop();
+#endif
+#ifndef generic
     }
     if (interrupts_enabled) {
         __enable_irq();
@@ -113,7 +127,9 @@ uint32_t uart2::commandCount() {
 #ifndef generic
     bool interrupts_enabled = (__get_PRIMASK() == 0);
     __disable_irq();
+#endif
     result = commandCounter;
+#ifndef generic
     if (interrupts_enabled) {
         __enable_irq();
     }

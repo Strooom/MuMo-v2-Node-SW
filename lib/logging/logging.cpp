@@ -12,6 +12,7 @@
 #include <power.hpp>
 #include <settingscollection.hpp>
 #include <i2c.hpp>
+#include <uart1.hpp>
 #ifndef generic
 #include "main.h"
 extern UART_HandleTypeDef huart1;
@@ -39,14 +40,6 @@ void logging::initialize() {
     if (!logging::isActive(logging::destination::debugProbe)) {
         gpio::disableGpio(gpio::group::debugPort);
     }
-
-    // #if !defined unitTesting && defined platformio        // when on platformio, we don't have SWO trace, so use UART1, except when unitTesting because then we need UART1 for test-results transport
-    //     logging::enable(logging::destination::uart1);
-    // #endif
-
-    i2c::wakeUp();
-    logging::setActiveSources(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::activeLoggingSources));
-    i2c::goSleep();
 }
 
 uint32_t logging::snprintf(const char *format, ...) {
@@ -89,9 +82,7 @@ void logging::write(uint32_t dataLength) {
 #endif
     }
     if (isActive(destination::uart1)) {
-#ifndef generic
-        HAL_UART_Transmit(&huart1, (uint8_t *)buffer, static_cast<const uint16_t>(dataLength), 1000);
-#endif
+        uart1::transmit(buffer, dataLength);
     }
 }
 

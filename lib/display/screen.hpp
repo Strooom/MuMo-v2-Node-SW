@@ -12,47 +12,48 @@ class screen {
     static bool isModified() { return modified; }
     static void update();
     static void setText(uint32_t lineIndex, const char* text);
-    static void clearAllTexts();
+    static void clearConsole();
 
     static void setType(screenType newType);
-
 
     static void setText(uint32_t lineIndex, const char* textBig, const char* textSmall);
     static void setUsbStatus(const bool hasUsbPower);
     static void setNetworkStatus(const uint32_t networkSignalStrength);
-    static void setBatteryStatus(uint32_t batterylevel);
+    static void setBatteryStatus(uint32_t batteryLevel);
     static void setName(const char* newName);
+    static void setUidAsHex(const char* newUidAsHex);
 
-    static constexpr uint32_t numberOfLines{3};
-    static constexpr uint32_t maxTextLength{8};
-    static constexpr uint32_t numberOfLines2{10};
-    static constexpr uint32_t maxTextLength2{24};
-    static constexpr uint32_t maxNameLength{8};
+    static void waitForUserToRead();
+
+    static constexpr uint32_t nmbrOfMeasurementTextLines{3U};
+    static constexpr uint32_t maxMeasurementTextLength{8U};
+    static constexpr uint32_t nmbrOfConsoleTextLines{10U};
+    static constexpr uint32_t maxConsoleTextLength{30U};
+    static constexpr uint32_t maxNodeNameLength{8U};
 #ifndef unitTesting
 
   private:
 #endif
     static bool modified;
-    static screenType currentScreenType;
-
+    static screenType activeScreenType;
 
     // Properties for screenType::measurements
 
-    static char bigText[numberOfLines][maxTextLength + 1];
-    static char smallText[numberOfLines][maxTextLength + 1];
+    static char bigText[nmbrOfMeasurementTextLines][maxMeasurementTextLength + 1U];
+    static char smallText[nmbrOfMeasurementTextLines][maxMeasurementTextLength + 1U];
     static bool hasUsbPower;
-    static uint32_t netwerkStrength;
+    static uint32_t networkStrength;
     static uint32_t batteryLevel;
-    static char name[maxNameLength + 1];
-
-
+    static char uidAsHex[17];
+    static char name[maxNodeNameLength + 1U];
 
     // Properties for screenType::message
 
-    static char consoleText[numberOfLines2][maxTextLength2 + 1];
+    static char consoleText[nmbrOfConsoleTextLines][maxConsoleTextLength + 1U];
 
-static void showMeasurements();
-static void showDeviceInfo();
-
-
+    static void showLogo();
+    static void showConsole();
+    static void showUid();
+    static void showMeasurements();
+    
 };

@@ -12,23 +12,27 @@
 
 class battery {
   public:
-    static void initalize();
+    static void setType(uint8_t index);
+    static bool isValidType(batteryType newBatteryType);
+    static void initialize(batteryType newBatteryType);
     static void run();
     static sensorDeviceState getState() { return state; };
     static constexpr uint32_t nmbrChannels{2};
     static constexpr uint32_t voltage{0};
-    static constexpr uint32_t percentCharged{1};
+    static constexpr uint32_t stateOfCharge{1};
     static batteryType type;
+
+    static void startSampling();
+    static bool samplingIsReady();
+    static uint32_t readSample();
+    static float voltageFromRaw(uint32_t rawADC);
+
 
 #ifndef unitTesting
 
   private:
 #endif
     static sensorDeviceState state;
-    static void startSampling();
-    static bool samplingIsReady();
-    static uint32_t readSample();
-    static float voltageFromRaw(uint32_t rawADC);
 #ifdef generic
     static uint32_t mockBatteryRawADC;
     static float mockBatteryVoltage;

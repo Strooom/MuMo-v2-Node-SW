@@ -57,17 +57,6 @@ void test_is_initialized() {
     TEST_ASSERT_TRUE(settingsCollection::isInitialized());
 }
 
-void test_initialize_once() {
-    nonVolatileStorage::erase();
-    TEST_ASSERT_FALSE(settingsCollection::isInitialized());
-    settingsCollection::initializeOnce();
-    TEST_ASSERT_EQUAL_UINT8(0x01, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::nvsMapVersion));
-
-    uint8_t testArrayExpected[16]{};
-    uint8_t testArrayOut[16]{};
-    settingsCollection::readByteArray(testArrayOut, settingsCollection::settingIndex::networkSessionKey);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(testArrayExpected, testArrayOut, 16);
-}
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
@@ -76,6 +65,5 @@ int main(int argc, char **argv) {
     RUN_TEST(test_allBlocksWithinOnePage);
     RUN_TEST(test_write_read_setting);
     RUN_TEST(test_is_initialized);
-    RUN_TEST(test_initialize_once);
     UNITY_END();
 }

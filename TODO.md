@@ -1,9 +1,6 @@
 # Short Term ToDo's
 
 * getbatteryChargeFromVoltage table right by doing a discharge test over 24h
-* show UID as QRCode
-  - on boot
-  - when LoRaWAN is not yet configured...
 
 * CLI : 
   - UART2 activeren bij USB connectie
@@ -14,10 +11,8 @@
   - batterijspanning omzetten in uint8 : omrekening toevoegen aan battery
 
 
-* batteryVoltage seems incorrect ?? also shown with 1 decimal io 2 ??
 * wrapping of measurementsCollection : writing and reading measurements
 * erase old measurements when space needed for new ones
-
 
 
 # Medium Term ToDo's
@@ -25,19 +20,15 @@
   - add unit testing
   - move code from screen to graphics
 
-
-
-
-
 # Long Term ToDo's
-* look at partial display updates : C:\Users\pasca\Documents\Projects\UA\GxEPD\examples\PartialUpdateExample
+
 * make generic unit tests also run on target
 * OTAA
 * make EEPROM work for multiples of 64K : 
   - I2C address = 0x50 + address/64K
   - address = address % 64K
 * target unit test for wait time after page write into eeprom
-* reading the tamper button and wake up from it
+
 * report number of measurements on bootscreen
 * merge hw aes tests into 1, in order to not have too many target unit tests
 * Put some of the aesKey stuff, only needed for SW-AES in conditional compilation, eg key expansion

@@ -29,10 +29,17 @@ class LoRaWAN {
     static void restoreConfig();
     static void restoreState();
     static void restoreChannels();
+    static bool isValidConfig();
+    static bool isValidState();
 
     static void saveConfig();
     static void saveState();
     static void saveChannels();
+
+    static void resetState();
+    static void resetChannels();
+
+    static void resetMacLayer();
 
     static void handleEvents(applicationEvent theEvent);
     static uint32_t getMaxApplicationPayloadLength();
@@ -77,6 +84,9 @@ class LoRaWAN {
     static frameCount uplinkFrameCount;
     static frameCount downlinkFrameCount;
     static uint32_t rx1DelayInSeconds;
+    static uint32_t rx1DataRateOffset;
+    static uint32_t rx2DataRateIndex;
+    static uint32_t rx2FrequencyInHz;
 
 #ifndef unitTesting
   private:
@@ -85,11 +95,7 @@ class LoRaWAN {
     static txRxCycleState state;
     static void goTo(txRxCycleState newState);
 
-    static dataRates theDataRates;
-    static uint32_t rx1DataRateOffset;
-    static uint32_t rx2DataRateIndex;
-    static uint32_t rx2FrequencyInHz;
-    static loRaTxChannelCollection txChannels;
+    static dataRates theDataRates;        // TODO : get rid of the object, as class is static
     static constexpr uint32_t maxRandomDelayBeforeTx{4096U};
 
     // #################################################
@@ -164,7 +170,7 @@ class LoRaWAN {
     static void setOffsetsAndLengthsTx(uint32_t framePayloadLength, uint32_t frameOptionsLength = 0);
     static void insertPayload(const uint8_t data[], const uint32_t length);
     static void encryptDecryptPayload(aesKey &theKey, linkDirection theDirection);
-    static void insertHeaders(const uint8_t* theFrameOptions, const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort);
+    static void insertHeaders(const uint8_t *theFrameOptions, const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort);
     static void padForMicCalculation(const uint32_t messageLength);
     static void insertMic();
     static void insertMic(uint32_t aMic);

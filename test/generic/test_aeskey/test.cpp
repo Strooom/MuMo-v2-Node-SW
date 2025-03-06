@@ -10,8 +10,8 @@ void tearDown(void) {        // after each test
 
 void test_initialize() {
     aesKey aKey;
-    uint8_t expectedBytes[aesKey::lengthInBytes]{};
-    uint32_t expectedWords[aesKey::lengthInWords]{};
+    uint8_t expectedBytes[aesKey::lengthInBytes]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    uint32_t expectedWords[aesKey::lengthInWords]{0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aKey.asBytes(), aesKey::lengthInBytes);
     TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aKey.asWords(), aesKey::lengthInWords);
 }

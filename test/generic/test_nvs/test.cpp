@@ -7,7 +7,7 @@ void tearDown(void) {        // after each test
 }
 
 void test_isPresent() {
-    TEST_ASSERT_TRUE(nonVolatileStorage::isPresent());        // on the desktop this calls a dummy which always returns true. Real test is on the target HW
+    TEST_ASSERT_EQUAL(0, nonVolatileStorage::isPresent());        // on the desktop this calls a dummy which always returns 0. Real test is on the target HW
 }
 
 void test_pageNumber() {

@@ -1,4 +1,4 @@
-#include "font.hpp"
+#include <font.hpp>
 
 bool font::charIsInBounds(uint8_t asciiCode) const {
     if ((asciiCode < properties.asciiStart) || (asciiCode > properties.asciiEnd)) {

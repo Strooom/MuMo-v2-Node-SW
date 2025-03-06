@@ -203,7 +203,7 @@ float bme680::calculateBarometricPressure() {
 
     if ((int)var1 != 0) {
         result     = (((result - (var2 / 4096.0f)) * 6250.0f) / var1);
-        var1       = (calibrationCoefficientPressure9*result * result) / 2147483648.0f;
+        var1       = (calibrationCoefficientPressure9 * result * result) / 2147483648.0f;
         var2       = result * (calibrationCoefficientPressure8 / 32768.0f);
         float var3 = ((result / 256.0f) * (result / 256.0f) * (result / 256.0f) * (calibrationCoefficientPressure10 / 131072.0f));
         result     = (result + (var1 + var2 + var3 + (calibrationCoefficientPressure7 * 128.0f)) / 16.0f);
@@ -218,14 +218,7 @@ float bme680::calculateBarometricPressure() {
 
 bool bme680::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
-    bool i2cState = i2c::isInitialized();
-    if (!i2cState) {
-        i2c::wakeUp();
-    }
     bool result = (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
-    if (!i2cState) {
-        i2c::goSleep();
-    }
     return result;
 
 #else
@@ -236,14 +229,7 @@ bool bme680::testI2cAddress(uint8_t addressToTest) {
 uint8_t bme680::readRegister(registers registerAddress) {
     uint8_t result;
 #ifndef generic
-    bool i2cState = i2c::isInitialized();
-    if (!i2cState) {
-        i2c::wakeUp();
-    }
     HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &result, 1, halTimeout);
-    if (!i2cState) {
-        i2c::goSleep();
-    }
 #else
     result = mockBME680Registers[static_cast<uint8_t>(registerAddress)];
 #endif
@@ -252,14 +238,7 @@ uint8_t bme680::readRegister(registers registerAddress) {
 
 void bme680::writeRegister(registers registerAddress, uint8_t value) {
 #ifndef generic
-    bool i2cState = i2c::isInitialized();
-    if (!i2cState) {
-        i2c::wakeUp();
-    }
     HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
-    if (!i2cState) {
-        i2c::goSleep();
-    }
 #else
     mockBME680Registers[static_cast<uint8_t>(registerAddress)] = value;
 #endif
@@ -267,14 +246,7 @@ void bme680::writeRegister(registers registerAddress, uint8_t value) {
 
 void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* destination) {
 #ifndef generic
-    bool i2cState = i2c::isInitialized();
-    if (!i2cState) {
-        i2c::wakeUp();
-    }
     HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_8BIT, destination, length, halTimeout);
-    if (!i2cState) {
-        i2c::goSleep();
-    }
 #else
     (void)memcpy(destination, mockBME680Registers + startAddress, length);
 #endif

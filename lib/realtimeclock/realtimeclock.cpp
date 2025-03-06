@@ -24,10 +24,7 @@ void realTimeClock::initialize() {
     time_t localTime = get();
     if (localTime < buildInfo::buildEpoch) {
         set();
-        logging::snprintf("RTC initialized to buildTime\n");
     }
-    localTime = get();
-    logging::snprintf("UTC = %s", ctime(&localTime));
 }
 
 void realTimeClock::set(time_t unixTime) {
