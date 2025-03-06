@@ -176,7 +176,7 @@ void gpio::enableGpio(group theGroup) {
             HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_RESET);
             break;
 
-        case gpio::group::other:
+        case gpio::group::test0:
             // PB0 = Wio-E5 pin 28 - TestPin used during debugging and power measurements
             GPIO_InitStruct.Pin   = GPIO_PIN_0;
             GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
@@ -224,17 +224,17 @@ void gpio::disableGpio(group theGroup) {
             HAL_GPIO_DeInit(GPIOB, displayBusy_Pin | GPIO_PIN_13);
             HAL_GPIO_WritePin(GPIOA, displayReset_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(GPIOB, displayDataCommand_Pin | displayChipSelect_Pin, GPIO_PIN_RESET);
-
-            // HAL_GPIO_DeInit(GPIOA, GPIO_PIN_10 | displayReset_Pin);
-            // HAL_GPIO_DeInit(GPIOB, displayBusy_Pin | displayDataCommand_Pin | displayChipSelect_Pin | GPIO_PIN_13);
             break;
 
         case gpio::group::debugPort:
-            // NOTE : This resets the SWD AND JTAG pins to analog inputs (lowest power consumption).
-            // We don't use JTAG, but we assigned PIN PB4 another function (usbPowerPresent). Disabling all debug pins, also disables PB4 as usbPowerPresent.
-            HAL_GPIO_DeInit(GPIOA, GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15);
-            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_4);
-            // HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3);
+            // NOTE : SWD AND JTAG pins are enabled after reset. In order to reduce power consumption, we reset them to analog inputs
+            // We don't use JTAG so we assigned PIN PB4 another function : usbPowerPresent. For this reason, we don't modify this pin here.
+            // PA13 = Wio-E5 pin 3 = SWDIO
+            // PA14 = Wio-E5 pin 4 = SWCLK
+            // PB3 = Wio-E5 pin 8 = SWO
+            // Note that these 3 pins also double as inputs from buttons
+            HAL_GPIO_DeInit(GPIOA, GPIO_PIN_13 | GPIO_PIN_14);
+            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3);
             break;
 
         case gpio::group::uart1:
@@ -257,17 +257,18 @@ void gpio::disableGpio(group theGroup) {
         case gpio::group::enableDisplayPower:
             // PA9 = Wio-E5 pin 21 - charge the display power rail without a current peak, prevents brownout of the MCU
             // PC0 = Wio-E5 pin 13 - switches the 3.3V towards the epaper display
+            // We do not disable these pins but rather drive it high in order to keep power off from this rail
             HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
             break;
 
         case gpio::group::enableSensorsEepromPower:
             // PC1 = Wio-E5 pin 12 - switches the 3.3V towards sensors and eeprom
+            // We do not disable this pin but rather drive it high in order to keep power off from this rail
             HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
-            // HAL_GPIO_DeInit(GPIOC, GPIO_PIN_1);
             break;
 
-        case gpio::group::other:
+        case gpio::group::test0:
             // PB0 = Wio-E5 pin 28 - TestPin used during debugging and power measurements
             HAL_GPIO_DeInit(GPIOB, GPIO_PIN_0);
             break;
