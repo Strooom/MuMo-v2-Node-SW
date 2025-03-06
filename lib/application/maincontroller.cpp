@@ -111,6 +111,7 @@ void mainController::initialize() {
         sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, 20);
     } else {
         logging::snprintf(logging::source::criticalError, "invalid BatteryType %d\n", static_cast<uint8_t>(theBatteryType));
+        // settingsCollection::save(static_cast<uint8_t>(batteryType::liFePO4_700mAh), settingsCollection::settingIndex::batteryType);        // comment out for setting the battery type
     }
 
     mcuType theMcuType = static_cast<mcuType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
@@ -120,6 +121,7 @@ void mainController::initialize() {
         sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)] = true;
     } else {
         logging::snprintf(logging::source::criticalError, "invalid RadioType %d\n", static_cast<uint8_t>(theMcuType));
+        // settingsCollection::save(static_cast<uint8_t>(mcuType::lowPower), settingsCollection::settingIndex::mcuType);        // comment out for setting the radio type
         goTo(mainState::fatalError);
         return;
     }
@@ -148,6 +150,16 @@ void mainController::initialize() {
     gpio::enableGpio(gpio::group::rfControl);
 
     LoRaWAN::initialize();
+
+    // uint32_t toBeDevAddr            = 0x260B1723;
+    // const char toBeNetworkKey[]     = "687F33B28C045E0412383B50D8853984";
+    // const char toBeApplicationKey[] = "862DDA53CFB9A19169EDF0F4CC31480D";
+
+    // LoRaWAN::DevAddr.asUint32 = toBeDevAddr;
+    // LoRaWAN::networkKey.setFromHexString(toBeNetworkKey);
+    // LoRaWAN::applicationKey.setFromHexString(toBeApplicationKey);
+    // LoRaWAN::saveConfig();
+    // LoRaWAN::restoreConfig();
 
     // Uncomment to reset MacLayer state and/or channels in the device
     // Needs a matching MacLayer reset at the LoRaWAN Network Server
@@ -351,14 +363,12 @@ void mainController::prepareSleep() {
     switch (state) {
         case mainState::idle:
             logging::snprintf("goSleep...\n");
-
-            // gpio::disableGpio(gpio::group::i2c);
-            // gpio::disableGpio(gpio::group::writeProtect);
+            gpio::disableGpio(gpio::group::usbPresent);
+            i2c::goSleep();
+            gpio::disableGpio(gpio::group::uart1);
             // gpio::disableGpio(gpio::group::spiDisplay);
-            // gpio::disableGpio(gpio::group::usbPresent);
             // gpio::disableGpio(gpio::group::uart2);
             // gpio::disableGpio(gpio::group::rfControl);
-            // gpio::disableGpio(gpio::group::uart1);
             break;
 
         default:
@@ -380,17 +390,14 @@ void mainController::wakeUp() {
     switch (state) {
         case mainState::idle:
 #ifndef generic
-            MX_I2C2_Init();
             MX_ADC_Init();
             MX_AES_Init();
             MX_RNG_Init();
             MX_USART1_UART_Init();
 #endif
             // gpio::enableGpio(gpio::group::rfControl);
-            // gpio::enableGpio(gpio::group::usbPresent);
-            // gpio::enableGpio(gpio::group::i2c);
-            // gpio::enableGpio(gpio::group::writeProtect);
-            // gpio::enableGpio(gpio::group::uart1);
+            gpio::enableGpio(gpio::group::uart1);
+            gpio::enableGpio(gpio::group::usbPresent);
             logging::snprintf("...wakeUp\n");
             break;
 

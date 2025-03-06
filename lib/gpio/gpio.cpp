@@ -263,7 +263,8 @@ void gpio::disableGpio(group theGroup) {
 
         case gpio::group::enableSensorsEepromPower:
             // PC1 = Wio-E5 pin 12 - switches the 3.3V towards sensors and eeprom
-            HAL_GPIO_DeInit(GPIOC, GPIO_PIN_1);
+            HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
+            // HAL_GPIO_DeInit(GPIOC, GPIO_PIN_1);
             break;
 
         case gpio::group::other:
