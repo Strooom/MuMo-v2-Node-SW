@@ -28,11 +28,10 @@ class gpio {
 
     static void enableGpio(group aGroup);
     static void disableGpio(group aGroup);
-    static void disableAllGpio();
 
 #ifndef unitTesting
 
   private:
 #endif
-    static void enableDisableGpio(group theGroup, bool enable);
+
 };

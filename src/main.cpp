@@ -24,6 +24,8 @@
 #include <lptim.hpp>
 #include <qrcode.hpp>
 
+// TODO : these handles have to move to the respective wrapper classes
+
 ADC_HandleTypeDef hadc;
 CRYP_HandleTypeDef hcryp;
 __ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {0x00000000, 0x00000000, 0x00000000, 0x00000000};
@@ -37,6 +39,8 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
+
+// TODO : these initializers have to move to the respective wrapper classes
 
 void SystemClock_Config(void);
 static void MX_RTC_Init(void);
@@ -53,7 +57,7 @@ void executeRomBootloader();
 int main(void) {
     HAL_Init();
     SystemClock_Config();
-    // HAL_Delay(10000);
+    // HAL_Delay(10000); // only required on STM32IDE to allow the debugger to connect
     __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
     gpio::initialize();
     if (gpio::isDebugProbePresent()) {

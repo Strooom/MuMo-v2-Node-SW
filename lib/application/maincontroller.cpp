@@ -349,11 +349,16 @@ void mainController::goTo(mainState newState) {
 
 void mainController::prepareSleep() {
     switch (state) {
-        case mainState::idle:        // Intentional fallthrough
-                                     // case mainState::networkCheck:
-
+        case mainState::idle:
             logging::snprintf("goSleep...\n");
-            gpio::disableAllGpio();
+
+            // gpio::disableGpio(gpio::group::i2c);
+            // gpio::disableGpio(gpio::group::writeProtect);
+            // gpio::disableGpio(gpio::group::spiDisplay);
+            // gpio::disableGpio(gpio::group::usbPresent);
+            // gpio::disableGpio(gpio::group::uart2);
+            // gpio::disableGpio(gpio::group::rfControl);
+            // gpio::disableGpio(gpio::group::uart1);
             break;
 
         default:
@@ -362,8 +367,7 @@ void mainController::prepareSleep() {
 }
 void mainController::goSleep() {
     switch (state) {
-        case mainState::idle:        // Intentional fallthrough
-                                     // case mainState::networkCheck:
+        case mainState::idle:
             mcuStop2();
             break;
 
@@ -374,20 +378,19 @@ void mainController::goSleep() {
 
 void mainController::wakeUp() {
     switch (state) {
-        case mainState::idle:        // Intentional fallthrough
-                                     // case mainState::networkCheck:
+        case mainState::idle:
 #ifndef generic
             MX_I2C2_Init();
             MX_ADC_Init();
             MX_AES_Init();
             MX_RNG_Init();
-            MX_USART1_UART_Init();        // Should only do this when UART0 is being used for logging...
+            MX_USART1_UART_Init();
 #endif
-            gpio::enableGpio(gpio::group::rfControl);
-            gpio::enableGpio(gpio::group::usbPresent);
-            gpio::enableGpio(gpio::group::i2c);
-            gpio::enableGpio(gpio::group::writeProtect);
-            gpio::enableGpio(gpio::group::uart1);
+            // gpio::enableGpio(gpio::group::rfControl);
+            // gpio::enableGpio(gpio::group::usbPresent);
+            // gpio::enableGpio(gpio::group::i2c);
+            // gpio::enableGpio(gpio::group::writeProtect);
+            // gpio::enableGpio(gpio::group::uart1);
             logging::snprintf("...wakeUp\n");
             break;
 
