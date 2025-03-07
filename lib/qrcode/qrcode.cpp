@@ -285,6 +285,19 @@ bool qrCode::isDarkModule(uint32_t x, uint32_t y, uint32_t theVersion) {
 }
 
 bool qrCode::isAlignmentPattern(uint32_t x, uint32_t y, uint32_t theVersion) {
+    if (theVersion == 1) {
+        return false;
+    }
+    uint32_t nmbrRowsCols = nmbrOfAlignmentPatternRowsOrCols(theVersion);
+    for (uint32_t index = 0; index < nmbrRowsCols; index++) {
+        uint32_t coordinate = alignmentPatternCoordinate(index, theVersion);
+        if (((x >= coordinate - 2) && (x <= coordinate + 2)) && ((y >= coordinate - 2) && (y <= coordinate + 2))) {
+            return true;
+        }
+        if ((x == coordinate) && (y == coordinate)) {
+            return true;
+        }
+    }
     return false;
 }
 

@@ -174,65 +174,63 @@ void test_nmbrOfAlignmentPatterns() {
 
 void test_alignmentPatternSpacing() {
     // Version 1 has no alignment patterns
-    TEST_ASSERT_EQUAL(18-6, qrCode::alignmentPatternSpacing(2));
-    TEST_ASSERT_EQUAL(22-6, qrCode::alignmentPatternSpacing(3));
-    TEST_ASSERT_EQUAL(26-6, qrCode::alignmentPatternSpacing(4));
-    TEST_ASSERT_EQUAL(30-6, qrCode::alignmentPatternSpacing(5));
-    TEST_ASSERT_EQUAL(34-6, qrCode::alignmentPatternSpacing(6));
+    TEST_ASSERT_EQUAL(18 - 6, qrCode::alignmentPatternSpacing(2));
+    TEST_ASSERT_EQUAL(22 - 6, qrCode::alignmentPatternSpacing(3));
+    TEST_ASSERT_EQUAL(26 - 6, qrCode::alignmentPatternSpacing(4));
+    TEST_ASSERT_EQUAL(30 - 6, qrCode::alignmentPatternSpacing(5));
+    TEST_ASSERT_EQUAL(34 - 6, qrCode::alignmentPatternSpacing(6));
 
-    TEST_ASSERT_EQUAL(38-22, qrCode::alignmentPatternSpacing(7));
-    TEST_ASSERT_EQUAL(42-24, qrCode::alignmentPatternSpacing(8));
-    TEST_ASSERT_EQUAL(46-26, qrCode::alignmentPatternSpacing(9));
-    TEST_ASSERT_EQUAL(50-28, qrCode::alignmentPatternSpacing(10));
-    TEST_ASSERT_EQUAL(54-30, qrCode::alignmentPatternSpacing(11));
-    TEST_ASSERT_EQUAL(58-32, qrCode::alignmentPatternSpacing(12));
-    TEST_ASSERT_EQUAL(62-34, qrCode::alignmentPatternSpacing(13));
+    TEST_ASSERT_EQUAL(38 - 22, qrCode::alignmentPatternSpacing(7));
+    TEST_ASSERT_EQUAL(42 - 24, qrCode::alignmentPatternSpacing(8));
+    TEST_ASSERT_EQUAL(46 - 26, qrCode::alignmentPatternSpacing(9));
+    TEST_ASSERT_EQUAL(50 - 28, qrCode::alignmentPatternSpacing(10));
+    TEST_ASSERT_EQUAL(54 - 30, qrCode::alignmentPatternSpacing(11));
+    TEST_ASSERT_EQUAL(58 - 32, qrCode::alignmentPatternSpacing(12));
+    TEST_ASSERT_EQUAL(62 - 34, qrCode::alignmentPatternSpacing(13));
 
-    TEST_ASSERT_EQUAL(66-46, qrCode::alignmentPatternSpacing(14));
-    TEST_ASSERT_EQUAL(46-26, qrCode::alignmentPatternSpacing(14));
-    TEST_ASSERT_EQUAL(70-48, qrCode::alignmentPatternSpacing(15));
-    TEST_ASSERT_EQUAL(48-26, qrCode::alignmentPatternSpacing(15));
-    TEST_ASSERT_EQUAL(74-50, qrCode::alignmentPatternSpacing(16));
-    TEST_ASSERT_EQUAL(50-26, qrCode::alignmentPatternSpacing(16));
-    TEST_ASSERT_EQUAL(78-54, qrCode::alignmentPatternSpacing(17));
-    TEST_ASSERT_EQUAL(54-30, qrCode::alignmentPatternSpacing(17));
-    TEST_ASSERT_EQUAL(82-56, qrCode::alignmentPatternSpacing(18));
-    TEST_ASSERT_EQUAL(56-30, qrCode::alignmentPatternSpacing(18));
-    TEST_ASSERT_EQUAL(86-58, qrCode::alignmentPatternSpacing(19));
-    TEST_ASSERT_EQUAL(58-30, qrCode::alignmentPatternSpacing(19));
-    TEST_ASSERT_EQUAL(90-62, qrCode::alignmentPatternSpacing(20));
-    TEST_ASSERT_EQUAL(62-34, qrCode::alignmentPatternSpacing(20));
+    TEST_ASSERT_EQUAL(66 - 46, qrCode::alignmentPatternSpacing(14));
+    TEST_ASSERT_EQUAL(46 - 26, qrCode::alignmentPatternSpacing(14));
+    TEST_ASSERT_EQUAL(70 - 48, qrCode::alignmentPatternSpacing(15));
+    TEST_ASSERT_EQUAL(48 - 26, qrCode::alignmentPatternSpacing(15));
+    TEST_ASSERT_EQUAL(74 - 50, qrCode::alignmentPatternSpacing(16));
+    TEST_ASSERT_EQUAL(50 - 26, qrCode::alignmentPatternSpacing(16));
+    TEST_ASSERT_EQUAL(78 - 54, qrCode::alignmentPatternSpacing(17));
+    TEST_ASSERT_EQUAL(54 - 30, qrCode::alignmentPatternSpacing(17));
+    TEST_ASSERT_EQUAL(82 - 56, qrCode::alignmentPatternSpacing(18));
+    TEST_ASSERT_EQUAL(56 - 30, qrCode::alignmentPatternSpacing(18));
+    TEST_ASSERT_EQUAL(86 - 58, qrCode::alignmentPatternSpacing(19));
+    TEST_ASSERT_EQUAL(58 - 30, qrCode::alignmentPatternSpacing(19));
+    TEST_ASSERT_EQUAL(90 - 62, qrCode::alignmentPatternSpacing(20));
+    TEST_ASSERT_EQUAL(62 - 34, qrCode::alignmentPatternSpacing(20));
 
-// TODO : complete for higher versions
+    // TODO : complete for higher versions
 
+    TEST_ASSERT_EQUAL(138 - 112, qrCode::alignmentPatternSpacing(32));
+    TEST_ASSERT_EQUAL(112 - 86, qrCode::alignmentPatternSpacing(32));
+    TEST_ASSERT_EQUAL(86 - 60, qrCode::alignmentPatternSpacing(32));
+    TEST_ASSERT_EQUAL(60 - 34, qrCode::alignmentPatternSpacing(32));
 
-    TEST_ASSERT_EQUAL(138-112, qrCode::alignmentPatternSpacing(32));
-    TEST_ASSERT_EQUAL(112-86, qrCode::alignmentPatternSpacing(32));
-    TEST_ASSERT_EQUAL(86-60, qrCode::alignmentPatternSpacing(32));
-    TEST_ASSERT_EQUAL(60-34, qrCode::alignmentPatternSpacing(32));
-
-    TEST_ASSERT_EQUAL(170-142, qrCode::alignmentPatternSpacing(40));
-    TEST_ASSERT_EQUAL(142-114, qrCode::alignmentPatternSpacing(40));
-    TEST_ASSERT_EQUAL(114-86, qrCode::alignmentPatternSpacing(40));
-    TEST_ASSERT_EQUAL(86-58, qrCode::alignmentPatternSpacing(40));
-    TEST_ASSERT_EQUAL(58-30, qrCode::alignmentPatternSpacing(40));
+    TEST_ASSERT_EQUAL(170 - 142, qrCode::alignmentPatternSpacing(40));
+    TEST_ASSERT_EQUAL(142 - 114, qrCode::alignmentPatternSpacing(40));
+    TEST_ASSERT_EQUAL(114 - 86, qrCode::alignmentPatternSpacing(40));
+    TEST_ASSERT_EQUAL(86 - 58, qrCode::alignmentPatternSpacing(40));
+    TEST_ASSERT_EQUAL(58 - 30, qrCode::alignmentPatternSpacing(40));
 }
 
 void test_alignmentPatternCoordinates() {
-    TEST_ASSERT_EQUAL(6, qrCode::alignmentPatternCoordinate(0,2));
-    TEST_ASSERT_EQUAL(18, qrCode::alignmentPatternCoordinate(1,2));
+    TEST_ASSERT_EQUAL(6, qrCode::alignmentPatternCoordinate(0, 2));
+    TEST_ASSERT_EQUAL(18, qrCode::alignmentPatternCoordinate(1, 2));
 
-    TEST_ASSERT_EQUAL(6, qrCode::alignmentPatternCoordinate(0,7));
-    TEST_ASSERT_EQUAL(22, qrCode::alignmentPatternCoordinate(1,7));
-    TEST_ASSERT_EQUAL(38, qrCode::alignmentPatternCoordinate(2,7));
+    TEST_ASSERT_EQUAL(6, qrCode::alignmentPatternCoordinate(0, 7));
+    TEST_ASSERT_EQUAL(22, qrCode::alignmentPatternCoordinate(1, 7));
+    TEST_ASSERT_EQUAL(38, qrCode::alignmentPatternCoordinate(2, 7));
 
-    TEST_ASSERT_EQUAL(6, qrCode::alignmentPatternCoordinate(0,32));
-    TEST_ASSERT_EQUAL(34, qrCode::alignmentPatternCoordinate(1,32));
-    TEST_ASSERT_EQUAL(60, qrCode::alignmentPatternCoordinate(2,32));
-    TEST_ASSERT_EQUAL(86, qrCode::alignmentPatternCoordinate(3,32));
-    TEST_ASSERT_EQUAL(112, qrCode::alignmentPatternCoordinate(4,32));
-    TEST_ASSERT_EQUAL(138, qrCode::alignmentPatternCoordinate(5,32));
-
+    TEST_ASSERT_EQUAL(6, qrCode::alignmentPatternCoordinate(0, 32));
+    TEST_ASSERT_EQUAL(34, qrCode::alignmentPatternCoordinate(1, 32));
+    TEST_ASSERT_EQUAL(60, qrCode::alignmentPatternCoordinate(2, 32));
+    TEST_ASSERT_EQUAL(86, qrCode::alignmentPatternCoordinate(3, 32));
+    TEST_ASSERT_EQUAL(112, qrCode::alignmentPatternCoordinate(4, 32));
+    TEST_ASSERT_EQUAL(138, qrCode::alignmentPatternCoordinate(5, 32));
 }
 
 void test_nmbrOfRawDataModules() {
@@ -301,6 +299,37 @@ void test_nmbrOfErrorCorrectionModules() {
     TEST_ASSERT_EQUAL(22 * 2 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::high));
 }
 
+void test_isFinderPatternOrSeparator() {
+    TEST_ASSERT_TRUE(qrCode::isFinderPatternOrSeparator(0, 0, 1));
+    TEST_ASSERT_TRUE(qrCode::isFinderPatternOrSeparator(0, 7, 1));
+    TEST_ASSERT_TRUE(qrCode::isFinderPatternOrSeparator(7, 0, 1));
+
+    TEST_ASSERT_TRUE(qrCode::isFinderPatternOrSeparator(20, 0, 1));
+    TEST_ASSERT_TRUE(qrCode::isFinderPatternOrSeparator(2, 20, 1));
+    TEST_ASSERT_FALSE(qrCode::isFinderPatternOrSeparator(20, 20, 1));
+}
+
+void test_isTimingPattern() {
+    TEST_ASSERT_TRUE(qrCode::isTimingPattern(6, 8, 1));
+    TEST_ASSERT_TRUE(qrCode::isTimingPattern(6, 12, 1));
+    TEST_ASSERT_TRUE(qrCode::isTimingPattern(8, 6, 1));
+    TEST_ASSERT_TRUE(qrCode::isTimingPattern(12, 6, 1));
+}
+
+void test_isFormatInformation() {
+    TEST_ASSERT_TRUE(qrCode::isFormatInformation(0, 8, 1));
+}
+
+void test_isVersionInformation() {
+    TEST_ASSERT_TRUE(qrCode::isVersionInformation(0, 35, 7));
+}
+
+void test_isAlignmentPattern() {
+        TEST_ASSERT_TRUE(qrCode::isAlignmentPattern(18, 18, 2));
+        TEST_ASSERT_TRUE(qrCode::isAlignmentPattern(16, 16, 2));
+        TEST_ASSERT_TRUE(qrCode::isAlignmentPattern(20, 20, 2));
+
+}
 
 #pragma endregion
 
@@ -326,5 +355,10 @@ int main(int argc, char **argv) {
     RUN_TEST(test_nmbrOfRawDataModules);
     RUN_TEST(test_nmbrOfErrorCorrectionModules);
     RUN_TEST(test_versionNeeded);
+    RUN_TEST(test_isFinderPatternOrSeparator);
+    RUN_TEST(test_isTimingPattern);
+    RUN_TEST(test_isFormatInformation);
+    RUN_TEST(test_isVersionInformation);
+    RUN_TEST(test_isAlignmentPattern);
     UNITY_END();
 }
