@@ -5,7 +5,7 @@
 // This code is using the vocabulary of the QR Code standard ISO/IEC 18004:2006
 // See qrcode.md for a short explanation
 
-bool qrCode::isValid(uint32_t theVersion) {
+bool qrCode::isValidVersion(uint32_t theVersion) {
     if (theVersion == 0) {
         return false;
     }
@@ -377,39 +377,25 @@ uint32_t qrCode::nmbrOfAlignmentPatternRowsOrCols(uint32_t theVersion) {
     return ((theVersion / 7U) + 2);
 }
 
-// int qrCode::max(int a, int b) {
-//     if (a > b) {
-//         return a;
-//     }
-//     return b;
-// }
+uint32_t qrCode::alignmentPatternSpacing(uint32_t theVersion) {
+    if (theVersion != 32U) {
+        return (theVersion * 4U + (nmbrOfAlignmentPatternRowsOrCols(theVersion) * 2U) + 1U) / ((2U * nmbrOfAlignmentPatternRowsOrCols(theVersion)) - 2U) * 2U;
+    } else {
+        return 26;
+    }
+}
 
-// char qrCode::getModeBits(uint8_t version, encodingFormat theEncodingFormat) {
-//     // We store the following tightly packed (less 8) in modeInfo
-//     //               <=9  <=26  <= 40
-//     // NUMERIC      ( 10,   12,    14);
-//     // ALPHANUMERIC (  9,   11,    13);
-//     // BYTE         (  8,   16,    16);
-
-//     // Note: We use 15 instead of 16; since 15 doesn't exist and we cannot store 16 (8 + 8) in 3 bits
-//     // hex(int("".join(reversed([('00' + bin(x - 8)[2:])[-3:] for x in [10, 9, 8, 12, 11, 15, 14, 13, 15]])), 2))
-
-//     auto nmbrOfShifts     = 3U * static_cast<uint32_t>(theEncodingFormat);
-//     unsigned int modeInfo = 0x7bbb80a;
-
-//     if (version > 9) {
-//         modeInfo >>= 9;
-//     }
-//     if (version > 26) {
-//         modeInfo >>= 9;
-//     }
-//     char result = 8 + ((modeInfo >> nmbrOfShifts) & 0x07);
-//     if (result == 15) {
-//         result = 16;
-//     }
-
-//     return result;
-// }
+uint32_t qrCode::alignmentPatternCoordinate(uint32_t index, uint32_t theVersion) {
+    uint32_t maxIndex = nmbrOfAlignmentPatternRowsOrCols(theVersion) - 1;
+    if (index > maxIndex) {
+        return 0;
+    }
+    if (index == 0) {
+        return 6U;
+    } else {
+        return size(theVersion) - 7 - (alignmentPatternSpacing(theVersion) * (maxIndex - index));
+    }
+}
 
 void qrCode::drawFinderPattern(uint32_t centerX, uint32_t centerY) {
     for (int32_t relativeX = -3; relativeX <= 3; relativeX++) {
@@ -427,9 +413,9 @@ void qrCode::drawFinderPattern(uint32_t centerX, uint32_t centerY) {
 }
 
 void qrCode::drawAllFinderPatterns(uint32_t theVersion) {
-    drawFinderPattern(3, 3);                           // topleft
-    drawFinderPattern(size(theVersion) - 4, 3);        // topright
-    drawFinderPattern(3, size(theVersion) - 4);        // bottomleft
+    drawFinderPattern(3, 3);
+    drawFinderPattern(size(theVersion) - 4, 3);
+    drawFinderPattern(3, size(theVersion) - 4);
 }
 
 void qrCode::drawAlignmentPattern(uint32_t centerX, uint32_t centerY) {
@@ -447,7 +433,16 @@ void qrCode::drawAlignmentPattern(uint32_t centerX, uint32_t centerY) {
     }
 }
 
-void drawAllAlignmentPatterns(uint32_t theVersion) {
+void qrCode::drawAllAlignmentPatterns(uint32_t theVersion) {
+    if (theVersion == 1) {
+        return;
+    }
+
+    uint32_t nmbrRowsCols = nmbrOfAlignmentPatternRowsOrCols(theVersion);
+    for (uint32_t index = 0; index < nmbrRowsCols; index++) {
+        uint32_t coordinate = alignmentPatternCoordinate(index, theVersion);
+        drawAlignmentPattern(coordinate, coordinate);
+    }
 }
 
 void qrCode::drawTimingPattern() {

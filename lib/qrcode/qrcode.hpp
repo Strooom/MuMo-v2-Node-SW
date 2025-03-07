@@ -35,7 +35,7 @@ class qrCode {
     static constexpr uint32_t maxAlphanumericLength{4296};
     static constexpr uint32_t maxByteLength{2953};
 
-    static bool isValid(uint32_t theVersion);
+    static bool isValidVersion(uint32_t theVersion);
     static uint32_t size(uint32_t theVersion);
 
     static uint8_t compressNumeric(char c);
@@ -69,6 +69,8 @@ class qrCode {
     static uint32_t nmbrOfErrorCorrectionModules(uint32_t theVersion, errorCorrectionLevel theErrorCorrectionLevel);
     static uint32_t nmbrOfAlignmentPatternRowsOrCols(uint32_t theVersion);
     static uint32_t nmbrOfAlignmentPatterns(uint32_t theVersion);
+    static uint32_t alignmentPatternSpacing(uint32_t theVersion);
+    static uint32_t alignmentPatternCoordinate(uint32_t index, uint32_t theVersion);
 
     // static constexpr uint16_t nmbrRawDataModules[maxVersion]                                        = {208, 359, 567, 807, 1079, 1383, 1568, 1936, 2336, 2768, 3232, 3728, 4256, 4651, 5243, 5867, 6523, 7211, 7931, 8683, 9252, 10068, 10916, 11796, 12708, 13652, 14628, 15371, 16411, 17483, 18587, 19723, 20891, 22091, 23008, 24272, 25568, 26896, 28256, 29648};
     // static constexpr uint32_t nmbrOfErrorCorrectionLevels                                           = static_cast<uint32_t>(errorCorrectionLevel::nmbrOfErrorCorrectionLevels);
