@@ -14,7 +14,17 @@
 
 class qrCode {
   public:
-    static constexpr uint32_t maxVersion{3};        // 40
+    static constexpr uint32_t maxVersion{3};        // 1..40
+    static constexpr uint32_t maxSize{17 + 4 * maxVersion};
+
+    static constexpr uint32_t maxNumericLength{7089U};             // TODO : adjust these values to match the maxVersion...
+    static constexpr uint32_t maxAlphanumericLength{4296U};        // IDEM
+    static constexpr uint32_t maxByteLength{2953U};                // IDEM
+    
+    static constexpr uint32_t PENALTY_N1{3};
+    static constexpr uint32_t PENALTY_N2{3};
+    static constexpr uint32_t PENALTY_N3{40};
+    static constexpr uint32_t PENALTY_N4{10};
 
     static constexpr struct {
         uint16_t nmbrErrorCorrectionCodewords[nmbrOfErrorCorrectionLevels];
@@ -27,13 +37,10 @@ class qrCode {
     static bool isNumeric(const char data);
     static bool isNumeric(const char *data);
     static bool isNumeric(const char *data, uint32_t length);
-    static constexpr uint32_t maxNumericLength{7089};
 
     static bool isAlphanumeric(const char data);
     static bool isAlphanumeric(const char *data);
     static bool isAlphanumeric(const char *data, uint32_t length);
-    static constexpr uint32_t maxAlphanumericLength{4296};
-    static constexpr uint32_t maxByteLength{2953};
 
     static bool isValidVersion(uint32_t theVersion);
     static uint32_t size(uint32_t theVersion);
@@ -45,7 +52,7 @@ class qrCode {
     static uint32_t characterCountIndicatorLength(uint32_t version, encodingFormat theEncodingFormat);
     static uint32_t payloadLengthInBits(uint32_t dataLengthInBytes, uint32_t theVersion, encodingFormat theEncodingFormat);
 
-    static void encodeData(bitVector &theBitVector, const char *text, uint32_t theVersion, encodingFormat theEncodingFormat);
+    static void encodeData(const char *text, uint32_t theVersion, encodingFormat theEncodingFormat);
 
     static bool isDataModule(uint32_t x, uint32_t y, uint32_t theVersion);
     static bool isTimingPattern(uint32_t x, uint32_t y, uint32_t theVersion);
@@ -59,7 +66,12 @@ class qrCode {
     static void drawAllFinderPatterns(uint32_t theVersion);
     static void drawAlignmentPattern(uint32_t centerX, uint32_t centerY);
     static void drawAllAlignmentPatterns(uint32_t theVersion);
-    static void drawTimingPattern();
+    static void drawTimingPattern(uint32_t theVersion);
+    static void drawFormatInfo(uint32_t theVersion);
+    static void drawVersionInfo(uint32_t theVersion);
+    static void drawPayload(uint32_t theVersion);
+    static void applyMask();
+    static uint32_t getPenaltyScore();
 
     static uint32_t versionNeeded(encodingFormat theEncodingFormat, uint32_t dataLengthInBytes, errorCorrectionLevel minimumErrorCorrectionLevel);
 

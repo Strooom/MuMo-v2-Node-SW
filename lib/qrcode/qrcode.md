@@ -3,6 +3,7 @@ https://dev.to/maxart2501/series/13444
 https://www.qrcode-tiger.com/qr-code-error-correction
 https://amodm.com/blog/2024/05/28/qr-codes-a-visual-explainer
 https://www.keyence.eu/ss/products/auto_id/codereader/basic_2d/qr.jsp
+https://www.qrcode.com/en/about/version.html
 
 vocabulary :
 * module : 1 pixel/square of the qrCode, can be white (0) or black (1)

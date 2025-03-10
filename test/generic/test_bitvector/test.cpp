@@ -5,45 +5,31 @@
 #include <unity.h>
 #include <bitvector.hpp>
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
-
-void test_neededLengthForExtBuffer() {
-    TEST_ASSERT_EQUAL(0, bitVector::neededLengthInBytes(0));
-    TEST_ASSERT_EQUAL(1, bitVector::neededLengthInBytes(1));
-    TEST_ASSERT_EQUAL(1, bitVector::neededLengthInBytes(8));
-    TEST_ASSERT_EQUAL(2, bitVector::neededLengthInBytes(9));
-    TEST_ASSERT_EQUAL(2, bitVector::neededLengthInBytes(16));
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_initialize() {
-    uint32_t testLength{40};
-    uint8_t storage[bitVector::neededLengthInBytes(testLength)];
-    bitVector testVector{storage, testLength};
-
+    bitVector<16U> testVector;
     TEST_ASSERT_EQUAL(0, testVector.level);
-    TEST_ASSERT_EQUAL(testLength, testVector.length);
-    TEST_ASSERT_EQUAL(0, testVector.levelInBits());
-    TEST_ASSERT_EQUAL(testLength, testVector.lengthInBits());
+    TEST_ASSERT_EQUAL(16U, testVector.length);
+    TEST_ASSERT_EQUAL(2U, testVector.lengthInBytes);
+
+    bitVector<20U> testVector2;
+    TEST_ASSERT_EQUAL(0, testVector2.level);
+    TEST_ASSERT_EQUAL(20U, testVector2.length);
+    TEST_ASSERT_EQUAL(3U, testVector2.lengthInBytes);
 }
 
-
 void test_Offset() {
-    uint32_t testLength{40};
-    uint8_t storage[bitVector::neededLengthInBytes(testLength)];
-    bitVector testVector{storage, testLength};
+    bitVector<20U> testVector;
     TEST_ASSERT_EQUAL(0, testVector.byteOffset(0));
     TEST_ASSERT_EQUAL(0, testVector.byteOffset(7));
     TEST_ASSERT_EQUAL(1, testVector.byteOffset(8));
     TEST_ASSERT_EQUAL(1, testVector.byteOffset(15));
-    }
+}
 
 void test_bitMask() {
-    uint32_t testLength{40};
-    uint8_t storage[bitVector::neededLengthInBytes(testLength)];
-    bitVector testVector{storage, testLength};
+    bitVector<20U> testVector;
     TEST_ASSERT_EQUAL(0b10000000, testVector.bitMask(0));
     TEST_ASSERT_EQUAL(0b00000001, testVector.bitMask(7));
     TEST_ASSERT_EQUAL(0b10000000, testVector.bitMask(8));
@@ -51,9 +37,7 @@ void test_bitMask() {
 }
 
 void test_set_get() {
-    uint32_t testLength{40};
-    uint8_t storage[bitVector::neededLengthInBytes(testLength)];
-    bitVector testVector{storage, testLength};
+    bitVector<40U> testVector;
     testVector.setBit(0);
     TEST_ASSERT_TRUE(testVector.getBit(0));
     testVector.clearBit(0);
@@ -72,11 +56,8 @@ void test_set_get() {
     TEST_ASSERT_TRUE(testVector.getBit(20));
 }
 
-
 void test_appendBits() {
-    uint32_t testLength{40};
-    uint8_t storage[bitVector::neededLengthInBytes(testLength)];
-    bitVector testVector{storage, testLength};
+    bitVector<40U> testVector;
     testVector.appendBits(0b00001111, 8);
     testVector.appendBits(0b10101010, 8);
     TEST_ASSERT_EQUAL(16, testVector.level);
@@ -86,7 +67,6 @@ void test_appendBits() {
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
-    RUN_TEST(test_neededLengthForExtBuffer);
     RUN_TEST(test_initialize);
     RUN_TEST(test_Offset);
     RUN_TEST(test_bitMask);

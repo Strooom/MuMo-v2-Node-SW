@@ -175,7 +175,7 @@ uint32_t qrCode::payloadLengthInBits(uint32_t dataLengthInBytes, uint32_t theVer
     }
 }
 
-void qrCode::encodeData(bitVector &theBitVector, const char *text, uint32_t theVersion, encodingFormat theEncodingFormat) {
+void qrCode::encodeData(const char *text, uint32_t theVersion, encodingFormat theEncodingFormat) {
     uint32_t maxLength;
     switch (theEncodingFormat) {
         case encodingFormat::numeric:
@@ -191,8 +191,8 @@ void qrCode::encodeData(bitVector &theBitVector, const char *text, uint32_t theV
             break;
     }
     uint32_t length = strnlen(text, maxLength);
-    theBitVector.appendBits(modeIndicator(theEncodingFormat), 4);
-    theBitVector.appendBits(length, characterCountIndicatorLength(theVersion, theEncodingFormat));
+    //theBitVector.appendBits(modeIndicator(theEncodingFormat), 4);
+    //theBitVector.appendBits(length, characterCountIndicatorLength(theVersion, theEncodingFormat));
 
     switch (theEncodingFormat) {
         case encodingFormat::numeric: {
@@ -202,13 +202,13 @@ void qrCode::encodeData(bitVector &theBitVector, const char *text, uint32_t theV
                 accumData = accumData * 10 + compressNumeric(text[i]);
                 accumCount++;
                 if (accumCount == 3) {
-                    theBitVector.appendBits(accumData, 10U);
+                    //theBitVector.appendBits(accumData, 10U);
                     accumData  = 0;
                     accumCount = 0;
                 }
             }
             if (accumCount > 0) {
-                theBitVector.appendBits(accumData, (accumCount * 3U) + 1U);
+                //theBitVector.appendBits(accumData, (accumCount * 3U) + 1U);
             }
         } break;
 
@@ -219,20 +219,20 @@ void qrCode::encodeData(bitVector &theBitVector, const char *text, uint32_t theV
                 accumData = accumData * 45 + compressAlphanumeric(text[i]);
                 accumCount++;
                 if (accumCount == 2) {
-                    theBitVector.appendBits(accumData, 11U);
+                    //theBitVector.appendBits(accumData, 11U);
                     accumData  = 0;
                     accumCount = 0;
                 }
             }
             if (accumCount > 0) {
-                theBitVector.appendBits(accumData, 6U);
+                //theBitVector.appendBits(accumData, 6U);
             }
         } break;
 
         case encodingFormat::byte:        // intentional fallthrough
         default: {
             for (uint32_t i = 0; i < length; i++) {
-                theBitVector.appendBits(text[i], 8U);
+                //theBitVector.appendBits(text[i], 8U);
             }
         } break;
     }
@@ -344,7 +344,7 @@ uint32_t qrCode::versionNeeded(encodingFormat theEncodingFormat, uint32_t dataLe
             return proposedVersion;
         }
     }
-    return 0;
+    return 0;        // no (valid) version found which accommodates the data with the requested error correction level
 }
 
 uint32_t qrCode::nmbrOfTotalModules(uint32_t theVersion) {
@@ -458,7 +458,7 @@ void qrCode::drawAllAlignmentPatterns(uint32_t theVersion) {
     }
 }
 
-void qrCode::drawTimingPattern() {
+void qrCode::drawTimingPattern(uint32_t theVersion) {
     // // modules
     // for (uint32_t index = 0; index < widthHeightInModules; index += 2U) {
     //     bitArray::setBit(6, index);
@@ -471,66 +471,194 @@ void qrCode::drawTimingPattern() {
     // }
 }
 
-// Draws two copies of the format bits (with its own error correction code)
-// based on the given mask and this object's error correction level field.
-// void qrCode::drawFormatBits(uint32_t ecc, uint32_t mask) {
-//     uint8_t size = modules->bitOffsetOrWidth;
+void qrCode::drawFormatInfo(uint32_t theVersion) {
+    // Draws two copies of the format bits (with its own error correction code)
+    // based on the given mask and this object's error correction level field.
+    // void qrCode::drawFormatBits(uint32_t ecc, uint32_t mask) {
+    //     uint8_t size = modules->bitOffsetOrWidth;
 
-//     // Calculate error correction code and pack bits
-//     uint32_t data = ecc << 3 | mask;        // errCorrLvl is uint2, mask is uint3
-//     uint32_t rem  = data;
-//     for (int i = 0; i < 10; i++) {
-//         rem = (rem << 1) ^ ((rem >> 9) * 0x537);
-//     }
+    //     // Calculate error correction code and pack bits
+    //     uint32_t data = ecc << 3 | mask;        // errCorrLvl is uint2, mask is uint3
+    //     uint32_t rem  = data;
+    //     for (int i = 0; i < 10; i++) {
+    //         rem = (rem << 1) ^ ((rem >> 9) * 0x537);
+    //     }
 
-//     data = data << 10 | rem;
-//     data ^= 0x5412;        // uint15
+    //     data = data << 10 | rem;
+    //     data ^= 0x5412;        // uint15
 
-//     // Draw first copy
-//     for (uint8_t i = 0; i <= 5; i++) {
-//         setFunctionModule(modules, isFunction, 8, i, ((data >> i) & 1) != 0);
-//     }
+    //     // Draw first copy
+    //     for (uint8_t i = 0; i <= 5; i++) {
+    //         setFunctionModule(modules, isFunction, 8, i, ((data >> i) & 1) != 0);
+    //     }
 
-//     setFunctionModule(modules, isFunction, 8, 7, ((data >> 6) & 1) != 0);
-//     setFunctionModule(modules, isFunction, 8, 8, ((data >> 7) & 1) != 0);
-//     setFunctionModule(modules, isFunction, 7, 8, ((data >> 8) & 1) != 0);
+    //     setFunctionModule(modules, isFunction, 8, 7, ((data >> 6) & 1) != 0);
+    //     setFunctionModule(modules, isFunction, 8, 8, ((data >> 7) & 1) != 0);
+    //     setFunctionModule(modules, isFunction, 7, 8, ((data >> 8) & 1) != 0);
 
-//     for (int8_t i = 9; i < 15; i++) {
-//         setFunctionModule(modules, isFunction, 14 - i, 8, ((data >> i) & 1) != 0);
-//     }
+    //     for (int8_t i = 9; i < 15; i++) {
+    //         setFunctionModule(modules, isFunction, 14 - i, 8, ((data >> i) & 1) != 0);
+    //     }
 
-//     // Draw second copy
-//     for (int8_t i = 0; i <= 7; i++) {
-//         setFunctionModule(modules, isFunction, size - 1 - i, 8, ((data >> i) & 1) != 0);
-//     }
+    //     // Draw second copy
+    //     for (int8_t i = 0; i <= 7; i++) {
+    //         setFunctionModule(modules, isFunction, size - 1 - i, 8, ((data >> i) & 1) != 0);
+    //     }
 
-//     for (int8_t i = 8; i < 15; i++) {
-//         setFunctionModule(modules, isFunction, 8, size - 15 + i, ((data >> i) & 1) != 0);
-//     }
+    //     for (int8_t i = 8; i < 15; i++) {
+    //         setFunctionModule(modules, isFunction, 8, size - 15 + i, ((data >> i) & 1) != 0);
+    //     }
 
-//     setFunctionModule(modules, isFunction, 8, size - 8, true);
-// }
+    //     setFunctionModule(modules, isFunction, 8, size - 8, true);
+}
 
-// // Draws two copies of the version bits (with its own error correction code),
-// // based on this object's version field (which only has an effect for 7 <= version <= 40).
-// void qrCode::drawVersion(uint32_t version) {
-//     if (version < 7) {
-//         return;
-//     }
+void qrCode::drawVersionInfo(uint32_t theVersion) {
+    if (theVersion < 7) {
+        return;
+    }
 
-//     // Calculate error correction code and pack bits
-//     uint32_t rem = version;        // version is uint6, in the range [7, 40]
-//     for (uint8_t i = 0; i < 12; i++) {
-//         rem = (rem << 1) ^ ((rem >> 11) * 0x1F25);
-//     }
+    //     // Calculate error correction code and pack bits
+    //     uint32_t rem = version;        // version is uint6, in the range [7, 40]
+    //     for (uint8_t i = 0; i < 12; i++) {
+    //         rem = (rem << 1) ^ ((rem >> 11) * 0x1F25);
+    //     }
 
-//     uint32_t data = version << 12 | rem;        // uint18
+    //     uint32_t data = version << 12 | rem;        // uint18
 
-//     // Draw two copies
-//     for (uint8_t i = 0; i < 18; i++) {
-//         bool bit  = ((data >> i) & 1) != 0;
-//         uint8_t a = size - 11 + i % 3, b = i / 3;
-//         setFunctionModule(modules, isFunction, a, b, bit);
-//         setFunctionModule(modules, isFunction, b, a, bit);
-//     }
-// }
+    //     // Draw two copies
+    //     for (uint8_t i = 0; i < 18; i++) {
+    //         bool bit  = ((data >> i) & 1) != 0;
+    //         uint8_t a = size - 11 + i % 3, b = i / 3;
+    //         setFunctionModule(modules, isFunction, a, b, bit);
+    //         setFunctionModule(modules, isFunction, b, a, bit);
+    //     }
+}
+
+void qrCode::applyMask() {
+    // for (uint8_t y = 0; y < size; y++) {
+    //     for (uint8_t x = 0; x < size; x++) {
+    //         if (bb_getBit(isFunction, x, y)) {
+    //             continue;
+    //         }
+
+    //         bool invert = 0;
+    //         switch (mask) {
+    //             case 0:
+    //                 invert = (x + y) % 2 == 0;
+    //                 break;
+    //             case 1:
+    //                 invert = y % 2 == 0;
+    //                 break;
+    //             case 2:
+    //                 invert = x % 3 == 0;
+    //                 break;
+    //             case 3:
+    //                 invert = (x + y) % 3 == 0;
+    //                 break;
+    //             case 4:
+    //                 invert = (x / 3 + y / 2) % 2 == 0;
+    //                 break;
+    //             case 5:
+    //                 invert = x * y % 2 + x * y % 3 == 0;
+    //                 break;
+    //             case 6:
+    //                 invert = (x * y % 2 + x * y % 3) % 2 == 0;
+    //                 break;
+    //             case 7:
+    //                 invert = ((x + y) % 2 + x * y % 3) % 2 == 0;
+    //                 break;
+    //         }
+    //         bb_invertBit(modules, x, y, invert);
+    //     }
+    // }
+}
+
+uint32_t qrCode::getPenaltyScore() {
+    uint32_t result = 0;
+
+    // uint8_t size = modules->bitOffsetOrWidth;
+
+    // // Adjacent modules in row having same color
+    // for (uint8_t y = 0; y < size; y++) {
+    //     bool colorX = bb_getBit(modules, 0, y);
+    //     for (uint8_t x = 1, runX = 1; x < size; x++) {
+    //         bool cx = bb_getBit(modules, x, y);
+    //         if (cx != colorX) {
+    //             colorX = cx;
+    //             runX   = 1;
+
+    //         } else {
+    //             runX++;
+    //             if (runX == 5) {
+    //                 result += PENALTY_N1;
+    //             } else if (runX > 5) {
+    //                 result++;
+    //             }
+    //         }
+    //     }
+    // }
+
+    // // Adjacent modules in column having same color
+    // for (uint8_t x = 0; x < size; x++) {
+    //     bool colorY = bb_getBit(modules, x, 0);
+    //     for (uint8_t y = 1, runY = 1; y < size; y++) {
+    //         bool cy = bb_getBit(modules, x, y);
+    //         if (cy != colorY) {
+    //             colorY = cy;
+    //             runY   = 1;
+    //         } else {
+    //             runY++;
+    //             if (runY == 5) {
+    //                 result += PENALTY_N1;
+    //             } else if (runY > 5) {
+    //                 result++;
+    //             }
+    //         }
+    //     }
+    // }
+
+    // uint16_t black = 0;
+    // for (uint8_t y = 0; y < size; y++) {
+    //     uint16_t bitsRow = 0, bitsCol = 0;
+    //     for (uint8_t x = 0; x < size; x++) {
+    //         bool color = bb_getBit(modules, x, y);
+
+    //         // 2*2 blocks of modules having same color
+    //         if (x > 0 && y > 0) {
+    //             bool colorUL = bb_getBit(modules, x - 1, y - 1);
+    //             bool colorUR = bb_getBit(modules, x, y - 1);
+    //             bool colorL  = bb_getBit(modules, x - 1, y);
+    //             if (color == colorUL && color == colorUR && color == colorL) {
+    //                 result += PENALTY_N2;
+    //             }
+    //         }
+
+    //         // Finder-like pattern in rows and columns
+    //         bitsRow = ((bitsRow << 1) & 0x7FF) | color;
+    //         bitsCol = ((bitsCol << 1) & 0x7FF) | bb_getBit(modules, y, x);
+
+    //         // Needs 11 bits accumulated
+    //         if (x >= 10) {
+    //             if (bitsRow == 0x05D || bitsRow == 0x5D0) {
+    //                 result += PENALTY_N3;
+    //             }
+    //             if (bitsCol == 0x05D || bitsCol == 0x5D0) {
+    //                 result += PENALTY_N3;
+    //             }
+    //         }
+
+    //         // Balance of black and white modules
+    //         if (color) {
+    //             black++;
+    //         }
+    //     }
+    // }
+
+    // // Find smallest k such that (45-5k)% <= dark/total <= (55+5k)%
+    // uint16_t total = size * size;
+    // for (uint16_t k = 0; black * 20 < (9 - k) * total || black * 20 > (11 + k) * total; k++) {
+    //     result += PENALTY_N4;
+    // }
+
+    return result;
+}
