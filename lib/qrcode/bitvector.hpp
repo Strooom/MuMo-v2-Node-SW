@@ -12,7 +12,10 @@ class bitVector {
   public:
     const uint32_t length{toBeLength};
     const uint32_t lengthInBytes{(toBeLength + 7U) / 8U};
-
+    void reset() {
+        level = 0;
+        clearAllBits();
+    };
     void clearAllBits() { memset(data, 0, lengthInBytes); }
     void setBit(uint32_t bitIndex) { setOrClearBit(bitIndex, true); };
     void clearBit(uint32_t bitIndex) { setOrClearBit(bitIndex, false); };

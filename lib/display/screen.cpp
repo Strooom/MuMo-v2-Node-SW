@@ -169,7 +169,7 @@ void screen::showUid() {
     uint8_t qrcodeData[qrcode_getBufferSize(2)];
     char tmpKeyAsHexAscii[17];
     hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
-    qrcode_initText(&qrcode, qrcodeData, 2, static_cast<int8_t>(errorCorrectionLevel::medium), tmpKeyAsHexAscii);
+    qrcode_initText(&qrcode, qrcodeData, 2, 1U, tmpKeyAsHexAscii);
     graphics::drawQrcode(ux::qrCodeXOffset, ux::qrCodeYOffset, qrcode);
     uint32_t width      = graphics::getTextwidth(lucidaConsole12, tmpKeyAsHexAscii);
     uint32_t leftOffset = (display::widthInPixels - width) / 2;

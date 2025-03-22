@@ -10,21 +10,50 @@
 #include <bitvector.hpp>
 #include <bitmatrix.hpp>
 #include <encodingformat.hpp>
-#include <reedsolomon.hpp>
+
+enum class errorCorrectionLevel {
+    low      = 0,
+    medium   = 1,
+    quartile = 2,
+    high     = 3,
+};
+
+static constexpr uint32_t nmbrOfErrorCorrectionLevels{4};
 
 class qrCode {
   public:
-    static constexpr uint32_t maxVersion{3};        // 1..40
+    static constexpr uint32_t maxVersion{3};        // 1..40 This sets the maximum version that is supported by this library. Storage for the input data and output pixelmatrix is allocated statically and depends on this value.
     static constexpr uint32_t maxSize{17 + 4 * maxVersion};
+    static constexpr uint32_t maxNumericLength{127U};            // NOTE :  adjust these values to match the maxVersion...
+    static constexpr uint32_t maxAlphanumericLength{77U};        // IDEM    see https://www.qrcode.com/en/about/version.html
+    static constexpr uint32_t maxByteLength{53U};                // IDEM    and take values for 'Low' error correction level
+    // maxVersion            :  1,   2,   3,   4,   5, 6, 7, 8, 9, 10
+    // maxNumericLength      : 41,  77, 127, 187, 255,
+    // maxAlphanumericLength : 25,  47,  77, 114, 154,
+    // maxByteLength         : 17,  32,  53,  78, 106,
 
-    static constexpr uint32_t maxNumericLength{7089U};             // TODO : adjust these values to match the maxVersion...
-    static constexpr uint32_t maxAlphanumericLength{4296U};        // IDEM
-    static constexpr uint32_t maxByteLength{2953U};                // IDEM
-    
-    static constexpr uint32_t PENALTY_N1{3};
-    static constexpr uint32_t PENALTY_N2{3};
-    static constexpr uint32_t PENALTY_N3{40};
-    static constexpr uint32_t PENALTY_N4{10};
+    static uint32_t versionNeeded(const char *data, errorCorrectionLevel wantedErrorCorrectionLevel);                                // null-terminated string of data
+    static uint32_t versionNeeded(const uint8_t *data, uint32_t dataLength, errorCorrectionLevel wantedErrorCorrectionLevel);        //
+
+    static void setVersion(uint32_t theVersion);
+    static void setErrorCorrectionLevel(errorCorrectionLevel theErrorCorrectionLevel);
+    static encodingFormat getEncodingFormat(const char *data);                                // null-terminated string of data
+    static encodingFormat getEncodingFormat(const uint8_t *data, uint32_t dataLength);        //
+    static void encodeData(const char *data);                                                 // pre-set version and errorCorrection, null-terminated string of data
+    static void encodeData(const uint8_t *data, uint32_t dataLength);
+
+#ifndef unitTesting
+
+  private:
+#endif
+    static uint32_t size(uint32_t someVersion);
+    static uint32_t payloadLengthInBits(uint32_t dataLengthInBytes, uint32_t someVersion, encodingFormat someEncodingFormat);
+    static uint32_t nmbrOfTotalModules(uint32_t someVersion);
+    static uint32_t nmbrOfDataModules(uint32_t someVersion);
+    static uint32_t nmbrOfFunctionModules(uint32_t someVersion);
+    static uint32_t characterCountIndicatorLength(uint32_t someVersion, encodingFormat someEncodingFormat);
+    static uint32_t nmbrOfAlignmentPatterns(uint32_t someVersion);
+    static uint32_t nmbrOfAlignmentPatternRowsOrCols(uint32_t someVersion);
 
     static constexpr struct {
         uint16_t nmbrErrorCorrectionCodewords[nmbrOfErrorCorrectionLevels];
@@ -34,55 +63,42 @@ class qrCode {
         {{10, 16, 22, 28}, {1, 1, 1, 1}},
         {{15, 26, 18, 22}, {1, 1, 2, 2}}};
 
-    static bool isNumeric(const char data);
-    static bool isNumeric(const char *data);
-    static bool isNumeric(const char *data, uint32_t length);
+    static bool isNumeric(const char *data);                            // null-terminated string of data
+    static bool isNumeric(const uint8_t data);                          //
+    static bool isNumeric(const uint8_t *data, uint32_t length);        //
 
-    static bool isAlphanumeric(const char data);
-    static bool isAlphanumeric(const char *data);
-    static bool isAlphanumeric(const char *data, uint32_t length);
-
-    static bool isValidVersion(uint32_t theVersion);
-    static uint32_t size(uint32_t theVersion);
+    static bool isAlphanumeric(const char *data);                            // null-terminated string of data
+    static bool isAlphanumeric(const uint8_t data);                          //
+    static bool isAlphanumeric(const uint8_t *data, uint32_t length);        //
 
     static uint8_t compressNumeric(char c);
     static uint8_t compressAlphanumeric(char c);
-
     static uint8_t modeIndicator(encodingFormat theEncodingFormat);
-    static uint32_t characterCountIndicatorLength(uint32_t version, encodingFormat theEncodingFormat);
-    static uint32_t payloadLengthInBits(uint32_t dataLengthInBytes, uint32_t theVersion, encodingFormat theEncodingFormat);
 
-    static void encodeData(const char *text, uint32_t theVersion, encodingFormat theEncodingFormat);
-
-    static bool isDataModule(uint32_t x, uint32_t y, uint32_t theVersion);
-    static bool isTimingPattern(uint32_t x, uint32_t y, uint32_t theVersion);
-    static bool isDarkModule(uint32_t x, uint32_t y, uint32_t theVersion);
-    static bool isAlignmentPattern(uint32_t x, uint32_t y, uint32_t theVersion);
-    static bool isFormatInformation(uint32_t x, uint32_t y, uint32_t theVersion);
-    static bool isVersionInformation(uint32_t x, uint32_t y, uint32_t theVersion);
-    static bool isFinderPatternOrSeparator(uint32_t x, uint32_t y, uint32_t theVersion);
+    static bool isDataModule(uint32_t x, uint32_t y, uint32_t someVersion);
+    static bool isTimingPattern(uint32_t x, uint32_t y);
+    static bool isDarkModule(uint32_t x, uint32_t y, uint32_t someVersion);
+    static bool isAlignmentPattern(uint32_t x, uint32_t y, uint32_t someVersion);
+    static bool isFormatInformation(uint32_t x, uint32_t y, uint32_t someVersion);
+    static bool isVersionInformation(uint32_t x, uint32_t y, uint32_t someVersion);
+    static bool isFinderPatternOrSeparator(uint32_t x, uint32_t y, uint32_t someVersion);
 
     static void drawFinderPattern(uint32_t centerX, uint32_t centerY);
     static void drawAllFinderPatterns(uint32_t theVersion);
-    static void drawAlignmentPattern(uint32_t centerX, uint32_t centerY);
+    static void drawAlignmentPattern(uint32_t centerX, uint32_t centerY, uint32_t someVersion);
     static void drawAllAlignmentPatterns(uint32_t theVersion);
     static void drawTimingPattern(uint32_t theVersion);
     static void drawFormatInfo(uint32_t theVersion);
     static void drawVersionInfo(uint32_t theVersion);
     static void drawPayload(uint32_t theVersion);
-    static void applyMask();
+    static void applyMask(uint8_t maskType);
     static uint32_t getPenaltyScore();
 
-    static uint32_t versionNeeded(encodingFormat theEncodingFormat, uint32_t dataLengthInBytes, errorCorrectionLevel minimumErrorCorrectionLevel);
-
-    static uint32_t nmbrOfTotalModules(uint32_t theVersion);
-    static uint32_t nmbrOfFunctionModules(uint32_t theVersion);
-    static uint32_t nmbrOfDataModules(uint32_t theVersion);
     static uint32_t nmbrOfErrorCorrectionModules(uint32_t theVersion, errorCorrectionLevel theErrorCorrectionLevel);
-    static uint32_t nmbrOfAlignmentPatternRowsOrCols(uint32_t theVersion);
-    static uint32_t nmbrOfAlignmentPatterns(uint32_t theVersion);
-    static uint32_t alignmentPatternSpacing(uint32_t theVersion);
-    static uint32_t alignmentPatternCoordinate(uint32_t index, uint32_t theVersion);
+    static uint32_t alignmentPatternSpacing(uint32_t someVersion);
+    static uint32_t alignmentPatternCoordinate(uint32_t someVersion, uint32_t index);
+
+    static void addErrorCorrection();
 
     // static constexpr uint16_t nmbrRawDataModules[maxVersion]                                        = {208, 359, 567, 807, 1079, 1383, 1568, 1936, 2336, 2768, 3232, 3728, 4256, 4651, 5243, 5867, 6523, 7211, 7931, 8683, 9252, 10068, 10916, 11796, 12708, 13652, 14628, 15371, 16411, 17483, 18587, 19723, 20891, 22091, 23008, 24272, 25568, 26896, 28256, 29648};
     // static constexpr uint32_t nmbrOfErrorCorrectionLevels                                           = static_cast<uint32_t>(errorCorrectionLevel::nmbrOfErrorCorrectionLevels);
@@ -100,12 +116,15 @@ class qrCode {
     //     {1, 1, 2, 4, 4, 4, 5, 6, 8, 8, 11, 11, 16, 16, 18, 16, 19, 21, 25, 25, 25, 34, 30, 32, 35, 37, 40, 42, 45, 48, 51, 54, 57, 60, 63, 66, 70, 74, 77, 81},        // High
     // };
 
-#ifndef unitTesting
+    static uint32_t theVersion;
+    static errorCorrectionLevel theErrorCorrectionLevel;
+    static encodingFormat theEncodingFormat;
 
-  private:
-#endif
+    static bitVector<maxSize> buffer;
+    static bitMatrix<maxSize> modules;
 
-    //    static uint32_t version;
-    //    errorCorrectionLevel theErrorCorrectionLevel;
-    //    static bitMatrix &modules;
+    static constexpr uint32_t PENALTY_N1{3};
+    static constexpr uint32_t PENALTY_N2{3};
+    static constexpr uint32_t PENALTY_N3{40};
+    static constexpr uint32_t PENALTY_N4{10};
 };

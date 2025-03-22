@@ -1,5 +1,22 @@
+// ######################################################################################
+// ### Author : Pascal Roobrouck - https://github.com/Strooom                         ###
+// ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
+// ######################################################################################
+
 #include <reedsolomon.hpp>
+#include <polynome.hpp>
 #include <cstring>
+
+void reedSolomon::getErrorCorrectionBytes(uint8_t *output, const uint32_t protectionLength, const uint8_t *unprotectedMessage, uint32_t unprotectedMessageLength) {
+    // polynome message(unprotectedMessage, unprotectedMessageLength);        // create polynome from message
+    // polynome generator{protectionLength};                                  // create generator polynome = divisor, from correct length
+    // polynome::remainder(generator.order, generator.coefficients, message.coefficients, message.order, message.coefficients, 1);
+    // polynome::getCoefficients(output, protectionLength, message.coefficients, message.order);
+}
+
+void reedSolomon::appendErrorCorrectionBytes(uint8_t *unprotectedMessage, const uint32_t unprotectedMessageLength, const uint32_t protectionLength) {
+    // TODO: implement
+}
 
 uint8_t reedSolomon::multiply(uint8_t x, uint8_t y) {
     // Russian peasant multiplication

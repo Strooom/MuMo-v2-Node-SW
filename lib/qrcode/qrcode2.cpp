@@ -729,17 +729,15 @@ static void performErrorCorrection(uint8_t version, uint8_t ecc, BitBucket *data
     uint8_t blockEccLen    = totalEcc / numBlocks;
     uint8_t numShortBlocks = numBlocks - moduleCount / 8 % numBlocks;
     uint8_t shortBlockLen  = moduleCount / 8 / numBlocks;
-
     uint8_t shortDataBlockLen = shortBlockLen - blockEccLen;
 
     uint8_t result[data->capacityBytes];
     memset(result, 0, sizeof(result));
+    uint16_t offset    = 0;
+    uint8_t *dataBytes = data->data;
 
     uint8_t coeff[blockEccLen];
     rs_init(blockEccLen, coeff);
-
-    uint16_t offset    = 0;
-    uint8_t *dataBytes = data->data;
 
     // Interleave all short blocks
     for (uint8_t i = 0; i < shortDataBlockLen; i++) {

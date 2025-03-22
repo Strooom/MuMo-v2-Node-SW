@@ -19,6 +19,13 @@ class bitMatrix {
     void clearBit(uint32_t x, uint32_t y) { setOrClearBit(x, y, false); };
     void invertBit(uint32_t x, uint32_t y) { setOrClearBit(x, y, !getBit(x, y)); };
     bool getBit(uint32_t x, uint32_t y) { return (data[byteOffset(x, y)] & bitMask(x, y)) != 0; };
+    void setOrClearBit(uint32_t x, uint32_t y, bool newBitState) {
+        if (newBitState) {
+            data[byteOffset(x, y)] |= bitMask(x, y);
+        } else {
+            data[byteOffset(x, y)] &= ~bitMask(x, y);
+        }
+    };
 
 #ifndef unitTesting
 
@@ -28,11 +35,4 @@ class bitMatrix {
     uint8_t data[((toBeWidthHeightInBits * toBeWidthHeightInBits) + 7U) / 8U]{0};
     uint32_t byteOffset(uint32_t x, uint32_t y) const { return ((y * widthHeightInBits + x) >> 3U); };
     uint8_t bitMask(uint32_t x, uint32_t y) const { return static_cast<uint8_t>(1U << (7U - ((y * widthHeightInBits + x) % 8U))); };
-    void setOrClearBit(uint32_t x, uint32_t y, bool newBitState) {
-        if (newBitState) {
-            data[byteOffset(x, y)] |= bitMask(x, y);
-        } else {
-            data[byteOffset(x, y)] &= ~bitMask(x, y);
-        }
-    };
 };
