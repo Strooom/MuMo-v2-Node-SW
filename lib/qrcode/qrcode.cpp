@@ -28,7 +28,7 @@ uint32_t qrCode::versionNeeded(const uint8_t *data, uint32_t dataLengthInBytes, 
         uint32_t bitsNeededForPayload;
 
         bitsNeededForPayload         = payloadLengthInBits(dataLengthInBytes, candidateVersion, neededEncodingFormat);
-        bitsNeededForErrorCorrection = versionProperties[candidateVersion - 1].nmbrErrorCorrectionCodewords[static_cast<uint32_t>(wantedErrorCorrectionLevel)] * versionProperties[candidateVersion - 1].nmbrErrorCorrectionBlocks[static_cast<uint32_t>(wantedErrorCorrectionLevel)] * 8;
+        bitsNeededForErrorCorrection = versionProperties[candidateVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(wantedErrorCorrectionLevel)] * versionProperties[candidateVersion - 1].nmbrBlocks[static_cast<uint32_t>(wantedErrorCorrectionLevel)] * 8;
         totalAvailableBits           = nmbrOfDataModules(candidateVersion);
         if (bitsNeededForPayload + bitsNeededForErrorCorrection <= totalAvailableBits) {
             return candidateVersion;
@@ -73,7 +73,7 @@ void qrCode::encodeData(const uint8_t *data, uint32_t dataLength) {
 
 void qrCode::addTerminator() {
     // add terminator : up to four zero bits
-    uint32_t nmbrOfTerminatorBits{availableDataCodeWords[theVersion - 1][static_cast<uint8_t>(theErrorCorrectionLevel)] * 8 - buffer.levelInBits()};
+    uint32_t nmbrOfTerminatorBits{versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint8_t>(theErrorCorrectionLevel)] * 8 - buffer.levelInBits()};
     if (nmbrOfTerminatorBits > 4) {
         nmbrOfTerminatorBits = 4;
     }
@@ -91,12 +91,12 @@ void qrCode::addBitPadding() {
 void qrCode::addBytePadding() {
     // add byte padding : fill with 0xEC and 0x11 until available space is filled
     while (true) {
-        if (buffer.levelInBytes() < availableDataCodeWords[theVersion - 1][static_cast<uint8_t>(theErrorCorrectionLevel)]) {
+        if (buffer.levelInBytes() < versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint8_t>(theErrorCorrectionLevel)]) {
             buffer.appendBits(0xEC, 8);
         } else {
             return;
         }
-        if (buffer.levelInBytes() < availableDataCodeWords[theVersion - 1][static_cast<uint8_t>(theErrorCorrectionLevel)]) {
+        if (buffer.levelInBytes() < versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint8_t>(theErrorCorrectionLevel)]) {
             buffer.appendBits(0x11, 8);
         } else {
             return;
@@ -262,6 +262,22 @@ uint8_t qrCode::compressAlphanumeric(char theCharacter) {
 #pragma endregion
 
 #pragma region errorCorrection
+
+uint32_t qrCode::nmbrBlocksGroup1(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
+    return (versionProperties[someVersion - 1].nmbrBlocks[static_cast<uint8_t>(someErrorCorrectionLevel)] * blockLengthGroup2(someVersion, someErrorCorrectionLevel)) - versionProperties[someVersion - 1].availableDataCodeWords[static_cast<uint8_t>(someErrorCorrectionLevel)];
+}
+
+uint32_t qrCode::nmbrBlocksGroup2(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
+    return versionProperties[someVersion - 1].nmbrBlocks[static_cast<uint8_t>(someErrorCorrectionLevel)] - nmbrBlocksGroup1(someVersion, someErrorCorrectionLevel);
+}
+
+uint32_t qrCode::blockLengthGroup1(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
+    return versionProperties[someVersion - 1].availableDataCodeWords[static_cast<uint8_t>(someErrorCorrectionLevel)] / versionProperties[someVersion - 1].nmbrBlocks[static_cast<uint8_t>(someErrorCorrectionLevel)];
+}
+
+uint32_t qrCode::blockLengthGroup2(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
+    return blockLengthGroup1(someVersion, someErrorCorrectionLevel) + 1;
+}
 
 #pragma endregion
 
@@ -624,7 +640,7 @@ uint32_t qrCode::nmbrOfFunctionModules(uint32_t someVersion) {
 }
 
 uint32_t qrCode::nmbrOfErrorCorrectionModules(uint32_t someVersion, errorCorrectionLevel theErrorCorrectionLevel) {
-    return versionProperties[someVersion - 1].nmbrErrorCorrectionCodewords[static_cast<uint32_t>(theErrorCorrectionLevel)] * versionProperties[someVersion - 1].nmbrErrorCorrectionBlocks[static_cast<uint32_t>(theErrorCorrectionLevel)] * 8;
+    return versionProperties[someVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)] * versionProperties[someVersion - 1].nmbrBlocks[static_cast<uint32_t>(theErrorCorrectionLevel)] * 8;
 }
 
 uint32_t qrCode::nmbrOfAlignmentPatterns(uint32_t someVersion) {

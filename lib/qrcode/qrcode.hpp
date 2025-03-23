@@ -22,17 +22,10 @@ static constexpr uint32_t nmbrOfErrorCorrectionLevels{4};
 
 class qrCode {
   public:
-    static constexpr uint32_t maxVersion{3};                       // 1..40 This sets the maximum version that is supported by this library. Storage for the input data and output pixelmatrix is allocated statically and depends on this value.
-    static constexpr uint32_t maxSize{17 + 4 * maxVersion};        //
-    static constexpr uint32_t maxInputLength{127U};                // Maximum length of a c-style string with payload data to encode into the QRCode. This maximum is needed to limit strlen functions for safety
-    static constexpr uint32_t maxPayloadLengthInBytes{36U};        //
-
-    static constexpr uint32_t availableDataCodeWords[maxVersion][nmbrOfErrorCorrectionLevels]{
-        {19, 16, 13, 9},
-        {34, 28, 22, 16},
-        {55, 44, 34, 26},
-    };
-
+    static constexpr uint32_t maxVersion{5};                                                                                         // 1..40 This sets the maximum version that is supported by this library. Storage for the input data and output pixelmatrix is allocated statically and depends on this value.
+    static constexpr uint32_t maxSize{17 + 4 * maxVersion};                                                                          //
+    static constexpr uint32_t maxInputLength{127U};                                                                                  // Maximum length of a c-style string with payload data to encode into the QRCode. This maximum is needed to limit strlen functions for safety
+    static constexpr uint32_t maxPayloadLengthInBytes{36U};                                                                          //
     static uint32_t versionNeeded(const char *data, errorCorrectionLevel wantedErrorCorrectionLevel);                                // null-terminated string of data
     static uint32_t versionNeeded(const uint8_t *data, uint32_t dataLength, errorCorrectionLevel wantedErrorCorrectionLevel);        //
 
@@ -50,6 +43,11 @@ class qrCode {
     static void addBitPadding();
     static void addBytePadding();
 
+    static uint32_t nmbrBlocksGroup1(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
+    static uint32_t nmbrBlocksGroup2(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
+    static uint32_t blockLengthGroup1(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
+    static uint32_t blockLengthGroup2(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
+
 #ifndef unitTesting
 
   private:
@@ -64,12 +62,15 @@ class qrCode {
     static uint32_t nmbrOfAlignmentPatternRowsOrCols(uint32_t someVersion);
 
     static constexpr struct {
-        uint16_t nmbrErrorCorrectionCodewords[nmbrOfErrorCorrectionLevels];
-        uint8_t nmbrErrorCorrectionBlocks[nmbrOfErrorCorrectionLevels];
-    } versionProperties[3]{
-        {{7, 10, 13, 17}, {1, 1, 1, 1}},
-        {{10, 16, 22, 28}, {1, 1, 1, 1}},
-        {{15, 26, 18, 22}, {1, 1, 2, 2}}};
+        uint16_t availableDataCodeWords[nmbrOfErrorCorrectionLevels];
+        uint8_t nmbrBlocks[nmbrOfErrorCorrectionLevels];
+        uint8_t nmbrErrorCorrectionCodewordsPerBlock[nmbrOfErrorCorrectionLevels];
+    } versionProperties[maxVersion]{
+        {{19, 16, 13, 9}, {1, 1, 1, 1}, {7, 10, 13, 17}},
+        {{34, 28, 22, 16}, {1, 1, 1, 1}, {10, 16, 22, 28}},
+        {{55, 44, 34, 26}, {1, 1, 2, 2}, {15, 26, 18, 22}},
+        {{80, 64, 48, 36}, {1, 2, 2, 4}, {20, 18, 26, 16}},
+        {{108, 86, 62, 46}, {1, 2, 4, 4}, {26, 24, 18, 22}}};
 
     static bool isNumeric(const char *data);                            // null-terminated string of data
     static bool isNumeric(const uint8_t data);                          //

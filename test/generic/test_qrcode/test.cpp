@@ -428,6 +428,33 @@ void test_encodeData() {
     }
 }
 
+void test_blockCalculations() {
+    TEST_ASSERT_EQUAL(19, qrCode::blockLengthGroup1(1, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(1, qrCode::nmbrBlocksGroup1(1, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(20, qrCode::blockLengthGroup2(1, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(0, qrCode::nmbrBlocksGroup2(1, errorCorrectionLevel::low));
+
+    TEST_ASSERT_EQUAL(13, qrCode::blockLengthGroup1(3, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(2, qrCode::nmbrBlocksGroup1(3, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(14, qrCode::blockLengthGroup2(3, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(0, qrCode::nmbrBlocksGroup2(3, errorCorrectionLevel::high));
+
+    TEST_ASSERT_EQUAL(9, qrCode::blockLengthGroup1(4, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(4, qrCode::nmbrBlocksGroup1(4, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(10, qrCode::blockLengthGroup2(4, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(0, qrCode::nmbrBlocksGroup2(4, errorCorrectionLevel::high));
+
+    TEST_ASSERT_EQUAL(15, qrCode::blockLengthGroup1(5, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(2, qrCode::nmbrBlocksGroup1(5, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(16, qrCode::blockLengthGroup2(5, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(2, qrCode::nmbrBlocksGroup2(5, errorCorrectionLevel::quartile));
+
+    TEST_ASSERT_EQUAL(11, qrCode::blockLengthGroup1(5, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(2, qrCode::nmbrBlocksGroup1(5, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(12, qrCode::blockLengthGroup2(5, errorCorrectionLevel::high));
+    TEST_ASSERT_EQUAL(2, qrCode::nmbrBlocksGroup2(5, errorCorrectionLevel::high));
+}
+
 void test_alignmentPatternSpacing() {
     // Version 1 has no alignment patterns and so also no spacing
     TEST_ASSERT_EQUAL(18 - 6, qrCode::alignmentPatternSpacing(2));
@@ -530,8 +557,9 @@ int main(int argc, char **argv) {
     RUN_TEST(test_isNumeric);
     RUN_TEST(test_isAlphanumeric);
     RUN_TEST(test_getEncodingFormat);
-    RUN_TEST(test_payloadLengthInBits),
-        RUN_TEST(test_encodeData);
+    RUN_TEST(test_payloadLengthInBits);
+    RUN_TEST(test_encodeData);
+    RUN_TEST(test_blockCalculations);
 
     RUN_TEST(test_size);
     RUN_TEST(test_nmbrOfAlignmentPatterns);
