@@ -22,15 +22,16 @@ static constexpr uint32_t nmbrOfErrorCorrectionLevels{4};
 
 class qrCode {
   public:
-    static constexpr uint32_t maxVersion{3};        // 1..40 This sets the maximum version that is supported by this library. Storage for the input data and output pixelmatrix is allocated statically and depends on this value.
-    static constexpr uint32_t maxSize{17 + 4 * maxVersion};
-    static constexpr uint32_t maxNumericLength{127U};            // NOTE :  adjust these values to match the maxVersion...
-    static constexpr uint32_t maxAlphanumericLength{77U};        // IDEM    see https://www.qrcode.com/en/about/version.html
-    static constexpr uint32_t maxByteLength{53U};                // IDEM    and take values for 'Low' error correction level
-    // maxVersion            :  1,   2,   3,   4,   5, 6, 7, 8, 9, 10
-    // maxNumericLength      : 41,  77, 127, 187, 255,
-    // maxAlphanumericLength : 25,  47,  77, 114, 154,
-    // maxByteLength         : 17,  32,  53,  78, 106,
+    static constexpr uint32_t maxVersion{3};                       // 1..40 This sets the maximum version that is supported by this library. Storage for the input data and output pixelmatrix is allocated statically and depends on this value.
+    static constexpr uint32_t maxSize{17 + 4 * maxVersion};        //
+    static constexpr uint32_t maxInputLength{127U};                // Maximum length of a c-style string with payload data to encode into the QRCode. This maximum is needed to limit strlen functions for safety
+    static constexpr uint32_t maxPayloadLengthInBytes{36U};        //
+
+    static constexpr uint32_t availableDataCodeWords[maxVersion][nmbrOfErrorCorrectionLevels]{
+        {19, 16, 13, 9},
+        {34, 28, 22, 16},
+        {55, 44, 34, 26},
+    };
 
     static uint32_t versionNeeded(const char *data, errorCorrectionLevel wantedErrorCorrectionLevel);                                // null-terminated string of data
     static uint32_t versionNeeded(const uint8_t *data, uint32_t dataLength, errorCorrectionLevel wantedErrorCorrectionLevel);        //
@@ -41,6 +42,13 @@ class qrCode {
     static encodingFormat getEncodingFormat(const uint8_t *data, uint32_t dataLength);        //
     static void encodeData(const char *data);                                                 // pre-set version and errorCorrection, null-terminated string of data
     static void encodeData(const uint8_t *data, uint32_t dataLength);
+    static void encodeNumeric(const uint8_t *data, uint32_t dataLength);
+    static void encodeAlfaNumeric(const uint8_t *data, uint32_t dataLength);
+    static void encodeByte(const uint8_t *data, uint32_t dataLength);
+
+    static void addTerminator();
+    static void addBitPadding();
+    static void addBytePadding();
 
 #ifndef unitTesting
 
@@ -100,6 +108,8 @@ class qrCode {
 
     static void addErrorCorrection();
 
+    static void interleaveData(uint8_t *destination, const uint8_t *source, const uint32_t sourceLength, const uint32_t nmbrOfBlocksGroup1, const uint32_t nmbrOfBlocksGroup2, const uint32_t blockLength);
+
     // static constexpr uint16_t nmbrRawDataModules[maxVersion]                                        = {208, 359, 567, 807, 1079, 1383, 1568, 1936, 2336, 2768, 3232, 3728, 4256, 4651, 5243, 5867, 6523, 7211, 7931, 8683, 9252, 10068, 10916, 11796, 12708, 13652, 14628, 15371, 16411, 17483, 18587, 19723, 20891, 22091, 23008, 24272, 25568, 26896, 28256, 29648};
     // static constexpr uint32_t nmbrOfErrorCorrectionLevels                                           = static_cast<uint32_t>(errorCorrectionLevel::nmbrOfErrorCorrectionLevels);
     // static constexpr uint32_t nmbrErrorCorrectionCodewords[nmbrOfErrorCorrectionLevels][maxVersion] = {
@@ -120,8 +130,9 @@ class qrCode {
     static errorCorrectionLevel theErrorCorrectionLevel;
     static encodingFormat theEncodingFormat;
 
-    static bitVector<maxSize> buffer;
+    static bitVector<maxPayloadLengthInBytes * 8U> buffer;
     static bitMatrix<maxSize> modules;
+    static bitMatrix<maxSize> isData;
 
     static constexpr uint32_t PENALTY_N1{3};
     static constexpr uint32_t PENALTY_N2{3};

@@ -32,6 +32,8 @@ class bitVector {
             level++;
         }
     }
+    uint32_t levelInBits() const { return level; };
+    uint32_t levelInBytes() const { return (level + 7U) / 8U; };
 
 #ifndef unitTesting
 

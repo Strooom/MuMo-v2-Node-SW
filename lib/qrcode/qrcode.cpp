@@ -8,13 +8,14 @@
 uint32_t qrCode::theVersion{0};        // 0 is an invalid value and indicates the version has not yet been set
 errorCorrectionLevel qrCode::theErrorCorrectionLevel{errorCorrectionLevel::low};
 encodingFormat qrCode::theEncodingFormat{encodingFormat::numeric};
-bitVector<qrCode::maxSize> qrCode::buffer;
+bitVector<qrCode::maxPayloadLengthInBytes * 8U> qrCode::buffer;
 bitMatrix<qrCode::maxSize> qrCode::modules;
+bitMatrix<qrCode::maxSize> qrCode::isData;
 
 #pragma region publicAPI
 
 uint32_t qrCode::versionNeeded(const char *data, errorCorrectionLevel wantedErrorCorrectionLevel) {
-    uint32_t dataLength = strnlen(data, maxNumericLength);
+    uint32_t dataLength = strnlen(data, maxInputLength);
     return versionNeeded(reinterpret_cast<const uint8_t *>(data), dataLength, wantedErrorCorrectionLevel);
 }
 
@@ -40,7 +41,7 @@ uint32_t qrCode::versionNeeded(const uint8_t *data, uint32_t dataLengthInBytes, 
 #pragma region encodingPayload
 
 void qrCode::encodeData(const char *data) {
-    uint32_t length = strnlen(data, maxByteLength);
+    uint32_t length = strnlen(data, maxInputLength);
     encodeData(reinterpret_cast<const uint8_t *>(data), length);
 }
 
@@ -51,46 +52,95 @@ void qrCode::encodeData(const uint8_t *data, uint32_t dataLength) {
     buffer.appendBits(dataLength, characterCountIndicatorLength(theVersion, theEncodingFormat));
 
     switch (theEncodingFormat) {
-        case encodingFormat::numeric: {
-            uint32_t accumData  = 0;
-            uint32_t accumCount = 0;
-            for (uint32_t i = 0; i < dataLength; i++) {
-                accumData = accumData * 10 + compressNumeric(data[i]);
-                accumCount++;
-                if (accumCount == 3) {
-                    buffer.appendBits(accumData, 10U);
-                    accumData  = 0;
-                    accumCount = 0;
-                }
-            }
-            if (accumCount > 0) {
-                buffer.appendBits(accumData, (accumCount * 3U) + 1U);
-            }
-        } break;
+        case encodingFormat::numeric:
+            encodeNumeric(data, dataLength);
+            break;
 
-        case encodingFormat::alphanumeric: {
-            uint32_t accumData  = 0;
-            uint32_t accumCount = 0;
-            for (uint32_t i = 0; i < dataLength; i++) {
-                accumData = accumData * 45 + compressAlphanumeric(data[i]);
-                accumCount++;
-                if (accumCount == 2) {
-                    buffer.appendBits(accumData, 11U);
-                    accumData  = 0;
-                    accumCount = 0;
-                }
-            }
-            if (accumCount > 0) {
-                buffer.appendBits(accumData, 6U);
-            }
-        } break;
+        case encodingFormat::alphanumeric:
+            encodeAlfaNumeric(data, dataLength);
+            break;
 
         case encodingFormat::byte:        // intentional fallthrough
-        default: {
-            for (uint32_t i = 0; i < dataLength; i++) {
-                buffer.appendBits(data[i], 8U);
-            }
-        } break;
+        default:
+            encodeByte(data, dataLength);
+            break;
+    }
+
+    addTerminator();
+    addBitPadding();
+    addBytePadding();
+}
+
+void qrCode::addTerminator() {
+    // add terminator : up to four zero bits
+    uint32_t nmbrOfTerminatorBits{availableDataCodeWords[theVersion - 1][static_cast<uint8_t>(theErrorCorrectionLevel)] * 8 - buffer.levelInBits()};
+    if (nmbrOfTerminatorBits > 4) {
+        nmbrOfTerminatorBits = 4;
+    }
+    buffer.appendBits(0, nmbrOfTerminatorBits);
+}
+
+void qrCode::addBitPadding() {
+    // add bit padding : add zeros to make the length of the data a multiple of 8
+    uint32_t nmbrOfBytePaddingBits{8U - (buffer.levelInBits() % 8U)};
+    if (nmbrOfBytePaddingBits != 8) {
+        buffer.appendBits(0, nmbrOfBytePaddingBits);
+    }
+}
+
+void qrCode::addBytePadding() {
+    // add byte padding : fill with 0xEC and 0x11 until available space is filled
+    while (true) {
+        if (buffer.levelInBytes() < availableDataCodeWords[theVersion - 1][static_cast<uint8_t>(theErrorCorrectionLevel)]) {
+            buffer.appendBits(0xEC, 8);
+        } else {
+            return;
+        }
+        if (buffer.levelInBytes() < availableDataCodeWords[theVersion - 1][static_cast<uint8_t>(theErrorCorrectionLevel)]) {
+            buffer.appendBits(0x11, 8);
+        } else {
+            return;
+        }
+    }
+}
+
+void qrCode::encodeNumeric(const uint8_t *data, uint32_t dataLength) {
+    uint32_t accumData  = 0;
+    uint32_t accumCount = 0;
+    for (uint32_t i = 0; i < dataLength; i++) {
+        accumData = accumData * 10 + compressNumeric(data[i]);
+        accumCount++;
+        if (accumCount == 3) {
+            buffer.appendBits(accumData, 10U);
+            accumData  = 0;
+            accumCount = 0;
+        }
+    }
+    if (accumCount > 0) {
+        buffer.appendBits(accumData, (accumCount * 3U) + 1U);
+    }
+}
+
+void qrCode::encodeAlfaNumeric(const uint8_t *data, uint32_t dataLength) {
+    uint32_t accumData  = 0;
+    uint32_t accumCount = 0;
+    for (uint32_t i = 0; i < dataLength; i++) {
+        accumData = accumData * 45 + compressAlphanumeric(data[i]);
+        accumCount++;
+        if (accumCount == 2) {
+            buffer.appendBits(accumData, 11U);
+            accumData  = 0;
+            accumCount = 0;
+        }
+    }
+    if (accumCount > 0) {
+        buffer.appendBits(accumData, 6U);
+    }
+}
+
+void qrCode::encodeByte(const uint8_t *data, uint32_t dataLength) {
+    for (uint32_t i = 0; i < dataLength; i++) {
+        buffer.appendBits(data[i], 8U);
     }
 }
 
@@ -119,7 +169,7 @@ bool qrCode::isNumeric(const uint8_t data) {
 }
 
 bool qrCode::isNumeric(const char *data) {
-    uint32_t length = strnlen(data, maxNumericLength);
+    uint32_t length = strnlen(data, maxInputLength);
     for (uint32_t i = 0; i < length; i++) {
         if (!isNumeric(data[i])) {
             return false;
@@ -151,7 +201,7 @@ bool qrCode::isAlphanumeric(const uint8_t data) {
 }
 
 bool qrCode::isAlphanumeric(const char *data) {
-    uint32_t length = strnlen(data, maxAlphanumericLength);
+    uint32_t length = strnlen(data, maxInputLength);
     for (uint32_t i = 0; i < length; i++) {
         if (!isAlphanumeric(data[i])) {
             return false;
@@ -468,7 +518,6 @@ void qrCode::applyMask(uint8_t maskType) {
 
 uint32_t qrCode::size(uint32_t someVersion) { return 17 + 4 * someVersion; }
 
-
 uint32_t qrCode::payloadLengthInBits(uint32_t dataLengthInBytes, uint32_t someVersion, encodingFormat theEncodingFormat) {
     uint32_t modeIndicatorLength{4U};
     switch (theEncodingFormat) {
@@ -540,7 +589,6 @@ void qrCode::setVersion(uint32_t newVersion) {
 
 void qrCode::setErrorCorrectionLevel(errorCorrectionLevel newErrorCorrectionLevel) { theErrorCorrectionLevel = newErrorCorrectionLevel; }
 
-
 uint8_t qrCode::modeIndicator(encodingFormat theEncodingFormat) {
     switch (theEncodingFormat) {
         case encodingFormat::numeric:
@@ -554,8 +602,6 @@ uint8_t qrCode::modeIndicator(encodingFormat theEncodingFormat) {
             return 0b0100;
     }
 }
-
-
 
 uint32_t qrCode::nmbrOfTotalModules(uint32_t someVersion) {
     return size(someVersion) * size(someVersion);
@@ -615,7 +661,6 @@ uint32_t qrCode::alignmentPatternCoordinate(uint32_t someVersion, uint32_t index
         return size(someVersion) - 7 - (alignmentPatternSpacing(someVersion) * (maxIndex - index));
     }
 }
-
 
 uint32_t qrCode::getPenaltyScore() {
     uint32_t result = 0;
@@ -708,4 +753,13 @@ uint32_t qrCode::getPenaltyScore() {
 }
 
 void qrCode::addErrorCorrection() {
+}
+
+void qrCode::interleaveData(uint8_t *destination, const uint8_t *source, const uint32_t sourceLength, const uint32_t nmbrOfBlocksGroup1, const uint32_t nmbrOfBlocksGroup2, const uint32_t blockLength) {
+    uint32_t sourceOffset{0};
+    uint32_t destinationOffset{0};
+    for (sourceOffset = 0; sourceOffset < sourceLength; sourceOffset++) {
+        destinationOffset              = sourceOffset % blockLength;        // TODO Need smarter formula here
+        destination[destinationOffset] = source[sourceOffset];
+    }
 }

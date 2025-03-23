@@ -60,6 +60,11 @@ class polynome {
         order = nmbr - 1;
     }
 
+    void getCoefficients(uint8_t *output) {
+        memcpy(output, coefficients, order + 1);
+    }
+
+
 #ifndef unitTesting
 
   private:
