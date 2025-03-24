@@ -177,7 +177,7 @@ void test_remainder() {
         static constexpr uint32_t generatorPolynomeOrder{2};
         messagePolynome.remainder(generatorPolynomeOrder);
         static constexpr uint8_t expected[generatorPolynomeOrder]{46, 52};
-        TEST_ASSERT_EQUAL_UINT32(generatorPolynomeOrder-1, messagePolynome.getOrder());
+        TEST_ASSERT_EQUAL_UINT32(generatorPolynomeOrder - 1, messagePolynome.getOrder());
         TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, messagePolynome.coefficients, generatorPolynomeOrder);
     }
     {
@@ -187,7 +187,7 @@ void test_remainder() {
         static constexpr uint32_t generatorPolynomeOrder{10};
         messagePolynome.remainder(generatorPolynomeOrder);
         static constexpr uint8_t expected[generatorPolynomeOrder]{196, 35, 39, 119, 235, 215, 231, 226, 93, 23};
-        TEST_ASSERT_EQUAL_UINT32(generatorPolynomeOrder-1, messagePolynome.getOrder());
+        TEST_ASSERT_EQUAL_UINT32(generatorPolynomeOrder - 1, messagePolynome.getOrder());
         TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, messagePolynome.coefficients, generatorPolynomeOrder);
     }
     {
@@ -197,8 +197,36 @@ void test_remainder() {
         static constexpr uint32_t generatorPolynomeOrder{16};
         messagePolynome.remainder(generatorPolynomeOrder);
         static constexpr uint8_t expected[generatorPolynomeOrder]{52, 61, 242, 187, 29, 7, 216, 249, 103, 87, 95, 69, 188, 134, 57, 20};
-        TEST_ASSERT_EQUAL_UINT32(generatorPolynomeOrder-1, messagePolynome.getOrder());
+        TEST_ASSERT_EQUAL_UINT32(generatorPolynomeOrder - 1, messagePolynome.getOrder());
         TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, messagePolynome.coefficients, generatorPolynomeOrder);
+    }
+
+    // Test-vector from https://www.nayuki.io/page/creating-a-qr-code-step-by-step using "0123456789" / low as input
+    {
+        static constexpr uint32_t messagePolynomeOrder{18};
+        uint8_t messagePolynomeCoefficients[messagePolynomeOrder + 1]{16, 40, 12, 86, 106, 105, 0, 236, 17, 236, 17, 236, 17, 236, 17, 236, 17, 236, 17};
+        polynome messagePolynome(messagePolynomeCoefficients, messagePolynomeOrder);
+        static constexpr uint32_t generatorPolynomeOrder{7};
+        messagePolynome.remainder(generatorPolynomeOrder);
+        static constexpr uint8_t expected[generatorPolynomeOrder]{39, 170, 38, 8, 235, 255, 214};
+        TEST_ASSERT_EQUAL_UINT32(generatorPolynomeOrder - 1, messagePolynome.getOrder());
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, messagePolynome.coefficients, generatorPolynomeOrder);
+    }
+}
+
+void test_reedSolomon() {
+    // using https://www.thonky.com/qr-code-tutorial/show-division-steps to generate test-vectors
+    {
+        static constexpr uint32_t messagePolynomeOrder{4};
+        uint8_t messagePolynomeCoefficients[messagePolynomeOrder + 1]{10, 20, 30, 40, 50};
+        polynome messagePolynome(messagePolynomeCoefficients, messagePolynomeOrder);
+        static constexpr uint32_t generatorPolynomeOrder{2};
+        uint8_t ecc[generatorPolynomeOrder];
+        static constexpr uint8_t expected[generatorPolynomeOrder]{46, 52};
+
+        reedSolomon::getErrorCorrectionBytes(ecc, generatorPolynomeOrder, messagePolynomeCoefficients, messagePolynomeOrder + 1);
+
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, ecc, generatorPolynomeOrder);
     }
 }
 
@@ -213,5 +241,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_setGeneratorFactor);
     RUN_TEST(test_generateGeneratorPolynome);
     RUN_TEST(test_remainder);
+    RUN_TEST(test_reedSolomon);
     UNITY_END();
 }

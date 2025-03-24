@@ -1,4 +1,5 @@
 #include <qrcode.hpp>
+#include <reedsolomon.hpp>
 #include <stdlib.h>
 #include <cstring>
 
@@ -92,12 +93,12 @@ void qrCode::addBytePadding() {
     // add byte padding : fill with 0xEC and 0x11 until available space is filled
     while (true) {
         if (buffer.levelInBytes() < versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint8_t>(theErrorCorrectionLevel)]) {
-            buffer.appendBits(0xEC, 8);
+            buffer.appendByte(0xEC);
         } else {
             return;
         }
         if (buffer.levelInBytes() < versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint8_t>(theErrorCorrectionLevel)]) {
-            buffer.appendBits(0x11, 8);
+            buffer.appendByte(0x11);
         } else {
             return;
         }
@@ -263,16 +264,44 @@ uint8_t qrCode::compressAlphanumeric(char theCharacter) {
 
 #pragma region errorCorrection
 
+uint32_t qrCode::nmbrBlocks(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
+    return versionProperties[someVersion - 1].nmbrBlocks[static_cast<uint8_t>(someErrorCorrectionLevel)];
+}
+
+uint32_t qrCode::blockLength(uint32_t blockIndex, uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
+    if (blockIndex >= nmbrBlocks(someVersion, someErrorCorrectionLevel)) {
+        return 0;
+    }
+    if (blockIndex < nmbrBlocksGroup1(someVersion, someErrorCorrectionLevel)) {
+        return blockLengthGroup1(someVersion, someErrorCorrectionLevel);
+    } else {
+        return blockLengthGroup2(someVersion, someErrorCorrectionLevel);
+    }
+}
+
+uint32_t qrCode::blockOffset(uint32_t blockIndex, uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
+    if (blockIndex >= nmbrBlocks(someVersion, someErrorCorrectionLevel)) {
+        return 0;
+    }
+    if (blockIndex < nmbrBlocksGroup1(someVersion, someErrorCorrectionLevel)) {
+        return blockLengthGroup1(someVersion, someErrorCorrectionLevel) * blockIndex;
+    } else {
+        uint32_t offsetGroup2 = blockLengthGroup1(someVersion, someErrorCorrectionLevel) * nmbrBlocksGroup1(someVersion, someErrorCorrectionLevel);
+        uint32_t indexGroup2  = blockIndex - nmbrBlocksGroup1(someVersion, someErrorCorrectionLevel);
+        return offsetGroup2 + indexGroup2 * blockLengthGroup2(someVersion, someErrorCorrectionLevel);
+    }
+}
+
 uint32_t qrCode::nmbrBlocksGroup1(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
-    return (versionProperties[someVersion - 1].nmbrBlocks[static_cast<uint8_t>(someErrorCorrectionLevel)] * blockLengthGroup2(someVersion, someErrorCorrectionLevel)) - versionProperties[someVersion - 1].availableDataCodeWords[static_cast<uint8_t>(someErrorCorrectionLevel)];
+    return (nmbrBlocks(someVersion, someErrorCorrectionLevel) * blockLengthGroup2(someVersion, someErrorCorrectionLevel)) - versionProperties[someVersion - 1].availableDataCodeWords[static_cast<uint8_t>(someErrorCorrectionLevel)];
 }
 
 uint32_t qrCode::nmbrBlocksGroup2(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
-    return versionProperties[someVersion - 1].nmbrBlocks[static_cast<uint8_t>(someErrorCorrectionLevel)] - nmbrBlocksGroup1(someVersion, someErrorCorrectionLevel);
+    return nmbrBlocks(someVersion, someErrorCorrectionLevel) - nmbrBlocksGroup1(someVersion, someErrorCorrectionLevel);
 }
 
 uint32_t qrCode::blockLengthGroup1(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
-    return versionProperties[someVersion - 1].availableDataCodeWords[static_cast<uint8_t>(someErrorCorrectionLevel)] / versionProperties[someVersion - 1].nmbrBlocks[static_cast<uint8_t>(someErrorCorrectionLevel)];
+    return versionProperties[someVersion - 1].availableDataCodeWords[static_cast<uint8_t>(someErrorCorrectionLevel)] / nmbrBlocks(someVersion, someErrorCorrectionLevel);
 }
 
 uint32_t qrCode::blockLengthGroup2(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
@@ -769,6 +798,20 @@ uint32_t qrCode::getPenaltyScore() {
 }
 
 void qrCode::addErrorCorrection() {
+    uint32_t nmbrOfBlocks     = nmbrBlocks(theVersion, theErrorCorrectionLevel);
+    uint32_t protectionLength = versionProperties[theVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)];
+    uint8_t ecc[protectionLength];
+    for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
+        uint32_t theBlockLength = blockLength(blockIndex, theVersion, theErrorCorrectionLevel);
+        uint8_t message[theBlockLength];
+        for (uint32_t i = 0; i < theBlockLength; i++) {
+            message[i] = buffer.getByte(i + blockOffset(blockIndex, theVersion, theErrorCorrectionLevel));
+        }
+        reedSolomon::getErrorCorrectionBytes(ecc, protectionLength, message, theBlockLength);
+        for (uint32_t i = 0; i < protectionLength; i++) {
+            buffer.appendByte(ecc[i]);
+        }
+    }
 }
 
 void qrCode::interleaveData(uint8_t *destination, const uint8_t *source, const uint32_t sourceLength, const uint32_t nmbrOfBlocksGroup1, const uint32_t nmbrOfBlocksGroup2, const uint32_t blockLength) {

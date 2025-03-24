@@ -22,7 +22,6 @@ class polynome {
         if (nmbrOfTerms <= maxNmbrOfTerms) {
             order = toBeOrder;
         }
-        memset(coefficients, 0, maxNmbrOfTerms);        // initialize all coefficients to zero
     }
 
     explicit polynome(const uint8_t *newCoefficients, uint32_t toBeOrder) {
@@ -30,12 +29,10 @@ class polynome {
         if (nmbrOfTerms <= maxNmbrOfTerms) {
             order = toBeOrder;
             memcpy(coefficients, newCoefficients, nmbrOfTerms);
-            memset(coefficients + nmbrOfTerms, 0, maxNmbrOfTerms - nmbrOfTerms);
         }
     }
 
     explicit polynome() {        // zero order polynome with all zero coefficients
-        memset(coefficients, 0, maxNmbrOfTerms);
     }
 
     uint32_t getOrder() const {
@@ -63,7 +60,6 @@ class polynome {
     void getCoefficients(uint8_t *output) {
         memcpy(output, coefficients, order + 1);
     }
-
 
 #ifndef unitTesting
 
@@ -147,6 +143,6 @@ class polynome {
     }
 
     static constexpr uint32_t maxNmbrOfTerms{64};
-    uint8_t coefficients[maxNmbrOfTerms];
+    uint8_t coefficients[maxNmbrOfTerms]{};        // initialize all coefficients to zero
     uint32_t order{0};
 };

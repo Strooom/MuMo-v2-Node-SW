@@ -5,6 +5,7 @@
 #include <unity.h>
 #include <qrcode.hpp>
 #include <string.h>
+#include <reedsolomon.hpp>
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -331,100 +332,106 @@ void test_encodeData() {
 
         TEST_ASSERT_EQUAL(272U, qrCode::buffer.levelInBits());
         TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
+    }
+    {
+        qrCode::setVersion(5);
+        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::quartile);
+        qrCode::encodeData("https://en.wikipedia.org/wiki/QR_code#Error_correction");
+        TEST_ASSERT_EQUAL(62U, qrCode::buffer.levelInBytes());
+    }
 
-        // Edge Cases Tests : Bit padding bits 0..7
-        // 0 bits padded
-        {
-            qrCode::setVersion(1);
-            qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
-            qrCode::encodeData("0123");
+    // Edge Cases Tests : Bit padding bits 0..7
+    // 0 bits padded
+    {
+        qrCode::setVersion(1);
+        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
+        qrCode::encodeData("0123");
 
-            bitVector<200U> expected;
-            expected.reset();
-            expected.appendBits(0b0001, 4);                                     // set mode to numeric - always 4 bits
-            expected.appendBits(0b0000000100, 10);                              // count - 10 bits
-            expected.appendBits(0b00000011000011, 14);                          // data
-            expected.appendBits(0b0000, 4);                                     // terminator
-            expected.appendBits(0b0, 0);                                        // bit padding : 0 (zero) bit
-            expected.appendBits(0b11101100000100011110110000010001, 32);        // byte padding
-            expected.appendBits(0b11101100, 8);                                 // byte padding
+        bitVector<200U> expected;
+        expected.reset();
+        expected.appendBits(0b0001, 4);                                     // set mode to numeric - always 4 bits
+        expected.appendBits(0b0000000100, 10);                              // count - 10 bits
+        expected.appendBits(0b00000011000011, 14);                          // data
+        expected.appendBits(0b0000, 4);                                     // terminator
+        expected.appendBits(0b0, 0);                                        // bit padding : 0 (zero) bit
+        expected.appendBits(0b11101100000100011110110000010001, 32);        // byte padding
+        expected.appendBits(0b11101100, 8);                                 // byte padding
 
-            TEST_ASSERT_EQUAL(72U, qrCode::buffer.levelInBits());
-            TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
-        }
-        // 1 bits padded
-        {
-            qrCode::setVersion(1);
-            qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
-            qrCode::encodeData("A");
+        TEST_ASSERT_EQUAL(72U, qrCode::buffer.levelInBits());
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
+    }
+    // 1 bits padded
+    {
+        qrCode::setVersion(1);
+        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
+        qrCode::encodeData("A");
 
-            bitVector<200U> expected;
-            expected.reset();
-            expected.appendBits(0b0010, 4);                                     // set mode to alfanumeric - always 4 bits
-            expected.appendBits(0b000000001, 9);                                // count - 9 bits
-            expected.appendBits(0b001010, 6);                                   // data
-            expected.appendBits(0b0000, 4);                                     // terminator
-            expected.appendBits(0b0, 1);                                        // bit padding : 1 bit
-            expected.appendBits(0b11101100000100011110110000010001, 32);        // byte padding
-            expected.appendBits(0b1110110000010001, 16);                        // byte padding
+        bitVector<200U> expected;
+        expected.reset();
+        expected.appendBits(0b0010, 4);                                     // set mode to alfanumeric - always 4 bits
+        expected.appendBits(0b000000001, 9);                                // count - 9 bits
+        expected.appendBits(0b001010, 6);                                   // data
+        expected.appendBits(0b0000, 4);                                     // terminator
+        expected.appendBits(0b0, 1);                                        // bit padding : 1 bit
+        expected.appendBits(0b11101100000100011110110000010001, 32);        // byte padding
+        expected.appendBits(0b1110110000010001, 16);                        // byte padding
 
-            TEST_ASSERT_EQUAL(72U, qrCode::buffer.levelInBits());
-            TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
-        }
-        // 6 bits padded
-        {
-            qrCode::setVersion(1);
-            qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
-            qrCode::encodeData("0123456");
+        TEST_ASSERT_EQUAL(72U, qrCode::buffer.levelInBits());
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
+    }
+    // 6 bits padded
+    {
+        qrCode::setVersion(1);
+        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
+        qrCode::encodeData("0123456");
 
-            bitVector<200U> expected;
-            expected.reset();
-            expected.appendBits(0b0001, 4);                             // set mode to numeric - always 4 bits
-            expected.appendBits(0b0000000111, 10);                      // count - 10 bits
-            expected.appendBits(0b000000110001010110010110, 24);        // data
-            expected.appendBits(0b0000, 4);                             // terminator
-            expected.appendBits(0b000000, 6);                           // bit padding : 6 bits
-            expected.appendBits(0b111011000001000111101100, 24);        // byte padding
+        bitVector<200U> expected;
+        expected.reset();
+        expected.appendBits(0b0001, 4);                             // set mode to numeric - always 4 bits
+        expected.appendBits(0b0000000111, 10);                      // count - 10 bits
+        expected.appendBits(0b000000110001010110010110, 24);        // data
+        expected.appendBits(0b0000, 4);                             // terminator
+        expected.appendBits(0b000000, 6);                           // bit padding : 6 bits
+        expected.appendBits(0b111011000001000111101100, 24);        // byte padding
 
-            TEST_ASSERT_EQUAL(72U, qrCode::buffer.levelInBits());
-            TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
-        }
-        // 7 bits padded
-        {
-            qrCode::setVersion(1);
-            qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
-            qrCode::encodeData("01");
+        TEST_ASSERT_EQUAL(72U, qrCode::buffer.levelInBits());
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
+    }
+    // 7 bits padded
+    {
+        qrCode::setVersion(1);
+        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
+        qrCode::encodeData("01");
 
-            bitVector<200U> expected;
-            expected.reset();
-            expected.appendBits(0b0001, 4);                                     // set mode to numeric - always 4 bits
-            expected.appendBits(0b0000000010, 10);                              // count - 10 bits
-            expected.appendBits(0b0000001, 7);                                  // data
-            expected.appendBits(0b0000, 4);                                     // terminator
-            expected.appendBits(0b0000000, 7);                                  // bit padding : 6 bits
-            expected.appendBits(0b11101100000100011110110000010001, 32);        // byte padding
-            expected.appendBits(0b11101100, 8);                                 // byte padding
+        bitVector<200U> expected;
+        expected.reset();
+        expected.appendBits(0b0001, 4);                                     // set mode to numeric - always 4 bits
+        expected.appendBits(0b0000000010, 10);                              // count - 10 bits
+        expected.appendBits(0b0000001, 7);                                  // data
+        expected.appendBits(0b0000, 4);                                     // terminator
+        expected.appendBits(0b0000000, 7);                                  // bit padding : 6 bits
+        expected.appendBits(0b11101100000100011110110000010001, 32);        // byte padding
+        expected.appendBits(0b11101100, 8);                                 // byte padding
 
-            TEST_ASSERT_EQUAL(72U, qrCode::buffer.levelInBits());
-            TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
-        }
-        // 1 bit terminator
-        {
-            qrCode::setVersion(1);
-            qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
-            qrCode::encodeData("01234567890123456");
+        TEST_ASSERT_EQUAL(72U, qrCode::buffer.levelInBits());
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
+    }
+    // 1 bit terminator
+    {
+        qrCode::setVersion(1);
+        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
+        qrCode::encodeData("01234567890123456");
 
-            bitVector<200U> expected;
-            expected.reset();
-            expected.appendBits(0b0001, 4);                                     // set mode to numeric - always 4 bits
-            expected.appendBits(0b0000010001, 10);                              // count - 10 bits
-            expected.appendBits(0b00000011000101011001101010011011, 32);        // data
-            expected.appendBits(0b1000010100111010100111000, 25);               // data
-            expected.appendBits(0b0, 1);                                        // terminator, 1-bit only
+        bitVector<200U> expected;
+        expected.reset();
+        expected.appendBits(0b0001, 4);                                     // set mode to numeric - always 4 bits
+        expected.appendBits(0b0000010001, 10);                              // count - 10 bits
+        expected.appendBits(0b00000011000101011001101010011011, 32);        // data
+        expected.appendBits(0b1000010100111010100111000, 25);               // data
+        expected.appendBits(0b0, 1);                                        // terminator, 1-bit only
 
-            TEST_ASSERT_EQUAL(72U, qrCode::buffer.levelInBits());
-            TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
-        }
+        TEST_ASSERT_EQUAL(72U, qrCode::buffer.levelInBits());
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
     }
 }
 
@@ -453,6 +460,108 @@ void test_blockCalculations() {
     TEST_ASSERT_EQUAL(2, qrCode::nmbrBlocksGroup1(5, errorCorrectionLevel::high));
     TEST_ASSERT_EQUAL(12, qrCode::blockLengthGroup2(5, errorCorrectionLevel::high));
     TEST_ASSERT_EQUAL(2, qrCode::nmbrBlocksGroup2(5, errorCorrectionLevel::high));
+}
+
+void test_blockContents() {
+    {
+        // Test-vector from https://dev.to/maxart2501/let-s-develop-a-qr-code-generator-part-viii-different-sizes-1e0e#codeword-blocks
+        qrCode::setVersion(5);
+        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::quartile);
+        qrCode::encodeData("https://en.wikipedia.org/wiki/QR_code#Error_correction");
+        TEST_ASSERT_EQUAL(62U, qrCode::buffer.levelInBytes());
+
+        uint8_t expectedDataBlock0[15] = {67, 102, 135, 71, 71, 7, 51, 162, 242, 246, 86, 226, 231, 118, 150};
+        uint8_t expectedDataBlock1[15] = {182, 151, 6, 86, 70, 150, 18, 230, 247, 38, 114, 247, 118, 150, 182};
+        uint8_t expectedDataBlock2[16] = {146, 245, 21, 37, 246, 54, 246, 70, 82, 52, 87, 39, 38, 247, 37, 246};
+        uint8_t expectedDataBlock3[16] = {54, 247, 39, 38, 86, 55, 70, 150, 246, 224, 236, 17, 236, 17, 236, 17};
+
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedDataBlock0, qrCode::buffer.data + qrCode::blockOffset(0, 5, errorCorrectionLevel::quartile), qrCode::blockLength(0, 5, errorCorrectionLevel::quartile));
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedDataBlock1, qrCode::buffer.data + qrCode::blockOffset(1, 5, errorCorrectionLevel::quartile), qrCode::blockLength(1, 5, errorCorrectionLevel::quartile));
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedDataBlock2, qrCode::buffer.data + qrCode::blockOffset(2, 5, errorCorrectionLevel::quartile), qrCode::blockLength(2, 5, errorCorrectionLevel::quartile));
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedDataBlock3, qrCode::buffer.data + qrCode::blockOffset(3, 5, errorCorrectionLevel::quartile), qrCode::blockLength(3, 5, errorCorrectionLevel::quartile));
+    }
+}
+
+void test_getErrorCorrectionBytes() {
+    {
+        uint8_t source[15] = {67, 102, 135, 71, 71, 7, 51, 162, 242, 246, 86, 226, 231, 118, 150};
+        uint8_t ecc[18];
+        reedSolomon::getErrorCorrectionBytes(ecc, 18, source, 15);
+        uint8_t expectedEcc[18] = {0x9A, 0x96, 0x89, 0xE1, 0xF5, 0xB0, 0xDE, 0x9F, 0x29, 0x87, 0x70, 0x7D, 0x4B, 0xE0, 0x88, 0x1F, 0x85, 0xF9};
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedEcc, ecc, 18);
+    }
+    {
+        uint8_t source[15] = {182, 151, 6, 86, 70, 150, 18, 230, 247, 38, 114, 247, 118, 150, 182};
+        uint8_t ecc[18];
+        reedSolomon::getErrorCorrectionBytes(ecc, 18, source, 15);
+        uint8_t expectedEcc[18] = {0xDB, 0x64, 0x3A, 0x56, 0x2F, 0xBF, 0x01, 0x06, 0x79, 0x34, 0xDB, 0xC0, 0xAE, 0x0D, 0x4E, 0x6E, 0x0F, 0xC9};
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedEcc, ecc, 18);
+    }
+    {
+        uint8_t source[16] = {146, 245, 21, 37, 246, 54, 246, 70, 82, 52, 87, 39, 38, 247, 37, 246};
+        uint8_t ecc[18];
+        reedSolomon::getErrorCorrectionBytes(ecc, 18, source, 16);
+        uint8_t expectedEcc[18] = {0xA3, 0xE1, 0xDD, 0x45, 0xC3, 0x39, 0x8B, 0x1D, 0x42, 0xE7, 0x31, 0x5E, 0xA5, 0xE8, 0x24, 0x32, 0xBF, 0xAB};
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedEcc, ecc, 18);
+    }
+    {
+        uint8_t source[16] = {54, 247, 39, 38, 86, 55, 70, 150, 246, 224, 236, 17, 236, 17, 236, 17};
+        uint8_t ecc[18];
+        reedSolomon::getErrorCorrectionBytes(ecc, 18, source, 16);
+        uint8_t expectedEcc[18] = {0xF3, 0x6A, 0x27, 0x26, 0xB2, 0x7B, 0xBD, 0x43, 0xB4, 0x1A, 0xC8, 0xD4, 0xFE, 0xDB, 0xDD, 0x83, 0x9D, 0x61};
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedEcc, ecc, 18);
+    }
+}
+
+void test_addErrorCorrectionBytes() {
+    {
+        qrCode::setVersion(1);
+        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::low);
+        qrCode::encodeData("0123456789");
+        TEST_ASSERT_EQUAL(19U, qrCode::buffer.levelInBytes());
+        qrCode::addErrorCorrection();
+        TEST_ASSERT_EQUAL(26U, qrCode::buffer.levelInBytes());
+        uint8_t expectedData[26] = {0x10, 0x28, 0x0C, 0x56, 0x6A, 0x69, 0x00, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0x27, 0xAA, 0x26, 0x08, 0xEB, 0xFF, 0xD6};
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedData, qrCode::buffer.data, qrCode::buffer.levelInBytes());
+    }
+    {
+        qrCode::setVersion(1);
+        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::medium);
+        qrCode::encodeData("0123456789");
+        TEST_ASSERT_EQUAL(16U, qrCode::buffer.levelInBytes());
+        qrCode::addErrorCorrection();
+        TEST_ASSERT_EQUAL(26U, qrCode::buffer.levelInBytes());
+        uint8_t expectedData[26] = {0x10, 0x28, 0x0C, 0x56, 0x6A, 0x69, 0x00, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x2D, 0xB7, 0x27, 0xFB, 0xF5, 0xD3, 0xAA, 0x8F, 0xD9, 0x11};
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedData, qrCode::buffer.data, qrCode::buffer.levelInBytes());
+    }
+    {
+        qrCode::setVersion(1);
+        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
+        qrCode::encodeData("0123456789");
+        TEST_ASSERT_EQUAL(9U, qrCode::buffer.levelInBytes());
+        qrCode::addErrorCorrection();
+        TEST_ASSERT_EQUAL(26U, qrCode::buffer.levelInBytes());
+        uint8_t expectedData[26] = {0x10, 0x28, 0x0C, 0x56, 0x6A, 0x69, 0x00, 0xEC, 0x11, 0xE5, 0x3D, 0x0A, 0xBB, 0xA0, 0x26, 0x0A, 0x07, 0xA7, 0x8A, 0x51, 0xCD, 0xDD, 0x96, 0xB1, 0x68, 0x5D};
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedData, qrCode::buffer.data, qrCode::buffer.levelInBytes());
+    }
+    {
+        qrCode::setVersion(5);
+        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::quartile);
+        qrCode::encodeData("https://en.wikipedia.org/wiki/QR_code#Error_correction");
+        TEST_ASSERT_EQUAL(62U, qrCode::buffer.levelInBytes());
+        qrCode::addErrorCorrection();
+        TEST_ASSERT_EQUAL(134U, qrCode::buffer.levelInBytes());
+        uint8_t expectedData[134] = {
+        67, 102, 135, 71, 71, 7, 51, 162, 242, 246, 86, 226, 231, 118, 150,
+        182, 151, 6, 86, 70, 150, 18, 230, 247, 38, 114, 247, 118, 150, 182,
+        146, 245, 21, 37, 246, 54, 246, 70, 82, 52, 87, 39, 38, 247, 37, 246,
+        54, 247, 39, 38, 86, 55, 70, 150, 246, 224, 236, 17, 236, 17, 236, 17,
+        0x9A, 0x96, 0x89, 0xE1, 0xF5, 0xB0, 0xDE, 0x9F, 0x29, 0x87, 0x70, 0x7D, 0x4B, 0xE0, 0x88, 0x1F, 0x85, 0xF9,
+        0xDB, 0x64, 0x3A, 0x56, 0x2F, 0xBF, 0x01, 0x06, 0x79, 0x34, 0xDB, 0xC0, 0xAE, 0x0D, 0x4E, 0x6E, 0x0F, 0xC9,
+        0xA3, 0xE1, 0xDD, 0x45, 0xC3, 0x39, 0x8B, 0x1D, 0x42, 0xE7, 0x31, 0x5E, 0xA5, 0xE8, 0x24, 0x32, 0xBF, 0xAB,
+        0xF3, 0x6A, 0x27, 0x26, 0xB2, 0x7B, 0xBD, 0x43, 0xB4, 0x1A, 0xC8, 0xD4, 0xFE, 0xDB, 0xDD, 0x83, 0x9D, 0x61};
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedData, qrCode::buffer.data, qrCode::buffer.levelInBytes());
+    }
 }
 
 void test_alignmentPatternSpacing() {
@@ -560,6 +669,9 @@ int main(int argc, char **argv) {
     RUN_TEST(test_payloadLengthInBits);
     RUN_TEST(test_encodeData);
     RUN_TEST(test_blockCalculations);
+    RUN_TEST(test_blockContents);
+    RUN_TEST(test_getErrorCorrectionBytes);
+    RUN_TEST(test_addErrorCorrectionBytes);
 
     RUN_TEST(test_size);
     RUN_TEST(test_nmbrOfAlignmentPatterns);

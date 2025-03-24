@@ -25,7 +25,7 @@ class qrCode {
     static constexpr uint32_t maxVersion{5};                                                                                         // 1..40 This sets the maximum version that is supported by this library. Storage for the input data and output pixelmatrix is allocated statically and depends on this value.
     static constexpr uint32_t maxSize{17 + 4 * maxVersion};                                                                          //
     static constexpr uint32_t maxInputLength{127U};                                                                                  // Maximum length of a c-style string with payload data to encode into the QRCode. This maximum is needed to limit strlen functions for safety
-    static constexpr uint32_t maxPayloadLengthInBytes{36U};                                                                          //
+    static constexpr uint32_t maxPayloadLengthInBytes{256U};                                                                         //
     static uint32_t versionNeeded(const char *data, errorCorrectionLevel wantedErrorCorrectionLevel);                                // null-terminated string of data
     static uint32_t versionNeeded(const uint8_t *data, uint32_t dataLength, errorCorrectionLevel wantedErrorCorrectionLevel);        //
 
@@ -43,6 +43,9 @@ class qrCode {
     static void addBitPadding();
     static void addBytePadding();
 
+    static uint32_t nmbrBlocks(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
+    static uint32_t blockLength(uint32_t blockIndex, uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
+    static uint32_t blockOffset(uint32_t blockIndex, uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
     static uint32_t nmbrBlocksGroup1(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
     static uint32_t nmbrBlocksGroup2(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
     static uint32_t blockLengthGroup1(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
