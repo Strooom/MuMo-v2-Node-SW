@@ -72,6 +72,29 @@ void test_clearAll() {
     }
 }
 
+void test_setAll() {
+    bitMatrix<16U> testMatrix;
+    testMatrix.clearAllBits();
+    testMatrix.setAllBits();
+    for (uint32_t byteIndex = 0; byteIndex < testMatrix.sizeInBytes; byteIndex++) {
+        TEST_ASSERT_EQUAL(0xFF, testMatrix.data[byteIndex]);
+    }
+}
+
+void test_setNewSize() {
+    bitMatrix<32U> testMatrix;
+    testMatrix.setWidthHeightInBits(24U);
+    TEST_ASSERT_EQUAL(24U, testMatrix.getWidthHeightInBits());
+    TEST_ASSERT_EQUAL(576, testMatrix.getSizeInBits());
+    TEST_ASSERT_EQUAL(72U, testMatrix.getSizeInBytes());
+
+    // Edge case : trying to set a size that is too large - has no effect
+    testMatrix.setWidthHeightInBits(33U);
+    TEST_ASSERT_EQUAL(24U, testMatrix.getWidthHeightInBits());
+    TEST_ASSERT_EQUAL(576, testMatrix.getSizeInBits());
+    TEST_ASSERT_EQUAL(72U, testMatrix.getSizeInBytes());
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
@@ -79,5 +102,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_bitMask);
     RUN_TEST(test_set_get);
     RUN_TEST(test_clearAll);
+    RUN_TEST(test_setAll);
+    RUN_TEST(test_setNewSize);
     UNITY_END();
 }

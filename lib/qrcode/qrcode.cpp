@@ -814,11 +814,23 @@ void qrCode::addErrorCorrection() {
     }
 }
 
-void qrCode::interleaveData(uint8_t *destination, const uint8_t *source, const uint32_t sourceLength, const uint32_t nmbrOfBlocksGroup1, const uint32_t nmbrOfBlocksGroup2, const uint32_t blockLength) {
-    uint32_t sourceOffset{0};
-    uint32_t destinationOffset{0};
-    for (sourceOffset = 0; sourceOffset < sourceLength; sourceOffset++) {
-        destinationOffset              = sourceOffset % blockLength;        // TODO Need smarter formula here
-        destination[destinationOffset] = source[sourceOffset];
+void qrCode::interleaveData() {
+    if (theVersion > 4) {
+        uint8_t tempBuffer[maxPayloadLengthInBytes]{};        // build interleaved data in tempBuffer, then copy back to buffer
+        uint32_t sourceOffset{0};
+        uint32_t destinationOffset{0};
+        // iterate over all data blocks
+
+        // iterate over all error correction blocks
+        buffer.reset();
+        for (uint32_t i = 0; i < maxPayloadLengthInBytes; i++) {
+            buffer.appendByte(tempBuffer[i]);
+        }
     }
+}
+
+void qrCode::drawPatterns(uint32_t theVersion) {
+}
+
+void qrCode::drawPayload(uint32_t theVersion) {
 }
