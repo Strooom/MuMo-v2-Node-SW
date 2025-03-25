@@ -678,44 +678,6 @@ void test_alignmentPatternCoordinates() {
     TEST_ASSERT_EQUAL(138, qrCode::alignmentPatternCoordinate(32, 5));
 }
 
-void test_isFinderPatternOrSeparator() {
-    TEST_ASSERT_TRUE(qrCode::isFinderPatternOrSeparator(0, 0, 1));
-    TEST_ASSERT_TRUE(qrCode::isFinderPatternOrSeparator(0, 7, 1));
-    TEST_ASSERT_TRUE(qrCode::isFinderPatternOrSeparator(7, 0, 1));
-
-    TEST_ASSERT_TRUE(qrCode::isFinderPatternOrSeparator(20, 0, 1));
-    TEST_ASSERT_TRUE(qrCode::isFinderPatternOrSeparator(2, 20, 1));
-    TEST_ASSERT_FALSE(qrCode::isFinderPatternOrSeparator(20, 20, 1));
-}
-
-void test_isTimingPattern() {
-    qrCode::setVersion(1);
-    TEST_ASSERT_TRUE(qrCode::isTimingPattern(6, 8));
-    TEST_ASSERT_TRUE(qrCode::isTimingPattern(6, 12));
-    TEST_ASSERT_TRUE(qrCode::isTimingPattern(8, 6));
-    TEST_ASSERT_TRUE(qrCode::isTimingPattern(12, 6));
-}
-
-void test_isFormatInformation() {
-    TEST_ASSERT_TRUE(qrCode::isFormatInformation(0, 8, 1));
-}
-
-void test_isVersionInformation() {
-    // problem, maxVersion is < 7 and version info is only available from version 7
-    // TEST_ASSERT_TRUE(qrCode::isVersionInformation(0, 35, 7));
-}
-
-void test_isAlignmentPattern() {
-    TEST_ASSERT_TRUE(qrCode::isAlignmentPattern(18, 18, 2));
-    TEST_ASSERT_TRUE(qrCode::isAlignmentPattern(16, 16, 2));
-    TEST_ASSERT_TRUE(qrCode::isAlignmentPattern(20, 20, 2));
-    TEST_ASSERT_FALSE(qrCode::isAlignmentPattern(15, 15, 2));
-    TEST_ASSERT_FALSE(qrCode::isAlignmentPattern(21, 21, 2));
-
-    qrCode::setVersion(1);
-    TEST_ASSERT_FALSE(qrCode::isAlignmentPattern(18, 18, 1));        // Version 1 does not have alignment patterns
-}
-
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_isNumeric);
@@ -743,10 +705,5 @@ int main(int argc, char **argv) {
     RUN_TEST(test_nmbrOfRawDataModules);
     RUN_TEST(test_nmbrOfErrorCorrectionModules);
     RUN_TEST(test_versionNeeded);
-    RUN_TEST(test_isFinderPatternOrSeparator);
-    RUN_TEST(test_isTimingPattern);
-    RUN_TEST(test_isFormatInformation);
-    RUN_TEST(test_isVersionInformation);
-    RUN_TEST(test_isAlignmentPattern);
     UNITY_END();
 }

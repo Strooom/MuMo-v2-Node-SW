@@ -22,12 +22,14 @@ static constexpr uint32_t nmbrOfErrorCorrectionLevels{4};
 
 class qrCode {
   public:
-    static constexpr uint32_t maxVersion{5};                                                                                         // 1..40 This sets the maximum version that is supported by this library. Storage for the input data and output pixelmatrix is allocated statically and depends on this value.
-    static constexpr uint32_t maxSize{17 + 4 * maxVersion};                                                                          //
-    static constexpr uint32_t maxInputLength{127U};                                                                                  // Maximum length of a c-style string with payload data to encode into the QRCode. This maximum is needed to limit strlen functions for safety
-    static constexpr uint32_t maxPayloadLengthInBytes{256U};                                                                         //
-    static uint32_t versionNeeded(const char *data, errorCorrectionLevel wantedErrorCorrectionLevel);                                // null-terminated string of data
-    static uint32_t versionNeeded(const uint8_t *data, uint32_t dataLength, errorCorrectionLevel wantedErrorCorrectionLevel);        //
+    static constexpr uint32_t maxVersion{5};                                                                                          // 1..40 This sets the maximum version that is supported by this library. Storage for the input data and output pixelmatrix is allocated statically and depends on this value.
+    static constexpr uint32_t maxSize{17 + 4 * maxVersion};                                                                           //
+    static constexpr uint32_t maxInputLength{127U};                                                                                   // Maximum length of a c-style string with payload data to encode into the QRCode. This maximum is needed to limit strlen functions for safety
+    static constexpr uint32_t maxPayloadLengthInBytes{256U};                                                                          //
+    static uint32_t versionNeeded(const char *data, errorCorrectionLevel minimumErrorCorrectionLevel);                                // null-terminated string of data
+    static uint32_t versionNeeded(const uint8_t *data, uint32_t dataLength, errorCorrectionLevel minimumErrorCorrectionLevel);        //
+    static errorCorrectionLevel errorCorrectionLevelPossible(const char *data, uint32_t someVersion);                                             // null-terminated string of data
+    static errorCorrectionLevel errorCorrectionLevelPossible(const uint8_t *data, uint32_t dataLength, uint32_t someVersion);                     //
 
     static void setVersion(uint32_t theVersion);
     static void setErrorCorrectionLevel(errorCorrectionLevel theErrorCorrectionLevel);
@@ -90,14 +92,6 @@ class qrCode {
     static uint8_t compressAlphanumeric(char c);
     static uint8_t modeIndicator(encodingFormat theEncodingFormat);
 
-    static bool isDataModule(uint32_t x, uint32_t y, uint32_t someVersion);
-    static bool isTimingPattern(uint32_t x, uint32_t y);
-    static bool isDarkModule(uint32_t x, uint32_t y, uint32_t someVersion);
-    static bool isAlignmentPattern(uint32_t x, uint32_t y, uint32_t someVersion);
-    static bool isFormatInformation(uint32_t x, uint32_t y, uint32_t someVersion);
-    static bool isVersionInformation(uint32_t x, uint32_t y, uint32_t someVersion);
-    static bool isFinderPatternOrSeparator(uint32_t x, uint32_t y, uint32_t someVersion);
-
     static void drawFinderPattern(uint32_t centerX, uint32_t centerY);
     static void drawAllFinderPatterns(uint32_t theVersion);
     static void drawAlignmentPattern(uint32_t centerX, uint32_t centerY, uint32_t someVersion);
@@ -105,10 +99,15 @@ class qrCode {
     static void drawTimingPattern(uint32_t theVersion);
     static void drawFormatInfo(uint32_t theVersion);
     static void drawVersionInfo(uint32_t theVersion);
+    static void drawDarkModule(uint32_t theVersion);
     static void drawPatterns(uint32_t theVersion);
     static void drawPayload(uint32_t theVersion);
     static void applyMask(uint8_t maskType);
     static uint32_t getPenaltyScore();
+    static uint32_t penalty1();
+    static uint32_t penalty2();
+    static uint32_t penalty3();
+    static uint32_t penalty4();
 
     static uint32_t nmbrOfErrorCorrectionModules(uint32_t theVersion, errorCorrectionLevel theErrorCorrectionLevel);
     static uint32_t alignmentPatternSpacing(uint32_t someVersion);

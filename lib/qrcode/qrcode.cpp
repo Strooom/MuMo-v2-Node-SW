@@ -15,6 +15,8 @@ bitMatrix<qrCode::maxSize> qrCode::isData;
 
 #pragma region publicAPI
 
+// Returns the minimum version that can accommodate the data with the requested error correction level
+
 uint32_t qrCode::versionNeeded(const char *data, errorCorrectionLevel wantedErrorCorrectionLevel) {
     uint32_t dataLength = strnlen(data, maxInputLength);
     return versionNeeded(reinterpret_cast<const uint8_t *>(data), dataLength, wantedErrorCorrectionLevel);
@@ -36,6 +38,26 @@ uint32_t qrCode::versionNeeded(const uint8_t *data, uint32_t dataLengthInBytes, 
         }
     }
     return 0;        // no (valid) version found which accommodates the amount of data with this encodingFormat and with the requested error correction level
+}
+
+// Returns the maximum error correction level that can accommodate the data with the requested version
+
+errorCorrectionLevel qrCode::errorCorrectionLevelPossible(const char *data, uint32_t someVersion) {
+    uint32_t dataLength = strnlen(data, maxInputLength);
+    return errorCorrectionLevelPossible(reinterpret_cast<const uint8_t *>(data), dataLength, someVersion);
+}
+
+errorCorrectionLevel qrCode::errorCorrectionLevelPossible(const uint8_t *data, uint32_t dataLengthInBytes, uint32_t someVersion) {
+    if (versionNeeded(data, dataLengthInBytes, errorCorrectionLevel::high) == someVersion) {
+        return errorCorrectionLevel::high;
+    }
+    if (versionNeeded(data, dataLengthInBytes, errorCorrectionLevel::quartile) == someVersion) {
+        return errorCorrectionLevel::quartile;
+    }
+    if (versionNeeded(data, dataLengthInBytes, errorCorrectionLevel::medium) == someVersion) {
+        return errorCorrectionLevel::medium;
+    }
+    return errorCorrectionLevel::low;
 }
 
 #pragma endregion
@@ -312,95 +334,35 @@ uint32_t qrCode::blockLengthGroup2(uint32_t someVersion, errorCorrectionLevel so
 
 #pragma region drawing
 
-bool qrCode::isDataModule(uint32_t x, uint32_t y, uint32_t someVersion) {
-    if (isFinderPatternOrSeparator(x, y, someVersion)) {
-        return false;
-    }
-    if (isTimingPattern(x, y)) {
-        return false;
-    }
-    if (isAlignmentPattern(x, y, someVersion)) {
-        return false;
-    }
-    if (isFormatInformation(x, y, someVersion)) {
-        return false;
-    }
-    if (isVersionInformation(x, y, someVersion)) {
-        return false;
-    }
-    return true;
-}
+// bool qrCode::isFormatInformation(uint32_t x, uint32_t y, uint32_t someVersion) {
+//     // TODO : remove some overlap with other functions, eg timing pattern and dark module
+//     if ((y == 8) && (x <= 8)) {
+//         return true;
+//     }
+//     if ((y == 8) && (x > (size(someVersion) - 8))) {
+//         return true;
+//     }
+//     if ((x == 8) && (y <= 8)) {
+//         return true;
+//     }
+//     if ((x == 8) && (x > (size(someVersion) - 8))) {
+//         return true;
+//     }
+//     return false;
+// }
 
-bool qrCode::isFinderPatternOrSeparator(uint32_t x, uint32_t y, uint32_t someVersion) {
-    if (x <= 7 && y <= 7) {
-        return true;
-    }
-    if (x <= 7 && y >= size(someVersion) - 8) {
-        return true;
-    }
-    if (x >= size(someVersion) - 8 && y <= 7) {
-        return true;
-    }
-    return false;
-}
-
-bool qrCode::isTimingPattern(uint32_t x, uint32_t y) {
-    if (x == 6 || y == 6) {
-        return true;
-    }
-    return false;
-}
-
-bool qrCode::isDarkModule(uint32_t x, uint32_t y, uint32_t someVersion) {
-    if ((x == 4 * someVersion + 9) && (y == 8)) {
-        return true;
-    }
-    return false;
-}
-
-bool qrCode::isAlignmentPattern(uint32_t x, uint32_t y, uint32_t someVersion) {
-    if (someVersion == 1) {
-        return false;
-    }
-    uint32_t nmbrRowsCols = nmbrOfAlignmentPatternRowsOrCols(someVersion);
-    for (uint32_t index = 0; index < nmbrRowsCols; index++) {
-        uint32_t coordinate = alignmentPatternCoordinate(someVersion, index);
-        if (((x >= coordinate - 2) && (x <= coordinate + 2)) && ((y >= coordinate - 2) && (y <= coordinate + 2))) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool qrCode::isFormatInformation(uint32_t x, uint32_t y, uint32_t someVersion) {
-    // TODO : remove some overlap with other functions, eg timing pattern and dark module
-    if ((y == 8) && (x <= 8)) {
-        return true;
-    }
-    if ((y == 8) && (x > (size(someVersion) - 8))) {
-        return true;
-    }
-    if ((x == 8) && (y <= 8)) {
-        return true;
-    }
-    if ((x == 8) && (x > (size(someVersion) - 8))) {
-        return true;
-    }
-    return false;
-}
-
-bool qrCode::isVersionInformation(uint32_t x, uint32_t y, uint32_t someVersion) {
-    if (someVersion < 7) {
-        return false;
-    }
-    if ((x < 6) && (y >= size(someVersion) - 11) && (y <= size(someVersion) - 9)) {
-        return true;
-    }
-    if ((y < 6) && (x >= size(someVersion) - 11) && (x <= size(someVersion) - 9)) {
-        return true;
-    }
-    return false;
-}
+// bool qrCode::isVersionInformation(uint32_t x, uint32_t y, uint32_t someVersion) {
+//     if (someVersion < 7) {
+//         return false;
+//     }
+//     if ((x < 6) && (y >= size(someVersion) - 11) && (y <= size(someVersion) - 9)) {
+//         return true;
+//     }
+//     if ((y < 6) && (x >= size(someVersion) - 11) && (x <= size(someVersion) - 9)) {
+//         return true;
+//     }
+//     return false;
+// }
 
 void qrCode::drawFinderPattern(uint32_t centerX, uint32_t centerY) {
     for (int32_t relativeX = -3; relativeX <= 3; relativeX++) {
@@ -413,6 +375,7 @@ void qrCode::drawFinderPattern(uint32_t centerX, uint32_t centerY) {
                 modules.setBit(centerX + relativeX, centerY + relativeY);
                 return;
             }
+            isData.clearBit(centerX + relativeX, centerY + relativeY);
         }
     }
 }
@@ -434,6 +397,7 @@ void qrCode::drawAlignmentPattern(uint32_t centerX, uint32_t centerY, uint32_t s
                 modules.setBit(centerX + relativeX, centerY + relativeY);
                 return;
             }
+            isData.clearBit(centerX + relativeX, centerY + relativeY);
         }
     }
 }
@@ -451,8 +415,12 @@ void qrCode::drawAllAlignmentPatterns(uint32_t someVersion) {
 
 void qrCode::drawTimingPattern(uint32_t someVersion) {
     for (uint32_t index = 0; index < size(someVersion); index += 2U) {
-        modules.setBit(6, index);
-        modules.setBit(index, 6);
+        if (index % 2 == 0) {
+            modules.setBit(index, 6);
+            modules.setBit(6, index);
+        }
+        isData.clearBit(index, 6);
+        isData.clearBit(6, index);
     }
 }
 
@@ -519,44 +487,9 @@ void qrCode::drawVersionInfo(uint32_t theVersion) {
     // }
 }
 
-void qrCode::applyMask(uint8_t maskType) {
-    // for (uint8_t y = 0; y < size; y++) {
-    //     for (uint8_t x = 0; x < size; x++) {
-    //         if (!isDataModule(x, y)) {
-    //             continue;
-    //         }
-    //         bool invert{false};
-    //         switch (maskType) {
-    //             case 0:
-    //                 invert = (x + y) % 2 == 0;
-    //                 break;
-    //             case 1:
-    //                 invert = y % 2 == 0;
-    //                 break;
-    //             case 2:
-    //                 invert = x % 3 == 0;
-    //                 break;
-    //             case 3:
-    //                 invert = (x + y) % 3 == 0;
-    //                 break;
-    //             case 4:
-    //                 invert = (x / 3 + y / 2) % 2 == 0;
-    //                 break;
-    //             case 5:
-    //                 invert = x * y % 2 + x * y % 3 == 0;
-    //                 break;
-    //             case 6:
-    //                 invert = (x * y % 2 + x * y % 3) % 2 == 0;
-    //                 break;
-    //             case 7:
-    //                 invert = ((x + y) % 2 + x * y % 3) % 2 == 0;
-    //                 break;
-    //         }
-    //         if (invert) {
-    //             modules.invertBit(x, y);
-    //         }
-    //     }
-    // }
+void qrCode::drawDarkModule(uint32_t theVersion) {
+    modules.setBit(4 * theVersion + 9, 8);
+    isData.clearBit(4 * theVersion + 9, 8);
 }
 
 #pragma endregion
@@ -629,6 +562,7 @@ uint32_t qrCode::nmbrOfDataModules(uint32_t someVersion) {
 void qrCode::setVersion(uint32_t newVersion) {
     if (theVersion <= maxVersion) {
         theVersion = newVersion;
+        buffer.reset();
     }
 }
 
@@ -707,93 +641,133 @@ uint32_t qrCode::alignmentPatternCoordinate(uint32_t someVersion, uint32_t index
     }
 }
 
+uint32_t qrCode::penalty1() {
+    uint32_t result{0};
+    uint32_t width  = size(theVersion);
+    uint32_t height = size(theVersion);
+
+    for (uint8_t y = 0; y < height; y++) {
+        bool colorX = modules.getBit(0, y);
+        for (uint8_t x = 1, runX = 1; x < width; x++) {
+            bool cx = modules.getBit(x, y);
+            if (cx != colorX) {
+                colorX = cx;
+                runX   = 1;
+
+            } else {
+                runX++;
+                if (runX == 5) {
+                    result += PENALTY_N1;
+                } else if (runX > 5) {
+                    result++;
+                }
+            }
+        }
+    }
+
+    for (uint8_t x = 0; x < width; x++) {
+        bool colorY = modules.getBit(x, 0);
+        for (uint8_t y = 1, runY = 1; y < height; y++) {
+            bool cy = modules.getBit(x, y);
+            if (cy != colorY) {
+                colorY = cy;
+                runY   = 1;
+            } else {
+                runY++;
+                if (runY == 5) {
+                    result += PENALTY_N1;
+                } else if (runY > 5) {
+                    result++;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+uint32_t qrCode::penalty2() {
+    uint32_t result{0};
+    uint32_t width  = size(theVersion);
+    uint32_t height = size(theVersion);
+
+    uint16_t black = 0;
+    for (uint8_t y = 0; y < height; y++) {
+        uint16_t bitsRow = 0, bitsCol = 0;
+        for (uint8_t x = 0; x < width; x++) {
+            bool color = modules.getBit(x, y);
+
+            // 2*2 blocks of modules having same color
+            if (x > 0 && y > 0) {
+                bool colorUL = modules.getBit(x - 1, y - 1);
+                bool colorUR = modules.getBit(x, y - 1);
+                bool colorL  = modules.getBit(x - 1, y);
+                if (color == colorUL && color == colorUR && color == colorL) {
+                    result += PENALTY_N2;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+uint32_t qrCode::penalty3() {
+    uint32_t result{0};
+    uint32_t width  = size(theVersion);
+    uint32_t height = size(theVersion);
+
+    uint16_t black = 0;
+    for (uint8_t y = 0; y < height; y++) {
+        uint16_t bitsRow = 0, bitsCol = 0;
+        for (uint8_t x = 0; x < width; x++) {
+            bool color = modules.getBit(x, y);
+            // Finder-like pattern in rows and columns
+            bitsRow = ((bitsRow << 1) & 0x7FF) | color;
+            bitsCol = ((bitsCol << 1) & 0x7FF) | modules.getBit(y, x);
+
+            // Needs 11 bits accumulated
+            if (x >= 10) {
+                if (bitsRow == 0x05D || bitsRow == 0x5D0) {
+                    result += PENALTY_N3;
+                }
+                if (bitsCol == 0x05D || bitsCol == 0x5D0) {
+                    result += PENALTY_N3;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+uint32_t qrCode::penalty4() {
+    uint32_t result{0};
+    uint32_t width  = size(theVersion);
+    uint32_t height = size(theVersion);
+
+    uint16_t black = 0;
+    for (uint8_t y = 0; y < height; y++) {
+        uint16_t bitsRow = 0, bitsCol = 0;
+        for (uint8_t x = 0; x < width; x++) {
+            bool color = modules.getBit(x, y);
+            // Balance of black and white modules
+            if (color) {
+                black++;
+            }
+        }
+    }
+    // Find smallest k such that (45-5k)% <= dark/total <= (55+5k)%
+    uint16_t total = width * height;
+    for (uint16_t k = 0; black * 20 < (9 - k) * total || black * 20 > (11 + k) * total; k++) {
+        result += PENALTY_N4;
+    }
+    return result;
+}
+
 uint32_t qrCode::getPenaltyScore() {
-    uint32_t result = 0;
-
-    // uint8_t size = modules->bitOffsetOrWidth;
-
-    // // Adjacent modules in row having same color
-    // for (uint8_t y = 0; y < size; y++) {
-    //     bool colorX = bb_getBit(modules, 0, y);
-    //     for (uint8_t x = 1, runX = 1; x < size; x++) {
-    //         bool cx = bb_getBit(modules, x, y);
-    //         if (cx != colorX) {
-    //             colorX = cx;
-    //             runX   = 1;
-
-    //         } else {
-    //             runX++;
-    //             if (runX == 5) {
-    //                 result += PENALTY_N1;
-    //             } else if (runX > 5) {
-    //                 result++;
-    //             }
-    //         }
-    //     }
-    // }
-
-    // // Adjacent modules in column having same color
-    // for (uint8_t x = 0; x < size; x++) {
-    //     bool colorY = bb_getBit(modules, x, 0);
-    //     for (uint8_t y = 1, runY = 1; y < size; y++) {
-    //         bool cy = bb_getBit(modules, x, y);
-    //         if (cy != colorY) {
-    //             colorY = cy;
-    //             runY   = 1;
-    //         } else {
-    //             runY++;
-    //             if (runY == 5) {
-    //                 result += PENALTY_N1;
-    //             } else if (runY > 5) {
-    //                 result++;
-    //             }
-    //         }
-    //     }
-    // }
-
-    // uint16_t black = 0;
-    // for (uint8_t y = 0; y < size; y++) {
-    //     uint16_t bitsRow = 0, bitsCol = 0;
-    //     for (uint8_t x = 0; x < size; x++) {
-    //         bool color = bb_getBit(modules, x, y);
-
-    //         // 2*2 blocks of modules having same color
-    //         if (x > 0 && y > 0) {
-    //             bool colorUL = bb_getBit(modules, x - 1, y - 1);
-    //             bool colorUR = bb_getBit(modules, x, y - 1);
-    //             bool colorL  = bb_getBit(modules, x - 1, y);
-    //             if (color == colorUL && color == colorUR && color == colorL) {
-    //                 result += PENALTY_N2;
-    //             }
-    //         }
-
-    //         // Finder-like pattern in rows and columns
-    //         bitsRow = ((bitsRow << 1) & 0x7FF) | color;
-    //         bitsCol = ((bitsCol << 1) & 0x7FF) | bb_getBit(modules, y, x);
-
-    //         // Needs 11 bits accumulated
-    //         if (x >= 10) {
-    //             if (bitsRow == 0x05D || bitsRow == 0x5D0) {
-    //                 result += PENALTY_N3;
-    //             }
-    //             if (bitsCol == 0x05D || bitsCol == 0x5D0) {
-    //                 result += PENALTY_N3;
-    //             }
-    //         }
-
-    //         // Balance of black and white modules
-    //         if (color) {
-    //             black++;
-    //         }
-    //     }
-    // }
-
-    // // Find smallest k such that (45-5k)% <= dark/total <= (55+5k)%
-    // uint16_t total = size * size;
-    // for (uint16_t k = 0; black * 20 < (9 - k) * total || black * 20 > (11 + k) * total; k++) {
-    //     result += PENALTY_N4;
-    // }
-
+    uint32_t result{0};
+    result += penalty1();
+    result += penalty2();
+    result += penalty3();
+    result += penalty4();
     return result;
 }
 
@@ -864,6 +838,12 @@ void qrCode::interleaveData() {
 }
 
 void qrCode::drawPatterns(uint32_t theVersion) {
+    isData.setAllBits();
+    drawAllFinderPatterns(theVersion);
+    drawTimingPattern(theVersion);
+    drawAllAlignmentPatterns(theVersion);
+    drawFormatInfo(theVersion);
+    drawVersionInfo(theVersion);
 }
 
 void qrCode::drawPayload(uint32_t theVersion) {
