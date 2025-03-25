@@ -69,6 +69,7 @@ class qrCode {
         uint8_t nmbrBlocks[nmbrOfErrorCorrectionLevels];
         uint8_t nmbrErrorCorrectionCodewordsPerBlock[nmbrOfErrorCorrectionLevels];
     } versionProperties[maxVersion]{
+        // {payloadBytes}, {blocks}, {errorCorrection bytes per block}
         {{19, 16, 13, 9}, {1, 1, 1, 1}, {7, 10, 13, 17}},
         {{34, 28, 22, 16}, {1, 1, 1, 1}, {10, 16, 22, 28}},
         {{55, 44, 34, 26}, {1, 1, 2, 2}, {15, 26, 18, 22}},
@@ -114,6 +115,8 @@ class qrCode {
     static uint32_t alignmentPatternCoordinate(uint32_t someVersion, uint32_t index);
     static void addErrorCorrection();
     static void interleaveData();
+    static uint32_t dataOffset(uint32_t blockIndex, uint32_t rowIndex);
+    static uint32_t eccOffset(uint32_t blockIndex, uint32_t rowIndex);
 
     static uint32_t theVersion;
     static errorCorrectionLevel theErrorCorrectionLevel;

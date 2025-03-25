@@ -16,6 +16,7 @@
 * informational : modules containing user data
 * bitVector<size> data; this holds the to be encoded data, extended with error-correction
 * bitMatrix<size> modules; this is a 2-dimensional array, holding the pixels (modules) of the qrCode
+* bitMatrix<size> isData; this is a 2-dimensional array, holding a bool value per pixel (modules) of the qrCode, indicating whether it is pattern or payload. This speeds up the masking process a lot.
 
 # how to use this library
 This library is developed for use in embedded software where it is recommended to avoid allocating dynamic memory.
