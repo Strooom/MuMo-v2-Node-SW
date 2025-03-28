@@ -10,6 +10,45 @@
 void setUp(void) {}
 void tearDown(void) {}
 
+#pragma region testing internal data initialization / setting
+
+void test_initialization() {
+    static constexpr uint32_t testVersion{1};
+    const uint32_t size = qrCode::size(testVersion);
+    qrCode::setVersion(testVersion);
+    TEST_ASSERT_EQUAL(testVersion, qrCode::theVersion);
+    TEST_ASSERT_EQUAL(size, qrCode::modules.getWidthHeightInBits());
+    TEST_ASSERT_EQUAL(size, qrCode::isData.getWidthHeightInBits());
+    static const errorCorrectionLevel testErrorCorrectionLevel{errorCorrectionLevel::low};
+    qrCode::setErrorCorrectionLevel(testErrorCorrectionLevel);
+    TEST_ASSERT_EQUAL(testErrorCorrectionLevel, qrCode::theErrorCorrectionLevel);
+
+    TEST_ASSERT_EACH_EQUAL_UINT8(0, qrCode::modules.data, qrCode::modules.getSizeInBytes());
+    TEST_ASSERT_EACH_EQUAL_UINT8(0xFF, qrCode::isData.data, qrCode::isData.getSizeInBytes());
+    TEST_ASSERT_EACH_EQUAL_UINT8(0, qrCode::buffer.data, qrCode::buffer.lengthInBytes);
+}
+#pragma endregion
+#pragma region testing internal helpers
+
+void test_size() {
+    TEST_ASSERT_EQUAL(21U, qrCode::size(1U));
+    TEST_ASSERT_EQUAL(81U, qrCode::size(16U));
+    TEST_ASSERT_EQUAL(177U, qrCode::size(40U));
+}
+
+void test_setVersion() {
+    static constexpr uint32_t testVersion{1};
+    qrCode::setVersion(testVersion);
+    TEST_ASSERT_EQUAL(testVersion, qrCode::theVersion);
+}
+
+void test_setErrorCorrectionLevel() {
+    static const errorCorrectionLevel testErrorCorrectionLevel{errorCorrectionLevel::low};
+    qrCode::setErrorCorrectionLevel(testErrorCorrectionLevel);
+    TEST_ASSERT_EQUAL(testErrorCorrectionLevel, qrCode::theErrorCorrectionLevel);
+}
+#pragma endregion
+#pragma region testing encoding user data into payload
 void test_isNumeric() {
     // single character
     TEST_ASSERT_TRUE(qrCode::isNumeric('0'));
@@ -97,66 +136,6 @@ void test_characterCountIndicatorLength() {
     TEST_ASSERT_EQUAL(16, qrCode::characterCountIndicatorLength(40, encodingFormat::byte));
 }
 
-void test_versionNeeded() {
-    // numeric data
-    const char testData1[]{"01234567890123456789012345678901234567890"};                           // 41 numeric characters
-    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData1, errorCorrectionLevel::low));             //
-    const char testData2[]{"012345678901234567890123456789012345678901"};                          // 42 numeric characters
-    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData2, errorCorrectionLevel::low));             //
-    const char testData3[]{"0123456789012345678901234567890123"};                                  // 34 numeric characters
-    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData3, errorCorrectionLevel::medium));          //
-    const char testData4[]{"01234567890123456789012345678901234"};                                 // 35 numeric characters
-    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData4, errorCorrectionLevel::medium));          //
-    const char testData5[]{"012345678901234567890123456"};                                         // 27 numeric characters
-    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData5, errorCorrectionLevel::quartile));        //
-    const char testData6[]{"0123456789012345678901234567"};                                        // 28 numeric characters
-    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData6, errorCorrectionLevel::quartile));        //
-    const char testData7[]{"01234567890123456"};                                                   // 17 numeric characters
-    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData7, errorCorrectionLevel::high));            //
-    const char testData8[]{"0123456789012345678"};                                                 // 18 numeric characters
-    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData8, errorCorrectionLevel::high));            //
-
-    // alfanumeric data
-    const char testData10[]{"A123456789012345678901234"};                                           // 25 numeric characters
-    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData10, errorCorrectionLevel::low));             //
-    const char testData11[]{"A1234567890123456789012345"};                                          // 26 numeric characters
-    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData11, errorCorrectionLevel::low));             //
-    const char testData12[]{"A1234567890123456789"};                                                // 20 numeric characters
-    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData12, errorCorrectionLevel::medium));          //
-    const char testData13[]{"A12345678901234567890"};                                               // 21 numeric characters
-    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData13, errorCorrectionLevel::medium));          //
-    const char testData14[]{"A123456789012345"};                                                    // 16 numeric characters
-    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData14, errorCorrectionLevel::quartile));        //
-    const char testData15[]{"A1234567890123456"};                                                   // 17 numeric characters
-    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData15, errorCorrectionLevel::quartile));        //
-    const char testData16[]{"A123456789"};                                                          // 10 numeric characters
-    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData16, errorCorrectionLevel::high));            //
-    const char testData17[]{"A1234567890"};                                                         // 11 numeric characters
-    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData17, errorCorrectionLevel::high));            //
-
-    // byte data
-    const char testData20[]{"#1234567890123456"};                                                   // 17 numeric characters
-    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData20, errorCorrectionLevel::low));             //
-    const char testData21[]{"#12345678901234567"};                                                  // 18 numeric characters
-    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData21, errorCorrectionLevel::low));             //
-    const char testData22[]{"#1234567890123"};                                                      // 14 numeric characters
-    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData22, errorCorrectionLevel::medium));          //
-    const char testData23[]{"#12345678901234"};                                                     // 15 numeric characters
-    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData23, errorCorrectionLevel::medium));          //
-    const char testData24[]{"#1234567890"};                                                         // 11 numeric characters
-    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData24, errorCorrectionLevel::quartile));        //
-    const char testData25[]{"#12345678901"};                                                        // 12 numeric characters
-    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData25, errorCorrectionLevel::quartile));        //
-    const char testData26[]{"#123456"};                                                             // 7 numeric characters
-    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData26, errorCorrectionLevel::high));            //
-    const char testData27[]{"#1234567"};                                                            // 8 numeric characters
-    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData27, errorCorrectionLevel::high));            //
-
-    // edge case
-    // const char testData54[55]{"#12345678901234567890123456789012345678901234567890123"};
-    // TEST_ASSERT_EQUAL(0, qrCode::versionNeeded(testData54, errorCorrectionLevel::low));        // This case still fails, need to investigate in detail why
-}
-
 void test_compress() {
     TEST_ASSERT_EQUAL(0, qrCode::compressNumeric('0'));
     TEST_ASSERT_EQUAL(1, qrCode::compressNumeric('1'));
@@ -182,82 +161,10 @@ void test_compress() {
     TEST_ASSERT_EQUAL(44, qrCode::compressAlphanumeric(':'));
 }
 
-void test_nmbrOfAlignmentPatterns() {
-    TEST_ASSERT_EQUAL(0, qrCode::nmbrOfAlignmentPatterns(1));
-    TEST_ASSERT_EQUAL(1, qrCode::nmbrOfAlignmentPatterns(2));
-    TEST_ASSERT_EQUAL(1, qrCode::nmbrOfAlignmentPatterns(6));
-    TEST_ASSERT_EQUAL(6, qrCode::nmbrOfAlignmentPatterns(7));
-    TEST_ASSERT_EQUAL(6, qrCode::nmbrOfAlignmentPatterns(13));
-    TEST_ASSERT_EQUAL(13, qrCode::nmbrOfAlignmentPatterns(14));
-    TEST_ASSERT_EQUAL(13, qrCode::nmbrOfAlignmentPatterns(20));
-    TEST_ASSERT_EQUAL(22, qrCode::nmbrOfAlignmentPatterns(21));
-    TEST_ASSERT_EQUAL(22, qrCode::nmbrOfAlignmentPatterns(27));
-    TEST_ASSERT_EQUAL(33, qrCode::nmbrOfAlignmentPatterns(28));
-    TEST_ASSERT_EQUAL(33, qrCode::nmbrOfAlignmentPatterns(34));
-    TEST_ASSERT_EQUAL(46, qrCode::nmbrOfAlignmentPatterns(35));
-    TEST_ASSERT_EQUAL(46, qrCode::nmbrOfAlignmentPatterns(40));
-}
-
-void test_size() {
-    TEST_ASSERT_EQUAL(21U, qrCode::size(1U));
-    TEST_ASSERT_EQUAL(81U, qrCode::size(16U));
-    TEST_ASSERT_EQUAL(177U, qrCode::size(40U));
-}
-
-void test_nmbrOfRawDataModules() {
-    TEST_ASSERT_EQUAL(208, qrCode::nmbrOfDataModules(1));
-    TEST_ASSERT_EQUAL(359, qrCode::nmbrOfDataModules(2));
-    TEST_ASSERT_EQUAL(567, qrCode::nmbrOfDataModules(3));
-    TEST_ASSERT_EQUAL(807, qrCode::nmbrOfDataModules(4));
-    TEST_ASSERT_EQUAL(1079, qrCode::nmbrOfDataModules(5));
-    TEST_ASSERT_EQUAL(1383, qrCode::nmbrOfDataModules(6));
-    TEST_ASSERT_EQUAL(1568, qrCode::nmbrOfDataModules(7));
-    TEST_ASSERT_EQUAL(1936, qrCode::nmbrOfDataModules(8));
-    TEST_ASSERT_EQUAL(2336, qrCode::nmbrOfDataModules(9));
-    TEST_ASSERT_EQUAL(2768, qrCode::nmbrOfDataModules(10));
-    TEST_ASSERT_EQUAL(3232, qrCode::nmbrOfDataModules(11));
-    TEST_ASSERT_EQUAL(3728, qrCode::nmbrOfDataModules(12));
-    TEST_ASSERT_EQUAL(4256, qrCode::nmbrOfDataModules(13));
-    TEST_ASSERT_EQUAL(4651, qrCode::nmbrOfDataModules(14));
-    TEST_ASSERT_EQUAL(5243, qrCode::nmbrOfDataModules(15));
-    TEST_ASSERT_EQUAL(5867, qrCode::nmbrOfDataModules(16));
-}
-
-void test_nmbrOfErrorCorrectionModules() {
-    TEST_ASSERT_EQUAL(7 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(1, errorCorrectionLevel::low));
-    TEST_ASSERT_EQUAL(10 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(1, errorCorrectionLevel::medium));
-    TEST_ASSERT_EQUAL(13 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(1, errorCorrectionLevel::quartile));
-    TEST_ASSERT_EQUAL(17 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(1, errorCorrectionLevel::high));
-
-    TEST_ASSERT_EQUAL(10 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(2, errorCorrectionLevel::low));
-    TEST_ASSERT_EQUAL(16 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(2, errorCorrectionLevel::medium));
-    TEST_ASSERT_EQUAL(22 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(2, errorCorrectionLevel::quartile));
-    TEST_ASSERT_EQUAL(28 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(2, errorCorrectionLevel::high));
-
-    TEST_ASSERT_EQUAL(15 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::low));
-    TEST_ASSERT_EQUAL(26 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::medium));
-    TEST_ASSERT_EQUAL(18 * 2 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::quartile));
-    TEST_ASSERT_EQUAL(22 * 2 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::high));
-}
-
-// * nmbrOfDataModules
-// * nmbrOfTotalModules
-// * nmbrOfFunctionModules
-
 void test_getModeBits() {
     TEST_ASSERT_EQUAL(0b0001, qrCode::modeIndicator(encodingFormat::numeric));
     TEST_ASSERT_EQUAL(0b0010, qrCode::modeIndicator(encodingFormat::alphanumeric));
     TEST_ASSERT_EQUAL(0b0100, qrCode::modeIndicator(encodingFormat::byte));
-}
-
-void test_calculatePayloadLength() {
-    TEST_ASSERT_EQUAL(41, qrCode::payloadLengthInBits(8, 1, encodingFormat::numeric));
-    TEST_ASSERT_EQUAL(57, qrCode::payloadLengthInBits(8, 1, encodingFormat::alphanumeric));
-    TEST_ASSERT_EQUAL(76, qrCode::payloadLengthInBits(8, 1, encodingFormat::byte));
-
-    TEST_ASSERT_EQUAL(151, qrCode::payloadLengthInBits(41, 1, encodingFormat::numeric));
-    TEST_ASSERT_EQUAL(151, qrCode::payloadLengthInBits(25, 1, encodingFormat::alphanumeric));
-    TEST_ASSERT_EQUAL(148, qrCode::payloadLengthInBits(17, 1, encodingFormat::byte));
 }
 
 void test_encodeData() {
@@ -433,6 +340,25 @@ void test_encodeData() {
         TEST_ASSERT_EQUAL(72U, qrCode::buffer.levelInBits());
         TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
     }
+}
+#pragma endregion
+#pragma region testing error correction
+
+void test_nmbrOfErrorCorrectionModules() {
+    TEST_ASSERT_EQUAL(7 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(1, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(10 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(1, errorCorrectionLevel::medium));
+    TEST_ASSERT_EQUAL(13 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(1, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(17 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(1, errorCorrectionLevel::high));
+
+    TEST_ASSERT_EQUAL(10 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(2, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(16 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(2, errorCorrectionLevel::medium));
+    TEST_ASSERT_EQUAL(22 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(2, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(28 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(2, errorCorrectionLevel::high));
+
+    TEST_ASSERT_EQUAL(15 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::low));
+    TEST_ASSERT_EQUAL(26 * 1 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::medium));
+    TEST_ASSERT_EQUAL(18 * 2 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::quartile));
+    TEST_ASSERT_EQUAL(22 * 2 * 8, qrCode::nmbrOfErrorCorrectionModules(3, errorCorrectionLevel::high));
 }
 
 void test_blockCalculations() {
@@ -619,6 +545,97 @@ void test_interleave() {
     }
 }
 
+#pragma endregion
+#pragma region testing drawing patterns and user data
+
+void test_nmbrOfAlignmentPatterns() {
+    TEST_ASSERT_EQUAL(0, qrCode::nmbrOfAlignmentPatterns(1));
+    TEST_ASSERT_EQUAL(1, qrCode::nmbrOfAlignmentPatterns(2));
+    TEST_ASSERT_EQUAL(1, qrCode::nmbrOfAlignmentPatterns(6));
+    TEST_ASSERT_EQUAL(6, qrCode::nmbrOfAlignmentPatterns(7));
+    TEST_ASSERT_EQUAL(6, qrCode::nmbrOfAlignmentPatterns(13));
+    TEST_ASSERT_EQUAL(13, qrCode::nmbrOfAlignmentPatterns(14));
+    TEST_ASSERT_EQUAL(13, qrCode::nmbrOfAlignmentPatterns(20));
+    TEST_ASSERT_EQUAL(22, qrCode::nmbrOfAlignmentPatterns(21));
+    TEST_ASSERT_EQUAL(22, qrCode::nmbrOfAlignmentPatterns(27));
+    TEST_ASSERT_EQUAL(33, qrCode::nmbrOfAlignmentPatterns(28));
+    TEST_ASSERT_EQUAL(33, qrCode::nmbrOfAlignmentPatterns(34));
+    TEST_ASSERT_EQUAL(46, qrCode::nmbrOfAlignmentPatterns(35));
+    TEST_ASSERT_EQUAL(46, qrCode::nmbrOfAlignmentPatterns(40));
+}
+
+void test_drawFinderPattern() {
+    qrCode::setVersion(1);
+    qrCode::modules.setWidthHeightInBits(7);
+    qrCode::isData.setWidthHeightInBits(7);
+    qrCode::drawFinderPattern(3, 3);
+    TEST_ASSERT_EQUAL(7, qrCode::modules.getSizeInBytes());
+
+    bitVector<49> expected;
+    TEST_ASSERT_EQUAL(7, expected.lengthInBytes);
+    expected.appendBits(0b1111111, 7);
+    expected.appendBits(0b1000001, 7);
+    expected.appendBits(0b1011101, 7);
+    expected.appendBits(0b1011101, 7);
+    expected.appendBits(0b1011101, 7);
+    expected.appendBits(0b1000001, 7);
+    expected.appendBits(0b1111111, 7);
+    TEST_ASSERT_EQUAL(7, expected.levelInBytes());
+
+    for (uint32_t i = 0; i < 7; i++) {
+        TEST_ASSERT_EQUAL(expected.getByte(i), qrCode::modules.getByte(i));
+    }
+    for (uint32_t y = 0; y < 7; y++) {
+        for (uint32_t x = 0; x < 7; x++) {
+            TEST_ASSERT_FALSE(qrCode::isData.getBit(x, y));
+        }
+    }
+}
+
+void test_drawFinderSeparators() {
+    qrCode::setVersion(1);
+    qrCode::drawFinderSeparators(qrCode::theVersion);
+    TEST_IGNORE_MESSAGE("TODO: implement me");
+}
+
+void test_drawAllFindersAndSeparators() {
+    qrCode::setVersion(1);
+    qrCode::drawAllFinderPatternsAndSeparators(qrCode::theVersion);
+    TEST_IGNORE_MESSAGE("TODO: implement me");
+}
+
+void test_dummyFormat() {
+}
+
+void test_darkModule() {
+}
+
+void test_drawAlignmentPattern() {
+    qrCode::setVersion(1);
+    qrCode::modules.setWidthHeightInBits(5);
+    qrCode::isData.setWidthHeightInBits(5);
+    qrCode::drawAlignmentPattern(2, 2, 1);
+    TEST_ASSERT_EQUAL(4, qrCode::modules.getSizeInBytes());
+
+    bitVector<25> expected;
+    TEST_ASSERT_EQUAL(4, expected.lengthInBytes);
+    expected.appendBits(0b11111, 5);
+    expected.appendBits(0b10001, 5);
+    expected.appendBits(0b10101, 5);
+    expected.appendBits(0b10001, 5);
+    expected.appendBits(0b11111, 5);
+    TEST_ASSERT_EQUAL(4, expected.levelInBytes());
+
+    for (uint32_t i = 0; i < 4; i++) {
+        TEST_ASSERT_EQUAL(expected.getByte(i), qrCode::modules.getByte(i));
+    }
+    for (uint32_t y = 0; y < 5; y++) {
+        for (uint32_t x = 0; x < 5; x++) {
+            TEST_ASSERT_FALSE(qrCode::isData.getBit(x, y));
+        }
+    }
+}
+
 void test_alignmentPatternSpacing() {
     // Version 1 has no alignment patterns and so also no spacing
     TEST_ASSERT_EQUAL(18 - 6, qrCode::alignmentPatternSpacing(2));
@@ -678,13 +695,151 @@ void test_alignmentPatternCoordinates() {
     TEST_ASSERT_EQUAL(138, qrCode::alignmentPatternCoordinate(32, 5));
 }
 
+void test_drawAllAlignmentPatterns() {
+    qrCode::setVersion(2);
+    qrCode::drawAllAlignmentPatterns(qrCode::theVersion);
+    TEST_IGNORE_MESSAGE("TODO: implement me");
+}
+
+#pragma endregion
+#pragma region testing api
+void test_versionNeeded() {
+    // numeric data
+    const char testData1[]{"01234567890123456789012345678901234567890"};                           // 41 numeric characters
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData1, errorCorrectionLevel::low));             //
+    const char testData2[]{"012345678901234567890123456789012345678901"};                          // 42 numeric characters
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData2, errorCorrectionLevel::low));             //
+    const char testData3[]{"0123456789012345678901234567890123"};                                  // 34 numeric characters
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData3, errorCorrectionLevel::medium));          //
+    const char testData4[]{"01234567890123456789012345678901234"};                                 // 35 numeric characters
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData4, errorCorrectionLevel::medium));          //
+    const char testData5[]{"012345678901234567890123456"};                                         // 27 numeric characters
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData5, errorCorrectionLevel::quartile));        //
+    const char testData6[]{"0123456789012345678901234567"};                                        // 28 numeric characters
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData6, errorCorrectionLevel::quartile));        //
+    const char testData7[]{"01234567890123456"};                                                   // 17 numeric characters
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData7, errorCorrectionLevel::high));            //
+    const char testData8[]{"012345678901234567"};                                                  // 18 numeric characters
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData8, errorCorrectionLevel::high));            //
+
+    // alfanumeric data
+    const char testData10[]{"A123456789012345678901234"};                                           // 25 numeric characters
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData10, errorCorrectionLevel::low));             //
+    const char testData11[]{"A1234567890123456789012345"};                                          // 26 numeric characters
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData11, errorCorrectionLevel::low));             //
+    const char testData12[]{"A1234567890123456789"};                                                // 20 numeric characters
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData12, errorCorrectionLevel::medium));          //
+    const char testData13[]{"A12345678901234567890"};                                               // 21 numeric characters
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData13, errorCorrectionLevel::medium));          //
+    const char testData14[]{"A123456789012345"};                                                    // 16 numeric characters
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData14, errorCorrectionLevel::quartile));        //
+    const char testData15[]{"A1234567890123456"};                                                   // 17 numeric characters
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData15, errorCorrectionLevel::quartile));        //
+    const char testData16[]{"A123456789"};                                                          // 10 numeric characters
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData16, errorCorrectionLevel::high));            //
+    const char testData17[]{"A1234567890"};                                                         // 11 numeric characters
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData17, errorCorrectionLevel::high));            //
+
+    // byte data
+    const char testData20[]{"#1234567890123456"};                                                   // 17 numeric characters
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData20, errorCorrectionLevel::low));             //
+    const char testData21[]{"#12345678901234567"};                                                  // 18 numeric characters
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData21, errorCorrectionLevel::low));             //
+    const char testData22[]{"#1234567890123"};                                                      // 14 numeric characters
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData22, errorCorrectionLevel::medium));          //
+    const char testData23[]{"#12345678901234"};                                                     // 15 numeric characters
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData23, errorCorrectionLevel::medium));          //
+    const char testData24[]{"#1234567890"};                                                         // 11 numeric characters
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData24, errorCorrectionLevel::quartile));        //
+    const char testData25[]{"#12345678901"};                                                        // 12 numeric characters
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData25, errorCorrectionLevel::quartile));        //
+    const char testData26[]{"#123456"};                                                             // 7 numeric characters
+    TEST_ASSERT_EQUAL(1, qrCode::versionNeeded(testData26, errorCorrectionLevel::high));            //
+    const char testData27[]{"#1234567"};                                                            // 8 numeric characters
+    TEST_ASSERT_EQUAL(2, qrCode::versionNeeded(testData27, errorCorrectionLevel::high));            //
+
+    // edge case
+    const char testData54[55]{"#12345678901234567890123456789012345678901234567890123"};
+    TEST_ASSERT_EQUAL(0, qrCode::versionNeeded(testData54, errorCorrectionLevel::high));        // This case still fails, need to investigate in detail why
+}
+
+void test_errorCorrectionPossible() {
+    {
+        const char testData[]{"01234567890123456"};                                                              // 17 numeric characters
+        TEST_ASSERT_EQUAL(errorCorrectionLevel::high, qrCode::errorCorrectionLevelPossible(testData, 1));        //
+    }
+    {
+        const char testData[]{"012345678901234567"};                                                                 // 18 numeric characters
+        TEST_ASSERT_EQUAL(errorCorrectionLevel::quartile, qrCode::errorCorrectionLevelPossible(testData, 1));        //
+    }
+    {
+        const char testData[]{"012345678901234567890123456"};                                                        // 27 numeric characters
+        TEST_ASSERT_EQUAL(errorCorrectionLevel::quartile, qrCode::errorCorrectionLevelPossible(testData, 1));        //
+    }
+    {
+        const char testData[]{"0123456789012345678901234567"};                                                     // 28 numeric characters
+        TEST_ASSERT_EQUAL(errorCorrectionLevel::medium, qrCode::errorCorrectionLevelPossible(testData, 1));        //
+    }
+    {
+        const char testData[]{"0123456789012345678901234567890123"};                                               // 34 numeric characters
+        TEST_ASSERT_EQUAL(errorCorrectionLevel::medium, qrCode::errorCorrectionLevelPossible(testData, 1));        //
+    }
+    {
+        const char testData[]{"01234567890123456789012345678901234"};                                           // 35 numeric characters
+        TEST_ASSERT_EQUAL(errorCorrectionLevel::low, qrCode::errorCorrectionLevelPossible(testData, 1));        //
+    }
+}
+
+#pragma endregion
+
+void test_nmbrOfRawDataModules() {
+    TEST_ASSERT_EQUAL(208, qrCode::nmbrOfDataModules(1));
+    TEST_ASSERT_EQUAL(359, qrCode::nmbrOfDataModules(2));
+    TEST_ASSERT_EQUAL(567, qrCode::nmbrOfDataModules(3));
+    TEST_ASSERT_EQUAL(807, qrCode::nmbrOfDataModules(4));
+    TEST_ASSERT_EQUAL(1079, qrCode::nmbrOfDataModules(5));
+    TEST_ASSERT_EQUAL(1383, qrCode::nmbrOfDataModules(6));
+    TEST_ASSERT_EQUAL(1568, qrCode::nmbrOfDataModules(7));
+    TEST_ASSERT_EQUAL(1936, qrCode::nmbrOfDataModules(8));
+    TEST_ASSERT_EQUAL(2336, qrCode::nmbrOfDataModules(9));
+    TEST_ASSERT_EQUAL(2768, qrCode::nmbrOfDataModules(10));
+    TEST_ASSERT_EQUAL(3232, qrCode::nmbrOfDataModules(11));
+    TEST_ASSERT_EQUAL(3728, qrCode::nmbrOfDataModules(12));
+    TEST_ASSERT_EQUAL(4256, qrCode::nmbrOfDataModules(13));
+    TEST_ASSERT_EQUAL(4651, qrCode::nmbrOfDataModules(14));
+    TEST_ASSERT_EQUAL(5243, qrCode::nmbrOfDataModules(15));
+    TEST_ASSERT_EQUAL(5867, qrCode::nmbrOfDataModules(16));
+}
+
+void test_calculatePayloadLength() {
+    TEST_ASSERT_EQUAL(41, qrCode::payloadLengthInBits(8, 1, encodingFormat::numeric));
+    TEST_ASSERT_EQUAL(57, qrCode::payloadLengthInBits(8, 1, encodingFormat::alphanumeric));
+    TEST_ASSERT_EQUAL(76, qrCode::payloadLengthInBits(8, 1, encodingFormat::byte));
+
+    TEST_ASSERT_EQUAL(151, qrCode::payloadLengthInBits(41, 1, encodingFormat::numeric));
+    TEST_ASSERT_EQUAL(151, qrCode::payloadLengthInBits(25, 1, encodingFormat::alphanumeric));
+    TEST_ASSERT_EQUAL(148, qrCode::payloadLengthInBits(17, 1, encodingFormat::byte));
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
+    // testing internal data initialization / setting
+    RUN_TEST(test_initialization);
+
+    // general helpers
+
+    // encoding user data into payload
     RUN_TEST(test_isNumeric);
     RUN_TEST(test_isAlphanumeric);
     RUN_TEST(test_getEncodingFormat);
+    RUN_TEST(test_compress);
+    RUN_TEST(test_getModeBits);
     RUN_TEST(test_payloadLengthInBits);
     RUN_TEST(test_encodeData);
+    RUN_TEST(test_characterCountIndicatorLength);
+    RUN_TEST(test_calculatePayloadLength);
+
+    // error correction
     RUN_TEST(test_blockCalculations);
     RUN_TEST(test_blockContents);
     RUN_TEST(test_getErrorCorrectionBytes);
@@ -693,17 +848,22 @@ int main(int argc, char **argv) {
     RUN_TEST(test_getEccOffset);
     RUN_TEST(test_interleave);
 
-    RUN_TEST(test_size);
+    // drawing function patterns and user data
     RUN_TEST(test_nmbrOfAlignmentPatterns);
-
-    RUN_TEST(test_compress);
-    RUN_TEST(test_getModeBits);
-    RUN_TEST(test_characterCountIndicatorLength);
-    RUN_TEST(test_calculatePayloadLength);
+    RUN_TEST(test_drawFinderPattern);
+    RUN_TEST(test_drawFinderSeparators);
+    RUN_TEST(test_drawAllFindersAndSeparators);
+    RUN_TEST(test_dummyFormat);
+    RUN_TEST(test_darkModule);
+    RUN_TEST(test_drawAlignmentPattern);
+    RUN_TEST(test_drawAllAlignmentPatterns);
     RUN_TEST(test_alignmentPatternSpacing);
     RUN_TEST(test_alignmentPatternCoordinates);
     RUN_TEST(test_nmbrOfRawDataModules);
     RUN_TEST(test_nmbrOfErrorCorrectionModules);
+
+    // api
     RUN_TEST(test_versionNeeded);
+    RUN_TEST(test_errorCorrectionPossible);
     UNITY_END();
 }

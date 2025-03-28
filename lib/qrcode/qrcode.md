@@ -1,6 +1,6 @@
 # qrCode
 
-## web resources explaining how to construct a qrCode
+## web resources explaining how to construct a qrCode / Credits to ...
 
 * https://www.thonky.com/qr-code-tutorial/
 * https://dev.to/maxart2501/series/13444
@@ -23,8 +23,11 @@ This library is developed for use in embedded software where it is recommended t
 qrCodes come in different sizes, called 'version' (from 1 to 40), and the larger the version, the more memory is needed.
 In order to not waste memory, you define at compile-time what will be the maximum version (size) you may need, and memory for this maximum is allocated statically.
 
-In case you know at compile-time what version you need, it's as simple as calling qrCode::encodeData();
-In case you only know at run-time what will be the size of the payload, you can call qrCode::versionNeeded(); set this version and then call encodeData().
+In case you know at compile-time what version you need, it's as simple as calling qrCode::generateQrCode(data, version, errorCorrectionLevel);
+In case you only know at run-time what will be the size of the payload, you can call qrCode::versionNeeded(data, minimumErrorCorrectionLevel); to determine the minimum version needed to accomodate the data.
+Then you can optionally call qrCode::errorCorrectionLevelPossible() to determine the maximal errorCorrection possible for this data with this version.
+Finally call qrCode::generateQrCode(data, version, errorCorrectionLevel); to generate 
+Read the qrCode as a bitmap using qrCode::getBit(x, y);
 
 
 # Coordinates

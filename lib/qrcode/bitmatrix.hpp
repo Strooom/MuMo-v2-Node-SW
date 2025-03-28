@@ -35,6 +35,7 @@ class bitMatrix {
             data[byteOffset(x, y)] &= ~bitMask(x, y);
         }
     };
+    uint8_t getByte(uint32_t byteIndex) { return data[byteIndex]; };
 
 #ifndef unitTesting
 

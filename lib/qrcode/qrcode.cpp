@@ -3,19 +3,16 @@
 #include <stdlib.h>
 #include <cstring>
 
-// This code is using the vocabulary of the QR Code standard ISO/IEC 18004:2006
-// See qrcode.md for a short explanation
 
 uint32_t qrCode::theVersion{0};        // 0 is an invalid value and indicates the version has not yet been set
 errorCorrectionLevel qrCode::theErrorCorrectionLevel{errorCorrectionLevel::low};
 encodingFormat qrCode::theEncodingFormat{encodingFormat::numeric};
+uint32_t qrCode::theMask;
 bitVector<qrCode::maxPayloadLengthInBytes * 8U> qrCode::buffer;
 bitMatrix<qrCode::maxSize> qrCode::modules;
 bitMatrix<qrCode::maxSize> qrCode::isData;
 
 #pragma region publicAPI
-
-// Returns the minimum version that can accommodate the data with the requested error correction level
 
 uint32_t qrCode::versionNeeded(const char *data, errorCorrectionLevel wantedErrorCorrectionLevel) {
     uint32_t dataLength = strnlen(data, maxInputLength);
@@ -40,8 +37,6 @@ uint32_t qrCode::versionNeeded(const uint8_t *data, uint32_t dataLengthInBytes, 
     return 0;        // no (valid) version found which accommodates the amount of data with this encodingFormat and with the requested error correction level
 }
 
-// Returns the maximum error correction level that can accommodate the data with the requested version
-
 errorCorrectionLevel qrCode::errorCorrectionLevelPossible(const char *data, uint32_t someVersion) {
     uint32_t dataLength = strnlen(data, maxInputLength);
     return errorCorrectionLevelPossible(reinterpret_cast<const uint8_t *>(data), dataLength, someVersion);
@@ -60,132 +55,43 @@ errorCorrectionLevel qrCode::errorCorrectionLevelPossible(const uint8_t *data, u
     return errorCorrectionLevel::low;
 }
 
+void qrCode::generate(const char *data, uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
+    uint32_t dataLength = strnlen(data, maxInputLength);
+    generate(reinterpret_cast<const uint8_t *>(data), dataLength, someVersion, someErrorCorrectionLevel);
+}
+
+void qrCode::generate(const uint8_t *data, uint32_t dataLength, uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
+    setVersion(someVersion);
+    setErrorCorrectionLevel(someErrorCorrectionLevel);
+    encodeData(data, dataLength);
+    addErrorCorrection();
+    interleaveData();
+}
+
+bool qrCode::getModule(uint32_t x, uint32_t y) {
+    return modules.getBit(x, y);
+}
+
+#pragma endregion
+#pragma region general helpers
+
+uint32_t qrCode::size(uint32_t someVersion) { return 17 + 4 * someVersion; }
+
+void qrCode::setVersion(uint32_t newVersion) {
+    if ((newVersion <= maxVersion) && (newVersion > 0)) {
+        theVersion = newVersion;
+        buffer.reset();
+    }
+    modules.setWidthHeightInBits(size(theVersion));
+    modules.clearAllBits();
+    isData.setWidthHeightInBits(size(theVersion));
+    isData.setAllBits();
+}
+
+void qrCode::setErrorCorrectionLevel(errorCorrectionLevel newErrorCorrectionLevel) { theErrorCorrectionLevel = newErrorCorrectionLevel; }
+
 #pragma endregion
 #pragma region encodingPayload
-
-void qrCode::encodeData(const char *data) {
-    uint32_t length = strnlen(data, maxInputLength);
-    encodeData(reinterpret_cast<const uint8_t *>(data), length);
-}
-
-void qrCode::encodeData(const uint8_t *data, uint32_t dataLength) {
-    theEncodingFormat = getEncodingFormat(data, dataLength);
-    buffer.reset();
-    buffer.appendBits(modeIndicator(theEncodingFormat), 4);
-    buffer.appendBits(dataLength, characterCountIndicatorLength(theVersion, theEncodingFormat));
-
-    switch (theEncodingFormat) {
-        case encodingFormat::numeric:
-            encodeNumeric(data, dataLength);
-            break;
-
-        case encodingFormat::alphanumeric:
-            encodeAlfaNumeric(data, dataLength);
-            break;
-
-        case encodingFormat::byte:        // intentional fallthrough
-        default:
-            encodeByte(data, dataLength);
-            break;
-    }
-
-    addTerminator();
-    addBitPadding();
-    addBytePadding();
-}
-
-void qrCode::addTerminator() {
-    // add terminator : up to four zero bits
-    uint32_t nmbrOfTerminatorBits{versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint8_t>(theErrorCorrectionLevel)] * 8 - buffer.levelInBits()};
-    if (nmbrOfTerminatorBits > 4) {
-        nmbrOfTerminatorBits = 4;
-    }
-    buffer.appendBits(0, nmbrOfTerminatorBits);
-}
-
-void qrCode::addBitPadding() {
-    // add bit padding : add zeros to make the length of the data a multiple of 8
-    uint32_t nmbrOfBytePaddingBits{8U - (buffer.levelInBits() % 8U)};
-    if (nmbrOfBytePaddingBits != 8) {
-        buffer.appendBits(0, nmbrOfBytePaddingBits);
-    }
-}
-
-void qrCode::addBytePadding() {
-    // add byte padding : fill with 0xEC and 0x11 until available space is filled
-    while (true) {
-        if (buffer.levelInBytes() < versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint8_t>(theErrorCorrectionLevel)]) {
-            buffer.appendByte(0xEC);
-        } else {
-            return;
-        }
-        if (buffer.levelInBytes() < versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint8_t>(theErrorCorrectionLevel)]) {
-            buffer.appendByte(0x11);
-        } else {
-            return;
-        }
-    }
-}
-
-void qrCode::encodeNumeric(const uint8_t *data, uint32_t dataLength) {
-    uint32_t accumData  = 0;
-    uint32_t accumCount = 0;
-    for (uint32_t i = 0; i < dataLength; i++) {
-        accumData = accumData * 10 + compressNumeric(data[i]);
-        accumCount++;
-        if (accumCount == 3) {
-            buffer.appendBits(accumData, 10U);
-            accumData  = 0;
-            accumCount = 0;
-        }
-    }
-    if (accumCount > 0) {
-        buffer.appendBits(accumData, (accumCount * 3U) + 1U);
-    }
-}
-
-void qrCode::encodeAlfaNumeric(const uint8_t *data, uint32_t dataLength) {
-    uint32_t accumData  = 0;
-    uint32_t accumCount = 0;
-    for (uint32_t i = 0; i < dataLength; i++) {
-        accumData = accumData * 45 + compressAlphanumeric(data[i]);
-        accumCount++;
-        if (accumCount == 2) {
-            buffer.appendBits(accumData, 11U);
-            accumData  = 0;
-            accumCount = 0;
-        }
-    }
-    if (accumCount > 0) {
-        buffer.appendBits(accumData, 6U);
-    }
-}
-
-void qrCode::encodeByte(const uint8_t *data, uint32_t dataLength) {
-    for (uint32_t i = 0; i < dataLength; i++) {
-        buffer.appendBits(data[i], 8U);
-    }
-}
-
-encodingFormat qrCode::getEncodingFormat(const char *data) {
-    if (isNumeric(data)) {
-        return encodingFormat::numeric;
-    }
-    if (isAlphanumeric(data)) {
-        return encodingFormat::alphanumeric;
-    }
-    return encodingFormat::byte;
-}
-
-encodingFormat qrCode::getEncodingFormat(const uint8_t *data, uint32_t dataLength) {
-    if (isNumeric(data, dataLength)) {
-        return encodingFormat::numeric;
-    }
-    if (isAlphanumeric(data, dataLength)) {
-        return encodingFormat::alphanumeric;
-    }
-    return encodingFormat::byte;
-}
 
 bool qrCode::isNumeric(const uint8_t data) {
     return (data >= '0' && data <= '9');
@@ -242,6 +148,26 @@ bool qrCode::isAlphanumeric(const uint8_t *data, uint32_t length) {
     return true;
 }
 
+encodingFormat qrCode::getEncodingFormat(const char *data) {
+    if (isNumeric(data)) {
+        return encodingFormat::numeric;
+    }
+    if (isAlphanumeric(data)) {
+        return encodingFormat::alphanumeric;
+    }
+    return encodingFormat::byte;
+}
+
+encodingFormat qrCode::getEncodingFormat(const uint8_t *data, uint32_t dataLength) {
+    if (isNumeric(data, dataLength)) {
+        return encodingFormat::numeric;
+    }
+    if (isAlphanumeric(data, dataLength)) {
+        return encodingFormat::alphanumeric;
+    }
+    return encodingFormat::byte;
+}
+
 uint8_t qrCode::compressNumeric(char theCharacter) {
     if (isNumeric(theCharacter)) {
         return (theCharacter - '0');
@@ -282,8 +208,159 @@ uint8_t qrCode::compressAlphanumeric(char theCharacter) {
         return 0;
 }
 
-#pragma endregion
+void qrCode::encodeNumeric(const uint8_t *data, uint32_t dataLength) {
+    uint32_t accumData  = 0;
+    uint32_t accumCount = 0;
+    for (uint32_t i = 0; i < dataLength; i++) {
+        accumData = accumData * 10 + compressNumeric(data[i]);
+        accumCount++;
+        if (accumCount == 3) {
+            buffer.appendBits(accumData, 10U);
+            accumData  = 0;
+            accumCount = 0;
+        }
+    }
+    if (accumCount > 0) {
+        buffer.appendBits(accumData, (accumCount * 3U) + 1U);
+    }
+}
 
+void qrCode::encodeAlfaNumeric(const uint8_t *data, uint32_t dataLength) {
+    uint32_t accumData  = 0;
+    uint32_t accumCount = 0;
+    for (uint32_t i = 0; i < dataLength; i++) {
+        accumData = accumData * 45 + compressAlphanumeric(data[i]);
+        accumCount++;
+        if (accumCount == 2) {
+            buffer.appendBits(accumData, 11U);
+            accumData  = 0;
+            accumCount = 0;
+        }
+    }
+    if (accumCount > 0) {
+        buffer.appendBits(accumData, 6U);
+    }
+}
+
+void qrCode::encodeByte(const uint8_t *data, uint32_t dataLength) {
+    for (uint32_t i = 0; i < dataLength; i++) {
+        buffer.appendBits(data[i], 8U);
+    }
+}
+
+uint8_t qrCode::modeIndicator(encodingFormat theEncodingFormat) {
+    switch (theEncodingFormat) {
+        case encodingFormat::numeric:
+            return 0b0001;
+
+        case encodingFormat::alphanumeric:
+            return 0b0010;
+
+        case encodingFormat::byte:        // intentional fallthrough
+        default:
+            return 0b0100;
+    }
+}
+
+uint32_t qrCode::characterCountIndicatorLength(uint32_t someVersion, encodingFormat theEncodingFormat) {
+    if (someVersion < 10) {
+        switch (theEncodingFormat) {
+            case encodingFormat::numeric:
+                return 10;
+            case encodingFormat::alphanumeric:
+                return 9;
+            case encodingFormat::byte:        // intentional fallthrough
+            default:
+                return 8;
+        }
+    }
+    if (someVersion < 27) {
+        switch (theEncodingFormat) {
+            case encodingFormat::numeric:
+                return 12;
+            case encodingFormat::alphanumeric:
+                return 11;
+            case encodingFormat::byte:        // intentional fallthrough
+            default:
+                return 16;
+        }
+    }
+    switch (theEncodingFormat) {
+        case encodingFormat::numeric:
+            return 14;
+        case encodingFormat::alphanumeric:
+            return 13;
+        case encodingFormat::byte:        // intentional fallthrough
+        default:
+            return 16;
+    }
+}
+
+void qrCode::addTerminator() {
+    // add terminator : up to four zero bits
+    uint32_t nmbrOfTerminatorBits{versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint8_t>(theErrorCorrectionLevel)] * 8 - buffer.levelInBits()};
+    if (nmbrOfTerminatorBits > 4) {
+        nmbrOfTerminatorBits = 4;
+    }
+    buffer.appendBits(0, nmbrOfTerminatorBits);
+}
+
+void qrCode::addBitPadding() {
+    // add bit padding : add zeros to make the length of the data a multiple of 8
+    uint32_t nmbrOfBytePaddingBits{8U - (buffer.levelInBits() % 8U)};
+    if (nmbrOfBytePaddingBits != 8) {
+        buffer.appendBits(0, nmbrOfBytePaddingBits);
+    }
+}
+
+void qrCode::addBytePadding() {
+    // add byte padding : fill with 0xEC and 0x11 until available space is filled
+    while (true) {
+        if (buffer.levelInBytes() < versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint8_t>(theErrorCorrectionLevel)]) {
+            buffer.appendByte(0xEC);
+        } else {
+            return;
+        }
+        if (buffer.levelInBytes() < versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint8_t>(theErrorCorrectionLevel)]) {
+            buffer.appendByte(0x11);
+        } else {
+            return;
+        }
+    }
+}
+
+void qrCode::encodeData(const char *data) {
+    uint32_t length = strnlen(data, maxInputLength);
+    encodeData(reinterpret_cast<const uint8_t *>(data), length);
+}
+
+void qrCode::encodeData(const uint8_t *data, uint32_t dataLength) {
+    theEncodingFormat = getEncodingFormat(data, dataLength);
+    buffer.reset();
+    buffer.appendBits(modeIndicator(theEncodingFormat), 4);
+    buffer.appendBits(dataLength, characterCountIndicatorLength(theVersion, theEncodingFormat));
+
+    switch (theEncodingFormat) {
+        case encodingFormat::numeric:
+            encodeNumeric(data, dataLength);
+            break;
+
+        case encodingFormat::alphanumeric:
+            encodeAlfaNumeric(data, dataLength);
+            break;
+
+        case encodingFormat::byte:        // intentional fallthrough
+        default:
+            encodeByte(data, dataLength);
+            break;
+    }
+
+    addTerminator();
+    addBitPadding();
+    addBytePadding();
+}
+
+#pragma endregion
 #pragma region errorCorrection
 
 uint32_t qrCode::nmbrBlocks(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
@@ -330,280 +407,150 @@ uint32_t qrCode::blockLengthGroup2(uint32_t someVersion, errorCorrectionLevel so
     return blockLengthGroup1(someVersion, someErrorCorrectionLevel) + 1;
 }
 
-#pragma endregion
+uint32_t qrCode::dataOffset(uint32_t blockIndex, uint32_t rowIndex) {
+    uint32_t result{0};
+    for (uint32_t block = 0; block < blockIndex; block++) {
+        result += blockLength(block, theVersion, theErrorCorrectionLevel);
+    }
+    result += rowIndex;
+    return result;
+}
 
+uint32_t qrCode::eccOffset(uint32_t blockIndex, uint32_t rowIndex) {
+    uint32_t result{versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint32_t>(theErrorCorrectionLevel)]};
+    result += blockIndex * versionProperties[theVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)];
+    result += rowIndex;
+    return result;
+}
+
+uint32_t qrCode::errorCorrectionLevelBits(errorCorrectionLevel someLevel) {
+    switch (someLevel) {
+        case errorCorrectionLevel::low:
+            return 0b01;
+        case errorCorrectionLevel::medium:
+            return 0b00;
+        case errorCorrectionLevel::quartile:
+            return 0b11;
+        case errorCorrectionLevel::high:
+            return 0b10;
+        default:
+            return 0;
+    }
+}
+
+void qrCode::addErrorCorrection() {
+    uint32_t nmbrOfBlocks     = nmbrBlocks(theVersion, theErrorCorrectionLevel);
+    uint32_t protectionLength = versionProperties[theVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)];
+    uint8_t ecc[protectionLength];
+    for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
+        uint32_t theBlockLength = blockLength(blockIndex, theVersion, theErrorCorrectionLevel);
+        uint8_t message[theBlockLength];
+        for (uint32_t i = 0; i < theBlockLength; i++) {
+            message[i] = buffer.getByte(i + blockOffset(blockIndex, theVersion, theErrorCorrectionLevel));
+        }
+        reedSolomon::getErrorCorrectionBytes(ecc, protectionLength, message, theBlockLength);
+        for (uint32_t i = 0; i < protectionLength; i++) {
+            buffer.appendByte(ecc[i]);
+        }
+    }
+}
+
+void qrCode::interleaveData() {
+    if (nmbrBlocks(theVersion, theErrorCorrectionLevel) > 1) {
+        uint32_t lastBlockIndex             = nmbrBlocks(theVersion, theErrorCorrectionLevel) - 1;
+        uint32_t longestBlockLength         = blockLength(lastBlockIndex, theVersion, theErrorCorrectionLevel);
+        uint32_t nmbrErrorCodewordsPerBlock = versionProperties[theVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)];
+        uint8_t tempBuffer[256U];
+        uint32_t destinationIndex{0};
+
+        // iterate over all data blocks
+        for (uint32_t rowIndex = 0; rowIndex < longestBlockLength; rowIndex++) {
+            for (uint32_t blockIndex = 0; blockIndex <= lastBlockIndex; blockIndex++) {
+                if (rowIndex < blockLength(blockIndex, theVersion, theErrorCorrectionLevel)) {
+                    tempBuffer[destinationIndex] = buffer.getByte(dataOffset(blockIndex, rowIndex));
+                    destinationIndex++;
+                }
+            }
+        }
+        // iterate over all error correction blocks
+        for (uint32_t rowIndex = 0; rowIndex < nmbrErrorCodewordsPerBlock; rowIndex++) {
+            for (uint32_t blockIndex = 0; blockIndex <= lastBlockIndex; blockIndex++) {
+                tempBuffer[destinationIndex] = buffer.getByte(eccOffset(blockIndex, rowIndex));
+                destinationIndex++;
+            }
+        }
+
+        // Copy back to source buffer
+        buffer.reset();
+        for (uint32_t i = 0; i < maxPayloadLengthInBytes; i++) {
+            buffer.appendByte(tempBuffer[i]);
+        }
+    }
+}
+
+#pragma endregion
 #pragma region drawing
 
-// bool qrCode::isFormatInformation(uint32_t x, uint32_t y, uint32_t someVersion) {
-//     // TODO : remove some overlap with other functions, eg timing pattern and dark module
-//     if ((y == 8) && (x <= 8)) {
-//         return true;
-//     }
-//     if ((y == 8) && (x > (size(someVersion) - 8))) {
-//         return true;
-//     }
-//     if ((x == 8) && (y <= 8)) {
-//         return true;
-//     }
-//     if ((x == 8) && (x > (size(someVersion) - 8))) {
-//         return true;
-//     }
-//     return false;
-// }
-
-// bool qrCode::isVersionInformation(uint32_t x, uint32_t y, uint32_t someVersion) {
-//     if (someVersion < 7) {
-//         return false;
-//     }
-//     if ((x < 6) && (y >= size(someVersion) - 11) && (y <= size(someVersion) - 9)) {
-//         return true;
-//     }
-//     if ((y < 6) && (x >= size(someVersion) - 11) && (x <= size(someVersion) - 9)) {
-//         return true;
-//     }
-//     return false;
-// }
-
 void qrCode::drawFinderPattern(uint32_t centerX, uint32_t centerY) {
-    for (int32_t relativeX = -3; relativeX <= 3; relativeX++) {
-        for (int32_t relativeY = -3; relativeY <= 3; relativeY++) {
-            if (((relativeX == -3) || (relativeX == 3)) && ((relativeY == -3) || (relativeY == 3))) {
+    for (int32_t relativeY = -3; relativeY <= 3; relativeY++) {
+        for (int32_t relativeX = -3; relativeX <= 3; relativeX++) {
+            if (((relativeX == -3) || (relativeX == 3) || (relativeY == -3) || (relativeY == 3))) {
                 modules.setBit(centerX + relativeX, centerY + relativeY);
-                return;
             }
             if ((relativeX >= -1) && (relativeX <= 1) && (relativeY >= -1) && (relativeY <= 1)) {
                 modules.setBit(centerX + relativeX, centerY + relativeY);
-                return;
             }
             isData.clearBit(centerX + relativeX, centerY + relativeY);
         }
     }
 }
 
-void qrCode::drawAllFinderPatterns(uint32_t someVersion) {
+void qrCode::drawFinderSeparators(uint32_t someVersion) {
+    uint32_t end = size(someVersion) - 1;
+    for (uint32_t index = 0; index < 8; index++) {
+        isData.clearBit(index, 7);              // bottom of top-left finder pattern
+        isData.clearBit(7, index);              // right of top-left finder pattern
+        isData.clearBit(index, end - 7);        // left of top-right finder pattern
+        isData.clearBit(end - index, 7);        // bottom of top-right finder pattern
+        isData.clearBit(index, end - 7);        // top of bottom-left finder pattern
+        isData.clearBit(7, end - index);        // right of bottom-left finder pattern
+    }
+}
+
+void qrCode::drawAllFinderPatternsAndSeparators(uint32_t someVersion) {
     drawFinderPattern(3, 3);
     drawFinderPattern(size(someVersion) - 4, 3);
     drawFinderPattern(3, size(someVersion) - 4);
+    drawFinderSeparators(someVersion);
+}
+
+void qrCode::drawDummyFormatBits(uint32_t someVersion) {
+    uint32_t end = size(someVersion) - 1;
+    for (uint32_t index = 0; index < 9; index++) {
+        isData.clearBit(index, 8);              // bottom of top-left finder pattern
+        isData.clearBit(8, index);              // right of top-left finder pattern
+        isData.clearBit(end - index, 8);        // bottom of top-right finder pattern
+        isData.clearBit(8, end - index);        // right of bottom-left finder pattern
+    }
+}
+
+void qrCode::drawDarkModule(uint32_t someVersion) {
+    modules.setBit(8, size(someVersion) - 9);
+    isData.clearBit(8, size(someVersion) - 9);
 }
 
 void qrCode::drawAlignmentPattern(uint32_t centerX, uint32_t centerY, uint32_t someVersion) {
-    for (int32_t relativeX = -1; relativeX <= 1; relativeX++) {
-        for (int32_t relativeY = -1; relativeY <= 1; relativeY++) {
-            if (((relativeX == -1) || (relativeX == 1)) && ((relativeY == -1) || (relativeY == 1))) {
+    for (int32_t relativeY = -2; relativeY <= 2; relativeY++) {
+        for (int32_t relativeX = -2; relativeX <= 2; relativeX++) {
+            if (((relativeX == -2) || (relativeX == 2) || (relativeY == -2) || (relativeY == 2))) {
                 modules.setBit(centerX + relativeX, centerY + relativeY);
-                return;
             }
             if ((relativeX == 0) && (relativeY == 0)) {
                 modules.setBit(centerX + relativeX, centerY + relativeY);
-                return;
             }
             isData.clearBit(centerX + relativeX, centerY + relativeY);
         }
     }
-}
-
-void qrCode::drawAllAlignmentPatterns(uint32_t someVersion) {
-    if (someVersion == 1) {
-        return;
-    }
-    uint32_t nmbrRowsCols = nmbrOfAlignmentPatternRowsOrCols(someVersion);
-    for (uint32_t index = 0; index < nmbrRowsCols; index++) {
-        uint32_t coordinate = alignmentPatternCoordinate(someVersion, index);
-        drawAlignmentPattern(coordinate, coordinate, someVersion);
-    }
-}
-
-void qrCode::drawTimingPattern(uint32_t someVersion) {
-    for (uint32_t index = 0; index < size(someVersion); index += 2U) {
-        if (index % 2 == 0) {
-            modules.setBit(index, 6);
-            modules.setBit(6, index);
-        }
-        isData.clearBit(index, 6);
-        isData.clearBit(6, index);
-    }
-}
-
-void qrCode::drawFormatInfo(uint32_t theVersion) {
-    // Draws two copies of the format bits (with its own error correction code)
-    // based on the given mask and this object's error correction level field.
-    // void qrCode::drawFormatBits(uint32_t ecc, uint32_t mask) {
-    //     uint8_t size = modules->bitOffsetOrWidth;
-
-    //     // Calculate error correction code and pack bits
-    //     uint32_t data = ecc << 3 | mask;        // errCorrLvl is uint2, mask is uint3
-    //     uint32_t rem  = data;
-    //     for (int i = 0; i < 10; i++) {
-    //         rem = (rem << 1) ^ ((rem >> 9) * 0x537);
-    //     }
-
-    //     data = data << 10 | rem;
-    //     data ^= 0x5412;        // uint15
-
-    //     // Draw first copy
-    //     for (uint8_t i = 0; i <= 5; i++) {
-    //         setFunctionModule(modules, isFunction, 8, i, ((data >> i) & 1) != 0);
-    //     }
-
-    //     setFunctionModule(modules, isFunction, 8, 7, ((data >> 6) & 1) != 0);
-    //     setFunctionModule(modules, isFunction, 8, 8, ((data >> 7) & 1) != 0);
-    //     setFunctionModule(modules, isFunction, 7, 8, ((data >> 8) & 1) != 0);
-
-    //     for (int8_t i = 9; i < 15; i++) {
-    //         setFunctionModule(modules, isFunction, 14 - i, 8, ((data >> i) & 1) != 0);
-    //     }
-
-    //     // Draw second copy
-    //     for (int8_t i = 0; i <= 7; i++) {
-    //         setFunctionModule(modules, isFunction, size - 1 - i, 8, ((data >> i) & 1) != 0);
-    //     }
-
-    //     for (int8_t i = 8; i < 15; i++) {
-    //         setFunctionModule(modules, isFunction, 8, size - 15 + i, ((data >> i) & 1) != 0);
-    //     }
-
-    //     setFunctionModule(modules, isFunction, 8, size - 8, true);
-}
-
-void qrCode::drawVersionInfo(uint32_t theVersion) {
-    if (theVersion < 7) {
-        return;
-    }
-
-    // // Calculate error correction code and pack bits
-    // uint32_t rem = version;        // version is uint6, in the range [7, 40]
-    // for (uint8_t i = 0; i < 12; i++) {
-    //     rem = (rem << 1) ^ ((rem >> 11) * 0x1F25);
-    // }
-
-    // uint32_t data = version << 12 | rem;        // uint18
-
-    // for (uint8_t i = 0; i < 18; i++) {
-    //     bool bit  = ((data >> i) & 1) != 0;
-    //     uint8_t a = size(theVersion) - 11 + i % 3;
-    //     uint8_t b = i / 3;
-    //     modules.setOrClearBit(a, b, bit);
-    //     modules.setOrClearBit(b, a, bit);
-    // }
-}
-
-void qrCode::drawDarkModule(uint32_t theVersion) {
-    modules.setBit(4 * theVersion + 9, 8);
-    isData.clearBit(4 * theVersion + 9, 8);
-}
-
-#pragma endregion
-
-uint32_t qrCode::size(uint32_t someVersion) { return 17 + 4 * someVersion; }
-
-uint32_t qrCode::payloadLengthInBits(uint32_t dataLengthInBytes, uint32_t someVersion, encodingFormat theEncodingFormat) {
-    uint32_t modeIndicatorLength{4U};
-    switch (theEncodingFormat) {
-        case encodingFormat::numeric:
-            uint32_t remainderLength;
-            switch (dataLengthInBytes % 3) {
-                case 0:
-                    remainderLength = 0;
-                    break;
-                case 1:
-                    remainderLength = 4;
-                    break;
-                case 2:
-                    remainderLength = 7;
-                    break;
-            }
-            return modeIndicatorLength + characterCountIndicatorLength(someVersion, theEncodingFormat) + (10 * (dataLengthInBytes / 3)) + remainderLength;
-        case encodingFormat::alphanumeric:
-            return modeIndicatorLength + characterCountIndicatorLength(someVersion, theEncodingFormat) + (11 * (dataLengthInBytes / 2)) + (6 * (dataLengthInBytes % 2));
-        case encodingFormat::byte:        // intentional fallthrough
-        default:
-            return modeIndicatorLength + characterCountIndicatorLength(someVersion, theEncodingFormat) + (8 * dataLengthInBytes);
-    }
-}
-
-uint32_t qrCode::characterCountIndicatorLength(uint32_t someVersion, encodingFormat theEncodingFormat) {
-    if (someVersion < 10) {
-        switch (theEncodingFormat) {
-            case encodingFormat::numeric:
-                return 10;
-            case encodingFormat::alphanumeric:
-                return 9;
-            case encodingFormat::byte:        // intentional fallthrough
-            default:
-                return 8;
-        }
-    }
-    if (someVersion < 27) {
-        switch (theEncodingFormat) {
-            case encodingFormat::numeric:
-                return 12;
-            case encodingFormat::alphanumeric:
-                return 11;
-            case encodingFormat::byte:        // intentional fallthrough
-            default:
-                return 16;
-        }
-    }
-    switch (theEncodingFormat) {
-        case encodingFormat::numeric:
-            return 14;
-        case encodingFormat::alphanumeric:
-            return 13;
-        case encodingFormat::byte:        // intentional fallthrough
-        default:
-            return 16;
-    }
-}
-
-uint32_t qrCode::nmbrOfDataModules(uint32_t someVersion) {
-    return nmbrOfTotalModules(someVersion) - nmbrOfFunctionModules(someVersion);
-}
-
-void qrCode::setVersion(uint32_t newVersion) {
-    if (theVersion <= maxVersion) {
-        theVersion = newVersion;
-        buffer.reset();
-    }
-}
-
-void qrCode::setErrorCorrectionLevel(errorCorrectionLevel newErrorCorrectionLevel) { theErrorCorrectionLevel = newErrorCorrectionLevel; }
-
-uint8_t qrCode::modeIndicator(encodingFormat theEncodingFormat) {
-    switch (theEncodingFormat) {
-        case encodingFormat::numeric:
-            return 0b0001;
-
-        case encodingFormat::alphanumeric:
-            return 0b0010;
-
-        case encodingFormat::byte:        // intentional fallthrough
-        default:
-            return 0b0100;
-    }
-}
-
-uint32_t qrCode::nmbrOfTotalModules(uint32_t someVersion) {
-    return size(someVersion) * size(someVersion);
-}
-
-uint32_t qrCode::nmbrOfFunctionModules(uint32_t someVersion) {
-    uint32_t count{0};
-    count += 3 * 64;                                           // Finder patterns including separators
-    count += 2 * ((4 * someVersion) + 1);                      // Timing patterns
-    count += 1;                                                // Dark module
-    count += nmbrOfAlignmentPatterns(someVersion) * 25;        // Alignment patterns
-    if (nmbrOfAlignmentPatternRowsOrCols(someVersion) > 2) {
-        count -= 2 * ((nmbrOfAlignmentPatternRowsOrCols(someVersion) - 2) * 5);        // overlap of timing and alignment
-    }
-    count += (6U + 6U + 3U + 8U + 7U);        // Format information
-    if (someVersion >= 7) {
-        count += (2U * 6U * 3U);        // version information
-    }
-    return count;
-}
-
-uint32_t qrCode::nmbrOfErrorCorrectionModules(uint32_t someVersion, errorCorrectionLevel theErrorCorrectionLevel) {
-    return versionProperties[someVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)] * versionProperties[someVersion - 1].nmbrBlocks[static_cast<uint32_t>(theErrorCorrectionLevel)] * 8;
 }
 
 uint32_t qrCode::nmbrOfAlignmentPatterns(uint32_t someVersion) {
@@ -639,6 +586,133 @@ uint32_t qrCode::alignmentPatternCoordinate(uint32_t someVersion, uint32_t index
     } else {
         return size(someVersion) - 7 - (alignmentPatternSpacing(someVersion) * (maxIndex - index));
     }
+}
+
+void qrCode::drawAllAlignmentPatterns(uint32_t someVersion) {
+    if (someVersion == 1) {
+        return;
+    }
+    uint32_t nmbrRowsCols = nmbrOfAlignmentPatternRowsOrCols(someVersion);
+    for (uint32_t index = 0; index < nmbrRowsCols; index++) {
+        uint32_t coordinate = alignmentPatternCoordinate(someVersion, index);
+        drawAlignmentPattern(coordinate, coordinate, someVersion);
+    }
+}
+
+void qrCode::drawTimingPattern(uint32_t someVersion) {
+    for (uint32_t index = 0; index < size(someVersion); index += 2U) {
+        if (index % 2 == 0) {
+            modules.setBit(index, 6);
+            modules.setBit(6, index);
+        }
+        isData.clearBit(index, 6);
+        isData.clearBit(6, index);
+    }
+}
+
+uint32_t qrCode::formatInfo(uint32_t mask) {
+    uint32_t formatBits{0};
+    formatBits = errorCorrectionLevelBits(theErrorCorrectionLevel) << 3;        // 2 bits
+    formatBits |= mask;                                                         // 3 bits
+
+    uint32_t remainder = formatBits;
+    for (int i = 0; i < 10; i++) {
+        remainder = (remainder << 1) ^ ((remainder >> 9) * 0x537);
+    }
+
+    formatBits = formatBits << 10 | remainder;
+    formatBits ^= 0x5412;        // uint15
+}
+
+void qrCode::drawFormatInfoCopy1(uint32_t data) {
+    // Draw first copy - around top-left finder, skipping timing pattern
+    // modules.setBit(index, 6);
+    // isData.clearBit(6, index);
+}
+
+void qrCode::drawFormatInfoCopy2(uint32_t data) {
+    // Draw second copy - right from bottom-left finder, under top-right finder, skipping the dark module
+    // modules.setBit(6, index);
+    // isData.clearBit(6, index);
+}
+
+void qrCode::drawFormatInfo() {
+    uint32_t formatData = formatInfo(theMask);
+    drawFormatInfoCopy1(formatData);
+    drawFormatInfoCopy2(formatData);
+}
+
+void qrCode::drawVersionInfo(uint32_t theVersion) {
+    if (theVersion < 7) {
+        return;
+    }
+
+    // Calculate error correction code and pack bits
+    uint32_t rem = theVersion;        // version is uint6, in the range [7, 40]
+    for (uint8_t i = 0; i < 12; i++) {
+        rem = (rem << 1) ^ ((rem >> 11) * 0x1F25);
+    }
+
+    uint32_t data = theVersion << 12 | rem;        // uint18
+
+    for (uint8_t i = 0; i < 18; i++) {
+        bool bit  = ((data >> i) & 1) != 0;
+        uint8_t a = size(theVersion) - 11 + i % 3;
+        uint8_t b = i / 3;
+        modules.setOrClearBit(a, b, bit);
+        modules.setOrClearBit(b, a, bit);
+    }
+}
+
+void qrCode::drawPatterns(uint32_t theVersion) {
+    isData.setAllBits();
+    drawAllFinderPatternsAndSeparators(theVersion);
+    drawTimingPattern(theVersion);
+    drawAllAlignmentPatterns(theVersion);
+    drawFormatInfo();
+    drawVersionInfo(theVersion);
+}
+
+void qrCode::drawPayload(uint32_t theVersion) {
+    uint32_t codeSize = size(theVersion);
+    uint32_t bitIndex{0};
+
+    for (int32_t columnPairIndex = (codeSize - 1); columnPairIndex >= 1; columnPairIndex -= 2) {
+        if (columnPairIndex == 6) {        // Skip the timing pattern
+            columnPairIndex = 5;
+        }
+
+        for (uint32_t verticalIndex = 0; verticalIndex < codeSize; verticalIndex++) {
+            for (int columnIndex = 0; columnIndex < 2; columnIndex++) {
+                uint32_t x     = columnPairIndex - columnIndex;
+                bool isUpwards = ((columnPairIndex & 2) == 0) ^ (x < 6);
+                uint32_t y     = isUpwards ? codeSize - 1 - verticalIndex : verticalIndex;
+                if (isData.getBit(x, y)) {
+                    if (buffer.getBit(bitIndex)) {
+                        modules.setBit(x, y);
+                    }
+                    bitIndex++;
+
+                    // if (!bb_getBit(isFunction, x, y) && i < bitLength) {
+                    //     bb_setBit(modules, x, y, ((data[i >> 3] >> (7 - (i & 7))) & 1) != 0);
+                    //     i++;
+                    // }
+                }
+            }
+        }
+    }
+}
+
+void qrCode::applyMask(uint8_t maskType) {
+}
+
+uint32_t qrCode::getPenaltyScore() {
+    uint32_t result{0};
+    result += penalty1();
+    result += penalty2();
+    result += penalty3();
+    result += penalty4();
+    return result;
 }
 
 uint32_t qrCode::penalty1() {
@@ -762,89 +836,60 @@ uint32_t qrCode::penalty4() {
     return result;
 }
 
-uint32_t qrCode::getPenaltyScore() {
-    uint32_t result{0};
-    result += penalty1();
-    result += penalty2();
-    result += penalty3();
-    result += penalty4();
-    return result;
-}
+#pragma endregion
 
-void qrCode::addErrorCorrection() {
-    uint32_t nmbrOfBlocks     = nmbrBlocks(theVersion, theErrorCorrectionLevel);
-    uint32_t protectionLength = versionProperties[theVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)];
-    uint8_t ecc[protectionLength];
-    for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
-        uint32_t theBlockLength = blockLength(blockIndex, theVersion, theErrorCorrectionLevel);
-        uint8_t message[theBlockLength];
-        for (uint32_t i = 0; i < theBlockLength; i++) {
-            message[i] = buffer.getByte(i + blockOffset(blockIndex, theVersion, theErrorCorrectionLevel));
-        }
-        reedSolomon::getErrorCorrectionBytes(ecc, protectionLength, message, theBlockLength);
-        for (uint32_t i = 0; i < protectionLength; i++) {
-            buffer.appendByte(ecc[i]);
-        }
-    }
-}
+// ?????
 
-uint32_t qrCode::dataOffset(uint32_t blockIndex, uint32_t rowIndex) {
-    uint32_t result{0};
-    for (uint32_t block = 0; block < blockIndex; block++) {
-        result += blockLength(block, theVersion, theErrorCorrectionLevel);
-    }
-    result += rowIndex;
-    return result;
-}
-
-uint32_t qrCode::eccOffset(uint32_t blockIndex, uint32_t rowIndex) {
-    uint32_t result{versionProperties[theVersion - 1].availableDataCodeWords[static_cast<uint32_t>(theErrorCorrectionLevel)]};
-    result += blockIndex * versionProperties[theVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)];
-    result += rowIndex;
-    return result;
-}
-
-void qrCode::interleaveData() {
-    if (nmbrBlocks(theVersion, theErrorCorrectionLevel) > 1) {
-        uint32_t lastBlockIndex             = nmbrBlocks(theVersion, theErrorCorrectionLevel) - 1;
-        uint32_t longestBlockLength         = blockLength(lastBlockIndex, theVersion, theErrorCorrectionLevel);
-        uint32_t nmbrErrorCodewordsPerBlock = versionProperties[theVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)];
-        uint8_t tempBuffer[256U];
-        uint32_t destinationIndex{0};
-
-        // iterate over all data blocks
-        for (uint32_t rowIndex = 0; rowIndex < longestBlockLength; rowIndex++) {
-            for (uint32_t blockIndex = 0; blockIndex <= lastBlockIndex; blockIndex++) {
-                if (rowIndex < blockLength(blockIndex, theVersion, theErrorCorrectionLevel)) {
-                    tempBuffer[destinationIndex] = buffer.getByte(dataOffset(blockIndex, rowIndex));
-                    destinationIndex++;
-                }
+uint32_t qrCode::payloadLengthInBits(uint32_t dataLengthInBytes, uint32_t someVersion, encodingFormat theEncodingFormat) {
+    uint32_t modeIndicatorLength{4U};
+    switch (theEncodingFormat) {
+        case encodingFormat::numeric:
+            uint32_t remainderLength;
+            switch (dataLengthInBytes % 3) {
+                case 0:
+                    remainderLength = 0;
+                    break;
+                case 1:
+                    remainderLength = 4;
+                    break;
+                case 2:
+                    remainderLength = 7;
+                    break;
             }
-        }
-        // iterate over all error correction blocks
-        for (uint32_t rowIndex = 0; rowIndex < nmbrErrorCodewordsPerBlock; rowIndex++) {
-            for (uint32_t blockIndex = 0; blockIndex <= lastBlockIndex; blockIndex++) {
-                tempBuffer[destinationIndex] = buffer.getByte(eccOffset(blockIndex, rowIndex));
-                destinationIndex++;
-            }
-        }
-
-        // Copy back to source buffer
-        buffer.reset();
-        for (uint32_t i = 0; i < maxPayloadLengthInBytes; i++) {
-            buffer.appendByte(tempBuffer[i]);
-        }
+            return modeIndicatorLength + characterCountIndicatorLength(someVersion, theEncodingFormat) + (10 * (dataLengthInBytes / 3)) + remainderLength;
+        case encodingFormat::alphanumeric:
+            return modeIndicatorLength + characterCountIndicatorLength(someVersion, theEncodingFormat) + (11 * (dataLengthInBytes / 2)) + (6 * (dataLengthInBytes % 2));
+        case encodingFormat::byte:        // intentional fallthrough
+        default:
+            return modeIndicatorLength + characterCountIndicatorLength(someVersion, theEncodingFormat) + (8 * dataLengthInBytes);
     }
 }
 
-void qrCode::drawPatterns(uint32_t theVersion) {
-    isData.setAllBits();
-    drawAllFinderPatterns(theVersion);
-    drawTimingPattern(theVersion);
-    drawAllAlignmentPatterns(theVersion);
-    drawFormatInfo(theVersion);
-    drawVersionInfo(theVersion);
+uint32_t qrCode::nmbrOfDataModules(uint32_t someVersion) {
+    return nmbrOfTotalModules(someVersion) - nmbrOfFunctionModules(someVersion);
 }
 
-void qrCode::drawPayload(uint32_t theVersion) {
+uint32_t qrCode::nmbrOfTotalModules(uint32_t someVersion) {
+    return size(someVersion) * size(someVersion);
 }
+
+uint32_t qrCode::nmbrOfFunctionModules(uint32_t someVersion) {
+    uint32_t count{0};
+    count += 3 * 64;                                           // Finder patterns including separators
+    count += 2 * ((4 * someVersion) + 1);                      // Timing patterns
+    count += 1;                                                // Dark module
+    count += nmbrOfAlignmentPatterns(someVersion) * 25;        // Alignment patterns
+    if (nmbrOfAlignmentPatternRowsOrCols(someVersion) > 2) {
+        count -= 2 * ((nmbrOfAlignmentPatternRowsOrCols(someVersion) - 2) * 5);        // overlap of timing and alignment
+    }
+    count += (6U + 6U + 3U + 8U + 7U);        // Format information
+    if (someVersion >= 7) {
+        count += (2U * 6U * 3U);        // version information
+    }
+    return count;
+}
+
+uint32_t qrCode::nmbrOfErrorCorrectionModules(uint32_t someVersion, errorCorrectionLevel theErrorCorrectionLevel) {
+    return versionProperties[someVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)] * versionProperties[someVersion - 1].nmbrBlocks[static_cast<uint32_t>(theErrorCorrectionLevel)] * 8;
+}
+

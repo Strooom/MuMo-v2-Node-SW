@@ -59,6 +59,8 @@ void test_set_get() {
     TEST_ASSERT_FALSE(testMatrix.getBit(5, 5));
     testMatrix.invertBit(5, 5);
     TEST_ASSERT_TRUE(testMatrix.getBit(5, 5));
+
+    // TODO : test x, y out of bounds
 }
 
 void test_clearAll() {
