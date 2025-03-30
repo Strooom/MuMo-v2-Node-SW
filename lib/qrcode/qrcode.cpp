@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <cstring>
 
-
 uint32_t qrCode::theVersion{0};        // 0 is an invalid value and indicates the version has not yet been set
 errorCorrectionLevel qrCode::theErrorCorrectionLevel{errorCorrectionLevel::low};
 encodingFormat qrCode::theEncodingFormat{encodingFormat::numeric};
@@ -12,7 +11,7 @@ bitVector<qrCode::maxPayloadLengthInBytes * 8U> qrCode::buffer;
 bitMatrix<qrCode::maxSize> qrCode::modules;
 bitMatrix<qrCode::maxSize> qrCode::isData;
 
-#pragma region publicAPI
+#pragma region public API
 
 uint32_t qrCode::versionNeeded(const char *data, errorCorrectionLevel wantedErrorCorrectionLevel) {
     uint32_t dataLength = strnlen(data, maxInputLength);
@@ -510,7 +509,7 @@ void qrCode::drawFinderSeparators(uint32_t someVersion) {
     for (uint32_t index = 0; index < 8; index++) {
         isData.clearBit(index, 7);              // bottom of top-left finder pattern
         isData.clearBit(7, index);              // right of top-left finder pattern
-        isData.clearBit(index, end - 7);        // left of top-right finder pattern
+        isData.clearBit(end - 7, index);        // left of top-right finder pattern
         isData.clearBit(end - index, 7);        // bottom of top-right finder pattern
         isData.clearBit(index, end - 7);        // top of bottom-left finder pattern
         isData.clearBit(7, end - index);        // right of bottom-left finder pattern
@@ -525,18 +524,25 @@ void qrCode::drawAllFinderPatternsAndSeparators(uint32_t someVersion) {
 }
 
 void qrCode::drawDummyFormatBits(uint32_t someVersion) {
-    uint32_t end = size(someVersion) - 1;
-    for (uint32_t index = 0; index < 9; index++) {
-        isData.clearBit(index, 8);              // bottom of top-left finder pattern
-        isData.clearBit(8, index);              // right of top-left finder pattern
-        isData.clearBit(end - index, 8);        // bottom of top-right finder pattern
-        isData.clearBit(8, end - index);        // right of bottom-left finder pattern
+    uint32_t endCoordinate = size(someVersion) - 1;
+    for (uint32_t coordinate = 0; coordinate < 6; coordinate++) {
+        isData.clearBit(coordinate, 8);        // bottom of top-left finder pattern
+        isData.clearBit(8, coordinate);        // right of top-left finder pattern
+    }
+    isData.clearBit(8, 8);        // corner of top-left finder pattern
+    isData.clearBit(7, 8);        // corner of top-left finder pattern
+    isData.clearBit(8, 7);        // corner of top-left finder pattern
+    for (uint32_t xCoordinate = (endCoordinate - 7); xCoordinate <= endCoordinate; xCoordinate++) {
+        isData.clearBit(xCoordinate, 8);        // bottom of top-right finder pattern
+    }
+    for (uint32_t yCoordinate = (endCoordinate - 6); yCoordinate <= endCoordinate; yCoordinate++) {
+        isData.clearBit(8, yCoordinate);        // right of bottom-left finder pattern
     }
 }
 
 void qrCode::drawDarkModule(uint32_t someVersion) {
-    modules.setBit(8, size(someVersion) - 9);
-    isData.clearBit(8, size(someVersion) - 9);
+    modules.setBit(8, size(someVersion) - 8);
+    isData.clearBit(8, size(someVersion) - 8);
 }
 
 void qrCode::drawAlignmentPattern(uint32_t centerX, uint32_t centerY, uint32_t someVersion) {
@@ -593,14 +599,28 @@ void qrCode::drawAllAlignmentPatterns(uint32_t someVersion) {
         return;
     }
     uint32_t nmbrRowsCols = nmbrOfAlignmentPatternRowsOrCols(someVersion);
-    for (uint32_t index = 0; index < nmbrRowsCols; index++) {
-        uint32_t coordinate = alignmentPatternCoordinate(someVersion, index);
-        drawAlignmentPattern(coordinate, coordinate, someVersion);
+
+    for (uint32_t rowIndex = 0; rowIndex < nmbrRowsCols; rowIndex++) {
+        for (uint32_t columnIndex = 0; columnIndex < nmbrRowsCols; columnIndex++) {
+            if ((rowIndex == 0) && (columnIndex == 0)) {
+                continue;
+            }
+            if ((rowIndex == 0) && (columnIndex == (nmbrRowsCols - 1))) {
+                continue;
+            }
+            if ((rowIndex == (nmbrRowsCols - 1)) && (columnIndex == 0)) {
+                continue;
+            }
+            uint32_t xCoordinate = alignmentPatternCoordinate(someVersion, columnIndex);
+            uint32_t yCoordinate = alignmentPatternCoordinate(someVersion, rowIndex);
+            drawAlignmentPattern(xCoordinate, yCoordinate, someVersion);
+        }
     }
 }
 
 void qrCode::drawTimingPattern(uint32_t someVersion) {
-    for (uint32_t index = 0; index < size(someVersion); index += 2U) {
+    const uint32_t endIndex = size(someVersion) - 9;
+    for (uint32_t index = 8; index <= endIndex; index++) {
         if (index % 2 == 0) {
             modules.setBit(index, 6);
             modules.setBit(6, index);
@@ -892,4 +912,3 @@ uint32_t qrCode::nmbrOfFunctionModules(uint32_t someVersion) {
 uint32_t qrCode::nmbrOfErrorCorrectionModules(uint32_t someVersion, errorCorrectionLevel theErrorCorrectionLevel) {
     return versionProperties[someVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)] * versionProperties[someVersion - 1].nmbrBlocks[static_cast<uint32_t>(theErrorCorrectionLevel)] * 8;
 }
-

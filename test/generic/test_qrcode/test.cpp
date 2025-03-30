@@ -6,6 +6,7 @@
 #include <qrcode.hpp>
 #include <string.h>
 #include <reedsolomon.hpp>
+#include <stdio.h>
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -548,6 +549,160 @@ void test_interleave() {
 #pragma endregion
 #pragma region testing drawing patterns and user data
 
+void test_drawAllFindersAndSeparators() {
+    static constexpr uint16_t testVersion{2};
+    qrCode::setVersion(testVersion);
+    qrCode::drawAllFinderPatternsAndSeparators(testVersion);
+    static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
+    bitVector<testNmbrOfModules> expectedModules;
+    bitVector<testNmbrOfModules> expectedIsData;
+    TEST_ASSERT_EQUAL(625, testNmbrOfModules);
+    TEST_ASSERT_EQUAL(testNmbrOfModules, qrCode::modules.getSizeInBits());
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedModules.length);
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedIsData.length);
+
+    expectedModules.appendBits(0b1111111000000000001111111, 25);
+    expectedModules.appendBits(0b1000001000000000001000001, 25);
+    expectedModules.appendBits(0b1011101000000000001011101, 25);
+    expectedModules.appendBits(0b1011101000000000001011101, 25);
+    expectedModules.appendBits(0b1011101000000000001011101, 25);
+    expectedModules.appendBits(0b1000001000000000001000001, 25);
+    expectedModules.appendBits(0b1111111000000000001111111, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b1111111000000000000000000, 25);
+    expectedModules.appendBits(0b1000001000000000000000000, 25);
+    expectedModules.appendBits(0b1011101000000000000000000, 25);
+    expectedModules.appendBits(0b1011101000000000000000000, 25);
+    expectedModules.appendBits(0b1011101000000000000000000, 25);
+    expectedModules.appendBits(0b1000001000000000000000000, 25);
+    expectedModules.appendBits(0b1111111000000000000000000, 25);
+
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedModules.levelInBits());
+
+    expectedIsData.appendBits(0b0000000011111111100000000, 25);
+    expectedIsData.appendBits(0b0000000011111111100000000, 25);
+    expectedIsData.appendBits(0b0000000011111111100000000, 25);
+    expectedIsData.appendBits(0b0000000011111111100000000, 25);
+    expectedIsData.appendBits(0b0000000011111111100000000, 25);
+    expectedIsData.appendBits(0b0000000011111111100000000, 25);
+    expectedIsData.appendBits(0b0000000011111111100000000, 25);
+    expectedIsData.appendBits(0b0000000011111111100000000, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b0000000011111111111111111, 25);
+    expectedIsData.appendBits(0b0000000011111111111111111, 25);
+    expectedIsData.appendBits(0b0000000011111111111111111, 25);
+    expectedIsData.appendBits(0b0000000011111111111111111, 25);
+    expectedIsData.appendBits(0b0000000011111111111111111, 25);
+    expectedIsData.appendBits(0b0000000011111111111111111, 25);
+    expectedIsData.appendBits(0b0000000011111111111111111, 25);
+    expectedIsData.appendBits(0b0000000011111111111111111, 25);
+
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedIsData.levelInBits());
+
+    for (uint32_t y = 0; y < 25; y++) {
+        for (uint32_t x = 0; x < 25; x++) {
+            char message[32];
+            snprintf(message, 30, "mismatch %d,%d", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), message);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), message);
+        }
+    }
+}
+
+void test_drawDarkModule() {
+    static constexpr uint16_t testVersion{2};
+    qrCode::setVersion(testVersion);
+    qrCode::drawDarkModule(testVersion);
+    static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
+    bitVector<testNmbrOfModules> expectedModules;
+    bitVector<testNmbrOfModules> expectedIsData;
+    TEST_ASSERT_EQUAL(625, testNmbrOfModules);
+    TEST_ASSERT_EQUAL(testNmbrOfModules, qrCode::modules.getSizeInBits());
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedModules.length);
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedIsData.length);
+
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(000000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000010000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedIsData.levelInBits());
+
+    for (uint32_t y = 0; y < 25; y++) {
+        for (uint32_t x = 0; x < 25; x++) {
+            char message[32];
+            snprintf(message, 30, "mismatch %d,%d", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), message);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), message);
+        }
+    }
+}
+
 void test_nmbrOfAlignmentPatterns() {
     TEST_ASSERT_EQUAL(0, qrCode::nmbrOfAlignmentPatterns(1));
     TEST_ASSERT_EQUAL(1, qrCode::nmbrOfAlignmentPatterns(2));
@@ -562,78 +717,6 @@ void test_nmbrOfAlignmentPatterns() {
     TEST_ASSERT_EQUAL(33, qrCode::nmbrOfAlignmentPatterns(34));
     TEST_ASSERT_EQUAL(46, qrCode::nmbrOfAlignmentPatterns(35));
     TEST_ASSERT_EQUAL(46, qrCode::nmbrOfAlignmentPatterns(40));
-}
-
-void test_drawFinderPattern() {
-    qrCode::setVersion(1);
-    qrCode::modules.setWidthHeightInBits(7);
-    qrCode::isData.setWidthHeightInBits(7);
-    qrCode::drawFinderPattern(3, 3);
-    TEST_ASSERT_EQUAL(7, qrCode::modules.getSizeInBytes());
-
-    bitVector<49> expected;
-    TEST_ASSERT_EQUAL(7, expected.lengthInBytes);
-    expected.appendBits(0b1111111, 7);
-    expected.appendBits(0b1000001, 7);
-    expected.appendBits(0b1011101, 7);
-    expected.appendBits(0b1011101, 7);
-    expected.appendBits(0b1011101, 7);
-    expected.appendBits(0b1000001, 7);
-    expected.appendBits(0b1111111, 7);
-    TEST_ASSERT_EQUAL(7, expected.levelInBytes());
-
-    for (uint32_t i = 0; i < 7; i++) {
-        TEST_ASSERT_EQUAL(expected.getByte(i), qrCode::modules.getByte(i));
-    }
-    for (uint32_t y = 0; y < 7; y++) {
-        for (uint32_t x = 0; x < 7; x++) {
-            TEST_ASSERT_FALSE(qrCode::isData.getBit(x, y));
-        }
-    }
-}
-
-void test_drawFinderSeparators() {
-    qrCode::setVersion(1);
-    qrCode::drawFinderSeparators(qrCode::theVersion);
-    TEST_IGNORE_MESSAGE("TODO: implement me");
-}
-
-void test_drawAllFindersAndSeparators() {
-    qrCode::setVersion(1);
-    qrCode::drawAllFinderPatternsAndSeparators(qrCode::theVersion);
-    TEST_IGNORE_MESSAGE("TODO: implement me");
-}
-
-void test_dummyFormat() {
-}
-
-void test_darkModule() {
-}
-
-void test_drawAlignmentPattern() {
-    qrCode::setVersion(1);
-    qrCode::modules.setWidthHeightInBits(5);
-    qrCode::isData.setWidthHeightInBits(5);
-    qrCode::drawAlignmentPattern(2, 2, 1);
-    TEST_ASSERT_EQUAL(4, qrCode::modules.getSizeInBytes());
-
-    bitVector<25> expected;
-    TEST_ASSERT_EQUAL(4, expected.lengthInBytes);
-    expected.appendBits(0b11111, 5);
-    expected.appendBits(0b10001, 5);
-    expected.appendBits(0b10101, 5);
-    expected.appendBits(0b10001, 5);
-    expected.appendBits(0b11111, 5);
-    TEST_ASSERT_EQUAL(4, expected.levelInBytes());
-
-    for (uint32_t i = 0; i < 4; i++) {
-        TEST_ASSERT_EQUAL(expected.getByte(i), qrCode::modules.getByte(i));
-    }
-    for (uint32_t y = 0; y < 5; y++) {
-        for (uint32_t x = 0; x < 5; x++) {
-            TEST_ASSERT_FALSE(qrCode::isData.getBit(x, y));
-        }
-    }
 }
 
 void test_alignmentPatternSpacing() {
@@ -696,10 +779,213 @@ void test_alignmentPatternCoordinates() {
 }
 
 void test_drawAllAlignmentPatterns() {
-    qrCode::setVersion(2);
-    qrCode::drawAllAlignmentPatterns(qrCode::theVersion);
-    TEST_IGNORE_MESSAGE("TODO: implement me");
+    static constexpr uint16_t testVersion{2};
+    qrCode::setVersion(testVersion);
+    qrCode::drawAllAlignmentPatterns(testVersion);
+    static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
+    bitVector<testNmbrOfModules> expectedModules;
+    bitVector<testNmbrOfModules> expectedIsData;
+    TEST_ASSERT_EQUAL(625, testNmbrOfModules);
+    TEST_ASSERT_EQUAL(testNmbrOfModules, qrCode::modules.getSizeInBits());
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedModules.length);
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedIsData.length);
+
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(000000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000111110000, 25);
+    expectedModules.appendBits(0b0000000000000000100010000, 25);
+    expectedModules.appendBits(0b0000000000000000101010000, 25);
+    expectedModules.appendBits(0b0000000000000000100010000, 25);
+    expectedModules.appendBits(0b0000000000000000111110000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedModules.levelInBits());
+
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111000001111, 25);
+    expectedIsData.appendBits(0b1111111111111111000001111, 25);
+    expectedIsData.appendBits(0b1111111111111111000001111, 25);
+    expectedIsData.appendBits(0b1111111111111111000001111, 25);
+    expectedIsData.appendBits(0b1111111111111111000001111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedIsData.levelInBits());
+
+    for (uint32_t y = 0; y < 25; y++) {
+        for (uint32_t x = 0; x < 25; x++) {
+            char message[32];
+            snprintf(message, 30, "mismatch %d,%d", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), message);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), message);
+        }
+    }
 }
+
+void test_drawTimingPatterns() {
+    static constexpr uint16_t testVersion{2};
+    qrCode::setVersion(testVersion);
+    qrCode::drawTimingPattern(testVersion);
+    static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
+    bitVector<testNmbrOfModules> expectedModules;
+    bitVector<testNmbrOfModules> expectedIsData;
+    TEST_ASSERT_EQUAL(625, testNmbrOfModules);
+    TEST_ASSERT_EQUAL(testNmbrOfModules, qrCode::modules.getSizeInBits());
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedModules.length);
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedIsData.length);
+
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(000000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000010101010100000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000001000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000001000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000001000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000001000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000001000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+    expectedModules.appendBits(0b0000000000000000000000000, 25);
+
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedModules.levelInBits());
+
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111100000000011111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111110111111111111111111, 25);
+    expectedIsData.appendBits(0b1111110111111111111111111, 25);
+    expectedIsData.appendBits(0b1111110111111111111111111, 25);
+    expectedIsData.appendBits(0b1111110111111111111111111, 25);
+    expectedIsData.appendBits(0b1111110111111111111111111, 25);
+    expectedIsData.appendBits(0b1111110111111111111111111, 25);
+    expectedIsData.appendBits(0b1111110111111111111111111, 25);
+    expectedIsData.appendBits(0b1111110111111111111111111, 25);
+    expectedIsData.appendBits(0b1111110111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedIsData.levelInBits());
+
+    for (uint32_t y = 0; y < 25; y++) {
+        for (uint32_t x = 0; x < 25; x++) {
+            char message[32];
+            snprintf(message, 30, "mismatch %d,%d", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), message);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), message);
+        }
+    }
+}
+
+void test_drawDummyFormatInfo() {
+    static constexpr uint16_t testVersion{2};
+    qrCode::setVersion(testVersion);
+    qrCode::drawDummyFormatBits(testVersion);
+    static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
+    bitVector<testNmbrOfModules> expectedIsData;
+    TEST_ASSERT_EQUAL(625, testNmbrOfModules);
+    TEST_ASSERT_EQUAL(testNmbrOfModules, qrCode::modules.getSizeInBits());
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedIsData.length);
+
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b0000001001111111100000000, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111111111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+    expectedIsData.appendBits(0b1111111101111111111111111, 25);
+
+    TEST_ASSERT_EQUAL(testNmbrOfModules, expectedIsData.levelInBits());
+
+    for (uint32_t y = 0; y < 25; y++) {
+        for (uint32_t x = 0; x < 25; x++) {
+            char message[32];
+            snprintf(message, 30, "mismatch %d,%d", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(false, qrCode::modules.getBit(x, y), message);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), message);
+        }
+    }
+}
+
+void test_drawFormatInfo() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
+void test_drawVersionInfo() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
+void test_drawAllPatterns() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
+void test_drawPayload() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
 
 #pragma endregion
 #pragma region testing api
@@ -790,6 +1076,8 @@ void test_errorCorrectionPossible() {
     }
 }
 
+void test_generate() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
+
 #pragma endregion
 
 void test_nmbrOfRawDataModules() {
@@ -849,21 +1137,28 @@ int main(int argc, char **argv) {
     RUN_TEST(test_interleave);
 
     // drawing function patterns and user data
-    RUN_TEST(test_nmbrOfAlignmentPatterns);
-    RUN_TEST(test_drawFinderPattern);
-    RUN_TEST(test_drawFinderSeparators);
     RUN_TEST(test_drawAllFindersAndSeparators);
-    RUN_TEST(test_dummyFormat);
-    RUN_TEST(test_darkModule);
-    RUN_TEST(test_drawAlignmentPattern);
-    RUN_TEST(test_drawAllAlignmentPatterns);
+
+    RUN_TEST(test_nmbrOfAlignmentPatterns);
     RUN_TEST(test_alignmentPatternSpacing);
     RUN_TEST(test_alignmentPatternCoordinates);
-    RUN_TEST(test_nmbrOfRawDataModules);
-    RUN_TEST(test_nmbrOfErrorCorrectionModules);
+    RUN_TEST(test_drawAllAlignmentPatterns);
+
+    RUN_TEST(test_drawTimingPatterns);
+    RUN_TEST(test_drawDummyFormatInfo);
+    RUN_TEST(test_drawDarkModule);
+    RUN_TEST(test_drawFormatInfo);
+
+    RUN_TEST(test_drawVersionInfo);
+    RUN_TEST(test_drawAllPatterns);
+    RUN_TEST(test_drawPayload);
 
     // api
     RUN_TEST(test_versionNeeded);
     RUN_TEST(test_errorCorrectionPossible);
+    RUN_TEST(test_generate);
+
+    RUN_TEST(test_nmbrOfRawDataModules);
+    RUN_TEST(test_nmbrOfErrorCorrectionModules);
     UNITY_END();
 }
