@@ -550,7 +550,7 @@ void test_interleave() {
 #pragma region testing drawing patterns and user data
 
 void test_drawAllFindersAndSeparators() {
-    static constexpr uint16_t testVersion{2};
+    static constexpr uint32_t testVersion{2};
     qrCode::setVersion(testVersion);
     qrCode::drawAllFinderPatternsAndSeparators(testVersion);
     static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
@@ -628,7 +628,7 @@ void test_drawAllFindersAndSeparators() {
 }
 
 void test_drawDarkModule() {
-    static constexpr uint16_t testVersion{2};
+    static constexpr uint32_t testVersion{2};
     qrCode::setVersion(testVersion);
     qrCode::drawDarkModule(testVersion);
     static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
@@ -779,7 +779,7 @@ void test_alignmentPatternCoordinates() {
 }
 
 void test_drawAllAlignmentPatterns() {
-    static constexpr uint16_t testVersion{2};
+    static constexpr uint32_t testVersion{2};
     qrCode::setVersion(testVersion);
     qrCode::drawAllAlignmentPatterns(testVersion);
     static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
@@ -857,7 +857,7 @@ void test_drawAllAlignmentPatterns() {
 }
 
 void test_drawTimingPatterns() {
-    static constexpr uint16_t testVersion{2};
+    static constexpr uint32_t testVersion{2};
     qrCode::setVersion(testVersion);
     qrCode::drawTimingPattern(testVersion);
     static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
@@ -935,7 +935,7 @@ void test_drawTimingPatterns() {
 }
 
 void test_drawDummyFormatInfo() {
-    static constexpr uint16_t testVersion{2};
+    static constexpr uint32_t testVersion{2};
     qrCode::setVersion(testVersion);
     qrCode::drawDummyFormatBits(testVersion);
     static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
@@ -986,6 +986,214 @@ void test_drawFormatInfo() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
 void test_drawVersionInfo() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
 void test_drawAllPatterns() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
 void test_drawPayload() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
+
+void test_masking() {
+    {
+        static constexpr uint32_t testVersion{1};
+        static constexpr uint32_t maskType{0};
+        qrCode::setVersion(testVersion);
+        qrCode::applyMask(maskType);
+        static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
+        bitVector<testNmbrOfModules> expectedModules;
+        TEST_ASSERT_EQUAL(441, testNmbrOfModules);
+        TEST_ASSERT_EQUAL(testNmbrOfModules, qrCode::modules.getSizeInBits());
+        TEST_ASSERT_EQUAL(testNmbrOfModules, expectedModules.length);
+
+        expectedModules.appendBits(0b101010101010101010101, 21);
+        expectedModules.appendBits(0b010101010101010101010, 21);
+        expectedModules.appendBits(0b101010101010101010101, 21);
+        expectedModules.appendBits(0b010101010101010101010, 21);
+        expectedModules.appendBits(0b101010101010101010101, 21);
+        expectedModules.appendBits(0b010101010101010101010, 21);
+        expectedModules.appendBits(0b101010101010101010101, 21);
+        expectedModules.appendBits(0b010101010101010101010, 21);
+        expectedModules.appendBits(0b101010101010101010101, 21);
+        expectedModules.appendBits(0b010101010101010101010, 21);
+        expectedModules.appendBits(0b101010101010101010101, 21);
+        expectedModules.appendBits(0b010101010101010101010, 21);
+        expectedModules.appendBits(0b101010101010101010101, 21);
+        expectedModules.appendBits(0b010101010101010101010, 21);
+        expectedModules.appendBits(0b101010101010101010101, 21);
+        expectedModules.appendBits(0b010101010101010101010, 21);
+        expectedModules.appendBits(0b101010101010101010101, 21);
+        expectedModules.appendBits(0b010101010101010101010, 21);
+        expectedModules.appendBits(0b101010101010101010101, 21);
+        expectedModules.appendBits(0b010101010101010101010, 21);
+        expectedModules.appendBits(0b101010101010101010101, 21);
+
+        for (uint32_t y = 0; y < 21; y++) {
+            for (uint32_t x = 0; x < 21; x++) {
+                char message[32];
+                snprintf(message, 30, "mismatch %d,%d", x, y);
+                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), message);
+            }
+        }
+    }
+    {
+        static constexpr uint32_t testVersion{1};
+        static constexpr uint32_t maskType{1};
+        qrCode::setVersion(testVersion);
+        qrCode::applyMask(maskType);
+        static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
+        bitVector<testNmbrOfModules> expectedModules;
+        TEST_ASSERT_EQUAL(441, testNmbrOfModules);
+        TEST_ASSERT_EQUAL(testNmbrOfModules, qrCode::modules.getSizeInBits());
+        TEST_ASSERT_EQUAL(testNmbrOfModules, expectedModules.length);
+
+        expectedModules.appendBits(0b111111111111111111111, 21);
+        expectedModules.appendBits(0b000000000000000000000, 21);
+        expectedModules.appendBits(0b111111111111111111111, 21);
+        expectedModules.appendBits(0b000000000000000000000, 21);
+        expectedModules.appendBits(0b111111111111111111111, 21);
+        expectedModules.appendBits(0b000000000000000000000, 21);
+        expectedModules.appendBits(0b111111111111111111111, 21);
+        expectedModules.appendBits(0b000000000000000000000, 21);
+        expectedModules.appendBits(0b111111111111111111111, 21);
+        expectedModules.appendBits(0b000000000000000000000, 21);
+        expectedModules.appendBits(0b111111111111111111111, 21);
+        expectedModules.appendBits(0b000000000000000000000, 21);
+        expectedModules.appendBits(0b111111111111111111111, 21);
+        expectedModules.appendBits(0b000000000000000000000, 21);
+        expectedModules.appendBits(0b111111111111111111111, 21);
+        expectedModules.appendBits(0b000000000000000000000, 21);
+        expectedModules.appendBits(0b111111111111111111111, 21);
+        expectedModules.appendBits(0b000000000000000000000, 21);
+        expectedModules.appendBits(0b111111111111111111111, 21);
+        expectedModules.appendBits(0b000000000000000000000, 21);
+        expectedModules.appendBits(0b111111111111111111111, 21);
+
+        for (uint32_t y = 0; y < 21; y++) {
+            for (uint32_t x = 0; x < 21; x++) {
+                char message[32];
+                snprintf(message, 30, "mismatch %d,%d", x, y);
+                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), message);
+            }
+        }
+    }
+    {
+        static constexpr uint32_t testVersion{1};
+        static constexpr uint32_t maskType{2};
+        qrCode::setVersion(testVersion);
+        qrCode::applyMask(maskType);
+        static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
+        bitVector<testNmbrOfModules> expectedModules;
+        TEST_ASSERT_EQUAL(441, testNmbrOfModules);
+        TEST_ASSERT_EQUAL(testNmbrOfModules, qrCode::modules.getSizeInBits());
+        TEST_ASSERT_EQUAL(testNmbrOfModules, expectedModules.length);
+
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+
+        for (uint32_t y = 0; y < 21; y++) {
+            for (uint32_t x = 0; x < 21; x++) {
+                char message[32];
+                snprintf(message, 30, "mismatch %d,%d", x, y);
+                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), message);
+            }
+        }
+    }
+    {
+        static constexpr uint32_t testVersion{1};
+        static constexpr uint32_t maskType{3};
+        qrCode::setVersion(testVersion);
+        qrCode::applyMask(maskType);
+        static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
+        bitVector<testNmbrOfModules> expectedModules;
+        TEST_ASSERT_EQUAL(441, testNmbrOfModules);
+        TEST_ASSERT_EQUAL(testNmbrOfModules, qrCode::modules.getSizeInBits());
+        TEST_ASSERT_EQUAL(testNmbrOfModules, expectedModules.length);
+
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b001001001001001001001, 21);
+        expectedModules.appendBits(0b010010010010010010010, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b001001001001001001001, 21);
+        expectedModules.appendBits(0b010010010010010010010, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b001001001001001001001, 21);
+        expectedModules.appendBits(0b010010010010010010010, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b001001001001001001001, 21);
+        expectedModules.appendBits(0b010010010010010010010, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b001001001001001001001, 21);
+        expectedModules.appendBits(0b010010010010010010010, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b001001001001001001001, 21);
+        expectedModules.appendBits(0b010010010010010010010, 21);
+        expectedModules.appendBits(0b100100100100100100100, 21);
+        expectedModules.appendBits(0b001001001001001001001, 21);
+        expectedModules.appendBits(0b010010010010010010010, 21);
+
+        for (uint32_t y = 0; y < 21; y++) {
+            for (uint32_t x = 0; x < 21; x++) {
+                char message[32];
+                snprintf(message, 30, "mismatch %d,%d", x, y);
+                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), message);
+            }
+        }
+    }
+    {
+        static constexpr uint32_t testVersion{1};
+        static constexpr uint32_t maskType{4};
+        qrCode::setVersion(testVersion);
+        qrCode::applyMask(maskType);
+        static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
+        bitVector<testNmbrOfModules> expectedModules;
+        TEST_ASSERT_EQUAL(441, testNmbrOfModules);
+        TEST_ASSERT_EQUAL(testNmbrOfModules, qrCode::modules.getSizeInBits());
+        TEST_ASSERT_EQUAL(testNmbrOfModules, expectedModules.length);
+
+        expectedModules.appendBits(0b111000111000111000111, 21);
+        expectedModules.appendBits(0b111000111000111000111, 21);
+        expectedModules.appendBits(0b000111000111000111000, 21);
+        expectedModules.appendBits(0b000111000111000111000, 21);
+        expectedModules.appendBits(0b111000111000111000111, 21);
+        expectedModules.appendBits(0b111000111000111000111, 21);
+        expectedModules.appendBits(0b000111000111000111000, 21);
+        expectedModules.appendBits(0b000111000111000111000, 21);
+        expectedModules.appendBits(0b111000111000111000111, 21);
+        expectedModules.appendBits(0b111000111000111000111, 21);
+        expectedModules.appendBits(0b000111000111000111000, 21);
+        expectedModules.appendBits(0b000111000111000111000, 21);
+        expectedModules.appendBits(0b111000111000111000111, 21);
+        expectedModules.appendBits(0b111000111000111000111, 21);
+        expectedModules.appendBits(0b000111000111000111000, 21);
+        expectedModules.appendBits(0b000111000111000111000, 21);
+        expectedModules.appendBits(0b111000111000111000111, 21);
+        expectedModules.appendBits(0b111000111000111000111, 21);
+        expectedModules.appendBits(0b000111000111000111000, 21);
+        expectedModules.appendBits(0b000111000111000111000, 21);
+        expectedModules.appendBits(0b111000111000111000111, 21);
+
+        for (uint32_t y = 0; y < 21; y++) {
+            for (uint32_t x = 0; x < 21; x++) {
+                char message[32];
+                snprintf(message, 30, "mismatch %d,%d", x, y);
+                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), message);
+            }
+        }
+    }
+}
 
 #pragma endregion
 #pragma region testing api
@@ -1152,6 +1360,7 @@ int main(int argc, char **argv) {
     RUN_TEST(test_drawVersionInfo);
     RUN_TEST(test_drawAllPatterns);
     RUN_TEST(test_drawPayload);
+    RUN_TEST(test_masking);
 
     // api
     RUN_TEST(test_versionNeeded);

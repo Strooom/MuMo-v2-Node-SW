@@ -724,6 +724,42 @@ void qrCode::drawPayload(uint32_t theVersion) {
 }
 
 void qrCode::applyMask(uint8_t maskType) {
+    bool invert{false};
+    for (uint32_t x = 0; x < size(theVersion); x++) {
+        for (uint32_t y = 0; y < size(theVersion); y++) {
+            if (isData.getBit(x, y)) {
+                switch (maskType) {
+                    case 0:
+                        invert = ((x + y) % 2 == 0);
+                        break;
+                    case 1:
+                        invert = (y % 2 == 0);
+                        break;
+                    case 2:
+                        invert = (x % 3 == 0);
+                        break;
+                    case 3:
+                        invert = ((x + y) % 3 == 0);
+                        break;
+                    case 4:
+                        invert = ((x / 3 + y / 2) % 2 == 0);
+                        break;
+                    case 5:
+                        invert = (x * y % 2 + x * y % 3 == 0);
+                        break;
+                    case 6:
+                        invert = ((x * y % 2 + x * y % 3) % 2 == 0);
+                        break;
+                    case 7:
+                        invert = (((x + y) % 2 + x * y % 3) % 2 == 0);
+                        break;
+                }
+                if (invert) {
+                    modules.invertBit(x, y);
+                }
+            }
+        }
+    }
 }
 
 uint32_t qrCode::getPenaltyScore() {
@@ -751,7 +787,7 @@ uint32_t qrCode::penalty1() {
             } else {
                 runX++;
                 if (runX == 5) {
-                    result += PENALTY_N1;
+                    result += penaltyN1;
                 } else if (runX > 5) {
                     result++;
                 }
@@ -769,7 +805,7 @@ uint32_t qrCode::penalty1() {
             } else {
                 runY++;
                 if (runY == 5) {
-                    result += PENALTY_N1;
+                    result += penaltyN1;
                 } else if (runY > 5) {
                     result++;
                 }
@@ -781,23 +817,17 @@ uint32_t qrCode::penalty1() {
 
 uint32_t qrCode::penalty2() {
     uint32_t result{0};
-    uint32_t width  = size(theVersion);
-    uint32_t height = size(theVersion);
+    uint32_t maxX = size(theVersion) - 2;
+    uint32_t maxY = size(theVersion) - 2;
 
-    uint16_t black = 0;
-    for (uint8_t y = 0; y < height; y++) {
-        uint16_t bitsRow = 0, bitsCol = 0;
-        for (uint8_t x = 0; x < width; x++) {
-            bool color = modules.getBit(x, y);
-
-            // 2*2 blocks of modules having same color
-            if (x > 0 && y > 0) {
-                bool colorUL = modules.getBit(x - 1, y - 1);
-                bool colorUR = modules.getBit(x, y - 1);
-                bool colorL  = modules.getBit(x - 1, y);
-                if (color == colorUL && color == colorUR && color == colorL) {
-                    result += PENALTY_N2;
-                }
+    for (uint8_t y = 0; y <= maxY; y++) {
+        for (uint8_t x = 0; x <= maxX; x++) {
+            bool colorTopLeft     = modules.getBit(x, y);
+            bool colorTopRight    = modules.getBit(x + 1, y);
+            bool colorBottomLeft  = modules.getBit(x, y + 1);
+            bool colorBottomRight = modules.getBit(x + 1, y + 1);
+            if ((colorTopLeft == colorTopRight) && (colorTopLeft == colorBottomLeft) && (colorTopLeft == colorBottomRight)) {
+                result += penaltyN2;
             }
         }
     }
@@ -821,10 +851,10 @@ uint32_t qrCode::penalty3() {
             // Needs 11 bits accumulated
             if (x >= 10) {
                 if (bitsRow == 0x05D || bitsRow == 0x5D0) {
-                    result += PENALTY_N3;
+                    result += penaltyN3;
                 }
                 if (bitsCol == 0x05D || bitsCol == 0x5D0) {
-                    result += PENALTY_N3;
+                    result += penaltyN3;
                 }
             }
         }
@@ -833,27 +863,19 @@ uint32_t qrCode::penalty3() {
 }
 
 uint32_t qrCode::penalty4() {
-    uint32_t result{0};
-    uint32_t width  = size(theVersion);
-    uint32_t height = size(theVersion);
-
-    uint16_t black = 0;
-    for (uint8_t y = 0; y < height; y++) {
-        uint16_t bitsRow = 0, bitsCol = 0;
-        for (uint8_t x = 0; x < width; x++) {
-            bool color = modules.getBit(x, y);
-            // Balance of black and white modules
-            if (color) {
-                black++;
+    uint32_t maxX = size(theVersion) - 1;
+    uint32_t maxY = size(theVersion) - 1;
+    uint32_t blackModulesCount{0};
+    for (uint8_t y = 0; y <= maxY; y++) {
+        for (uint8_t x = 0; x <= maxX; x++) {
+            if (modules.getBit(x, y)) {
+                blackModulesCount++;
             }
         }
     }
-    // Find smallest k such that (45-5k)% <= dark/total <= (55+5k)%
-    uint16_t total = width * height;
-    for (uint16_t k = 0; black * 20 < (9 - k) * total || black * 20 > (11 + k) * total; k++) {
-        result += PENALTY_N4;
-    }
-    return result;
+    int32_t ratio  = (blackModulesCount * 100U) / (size(theVersion) * size(theVersion));
+    uint32_t delta = abs(ratio - 50) / 5;
+    return delta * penaltyN4;
 }
 
 #pragma endregion

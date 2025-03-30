@@ -117,10 +117,10 @@ class qrCode {
     
     
     // private compile-time constants
-    static constexpr uint32_t PENALTY_N1{3};
-    static constexpr uint32_t PENALTY_N2{3};
-    static constexpr uint32_t PENALTY_N3{40};
-    static constexpr uint32_t PENALTY_N4{10};
+    static constexpr uint32_t penaltyN1{3};
+    static constexpr uint32_t penaltyN2{3};
+    static constexpr uint32_t penaltyN3{40};
+    static constexpr uint32_t penaltyN4{10};
     static constexpr struct {
         uint16_t availableDataCodeWords[nmbrOfErrorCorrectionLevels];
         uint8_t nmbrBlocks[nmbrOfErrorCorrectionLevels];
