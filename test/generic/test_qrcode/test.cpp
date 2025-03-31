@@ -1048,8 +1048,7 @@ void test_drawPayload() {
         }
     }
 
-// TODO : also do this for a V2 which has alignment patterns and V7 which has version info
-
+    // TODO : also do this for a V2 which has alignment patterns and V7 which has version info
 }
 
 void test_masking() {
@@ -1382,12 +1381,23 @@ void test_calculatePayloadLength() {
     TEST_ASSERT_EQUAL(148, qrCode::payloadLengthInBits(17, 1, encodingFormat::byte));
 }
 
+void test_formatInfo() {
+    for (uint32_t eccLevelIndex = 0; eccLevelIndex < 4; eccLevelIndex++) {
+        for (uint32_t maskTypeIndex = 0; maskTypeIndex < 8; maskTypeIndex++) {
+            TEST_ASSERT_EQUAL(qrCode::formatInfoBits[eccLevelIndex][maskTypeIndex], qrCode::calculateFormatInfo(static_cast<errorCorrectionLevel>(eccLevelIndex), maskTypeIndex));
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     // testing internal data initialization / setting
     RUN_TEST(test_initialization);
 
     // general helpers
+    RUN_TEST(test_size);
+    RUN_TEST(test_setVersion);
+    RUN_TEST(test_setErrorCorrectionLevel);
 
     // encoding user data into payload
     RUN_TEST(test_isNumeric);
@@ -1432,7 +1442,11 @@ int main(int argc, char **argv) {
     RUN_TEST(test_errorCorrectionPossible);
     RUN_TEST(test_generate);
 
-    RUN_TEST(test_nmbrOfRawDataModules);
+    // temporary tests
     RUN_TEST(test_nmbrOfErrorCorrectionModules);
+    RUN_TEST(test_nmbrOfRawDataModules);
+    RUN_TEST(test_calculatePayloadLength);
+    RUN_TEST(test_formatInfo);
+
     UNITY_END();
 }

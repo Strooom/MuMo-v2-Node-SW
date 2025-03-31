@@ -17,6 +17,8 @@ enum class errorCorrectionLevel {
     high     = 3,
 };
 
+static constexpr uint32_t nmbrOfMasks{8};
+
 class qrCode {
   public:
     // api
@@ -75,7 +77,6 @@ class qrCode {
     static uint32_t blockLengthGroup2(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
     static uint32_t dataOffset(uint32_t blockIndex, uint32_t rowIndex);
     static uint32_t eccOffset(uint32_t blockIndex, uint32_t rowIndex);
-    static uint32_t errorCorrectionLevelBits(errorCorrectionLevel someLevel);
     static void addErrorCorrection();
     static void interleaveData();
 
@@ -92,7 +93,7 @@ class qrCode {
     static uint32_t alignmentPatternCoordinate(uint32_t someVersion, uint32_t index);
     static void drawAllAlignmentPatterns(uint32_t theVersion);
     static void drawTimingPattern(uint32_t theVersion);
-    static uint32_t formatInfo(uint32_t maskType);
+    static uint32_t calculateFormatInfo(errorCorrectionLevel someErrorCorrectionLevel, uint32_t mask);
     static void drawFormatInfoCopy1(uint32_t data);
     static void drawFormatInfoCopy2(uint32_t data);
     static void drawFormatInfo();
@@ -106,21 +107,15 @@ class qrCode {
     static uint32_t penalty3();
     static uint32_t penalty4();
 
-    
     // ????
-    
+
     static uint32_t payloadLengthInBits(uint32_t dataLengthInBytes, uint32_t someVersion, encodingFormat someEncodingFormat);
     static uint32_t nmbrOfTotalModules(uint32_t someVersion);
     static uint32_t nmbrOfDataModules(uint32_t someVersion);
     static uint32_t nmbrOfFunctionModules(uint32_t someVersion);
     static uint32_t nmbrOfErrorCorrectionModules(uint32_t theVersion, errorCorrectionLevel theErrorCorrectionLevel);
-    
-    
+
     // private compile-time constants
-    static constexpr uint32_t penaltyN1{3};
-    static constexpr uint32_t penaltyN2{3};
-    static constexpr uint32_t penaltyN3{40};
-    static constexpr uint32_t penaltyN4{10};
     static constexpr struct {
         uint16_t availableDataCodeWords[nmbrOfErrorCorrectionLevels];
         uint8_t nmbrBlocks[nmbrOfErrorCorrectionLevels];
@@ -134,6 +129,48 @@ class qrCode {
         {{108, 86, 62, 46}, {1, 2, 4, 4}, {26, 24, 18, 22}}
         //        {{108, 86, 62, 46}, {2, 4, 4, 4}, {36, 24, 18, 22}}
     };
+
+    static constexpr uint16_t formatInfoBits[nmbrOfErrorCorrectionLevels][nmbrOfMasks]{
+        {0b111011111000100, 0b111001011110011, 0b111110110101010, 0b111100010011101, 0b110011000101111, 0b110001100011000, 0b110110001000001, 0b110100101110110},        // formatInfo bits taken from https://www.thonky.com/qr-code-tutorial/format-version-tables
+        {0b101010000010010, 0b101000100100101, 0b101111001111100, 0b101101101001011, 0b100010111111001, 0b100000011001110, 0b100111110010111, 0b100101010100000},
+        {0b011010101011111, 0b011000001101000, 0b011111100110001, 0b011101000000110, 0b010010010110100, 0b010000110000011, 0b010111011011010, 0b010101111101101},
+        {0b001011010001001, 0b001001110111110, 0b001110011100111, 0b001100111010000, 0b000011101100010, 0b000001001010101, 0b000110100001100, 0b000100000111011}};
+
+    static constexpr uint32_t versionBits[34]{
+        0b000111110010010100,
+        0b001000010110111100,
+        0b001001101010011001,
+        0b001010010011010011,
+        0b001011101111110110,
+        0b001100011101100010,
+        0b001101100001000111,
+        0b001110011000001101,
+        0b001111100100101000,
+        0b010000101101111000,
+        0b010001010001011101,
+        0b010010101000010111,
+        0b010011010100110010,
+        0b010100100110100110,
+        0b010101011010000011,
+        0b0010110100011001001, // ??
+        0b010111011111101100,
+        0b011000111011000100,
+        0b011001000111100001,
+        0b011010111110101011,
+        0b011011000010001110,
+        0b011100110000011010,
+        0b011101001100111111,
+        0b011110110101110101,
+        0b011111001001010000,
+        0b100000100111010101,
+        0b100001011011110000,
+        0b100010100010111010,
+        0b100011011110011111,
+        0b100100101100001011,
+        0b100101010000101110,
+        0b100110101001100100,
+        0b100111010101000001,
+        0b101000110001101001};        // versionInfo bits taken from https://www.thonky.com/qr-code-tutorial/format-version-tables
 
     // internal data
     static uint32_t theVersion;
