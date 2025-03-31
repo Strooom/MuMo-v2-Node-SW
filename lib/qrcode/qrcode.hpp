@@ -59,7 +59,6 @@ class qrCode {
     static void encodeNumeric(const uint8_t *data, uint32_t dataLength);
     static void encodeAlfaNumeric(const uint8_t *data, uint32_t dataLength);
     static void encodeByte(const uint8_t *data, uint32_t dataLength);
-    static uint8_t modeIndicator(encodingFormat theEncodingFormat);
     static uint32_t characterCountIndicatorLength(uint32_t someVersion, encodingFormat someEncodingFormat);
     static void addTerminator();
     static void addBitPadding();
@@ -127,7 +126,6 @@ class qrCode {
         {{55, 44, 34, 26}, {1, 1, 2, 2}, {15, 26, 18, 22}},
         {{80, 64, 48, 36}, {1, 2, 2, 4}, {20, 18, 26, 16}},
         {{108, 86, 62, 46}, {1, 2, 4, 4}, {26, 24, 18, 22}}
-        //        {{108, 86, 62, 46}, {2, 4, 4, 4}, {36, 24, 18, 22}}
     };
 
     // internal data

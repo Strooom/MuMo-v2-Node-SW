@@ -162,11 +162,6 @@ void test_compress() {
     TEST_ASSERT_EQUAL(44, qrCode::compressAlphanumeric(':'));
 }
 
-void test_getModeBits() {
-    TEST_ASSERT_EQUAL(0b0001, qrCode::modeIndicator(encodingFormat::numeric));
-    TEST_ASSERT_EQUAL(0b0010, qrCode::modeIndicator(encodingFormat::alphanumeric));
-    TEST_ASSERT_EQUAL(0b0100, qrCode::modeIndicator(encodingFormat::byte));
-}
 
 void test_encodeData() {
     // used https://www.nayuki.io/page/creating-a-qr-code-step-by-step to create test-vectors
@@ -1449,7 +1444,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_isAlphanumeric);
     RUN_TEST(test_getEncodingFormat);
     RUN_TEST(test_compress);
-    RUN_TEST(test_getModeBits);
     RUN_TEST(test_payloadLengthInBits);
     RUN_TEST(test_encodeData);
     RUN_TEST(test_characterCountIndicatorLength);

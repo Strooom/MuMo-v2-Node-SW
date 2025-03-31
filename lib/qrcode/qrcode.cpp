@@ -247,20 +247,6 @@ void qrCode::encodeByte(const uint8_t *data, uint32_t dataLength) {
     }
 }
 
-uint8_t qrCode::modeIndicator(encodingFormat someEncodingFormat) {
-    switch (someEncodingFormat) {
-        case encodingFormat::numeric:
-            return 0b0001;
-
-        case encodingFormat::alphanumeric:
-            return 0b0010;
-
-        case encodingFormat::byte:        // intentional fallthrough
-        default:
-            return 0b0100;
-    }
-}
-
 uint32_t qrCode::characterCountIndicatorLength(uint32_t someVersion, encodingFormat someEncodingFormat) {
     if (someVersion < 10) {
         switch (someEncodingFormat) {
@@ -336,7 +322,8 @@ void qrCode::encodeData(const char *data) {
 void qrCode::encodeData(const uint8_t *data, uint32_t dataLength) {
     theEncodingFormat = getEncodingFormat(data, dataLength);
     buffer.reset();
-    buffer.appendBits(modeIndicator(theEncodingFormat), 4);
+    static constexpr uint8_t modeIndicator[nmbrOfEncodingFormats] = {0b0001, 0b0010, 0b0100};
+    buffer.appendBits(modeIndicator[static_cast<uint32_t>(theEncodingFormat)], 4);
     buffer.appendBits(dataLength, characterCountIndicatorLength(theVersion, theEncodingFormat));
 
     switch (theEncodingFormat) {
@@ -791,12 +778,7 @@ void qrCode::applyMask(uint8_t maskType) {
 }
 
 uint32_t qrCode::getPenaltyScore() {
-    uint32_t result{0};
-    result += penalty1();
-    result += penalty2();
-    result += penalty3();
-    result += penalty4();
-    return result;
+    return penalty1() + penalty2() + penalty3() + penalty4();
 }
 
 uint32_t qrCode::penalty1() {
