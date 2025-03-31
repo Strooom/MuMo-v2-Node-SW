@@ -32,8 +32,7 @@ class polynome {
         }
     }
 
-    explicit polynome() {        // zero order polynome with all zero coefficients
-    }
+    explicit polynome() = default;
 
     uint32_t getOrder() const {
         return order;
