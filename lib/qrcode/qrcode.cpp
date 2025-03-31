@@ -642,6 +642,7 @@ uint32_t qrCode::formatInfo(uint32_t mask) {
 
     formatBits = formatBits << 10 | remainder;
     formatBits ^= 0x5412;        // uint15
+    return formatBits;
 }
 
 void qrCode::drawFormatInfoCopy1(uint32_t data) {
@@ -685,38 +686,35 @@ void qrCode::drawVersionInfo(uint32_t theVersion) {
 }
 
 void qrCode::drawPatterns(uint32_t theVersion) {
-    isData.setAllBits();
     drawAllFinderPatternsAndSeparators(theVersion);
     drawTimingPattern(theVersion);
     drawAllAlignmentPatterns(theVersion);
-    drawFormatInfo();
-    drawVersionInfo(theVersion);
+    drawDarkModule(theVersion);
+    drawDummyFormatBits(theVersion);
+    // drawVersionInfo(theVersion);
 }
 
 void qrCode::drawPayload(uint32_t theVersion) {
     uint32_t codeSize = size(theVersion);
     uint32_t bitIndex{0};
+    uint32_t x{0};
+    bool isUpwards{false};
+    uint32_t y{0};
 
     for (int32_t columnPairIndex = (codeSize - 1); columnPairIndex >= 1; columnPairIndex -= 2) {
         if (columnPairIndex == 6) {        // Skip the timing pattern
             columnPairIndex = 5;
         }
-
         for (uint32_t verticalIndex = 0; verticalIndex < codeSize; verticalIndex++) {
             for (int columnIndex = 0; columnIndex < 2; columnIndex++) {
-                uint32_t x     = columnPairIndex - columnIndex;
-                bool isUpwards = ((columnPairIndex & 2) == 0) ^ (x < 6);
-                uint32_t y     = isUpwards ? codeSize - 1 - verticalIndex : verticalIndex;
+                x = columnPairIndex - columnIndex;
+                isUpwards    = ((columnPairIndex & 2) == 0) ^ (x < 6);
+                y = isUpwards ? (codeSize - 1 - verticalIndex) : verticalIndex;
                 if (isData.getBit(x, y)) {
                     if (buffer.getBit(bitIndex)) {
                         modules.setBit(x, y);
                     }
                     bitIndex++;
-
-                    // if (!bb_getBit(isFunction, x, y) && i < bitLength) {
-                    //     bb_setBit(modules, x, y, ((data[i >> 3] >> (7 - (i & 7))) & 1) != 0);
-                    //     i++;
-                    // }
                 }
             }
         }

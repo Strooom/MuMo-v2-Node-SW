@@ -985,7 +985,72 @@ void test_drawDummyFormatInfo() {
 void test_drawFormatInfo() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
 void test_drawVersionInfo() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
 void test_drawAllPatterns() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
-void test_drawPayload() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
+
+void test_drawPayload() {
+    static constexpr uint32_t testVersion{1};
+    qrCode::setVersion(testVersion);
+    qrCode::setErrorCorrectionLevel(errorCorrectionLevel::low);
+
+    bitVector<208> expectedBuffer;
+    expectedBuffer.appendBits(0b00010000000001000000000011101100, 32);        // https://www.nayuki.io/page/creating-a-qr-code-step-by-step with payload "0"
+    expectedBuffer.appendBits(0b00010001111011000001000111101100, 32);
+    expectedBuffer.appendBits(0b00010001111011000001000111101100, 32);
+    expectedBuffer.appendBits(0b00010001111011000001000111101100, 32);
+    expectedBuffer.appendBits(0b00010001111011000001000110000011, 32);
+    expectedBuffer.appendBits(0b00000111010001011100001111000011, 32);
+    expectedBuffer.appendBits(0b1100110000011001, 16);
+
+    qrCode::encodeData("0");
+    qrCode::addErrorCorrection();
+
+    for (uint32_t bitIndex = 0; bitIndex < 208; bitIndex++) {
+        char message[32];
+        snprintf(message, 30, "mismatch %d", bitIndex);
+        TEST_ASSERT_EQUAL_MESSAGE(expectedBuffer.getBit(bitIndex), qrCode::buffer.getBit(bitIndex), message);
+    }
+
+    qrCode::drawPatterns(testVersion);
+    qrCode::drawPayload(testVersion);
+
+    static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
+    bitVector<testNmbrOfModules> expectedModules;
+    expectedModules.appendBits(0b111111100111001111111, 21);        // https://www.nayuki.io/page/creating-a-qr-code-step-by-step with payload "0"
+    expectedModules.appendBits(0b100000100010001000001, 21);
+    expectedModules.appendBits(0b101110100111001011101, 21);
+    expectedModules.appendBits(0b101110100000001011101, 21);
+    expectedModules.appendBits(0b101110100000001011101, 21);
+    expectedModules.appendBits(0b100000100101101000001, 21);
+    expectedModules.appendBits(0b111111101010101111111, 21);
+    expectedModules.appendBits(0b000000000000100000000, 21);
+    expectedModules.appendBits(0b000000100101100000000, 21);
+    expectedModules.appendBits(0b000011011011011101100, 21);
+
+    expectedModules.appendBits(0b101100100000001000100, 21);
+    expectedModules.appendBits(0b010000000001011101100, 21);
+    expectedModules.appendBits(0b101111111110000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+
+    expectedModules.appendBits(0b111111100001110111010, 21);
+    expectedModules.appendBits(0b100000100100100010000, 21);
+    expectedModules.appendBits(0b101110100111110111000, 21);
+    expectedModules.appendBits(0b101110100101011101100, 21);
+    expectedModules.appendBits(0b101110100000001000100, 21);
+    expectedModules.appendBits(0b100000100101011101110, 21);
+    expectedModules.appendBits(0b111111100100000000000, 21);
+
+    uint32_t bitIndex{0};
+    for (int32_t y = 20; y > 0; y--) {
+        for (int32_t x = 20; x > 0; x--) {
+            char message[64];
+            snprintf(message, 63, "mismatch bit %d, (%d,%d)", bitIndex, x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), message);
+            bitIndex++;
+        }
+    }
+
+// TODO : also do this for a V2 which has alignment patterns and V7 which has version info
+
+}
 
 void test_masking() {
     {
