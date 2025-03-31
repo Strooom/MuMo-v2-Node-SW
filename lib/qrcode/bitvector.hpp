@@ -21,7 +21,7 @@ class bitVector {
     void clearBit(uint32_t bitIndex) { setOrClearBit(bitIndex, false); };
     void invertBit(uint32_t bitIndex) { setOrClearBit(bitIndex, !getBit(bitIndex)); };
     bool getBit(uint32_t bitIndex) { return (data[byteOffset(bitIndex)] & bitMask(bitIndex)) != 0; };
-    void appendBits(uint32_t bits, uint8_t nmbrOfBits) {
+    void appendBits(uint32_t bits, uint32_t nmbrOfBits) {
         for (uint32_t index = 0; index < nmbrOfBits; index++) {
             if (((bits >> (nmbrOfBits - index - 1)) & 1) == 1) {
                 setBit(level);

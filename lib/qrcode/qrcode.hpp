@@ -86,7 +86,7 @@ class qrCode {
     static void drawAllFinderPatternsAndSeparators(uint32_t theVersion);
     static void drawDummyFormatBits(uint32_t someVersion);
     static void drawDarkModule(uint32_t someVersion);
-    static void drawAlignmentPattern(uint32_t centerX, uint32_t centerY, uint32_t someVersion);
+    static void drawAlignmentPattern(uint32_t centerX, uint32_t centerY);
     static uint32_t nmbrOfAlignmentPatterns(uint32_t someVersion);
     static uint32_t nmbrOfAlignmentPatternRowsOrCols(uint32_t someVersion);
     static uint32_t alignmentPatternSpacing(uint32_t someVersion);
@@ -130,11 +130,6 @@ class qrCode {
         //        {{108, 86, 62, 46}, {2, 4, 4, 4}, {36, 24, 18, 22}}
     };
 
-    static constexpr uint16_t formatInfoBits[nmbrOfErrorCorrectionLevels][nmbrOfMasks]{
-        {0b111011111000100, 0b111001011110011, 0b111110110101010, 0b111100010011101, 0b110011000101111, 0b110001100011000, 0b110110001000001, 0b110100101110110},        // formatInfo bits taken from https://www.thonky.com/qr-code-tutorial/format-version-tables
-        {0b101010000010010, 0b101000100100101, 0b101111001111100, 0b101101101001011, 0b100010111111001, 0b100000011001110, 0b100111110010111, 0b100101010100000},
-        {0b011010101011111, 0b011000001101000, 0b011111100110001, 0b011101000000110, 0b010010010110100, 0b010000110000011, 0b010111011011010, 0b010101111101101},
-        {0b001011010001001, 0b001001110111110, 0b001110011100111, 0b001100111010000, 0b000011101100010, 0b000001001010101, 0b000110100001100, 0b000100000111011}};
 
     static constexpr uint32_t versionBits[34]{
         0b000111110010010100,
