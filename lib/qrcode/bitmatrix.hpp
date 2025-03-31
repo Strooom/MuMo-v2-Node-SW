@@ -10,9 +10,9 @@
 template <uint32_t maxWidthHeightInBits>
 class bitMatrix {
   public:
-    uint32_t getWidthHeightInBits() { return widthHeightInBits; };
-    uint32_t getSizeInBits() { return widthHeightInBits * widthHeightInBits; };
-    uint32_t getSizeInBytes() { return (getSizeInBits() + 7U) / 8U; };
+    uint32_t getWidthHeightInBits() const { return widthHeightInBits; };
+    uint32_t getSizeInBits() const { return widthHeightInBits * widthHeightInBits; };
+    uint32_t getSizeInBytes() const { return (getSizeInBits() + 7U) / 8U; };
 
     void setWidthHeightInBits(uint32_t newWidthHeightInBits) {
         if (newWidthHeightInBits <= maxWidthHeightInBits) {
@@ -27,7 +27,7 @@ class bitMatrix {
     void setBit(uint32_t x, uint32_t y) { setOrClearBit(x, y, true); };
     void clearBit(uint32_t x, uint32_t y) { setOrClearBit(x, y, false); };
     void invertBit(uint32_t x, uint32_t y) { setOrClearBit(x, y, !getBit(x, y)); };
-    bool getBit(uint32_t x, uint32_t y) { return (data[byteOffset(x, y)] & bitMask(x, y)) != 0; };
+    bool getBit(uint32_t x, uint32_t y) const { return (data[byteOffset(x, y)] & bitMask(x, y)) != 0; };
     void setOrClearBit(uint32_t x, uint32_t y, bool newBitState) {
         if (newBitState) {
             data[byteOffset(x, y)] |= bitMask(x, y);
@@ -35,7 +35,7 @@ class bitMatrix {
             data[byteOffset(x, y)] &= ~bitMask(x, y);
         }
     };
-    uint8_t getByte(uint32_t byteIndex) { return data[byteIndex]; };
+    uint8_t getByte(uint32_t byteIndex) const { return data[byteIndex]; };
 
 #ifndef unitTesting
 

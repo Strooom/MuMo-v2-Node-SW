@@ -20,7 +20,7 @@ class bitVector {
     void setBit(uint32_t bitIndex) { setOrClearBit(bitIndex, true); };
     void clearBit(uint32_t bitIndex) { setOrClearBit(bitIndex, false); };
     void invertBit(uint32_t bitIndex) { setOrClearBit(bitIndex, !getBit(bitIndex)); };
-    bool getBit(uint32_t bitIndex) { return (data[byteOffset(bitIndex)] & bitMask(bitIndex)) != 0; };
+    bool getBit(uint32_t bitIndex) const { return (data[byteOffset(bitIndex)] & bitMask(bitIndex)) != 0; };
     void appendBits(uint32_t bits, uint32_t nmbrOfBits) {
         for (uint32_t index = 0; index < nmbrOfBits; index++) {
             if (((bits >> (nmbrOfBits - index - 1)) & 1) == 1) {
@@ -35,7 +35,7 @@ class bitVector {
         data[levelInBytes()] = byteToAppend;
         level += 8;
     }
-    uint8_t getByte(uint32_t byteIndex) { return data[byteIndex]; };
+    uint8_t getByte(uint32_t byteIndex) const { return data[byteIndex]; };
     uint32_t levelInBits() const { return level; };
     uint32_t levelInBytes() const { return (level + 7U) / 8U; };
 

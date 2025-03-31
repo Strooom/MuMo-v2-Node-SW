@@ -56,7 +56,7 @@ class polynome {
         order = nmbr - 1;
     }
 
-    void getCoefficients(uint8_t *output) {
+    void getCoefficients(uint8_t *output) const {
         memcpy(output, coefficients, order + 1);
     }
 

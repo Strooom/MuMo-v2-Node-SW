@@ -535,7 +535,7 @@ void qrCode::drawDarkModule(uint32_t someVersion) {
 void qrCode::drawAlignmentPattern(uint32_t centerX, uint32_t centerY) {
     for (int32_t relativeY = -2; relativeY <= 2; relativeY++) {
         for (int32_t relativeX = -2; relativeX <= 2; relativeX++) {
-            if (((relativeX == -2) || (relativeX == 2) || (relativeY == -2) || (relativeY == 2))) {
+            if ((relativeX == -2) || (relativeX == 2) || (relativeY == -2) || (relativeY == 2)) {
                 modules.setBit(centerX + relativeX, centerY + relativeY);
             }
             if ((relativeX == 0) && (relativeY == 0)) {
@@ -692,22 +692,22 @@ void qrCode::drawFormatInfo() {
     drawFormatInfoCopy2(formatInfoBits);
 }
 
-void qrCode::drawVersionInfo(uint32_t theVersion) {
-    if (theVersion < 7) {
+void qrCode::drawVersionInfo(uint32_t someVersion) {
+    if (someVersion < 7) {
         return;
     }
 
     // Calculate error correction code and pack bits
-    uint32_t rem = theVersion;        // version is uint6, in the range [7, 40]
+    uint32_t rem = someVersion;        // version is uint6, in the range [7, 40]
     for (uint8_t i = 0; i < 12; i++) {
         rem = (rem << 1) ^ ((rem >> 11) * 0x1F25);
     }
 
-    uint32_t data = theVersion << 12 | rem;        // uint18
+    uint32_t data = someVersion << 12 | rem;        // uint18
 
     for (uint8_t i = 0; i < 18; i++) {
         bool bit  = ((data >> i) & 1) != 0;
-        uint8_t a = size(theVersion) - 11 + i % 3;
+        uint8_t a = size(someVersion) - 11 + i % 3;
         uint8_t b = i / 3;
         modules.setOrClearBit(a, b, bit);
         modules.setOrClearBit(b, a, bit);
@@ -870,9 +870,9 @@ uint32_t qrCode::penalty3() {
     uint32_t width  = size(theVersion);
     uint32_t height = size(theVersion);
 
-    uint16_t black = 0;
     for (uint8_t y = 0; y < height; y++) {
-        uint16_t bitsRow = 0, bitsCol = 0;
+        uint16_t bitsRow{0};
+        uint16_t bitsCol{0};
         for (uint8_t x = 0; x < width; x++) {
             bool color = modules.getBit(x, y);
             // Finder-like pattern in rows and columns
