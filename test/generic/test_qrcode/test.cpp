@@ -16,12 +16,11 @@ void tearDown(void) {}
 void test_initialization() {
     static constexpr uint32_t testVersion{1};
     const uint32_t size = qrCode::size(testVersion);
-    qrCode::setVersion(testVersion);
+    static const errorCorrectionLevel testErrorCorrectionLevel{errorCorrectionLevel::low};
+    qrCode::initialize(testVersion, testErrorCorrectionLevel);
     TEST_ASSERT_EQUAL(testVersion, qrCode::theVersion);
     TEST_ASSERT_EQUAL(size, qrCode::modules.getWidthHeightInBits());
     TEST_ASSERT_EQUAL(size, qrCode::isData.getWidthHeightInBits());
-    static const errorCorrectionLevel testErrorCorrectionLevel{errorCorrectionLevel::low};
-    qrCode::setErrorCorrectionLevel(testErrorCorrectionLevel);
     TEST_ASSERT_EQUAL(testErrorCorrectionLevel, qrCode::theErrorCorrectionLevel);
 
     TEST_ASSERT_EACH_EQUAL_UINT8(0, qrCode::modules.data, qrCode::modules.getSizeInBytes());
@@ -37,17 +36,6 @@ void test_size() {
     TEST_ASSERT_EQUAL(177U, qrCode::size(40U));
 }
 
-void test_setVersion() {
-    static constexpr uint32_t testVersion{1};
-    qrCode::setVersion(testVersion);
-    TEST_ASSERT_EQUAL(testVersion, qrCode::theVersion);
-}
-
-void test_setErrorCorrectionLevel() {
-    static const errorCorrectionLevel testErrorCorrectionLevel{errorCorrectionLevel::low};
-    qrCode::setErrorCorrectionLevel(testErrorCorrectionLevel);
-    TEST_ASSERT_EQUAL(testErrorCorrectionLevel, qrCode::theErrorCorrectionLevel);
-}
 #pragma endregion
 #pragma region testing encoding user data into payload
 void test_isNumeric() {
@@ -162,14 +150,12 @@ void test_compress() {
     TEST_ASSERT_EQUAL(44, qrCode::compressAlphanumeric(':'));
 }
 
-
 void test_encodeData() {
     // used https://www.nayuki.io/page/creating-a-qr-code-step-by-step to create test-vectors
 
     // 1. Numeric encoding mode
     {
-        qrCode::setVersion(1);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::low);
+        qrCode::initialize(1, errorCorrectionLevel::low);
         qrCode::encodeData("0123456789");
 
         bitVector<200U> expected;
@@ -190,8 +176,7 @@ void test_encodeData() {
     {
         // 2. Alphanumeric encoding mode
 
-        qrCode::setVersion(1);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::low);
+        qrCode::initialize(1, errorCorrectionLevel::low);
         qrCode::encodeData("PROJECT NAYUKI");
 
         bitVector<200U> expected;
@@ -213,8 +198,7 @@ void test_encodeData() {
     {
         // 3. Byte encoding mode
 
-        qrCode::setVersion(2);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::low);
+        qrCode::initialize(2, errorCorrectionLevel::low);
         qrCode::encodeData("https://github.com/Strooom");
 
         bitVector<300U> expected;
@@ -237,8 +221,7 @@ void test_encodeData() {
         TEST_ASSERT_EQUAL_UINT8_ARRAY(expected.data, qrCode::buffer.data, qrCode::buffer.levelInBytes());
     }
     {
-        qrCode::setVersion(5);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::quartile);
+        qrCode::initialize(5, errorCorrectionLevel::quartile);
         qrCode::encodeData("https://en.wikipedia.org/wiki/QR_code#Error_correction");
         TEST_ASSERT_EQUAL(62U, qrCode::buffer.levelInBytes());
     }
@@ -246,8 +229,7 @@ void test_encodeData() {
     // Edge Cases Tests : Bit padding bits 0..7
     // 0 bits padded
     {
-        qrCode::setVersion(1);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
+        qrCode::initialize(1, errorCorrectionLevel::high);
         qrCode::encodeData("0123");
 
         bitVector<200U> expected;
@@ -265,8 +247,7 @@ void test_encodeData() {
     }
     // 1 bits padded
     {
-        qrCode::setVersion(1);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
+        qrCode::initialize(1, errorCorrectionLevel::high);
         qrCode::encodeData("A");
 
         bitVector<200U> expected;
@@ -284,8 +265,7 @@ void test_encodeData() {
     }
     // 6 bits padded
     {
-        qrCode::setVersion(1);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
+        qrCode::initialize(1, errorCorrectionLevel::high);
         qrCode::encodeData("0123456");
 
         bitVector<200U> expected;
@@ -302,8 +282,7 @@ void test_encodeData() {
     }
     // 7 bits padded
     {
-        qrCode::setVersion(1);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
+        qrCode::initialize(1, errorCorrectionLevel::high);
         qrCode::encodeData("01");
 
         bitVector<200U> expected;
@@ -321,8 +300,7 @@ void test_encodeData() {
     }
     // 1 bit terminator
     {
-        qrCode::setVersion(1);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
+        qrCode::initialize(1, errorCorrectionLevel::high);
         qrCode::encodeData("01234567890123456");
 
         bitVector<200U> expected;
@@ -387,8 +365,7 @@ void test_blockCalculations() {
 void test_blockContents() {
     {
         // Test-vector from https://dev.to/maxart2501/let-s-develop-a-qr-code-generator-part-viii-different-sizes-1e0e#codeword-blocks
-        qrCode::setVersion(5);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::quartile);
+        qrCode::initialize(5, errorCorrectionLevel::quartile);
         qrCode::encodeData("https://en.wikipedia.org/wiki/QR_code#Error_correction");
         TEST_ASSERT_EQUAL(62U, qrCode::buffer.levelInBytes());
 
@@ -437,8 +414,7 @@ void test_getErrorCorrectionBytes() {
 
 void test_addErrorCorrectionBytes() {
     {
-        qrCode::setVersion(1);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::low);
+        qrCode::initialize(1, errorCorrectionLevel::low);
         qrCode::encodeData("0123456789");
         TEST_ASSERT_EQUAL(19U, qrCode::buffer.levelInBytes());
         qrCode::addErrorCorrection();
@@ -447,8 +423,7 @@ void test_addErrorCorrectionBytes() {
         TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedData, qrCode::buffer.data, qrCode::buffer.levelInBytes());
     }
     {
-        qrCode::setVersion(1);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::medium);
+        qrCode::initialize(1, errorCorrectionLevel::medium);
         qrCode::encodeData("0123456789");
         TEST_ASSERT_EQUAL(16U, qrCode::buffer.levelInBytes());
         qrCode::addErrorCorrection();
@@ -457,8 +432,7 @@ void test_addErrorCorrectionBytes() {
         TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedData, qrCode::buffer.data, qrCode::buffer.levelInBytes());
     }
     {
-        qrCode::setVersion(1);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::high);
+        qrCode::initialize(1, errorCorrectionLevel::high);
         qrCode::encodeData("0123456789");
         TEST_ASSERT_EQUAL(9U, qrCode::buffer.levelInBytes());
         qrCode::addErrorCorrection();
@@ -467,8 +441,7 @@ void test_addErrorCorrectionBytes() {
         TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedData, qrCode::buffer.data, qrCode::buffer.levelInBytes());
     }
     {
-        qrCode::setVersion(5);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::quartile);
+        qrCode::initialize(5, errorCorrectionLevel::quartile);
         qrCode::encodeData("https://en.wikipedia.org/wiki/QR_code#Error_correction");
         TEST_ASSERT_EQUAL(62U, qrCode::buffer.levelInBytes());
         qrCode::addErrorCorrection();
@@ -487,8 +460,7 @@ void test_addErrorCorrectionBytes() {
 }
 
 void test_getDataOffset() {
-    qrCode::setVersion(5);
-    qrCode::setErrorCorrectionLevel(errorCorrectionLevel::quartile);
+    qrCode::initialize(5, errorCorrectionLevel::quartile);
     // This qrCode has 62 data bytes organized in 4 blocks of 15 / 15 / 16 / 16 bytes, each block has 18 ecc bytes
 
     TEST_ASSERT_EQUAL(0, qrCode::dataOffset(0, 0));
@@ -503,8 +475,7 @@ void test_getDataOffset() {
 }
 
 void test_getEccOffset() {
-    qrCode::setVersion(5);
-    qrCode::setErrorCorrectionLevel(errorCorrectionLevel::quartile);
+    qrCode::initialize(5, errorCorrectionLevel::quartile);
     // This qrCode has 62 data bytes organized in 4 blocks of 15 / 15 / 16 / 16 bytes, each block has 18 ecc bytes
 
     TEST_ASSERT_EQUAL(62, qrCode::eccOffset(0, 0));
@@ -520,8 +491,7 @@ void test_getEccOffset() {
 
 void test_interleave() {
     {
-        qrCode::setVersion(5);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::quartile);
+        qrCode::initialize(5, errorCorrectionLevel::quartile);
         qrCode::encodeData("https://en.wikipedia.org/wiki/QR_code#Error_correction");
         qrCode::addErrorCorrection();
         qrCode::interleaveData();
@@ -530,8 +500,7 @@ void test_interleave() {
         TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedData, qrCode::buffer.data, 134U);
     }
     {
-        qrCode::setVersion(4);
-        qrCode::setErrorCorrectionLevel(errorCorrectionLevel::medium);
+        qrCode::initialize(4, errorCorrectionLevel::medium);
         qrCode::encodeData("https://en.wikipedia.org/wiki/QR_code#Error_correction");
         qrCode::addErrorCorrection();
         qrCode::interleaveData();
@@ -546,7 +515,7 @@ void test_interleave() {
 
 void test_drawAllFindersAndSeparators() {
     static constexpr uint32_t testVersion{2};
-    qrCode::setVersion(testVersion);
+    qrCode::initialize(testVersion, errorCorrectionLevel::low);
     qrCode::drawAllFinderPatternsAndSeparators(testVersion);
     static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
     bitVector<testNmbrOfModules> expectedModules;
@@ -614,17 +583,17 @@ void test_drawAllFindersAndSeparators() {
 
     for (uint32_t y = 0; y < 25; y++) {
         for (uint32_t x = 0; x < 25; x++) {
-            char message[32];
-            snprintf(message, 30, "mismatch %d,%d", x, y);
-            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), message);
-            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), message);
+            char testFailMessage[32];
+            snprintf(testFailMessage, 30, "mismatch %d,%d", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), testFailMessage);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), testFailMessage);
         }
     }
 }
 
 void test_drawDarkModule() {
     static constexpr uint32_t testVersion{2};
-    qrCode::setVersion(testVersion);
+    qrCode::initialize(testVersion, errorCorrectionLevel::low);
     qrCode::drawDarkModule(testVersion);
     static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
     bitVector<testNmbrOfModules> expectedModules;
@@ -690,10 +659,10 @@ void test_drawDarkModule() {
 
     for (uint32_t y = 0; y < 25; y++) {
         for (uint32_t x = 0; x < 25; x++) {
-            char message[32];
-            snprintf(message, 30, "mismatch %d,%d", x, y);
-            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), message);
-            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), message);
+            char testFailMessage[32];
+            snprintf(testFailMessage, 30, "mismatch %d,%d", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), testFailMessage);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), testFailMessage);
         }
     }
 }
@@ -775,7 +744,7 @@ void test_alignmentPatternCoordinates() {
 
 void test_drawAllAlignmentPatterns() {
     static constexpr uint32_t testVersion{2};
-    qrCode::setVersion(testVersion);
+    qrCode::initialize(testVersion, errorCorrectionLevel::low);
     qrCode::drawAllAlignmentPatterns(testVersion);
     static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
     bitVector<testNmbrOfModules> expectedModules;
@@ -843,17 +812,17 @@ void test_drawAllAlignmentPatterns() {
 
     for (uint32_t y = 0; y < 25; y++) {
         for (uint32_t x = 0; x < 25; x++) {
-            char message[32];
-            snprintf(message, 30, "mismatch %d,%d", x, y);
-            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), message);
-            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), message);
+            char testFailMessage[32];
+            snprintf(testFailMessage, 30, "mismatch %d,%d", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), testFailMessage);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), testFailMessage);
         }
     }
 }
 
 void test_drawTimingPatterns() {
     static constexpr uint32_t testVersion{2};
-    qrCode::setVersion(testVersion);
+    qrCode::initialize(testVersion, errorCorrectionLevel::low);
     qrCode::drawTimingPattern(testVersion);
     static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
     bitVector<testNmbrOfModules> expectedModules;
@@ -921,17 +890,17 @@ void test_drawTimingPatterns() {
 
     for (uint32_t y = 0; y < 25; y++) {
         for (uint32_t x = 0; x < 25; x++) {
-            char message[32];
-            snprintf(message, 30, "mismatch %d,%d", x, y);
-            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), message);
-            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), message);
+            char testFailMessage[32];
+            snprintf(testFailMessage, 30, "mismatch %d,%d", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), testFailMessage);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), testFailMessage);
         }
     }
 }
 
 void test_drawDummyFormatInfo() {
     static constexpr uint32_t testVersion{2};
-    qrCode::setVersion(testVersion);
+    qrCode::initialize(testVersion, errorCorrectionLevel::low);
     qrCode::drawDummyFormatBits(testVersion);
     static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
     bitVector<testNmbrOfModules> expectedIsData;
@@ -969,22 +938,112 @@ void test_drawDummyFormatInfo() {
 
     for (uint32_t y = 0; y < 25; y++) {
         for (uint32_t x = 0; x < 25; x++) {
-            char message[32];
-            snprintf(message, 30, "mismatch %d,%d", x, y);
-            TEST_ASSERT_EQUAL_MESSAGE(false, qrCode::modules.getBit(x, y), message);
-            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), message);
+            char testFailMessage[32];
+            snprintf(testFailMessage, 30, "mismatch %d,%d", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(false, qrCode::modules.getBit(x, y), testFailMessage);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedIsData.getBit(y * 25 + x), qrCode::isData.getBit(x, y), testFailMessage);
         }
     }
 }
 
-void test_drawFormatInfo() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
+void test_formatInfo() {
+    static constexpr uint16_t formatInfoBits[nmbrOfErrorCorrectionLevels][nmbrOfMasks]{
+        {0b111011111000100, 0b111001011110011, 0b111110110101010, 0b111100010011101, 0b110011000101111, 0b110001100011000, 0b110110001000001, 0b110100101110110},        // formatInfo bits taken from https://www.thonky.com/qr-code-tutorial/format-version-tables
+        {0b101010000010010, 0b101000100100101, 0b101111001111100, 0b101101101001011, 0b100010111111001, 0b100000011001110, 0b100111110010111, 0b100101010100000},
+        {0b011010101011111, 0b011000001101000, 0b011111100110001, 0b011101000000110, 0b010010010110100, 0b010000110000011, 0b010111011011010, 0b010101111101101},
+        {0b001011010001001, 0b001001110111110, 0b001110011100111, 0b001100111010000, 0b000011101100010, 0b000001001010101, 0b000110100001100, 0b000100000111011}};
+
+    for (uint32_t eccLevelIndex = 0; eccLevelIndex < 4; eccLevelIndex++) {
+        for (uint32_t maskTypeIndex = 0; maskTypeIndex < 8; maskTypeIndex++) {
+            TEST_ASSERT_EQUAL(formatInfoBits[eccLevelIndex][maskTypeIndex], qrCode::calculateFormatInfo(static_cast<errorCorrectionLevel>(eccLevelIndex), maskTypeIndex));
+        }
+    }
+}
+
+void test_drawFormatInfo() {
+    static constexpr uint32_t testVersion{1};
+    static constexpr errorCorrectionLevel testErrorCorrectionLevel{errorCorrectionLevel::low};
+    static constexpr uint32_t testMask{4};
+
+    qrCode::initialize(testVersion, testErrorCorrectionLevel);
+    TEST_ASSERT_EQUAL(0b110011000101111, qrCode::calculateFormatInfo(testErrorCorrectionLevel, testMask));
+
+    qrCode::drawFormatInfo(testErrorCorrectionLevel, testMask);
+
+    static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
+    bitVector<testNmbrOfModules> expectedModules;
+
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b110011000000000101111, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+
+    for (uint32_t y = 0; y < 21; y++) {
+        for (uint32_t x = 0; x < 21; x++) {
+            char testFailMessage[32];
+            snprintf(testFailMessage, 30, "mismatch %d,%d", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), testFailMessage);
+        }
+    }
+
+    qrCode::initialize(testVersion, testErrorCorrectionLevel);
+    static constexpr uint16_t allOnes{0b111111111111111};
+    qrCode::drawFormatInfoCopy1(allOnes);
+    qrCode::drawFormatInfoCopy2(allOnes);
+    expectedModules.reset();
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b111111011000011111111, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000000000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+    expectedModules.appendBits(0b000000001000000000000, 21);
+
+    for (uint32_t y = 0; y < 21; y++) {
+        for (uint32_t x = 0; x < 21; x++) {
+            char testFailMessage[32];
+            snprintf(testFailMessage, 30, "mismatch %d,%d", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), testFailMessage);
+        }
+    }
+}
+
 void test_drawVersionInfo() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
-void test_drawAllPatterns() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
 
 void test_drawPayload() {
     static constexpr uint32_t testVersion{1};
-    qrCode::setVersion(testVersion);
-    qrCode::setErrorCorrectionLevel(errorCorrectionLevel::low);
+    qrCode::initialize(testVersion, errorCorrectionLevel::low);
 
     bitVector<208> expectedBuffer;
     expectedBuffer.appendBits(0b00010000000001000000000011101100, 32);        // https://www.nayuki.io/page/creating-a-qr-code-step-by-step with payload "0"
@@ -999,9 +1058,9 @@ void test_drawPayload() {
     qrCode::addErrorCorrection();
 
     for (uint32_t bitIndex = 0; bitIndex < 208; bitIndex++) {
-        char message[32];
-        snprintf(message, 30, "mismatch %d", bitIndex);
-        TEST_ASSERT_EQUAL_MESSAGE(expectedBuffer.getBit(bitIndex), qrCode::buffer.getBit(bitIndex), message);
+        char testFailMessage[32];
+        snprintf(testFailMessage, 30, "mismatch %d", bitIndex);
+        TEST_ASSERT_EQUAL_MESSAGE(expectedBuffer.getBit(bitIndex), qrCode::buffer.getBit(bitIndex), testFailMessage);
     }
 
     qrCode::drawPatterns(testVersion);
@@ -1036,9 +1095,9 @@ void test_drawPayload() {
     uint32_t bitIndex{0};
     for (int32_t y = 20; y > 0; y--) {
         for (int32_t x = 20; x > 0; x--) {
-            char message[64];
-            snprintf(message, 63, "mismatch bit %d, (%d,%d)", bitIndex, x, y);
-            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), message);
+            char testFailMessage[64];
+            snprintf(testFailMessage, 63, "mismatch bit %d, (%d,%d)", bitIndex, x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), testFailMessage);
             bitIndex++;
         }
     }
@@ -1050,7 +1109,7 @@ void test_masking() {
     {
         static constexpr uint32_t testVersion{1};
         static constexpr uint32_t maskType{0};
-        qrCode::setVersion(testVersion);
+        qrCode::initialize(testVersion, errorCorrectionLevel::low);
         qrCode::applyMask(maskType);
         static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
         bitVector<testNmbrOfModules> expectedModules;
@@ -1082,16 +1141,16 @@ void test_masking() {
 
         for (uint32_t y = 0; y < 21; y++) {
             for (uint32_t x = 0; x < 21; x++) {
-                char message[32];
-                snprintf(message, 30, "mismatch %d,%d", x, y);
-                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), message);
+                char testFailMessage[32];
+                snprintf(testFailMessage, 30, "mismatch %d,%d", x, y);
+                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), testFailMessage);
             }
         }
     }
     {
         static constexpr uint32_t testVersion{1};
         static constexpr uint32_t maskType{1};
-        qrCode::setVersion(testVersion);
+        qrCode::initialize(testVersion, errorCorrectionLevel::low);
         qrCode::applyMask(maskType);
         static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
         bitVector<testNmbrOfModules> expectedModules;
@@ -1123,16 +1182,16 @@ void test_masking() {
 
         for (uint32_t y = 0; y < 21; y++) {
             for (uint32_t x = 0; x < 21; x++) {
-                char message[32];
-                snprintf(message, 30, "mismatch %d,%d", x, y);
-                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), message);
+                char testFailMessage[32];
+                snprintf(testFailMessage, 30, "mismatch %d,%d", x, y);
+                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), testFailMessage);
             }
         }
     }
     {
         static constexpr uint32_t testVersion{1};
         static constexpr uint32_t maskType{2};
-        qrCode::setVersion(testVersion);
+        qrCode::initialize(testVersion, errorCorrectionLevel::low);
         qrCode::applyMask(maskType);
         static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
         bitVector<testNmbrOfModules> expectedModules;
@@ -1164,16 +1223,16 @@ void test_masking() {
 
         for (uint32_t y = 0; y < 21; y++) {
             for (uint32_t x = 0; x < 21; x++) {
-                char message[32];
-                snprintf(message, 30, "mismatch %d,%d", x, y);
-                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), message);
+                char testFailMessage[32];
+                snprintf(testFailMessage, 30, "mismatch %d,%d", x, y);
+                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), testFailMessage);
             }
         }
     }
     {
         static constexpr uint32_t testVersion{1};
         static constexpr uint32_t maskType{3};
-        qrCode::setVersion(testVersion);
+        qrCode::initialize(testVersion, errorCorrectionLevel::low);
         qrCode::applyMask(maskType);
         static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
         bitVector<testNmbrOfModules> expectedModules;
@@ -1205,16 +1264,16 @@ void test_masking() {
 
         for (uint32_t y = 0; y < 21; y++) {
             for (uint32_t x = 0; x < 21; x++) {
-                char message[32];
-                snprintf(message, 30, "mismatch %d,%d", x, y);
-                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), message);
+                char testFailMessage[32];
+                snprintf(testFailMessage, 30, "mismatch %d,%d", x, y);
+                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), testFailMessage);
             }
         }
     }
     {
         static constexpr uint32_t testVersion{1};
         static constexpr uint32_t maskType{4};
-        qrCode::setVersion(testVersion);
+        qrCode::initialize(testVersion, errorCorrectionLevel::low);
         qrCode::applyMask(maskType);
         static constexpr uint32_t testNmbrOfModules{(testVersion * 4 + 17) * (testVersion * 4 + 17)};
         bitVector<testNmbrOfModules> expectedModules;
@@ -1246,9 +1305,9 @@ void test_masking() {
 
         for (uint32_t y = 0; y < 21; y++) {
             for (uint32_t x = 0; x < 21; x++) {
-                char message[32];
-                snprintf(message, 30, "mismatch %d,%d", x, y);
-                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), message);
+                char testFailMessage[32];
+                snprintf(testFailMessage, 30, "mismatch %d,%d", x, y);
+                TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 21 + x), qrCode::modules.getBit(x, y), testFailMessage);
             }
         }
     }
@@ -1343,7 +1402,71 @@ void test_errorCorrectionPossible() {
     }
 }
 
-void test_generate() { TEST_IGNORE_MESSAGE("TODO: implement me"); }
+void test_generate() {
+    static constexpr char testInput[]{"test-driven-design"};
+    uint32_t testVersionNeeded = qrCode::versionNeeded(testInput, errorCorrectionLevel::low);
+    TEST_ASSERT_EQUAL(2, testVersionNeeded);
+    errorCorrectionLevel testErrorCorrectionPossible = qrCode::errorCorrectionLevelPossible(testInput, testVersionNeeded);
+    TEST_ASSERT_EQUAL(errorCorrectionLevel::quartile, testErrorCorrectionPossible);
+    qrCode::generate(testInput, testVersionNeeded, testErrorCorrectionPossible);
+    TEST_ASSERT_EQUAL(2, qrCode::theMask);
+    TEST_ASSERT_EQUAL(0b011111100110001, qrCode::calculateFormatInfo(qrCode::theErrorCorrectionLevel, qrCode::theMask));
+    {
+        bitVector<352> expectedBuffer;
+        expectedBuffer.appendBits(0b01000001001001110100011001010111, 32);
+        expectedBuffer.appendBits(0b00110111010000101101011001000111, 32);
+        expectedBuffer.appendBits(0b00100110100101110110011001010110, 32);
+        expectedBuffer.appendBits(0b11100010110101100100011001010111, 32);
+        expectedBuffer.appendBits(0b00110110100101100111011011100000, 32);
+        expectedBuffer.appendBits(0b11101100000100010000111110010111, 32);
+        expectedBuffer.appendBits(0b11101001000001000110001001111111, 32);
+        expectedBuffer.appendBits(0b11101111001101000110011001001111, 32);
+        expectedBuffer.appendBits(0b00010000001100000000001100101010, 32);
+        expectedBuffer.appendBits(0b11011000011110011001000011001000, 32);
+        expectedBuffer.appendBits(0b11000110101101001110001000000110, 32);
+
+        for (uint32_t bitIndex = 0; bitIndex < 352; bitIndex++) {
+            char testFailMessage[32];
+            snprintf(testFailMessage, 30, "mismatch %d", bitIndex);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedBuffer.getBit(bitIndex), qrCode::buffer.getBit(bitIndex), testFailMessage);
+        }
+    }
+
+    bitVector<625> expectedModules;
+    expectedModules.appendBits(0b1111111011010100101111111, 25);
+    expectedModules.appendBits(0b1000001001101111101000001, 25);
+    expectedModules.appendBits(0b1011101000010000101011101, 25);
+    expectedModules.appendBits(0b1011101000101001001011101, 25);
+    expectedModules.appendBits(0b1011101011100100101011101, 25);
+    expectedModules.appendBits(0b1000001011000111101000001, 25);
+    expectedModules.appendBits(0b1111111010101010101111111, 25);
+    expectedModules.appendBits(0b0000000001111101000000000, 25);
+    expectedModules.appendBits(0b0111111101000010000110001, 25);
+    expectedModules.appendBits(0b1011100001010000100101010, 25);
+    expectedModules.appendBits(0b1001011010011001111010111, 25);
+    expectedModules.appendBits(0b1010100001110010011100011, 25);
+    expectedModules.appendBits(0b0111001111010001111110111, 25);
+    expectedModules.appendBits(0b1000100001010010100100000, 25);
+    expectedModules.appendBits(0b1000011111010001110101011, 25);
+    expectedModules.appendBits(0b1011000111010101100011001, 25);
+    expectedModules.appendBits(0b1011111000001111111111111, 25);
+    expectedModules.appendBits(0b0000000011111111100010110, 25);
+    expectedModules.appendBits(0b1111111010001000101010011, 25);
+    expectedModules.appendBits(0b1000001010010010100010000, 25);
+    expectedModules.appendBits(0b1011101010001111111111101, 25);
+    expectedModules.appendBits(0b1011101010000111001010011, 25);
+    expectedModules.appendBits(0b1011101011101110000101001, 25);
+    expectedModules.appendBits(0b1000001010101101110010001, 25);
+    expectedModules.appendBits(0b1111111001000000011000111, 25);
+
+    for (int32_t y = 24; y >= 0; y--) {
+        for (int32_t x = 24; x >= 0; x--) {
+            char testFailMessage[32];
+            snprintf(testFailMessage, 30, "mismatch (%d,%d)", x, y);
+            TEST_ASSERT_EQUAL_MESSAGE(expectedModules.getBit(y * 25 + x), qrCode::modules.getBit(x, y), testFailMessage);
+        }
+    }
+}
 
 #pragma endregion
 
@@ -1376,20 +1499,6 @@ void test_calculatePayloadLength() {
     TEST_ASSERT_EQUAL(148, qrCode::payloadLengthInBits(17, 1, encodingFormat::byte));
 }
 
-void test_formatInfo() {
-    static constexpr uint16_t formatInfoBits[nmbrOfErrorCorrectionLevels][nmbrOfMasks]{
-        {0b111011111000100, 0b111001011110011, 0b111110110101010, 0b111100010011101, 0b110011000101111, 0b110001100011000, 0b110110001000001, 0b110100101110110},        // formatInfo bits taken from https://www.thonky.com/qr-code-tutorial/format-version-tables
-        {0b101010000010010, 0b101000100100101, 0b101111001111100, 0b101101101001011, 0b100010111111001, 0b100000011001110, 0b100111110010111, 0b100101010100000},
-        {0b011010101011111, 0b011000001101000, 0b011111100110001, 0b011101000000110, 0b010010010110100, 0b010000110000011, 0b010111011011010, 0b010101111101101},
-        {0b001011010001001, 0b001001110111110, 0b001110011100111, 0b001100111010000, 0b000011101100010, 0b000001001010101, 0b000110100001100, 0b000100000111011}};
-
-    for (uint32_t eccLevelIndex = 0; eccLevelIndex < 4; eccLevelIndex++) {
-        for (uint32_t maskTypeIndex = 0; maskTypeIndex < 8; maskTypeIndex++) {
-            TEST_ASSERT_EQUAL(formatInfoBits[eccLevelIndex][maskTypeIndex], qrCode::calculateFormatInfo(static_cast<errorCorrectionLevel>(eccLevelIndex), maskTypeIndex));
-        }
-    }
-}
-
 void test_versionInfo() {
     static constexpr uint32_t versionBits[34]{
         0b000111110010010100,
@@ -1407,7 +1516,7 @@ void test_versionInfo() {
         0b010011010100110010,
         0b010100100110100110,
         0b010101011010000011,
-        0b0010110100011001001, // ??
+        0b0010110100011001001,        // ??
         0b010111011111101100,
         0b011000111011000100,
         0b011001000111100001,
@@ -1426,7 +1535,6 @@ void test_versionInfo() {
         0b100110101001100100,
         0b100111010101000001,
         0b101000110001101001};        // versionInfo bits taken from https://www.thonky.com/qr-code-tutorial/format-version-tables
-
 }
 
 int main(int argc, char **argv) {
@@ -1436,8 +1544,6 @@ int main(int argc, char **argv) {
 
     // general helpers
     RUN_TEST(test_size);
-    RUN_TEST(test_setVersion);
-    RUN_TEST(test_setErrorCorrectionLevel);
 
     // encoding user data into payload
     RUN_TEST(test_isNumeric);
@@ -1472,7 +1578,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_drawFormatInfo);
 
     RUN_TEST(test_drawVersionInfo);
-    RUN_TEST(test_drawAllPatterns);
     RUN_TEST(test_drawPayload);
     RUN_TEST(test_masking);
 

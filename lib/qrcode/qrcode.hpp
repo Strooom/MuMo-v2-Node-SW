@@ -42,8 +42,7 @@ class qrCode {
 #endif
     // general helpers
     static uint32_t size(uint32_t someVersion);
-    static void setVersion(uint32_t theVersion);
-    static void setErrorCorrectionLevel(errorCorrectionLevel theErrorCorrectionLevel);
+    static void initialize(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
 
     // encoding user data into payload
     static bool isNumeric(const char *data);                                                  // null-terminated string of data
@@ -82,7 +81,7 @@ class qrCode {
     // drawing function patterns and user data
     static void drawFinderPattern(uint32_t centerX, uint32_t centerY);
     static void drawFinderSeparators(uint32_t someVersion);
-    static void drawAllFinderPatternsAndSeparators(uint32_t theVersion);
+    static void drawAllFinderPatternsAndSeparators(uint32_t someVersion);
     static void drawDummyFormatBits(uint32_t someVersion);
     static void drawDarkModule(uint32_t someVersion);
     static void drawAlignmentPattern(uint32_t centerX, uint32_t centerY);
@@ -90,21 +89,22 @@ class qrCode {
     static uint32_t nmbrOfAlignmentPatternRowsOrCols(uint32_t someVersion);
     static uint32_t alignmentPatternSpacing(uint32_t someVersion);
     static uint32_t alignmentPatternCoordinate(uint32_t someVersion, uint32_t index);
-    static void drawAllAlignmentPatterns(uint32_t theVersion);
-    static void drawTimingPattern(uint32_t theVersion);
-    static uint32_t calculateFormatInfo(errorCorrectionLevel someErrorCorrectionLevel, uint32_t mask);
+    static void drawAllAlignmentPatterns(uint32_t someVersion);
+    static void drawTimingPattern(uint32_t someVersion);
+    static uint32_t calculateFormatInfo(errorCorrectionLevel someErrorCorrectionLevel, uint32_t someMask);
     static void drawFormatInfoCopy1(uint32_t data);
     static void drawFormatInfoCopy2(uint32_t data);
-    static void drawFormatInfo();
-    static void drawVersionInfo(uint32_t theVersion);
-    static void drawPatterns(uint32_t theVersion);
-    static void drawPayload(uint32_t theVersion);
-    static void applyMask(uint8_t maskType);
-    static uint32_t getPenaltyScore();
+    static void drawFormatInfo(errorCorrectionLevel someErrorCorrectionLevel, uint32_t someMask);
+    static void drawVersionInfo(uint32_t someVersion);
+    static void drawPatterns(uint32_t someVersion);
+    static void drawPayload(uint32_t someVersion);
+    static void applyMask(uint8_t someMask);
+    static uint32_t penalty();
     static uint32_t penalty1();
     static uint32_t penalty2();
     static uint32_t penalty3();
     static uint32_t penalty4();
+    static void selectMask();
 
     // ????
 
@@ -112,7 +112,7 @@ class qrCode {
     static uint32_t nmbrOfTotalModules(uint32_t someVersion);
     static uint32_t nmbrOfDataModules(uint32_t someVersion);
     static uint32_t nmbrOfFunctionModules(uint32_t someVersion);
-    static uint32_t nmbrOfErrorCorrectionModules(uint32_t theVersion, errorCorrectionLevel theErrorCorrectionLevel);
+    static uint32_t nmbrOfErrorCorrectionModules(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
 
     // private compile-time constants
     static constexpr struct {
@@ -125,8 +125,7 @@ class qrCode {
         {{34, 28, 22, 16}, {1, 1, 1, 1}, {10, 16, 22, 28}},
         {{55, 44, 34, 26}, {1, 1, 2, 2}, {15, 26, 18, 22}},
         {{80, 64, 48, 36}, {1, 2, 2, 4}, {20, 18, 26, 16}},
-        {{108, 86, 62, 46}, {1, 2, 4, 4}, {26, 24, 18, 22}}
-    };
+        {{108, 86, 62, 46}, {1, 2, 4, 4}, {26, 24, 18, 22}}};
 
     // internal data
     static uint32_t theVersion;

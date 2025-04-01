@@ -60,11 +60,13 @@ void qrCode::generate(const char *data, uint32_t someVersion, errorCorrectionLev
 }
 
 void qrCode::generate(const uint8_t *data, uint32_t dataLength, uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel) {
-    setVersion(someVersion);
-    setErrorCorrectionLevel(someErrorCorrectionLevel);
+    initialize(someVersion, someErrorCorrectionLevel);
     encodeData(data, dataLength);
     addErrorCorrection();
     interleaveData();
+    drawPatterns(someVersion);
+    drawPayload(someVersion);
+    selectMask();
 }
 
 bool qrCode::getModule(uint32_t x, uint32_t y) {
@@ -76,18 +78,17 @@ bool qrCode::getModule(uint32_t x, uint32_t y) {
 
 uint32_t qrCode::size(uint32_t someVersion) { return 17 + 4 * someVersion; }
 
-void qrCode::setVersion(uint32_t newVersion) {
+void qrCode::initialize(uint32_t newVersion, errorCorrectionLevel newErrorCorrectionLevel) {
     if ((newVersion <= maxVersion) && (newVersion > 0)) {
         theVersion = newVersion;
         buffer.reset();
     }
+    theErrorCorrectionLevel = newErrorCorrectionLevel;
     modules.setWidthHeightInBits(size(theVersion));
     modules.clearAllBits();
     isData.setWidthHeightInBits(size(theVersion));
     isData.setAllBits();
 }
-
-void qrCode::setErrorCorrectionLevel(errorCorrectionLevel newErrorCorrectionLevel) { theErrorCorrectionLevel = newErrorCorrectionLevel; }
 
 #pragma endregion
 #pragma region encodingPayload
@@ -621,35 +622,23 @@ uint32_t qrCode::calculateFormatInfo(errorCorrectionLevel someErrorCorrectionLev
 }
 
 void qrCode::drawFormatInfoCopy1(uint32_t data) {
-    // Draw first copy - around top-left finder, skipping timing pattern
+    // Draw first copy - around top-left finder, skipping timing patterns
     bitVector<15> formatInfoBits;
     formatInfoBits.appendBits(data, 15);
-    for (uint32_t bitIndex = 0; bitIndex < 5; bitIndex++) {
-        if (formatInfoBits.getBit(bitIndex)) {
-            modules.setBit(bitIndex, 8);
-        }
+    for (uint32_t bitIndex = 0; bitIndex < 6; bitIndex++) {
+        modules.setOrClearBit(bitIndex, 8, formatInfoBits.getBit(bitIndex));
         isData.clearBit(bitIndex, 8);
     }
 
-    if (formatInfoBits.getBit(6)) {
-        modules.setBit(7, 8);
-    }
+    modules.setOrClearBit(7, 8, formatInfoBits.getBit(6));
     isData.clearBit(7, 8);
-
-    if (formatInfoBits.getBit(7)) {
-        modules.setBit(8, 8);
-    }
+    modules.setOrClearBit(8, 8, formatInfoBits.getBit(7));
     isData.clearBit(8, 8);
-
-    if (formatInfoBits.getBit(8)) {
-        modules.setBit(8, 7);
-    }
+    modules.setOrClearBit(8, 7, formatInfoBits.getBit(8));
     isData.clearBit(8, 7);
 
     for (uint32_t bitIndex = 9; bitIndex < 15; bitIndex++) {
-        if (formatInfoBits.getBit(bitIndex)) {
-            modules.setBit(8, 14 - bitIndex);
-        }
+        modules.setOrClearBit(8, 14 - bitIndex, formatInfoBits.getBit(bitIndex));
         isData.clearBit(8, 14 - bitIndex);
     }
 }
@@ -660,21 +649,17 @@ void qrCode::drawFormatInfoCopy2(uint32_t data) {
     formatInfoBits.appendBits(data, 15);
     uint32_t endIndex = size(theVersion) - 1;
     for (uint32_t bitIndex = 0; bitIndex < 7; bitIndex++) {
-        if (formatInfoBits.getBit(bitIndex)) {
-            modules.setBit(8, endIndex - bitIndex);
-        }
+        modules.setOrClearBit(8, endIndex - bitIndex, formatInfoBits.getBit(bitIndex));
         isData.clearBit(8, endIndex - bitIndex);
     }
     for (uint32_t bitIndex = 7; bitIndex < 15; bitIndex++) {
-        if (formatInfoBits.getBit(bitIndex)) {
-            modules.setBit(endIndex - 14 + bitIndex, 8);
-        }
+        modules.setOrClearBit(endIndex - 14 + bitIndex, 8, formatInfoBits.getBit(bitIndex));
         isData.clearBit(endIndex - 14 + bitIndex, 8);
     }
 }
 
-void qrCode::drawFormatInfo() {
-    uint32_t formatInfoBits = calculateFormatInfo(theErrorCorrectionLevel, theMask);
+void qrCode::drawFormatInfo(errorCorrectionLevel someErrorCorrectionLevel, uint32_t someMask) {
+    uint32_t formatInfoBits = calculateFormatInfo(someErrorCorrectionLevel, someMask);
     drawFormatInfoCopy1(formatInfoBits);
     drawFormatInfoCopy2(formatInfoBits);
 }
@@ -777,7 +762,7 @@ void qrCode::applyMask(uint8_t maskType) {
     }
 }
 
-uint32_t qrCode::getPenaltyScore() {
+uint32_t qrCode::penalty() {
     return penalty1() + penalty2() + penalty3() + penalty4();
 }
 
@@ -890,6 +875,28 @@ uint32_t qrCode::penalty4() {
     int32_t ratio  = (blackModulesCount * 100U) / (size(theVersion) * size(theVersion));
     uint32_t delta = abs(ratio - 50) / 5;
     return delta * penaltyN4;
+}
+
+void qrCode::selectMask() {
+    uint32_t penalties[nmbrOfMasks]{0};
+    for (uint32_t maskIndex = 0; maskIndex < nmbrOfMasks; maskIndex++) {
+        applyMask(maskIndex);
+        drawFormatInfo(theErrorCorrectionLevel, maskIndex);
+        penalties[maskIndex] = penalty();
+        applyMask(maskIndex);        // applying again reverts because it is XOR operation
+    }
+
+    uint32_t lowestPenalty = penalties[0];
+    uint32_t lowestPenaltyIndex{0};
+    for (uint32_t maskIndex = 1; maskIndex < nmbrOfMasks; maskIndex++) {
+        if (penalties[maskIndex] < lowestPenalty) {
+            lowestPenalty      = penalties[maskIndex];
+            lowestPenaltyIndex = maskIndex;
+        }
+    }
+    theMask = lowestPenaltyIndex;
+    applyMask(theMask);
+    drawFormatInfo(theErrorCorrectionLevel, theMask);
 }
 
 #pragma endregion

@@ -132,7 +132,7 @@ bool LoRaWAN::isValidConfig() {
     if (DevAddr.asUint32 == 0xFFFFFFFF) {
         return false;
     }
-    if ((DevAddr.asUint8[0] == 0x26) && (DevAddr.asUint8[1] == 0x0B)) { // This detects an old incorrectly stored DevAddr
+    if ((DevAddr.asUint8[0] == 0x26) && (DevAddr.asUint8[1] == 0x0B)) {        // This detects an old incorrectly stored DevAddr
         return false;
     }
     uint8_t tmpKeyArray[aesKey::lengthInBytes]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -167,9 +167,9 @@ void LoRaWAN::resetMacLayer() {
 }
 
 void LoRaWAN::resetState() {
-    uplinkFrameCount   = 0;
-    downlinkFrameCount = 0;
-    rx1DelayInSeconds  = 1;
+    uplinkFrameCount     = 0;
+    downlinkFrameCount   = 0;
+    rx1DelayInSeconds    = 1;
     currentDataRateIndex = 5;
     rx1DataRateOffset    = 0;
     rx2DataRateIndex     = 3;
@@ -600,8 +600,8 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                             goTo(txRxCycleState::idle);
                             return;
                             break;
+                        case messageType::invalid:        // intentional fallthrough
                         default:
-                        case messageType::invalid:
                             goTo(txRxCycleState::waitForRx2Start);
                             return;
                             break;
@@ -1287,18 +1287,42 @@ void LoRaWAN::dumpTransmitSettings() {
     logging::snprintf("  frequency = %u\n\n", txFrequency);
 }
 
-void LoRaWAN::dumpLinkCheckAnswer() {}
-void LoRaWAN::dumpLinkAdaptiveDataRateRequest() {}
-void LoRaWAN::dumpDutyCycleRequest() {}
-void LoRaWAN::dumpDeviceStatusRequest() {}
-void LoRaWAN::dumpNewChannelRequest() {}
-void LoRaWAN::dumpNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate) {}
-void LoRaWAN::dumpReceiveParameterSetupRequest() {}
-void LoRaWAN::dumpReceiveTimingSetupRequest() {}
-void LoRaWAN::dumpReceiveTimingSetupRequest(uint32_t rx1Delay) {}
-void LoRaWAN::dumpTransmitParameterSetupRequest() {}
-void LoRaWAN::dumpDownlinkChannelRequest() {}
-void LoRaWAN::dumpDeviceTimeAnswer() {}
+void LoRaWAN::dumpLinkCheckAnswer() {
+    // TODO : implement
+}
+void LoRaWAN::dumpLinkAdaptiveDataRateRequest() {
+    // TODO : implement
+}
+void LoRaWAN::dumpDutyCycleRequest() {
+    // TODO : implement
+}
+void LoRaWAN::dumpDeviceStatusRequest() {
+    // TODO : implement
+}
+void LoRaWAN::dumpNewChannelRequest() {
+    // TODO : implement
+}
+void LoRaWAN::dumpNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate) {
+    // TODO : implement
+}
+void LoRaWAN::dumpReceiveParameterSetupRequest() {
+    // TODO : implement
+}
+void LoRaWAN::dumpReceiveTimingSetupRequest() {
+    // TODO : implement
+}
+void LoRaWAN::dumpReceiveTimingSetupRequest(uint32_t rx1Delay) {
+    // TODO : implement
+}
+void LoRaWAN::dumpTransmitParameterSetupRequest() {
+    // TODO : implement
+}
+void LoRaWAN::dumpDownlinkChannelRequest() {
+    // TODO : implement
+}
+void LoRaWAN::dumpDeviceTimeAnswer() {
+    // TODO : implement
+}
 
 void LoRaWAN::appendMacCommand(macCommand theMacCommand) {
     LoRaWAN::macOut.append(static_cast<uint8_t>(theMacCommand));
