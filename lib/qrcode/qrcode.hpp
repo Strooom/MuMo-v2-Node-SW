@@ -99,7 +99,7 @@ class qrCode {
     static void drawVersionInfo(uint32_t someVersion);
     static void drawPatterns(uint32_t someVersion);
     static void drawPayload(uint32_t someVersion);
-    static void applyMask(uint8_t someMask);
+    static void applyMask(uint32_t someMask);
     static uint32_t penalty();
     static uint32_t penalty1();
     static uint32_t penalty2();
