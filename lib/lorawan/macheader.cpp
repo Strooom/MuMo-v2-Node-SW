@@ -13,5 +13,5 @@ void macHeader::set(frameType newFrameType) {
 }
 
 uint8_t macHeader::asUint8() const {
-    return static_cast<uint8_t>(theFrameType) << 5;
+    return static_cast<uint8_t>(static_cast<uint8_t>(theFrameType) << 5);
 }

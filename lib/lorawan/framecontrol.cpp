@@ -26,11 +26,11 @@ frameControl::frameControl(linkDirection newLinkDirection) {
 
 uint8_t frameControl::asByte() const {
     uint8_t result{0};
-    result = result | (static_cast<uint8_t>(ADR) << 7U);
-    result = result | (static_cast<uint8_t>(ADRACKReq) << 6U);
-    result = result | (static_cast<uint8_t>(ACK) << 5U);
-    result = result | (static_cast<uint8_t>(ClassB) << 4U);
-    result = result | (FOptsLen & 0x0F);
+    result = static_cast<uint8_t>(result | (static_cast<uint8_t>(ADR) << 7U));
+    result = static_cast<uint8_t>(result | (static_cast<uint8_t>(ADRACKReq) << 6U));
+    result = static_cast<uint8_t>(result | (static_cast<uint8_t>(ACK) << 5U));
+    result = static_cast<uint8_t>(result | (static_cast<uint8_t>(ClassB) << 4U));
+    result = static_cast<uint8_t>(result | (FOptsLen & 0x0F));
     return result;
 }
 

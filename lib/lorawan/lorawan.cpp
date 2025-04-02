@@ -287,7 +287,7 @@ void LoRaWAN::padForMicCalculation(const uint32_t messageLength) {
 }
 
 uint16_t LoRaWAN::receivedFramecount() {
-    return (static_cast<uint16_t>(rawMessage[frameCountOffset]) + (static_cast<uint16_t>(rawMessage[frameCountOffset + 1]) << 8U));
+    return static_cast<uint16_t>(static_cast<uint16_t>(rawMessage[frameCountOffset]) + (static_cast<uint16_t>(rawMessage[frameCountOffset + 1]) << 8U));
 }
 
 uint32_t LoRaWAN::receivedDeviceAddress() {

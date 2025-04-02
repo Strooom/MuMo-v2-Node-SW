@@ -74,26 +74,26 @@ void bme680::initialize() {
 
     calibrationCoefficientTemperature1 = static_cast<float>((static_cast<uint16_t>(registerData[32]) << 8) | static_cast<uint16_t>(registerData[31]));
     calibrationCoefficientTemperature2 = static_cast<float>((static_cast<int16_t>(registerData[1]) << 8) | static_cast<int16_t>(registerData[0]));
-    calibrationCoefficientTemperature3 = static_cast<float>(static_cast<int8_t>(registerData[2]));
+    calibrationCoefficientTemperature3 = static_cast<float>(registerData[2]);
 
     calibrationCoefficientHumidity1 = static_cast<float>((static_cast<uint16_t>(registerData[25]) << 4) | static_cast<uint16_t>(registerData[24] & 0x0F));
     calibrationCoefficientHumidity2 = static_cast<float>((static_cast<uint16_t>(registerData[23]) << 4) | static_cast<uint16_t>(registerData[24] >> 4));
-    calibrationCoefficientHumidity3 = static_cast<float>(static_cast<int8_t>(registerData[26]));
-    calibrationCoefficientHumidity4 = static_cast<float>(static_cast<int8_t>(registerData[27]));
-    calibrationCoefficientHumidity5 = static_cast<float>(static_cast<int8_t>(registerData[28]));
-    calibrationCoefficientHumidity6 = static_cast<float>(static_cast<uint8_t>(registerData[29]));
-    calibrationCoefficientHumidity7 = static_cast<float>(static_cast<int8_t>(registerData[30]));
+    calibrationCoefficientHumidity3 = static_cast<float>(registerData[26]);
+    calibrationCoefficientHumidity4 = static_cast<float>(registerData[27]);
+    calibrationCoefficientHumidity5 = static_cast<float>(registerData[28]);
+    calibrationCoefficientHumidity6 = static_cast<float>(registerData[29]);
+    calibrationCoefficientHumidity7 = static_cast<float>(registerData[30]);
 
     calibrationCoefficientPressure1  = static_cast<float>((static_cast<uint16_t>(registerData[5]) << 8) | static_cast<uint16_t>(registerData[4]));
     calibrationCoefficientPressure2  = static_cast<float>(static_cast<int16_t>((static_cast<uint16_t>(registerData[7]) << 8) | static_cast<uint16_t>(registerData[6])));
-    calibrationCoefficientPressure3  = static_cast<float>(static_cast<int8_t>(registerData[8]));
+    calibrationCoefficientPressure3  = static_cast<float>(registerData[8]);
     calibrationCoefficientPressure4  = static_cast<float>(static_cast<int16_t>((static_cast<uint16_t>(registerData[11]) << 8) | static_cast<uint16_t>(registerData[10])));
     calibrationCoefficientPressure5  = static_cast<float>(static_cast<int16_t>((static_cast<uint16_t>(registerData[13]) << 8) | static_cast<uint16_t>(registerData[12])));
-    calibrationCoefficientPressure6  = static_cast<float>(static_cast<int8_t>(registerData[15]));
-    calibrationCoefficientPressure7  = static_cast<float>(static_cast<int8_t>(registerData[14]));
+    calibrationCoefficientPressure6  = static_cast<float>(registerData[15]);
+    calibrationCoefficientPressure7  = static_cast<float>(registerData[14]);
     calibrationCoefficientPressure8  = static_cast<float>(static_cast<int16_t>(static_cast<uint16_t>(registerData[19]) << 8) | static_cast<uint16_t>(registerData[18]));
     calibrationCoefficientPressure9  = static_cast<float>(static_cast<int16_t>(static_cast<uint16_t>(registerData[21]) << 8) | static_cast<uint16_t>(registerData[20]));
-    calibrationCoefficientPressure10 = static_cast<float>(static_cast<uint8_t>(registerData[22]));
+    calibrationCoefficientPressure10 = static_cast<float>(registerData[22]);
 #else
     mockBME680Registers[static_cast<uint8_t>(bme680::registers::chipId)]      = bme680::chipIdValue;
     mockBME680Registers[static_cast<uint8_t>(bme680::registers::meas_status)] = 0x80;
