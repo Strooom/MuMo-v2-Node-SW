@@ -76,7 +76,7 @@ void measurementCollection::addMeasurement(uint32_t deviceIndex, uint32_t channe
 
 void measurementCollection::saveNewMeasurementsToEeprom() {
     newMeasurements.prefix(realTimeClock::bytesFromTime_t(realTimeClock::get()), 4);
-    newMeasurements.prefix(nmbrOfNewMeasurements);
+    newMeasurements.prefix(static_cast<uint8_t>(nmbrOfNewMeasurements));
     uint32_t level           = newMeasurements.getLevel();
     uint8_t trailingBytes[4] = {0xFF, 0xFF, 0xFF, 0xFF};        // TODO : check if we need to erase old measurements and add more 0xFF padding
     newMeasurements.append(trailingBytes, 4);
@@ -241,7 +241,7 @@ void measurementCollection::dumpMeasurement(uint32_t measurementOffset) {
 }
 
 uint32_t measurementCollection::dumpMeasurementGroup(uint32_t measurementGroupOffset) {
-    uint8_t nmbrOfMeasurements = nmbrOfMeasurementsInGroup(measurementGroupOffset);
+    uint32_t nmbrOfMeasurements = nmbrOfMeasurementsInGroup(measurementGroupOffset);
     time_t timestamp           = timestampOfMeasurementsGroup(measurementGroupOffset);
     logging::snprintf("%s", ctime(&timestamp));        // ctime appends a newline by itself..
 
