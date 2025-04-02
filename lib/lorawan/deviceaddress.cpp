@@ -13,10 +13,10 @@ deviceAddress& deviceAddress::operator=(const deviceAddress &theDeviceAddress) {
     asUint32 = theDeviceAddress.asUint32;
     return *this;
 }
-bool deviceAddress::operator==(const deviceAddress &theDeviceAddress) {
+bool deviceAddress::operator==(const deviceAddress &theDeviceAddress) const {
     return (asUint32 == theDeviceAddress.asUint32);
 }
 
-bool deviceAddress::operator!=(const deviceAddress &theDeviceAddress) {
+bool deviceAddress::operator!=(const deviceAddress &theDeviceAddress) const{
     return (asUint32 != theDeviceAddress.asUint32);
 }

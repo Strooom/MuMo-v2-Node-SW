@@ -14,8 +14,8 @@ class deviceAddress {
 
     deviceAddress& operator=(const uint32_t theDeviceAddress);
     deviceAddress& operator=(const deviceAddress& theDeviceAddress);
-    bool operator==(const deviceAddress& theDeviceAddress);
-    bool operator!=(const deviceAddress& theDeviceAddress);
+    bool operator==(const deviceAddress& theDeviceAddress) const;
+    bool operator!=(const deviceAddress& theDeviceAddress) const;
 
     union {
         uint32_t asUint32{0xFFFFFFFF};

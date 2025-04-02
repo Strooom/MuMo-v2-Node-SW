@@ -3,8 +3,6 @@
 #include <main.h>
 #endif
 
-// #define MODIFY_REG(REG, CLEARMASK, SETMASK)  WRITE_REG((REG), (((READ_REG(REG)) & (~(CLEARMASK))) | (SETMASK)))
-
 void stm32wle5_aes::initialize(aesMode theMode) {
     uint32_t aesControlRegisterValue{0};
     aesControlRegisterValue |= (0b10 << 1);                                  // set dataTypeSelection to byte, for bigEndian / littleEndian conversion

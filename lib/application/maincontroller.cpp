@@ -65,7 +65,6 @@ void mainController::initialize() {
     logging::enable(logging::destination::uart1);
     logging::enable(logging::source::applicationEvents);
     logging::enable(logging::source::settings);
-    // logging::enable(logging::source::sensorData);
     logging::enable(logging::source::lorawanMac);
     logging::enable(logging::source::lorawanData);
     logging::enable(logging::source::error);
