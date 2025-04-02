@@ -432,35 +432,37 @@ void qrCode::addErrorCorrection() {
 }
 
 void qrCode::interleaveData() {
-    if (nmbrBlocks(theVersion, theErrorCorrectionLevel) > 1) {
-        uint32_t lastBlockIndex             = nmbrBlocks(theVersion, theErrorCorrectionLevel) - 1;
-        uint32_t longestBlockLength         = blockLength(lastBlockIndex, theVersion, theErrorCorrectionLevel);
-        uint32_t nmbrErrorCodewordsPerBlock = versionProperties[theVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)];
-        uint8_t tempBuffer[256U]{};
-        uint32_t destinationIndex{0};
+    if (nmbrBlocks(theVersion, theErrorCorrectionLevel) == 1) {
+        return;
+    }
 
-        // iterate over all data blocks
-        for (uint32_t rowIndex = 0; rowIndex < longestBlockLength; rowIndex++) {
-            for (uint32_t blockIndex = 0; blockIndex <= lastBlockIndex; blockIndex++) {
-                if (rowIndex < blockLength(blockIndex, theVersion, theErrorCorrectionLevel)) {
-                    tempBuffer[destinationIndex] = buffer.getByte(dataOffset(blockIndex, rowIndex));
-                    destinationIndex++;
-                }
-            }
-        }
-        // iterate over all error correction blocks
-        for (uint32_t rowIndex = 0; rowIndex < nmbrErrorCodewordsPerBlock; rowIndex++) {
-            for (uint32_t blockIndex = 0; blockIndex <= lastBlockIndex; blockIndex++) {
-                tempBuffer[destinationIndex] = buffer.getByte(eccOffset(blockIndex, rowIndex));
+    uint32_t lastBlockIndex             = nmbrBlocks(theVersion, theErrorCorrectionLevel) - 1;
+    uint32_t longestBlockLength         = blockLength(lastBlockIndex, theVersion, theErrorCorrectionLevel);
+    uint32_t nmbrErrorCodewordsPerBlock = versionProperties[theVersion - 1].nmbrErrorCorrectionCodewordsPerBlock[static_cast<uint32_t>(theErrorCorrectionLevel)];
+    uint8_t tempBuffer[256U]{};
+    uint32_t destinationIndex{0};
+
+    // iterate over all data blocks
+    for (uint32_t rowIndex = 0; rowIndex < longestBlockLength; rowIndex++) {
+        for (uint32_t blockIndex = 0; blockIndex <= lastBlockIndex; blockIndex++) {
+            if (rowIndex < blockLength(blockIndex, theVersion, theErrorCorrectionLevel)) {
+                tempBuffer[destinationIndex] = buffer.getByte(dataOffset(blockIndex, rowIndex));
                 destinationIndex++;
             }
         }
-
-        // Copy back to source buffer
-        buffer.reset();
-        for (uint32_t i = 0; i < maxPayloadLengthInBytes; i++) {
-            buffer.appendByte(tempBuffer[i]);
+    }
+    // iterate over all error correction blocks
+    for (uint32_t rowIndex = 0; rowIndex < nmbrErrorCodewordsPerBlock; rowIndex++) {
+        for (uint32_t blockIndex = 0; blockIndex <= lastBlockIndex; blockIndex++) {
+            tempBuffer[destinationIndex] = buffer.getByte(eccOffset(blockIndex, rowIndex));
+            destinationIndex++;
         }
+    }
+
+    // Copy back to source buffer
+    buffer.reset();
+    for (uint32_t i = 0; i < maxPayloadLengthInBytes; i++) {
+        buffer.appendByte(tempBuffer[i]);
     }
 }
 
