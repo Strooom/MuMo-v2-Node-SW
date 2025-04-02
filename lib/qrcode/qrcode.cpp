@@ -726,7 +726,7 @@ void qrCode::drawPayload(uint32_t someVersion) {
     }
 }
 
-void qrCode::applyMask(uint8_t maskType) {
+void qrCode::applyMask(uint32_t maskType) {
     bool invert{false};
     for (uint32_t x = 0; x < size(theVersion); x++) {
         for (uint32_t y = 0; y < size(theVersion); y++) {
