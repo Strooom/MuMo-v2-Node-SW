@@ -69,6 +69,8 @@ void qrCode::generate(const uint8_t *data, uint32_t dataLength, uint32_t someVer
     selectMask();
 }
 
+uint32_t qrCode::size() { return size(theVersion); }
+
 bool qrCode::getModule(uint32_t x, uint32_t y) {
     return modules.getBit(x, y);
 }

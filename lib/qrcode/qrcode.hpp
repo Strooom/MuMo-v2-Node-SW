@@ -29,6 +29,7 @@ class qrCode {
     static void generate(const char *data, uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);                                // null-terminated string of data
     static void generate(const uint8_t *data, uint32_t dataLength, uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);        //
     static bool getModule(uint32_t x, uint32_t y);
+    static uint32_t size();
 
     // public compile-time constants
     static constexpr uint32_t maxVersion{5};                        // 1..40 This sets the maximum version that is supported by this library. Storage for the input data and output pixelmatrix is allocated statically and depends on this value.
@@ -41,8 +42,8 @@ class qrCode {
   private:
 #endif
     // general helpers
-    static uint32_t size(uint32_t someVersion);
     static void initialize(uint32_t someVersion, errorCorrectionLevel someErrorCorrectionLevel);
+    static uint32_t size(uint32_t someVersion);
 
     // encoding user data into payload
     static bool isNumeric(const char *data);                                                  // null-terminated string of data

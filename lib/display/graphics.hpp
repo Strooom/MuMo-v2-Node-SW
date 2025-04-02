@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include <font.hpp>
 #include <bitmap.hpp>
-#include <qrcode2.hpp>
 
 class graphics {
   public:
@@ -32,7 +31,7 @@ class graphics {
 
     static void drawBatteryIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level);                      // level goes from 0 to 100
     static void drawNetworkSignalStrengthIcon(const uint32_t xStart, const uint32_t yStart, const uint32_t level);        // level goes from 0 to 100
-    static void drawQrcode(const uint32_t xStart, const uint32_t yStart, QRCode &theQrCode);
+    static void drawQrCode(const uint32_t xStart, const uint32_t yStart);
 
 
 #ifndef unitTesting
