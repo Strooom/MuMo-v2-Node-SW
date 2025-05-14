@@ -1,3 +1,17 @@
+# Non-Volatile Memory
+Implemented with one or more I2C eeprom chips.
+Different HW-types can be used, if they are compatible with the following common addressing : 
+* each bank of 64K bytes is addressed by incrementing the I2C address, from baseAddress = 0x50
+* inside each bank a 16 bit address is used.
+
+# Paging
+Every memory access has some overhead : 
+* sending the address in I2C
+* disabling / re-enabling the write-protect for write operations
+So reading or writing a range of bytes is more efficient.
+However, this can only be done when the range is inside a so-called 'page' of the EEPROM device, typically 128 or 256 bytes.
+So when doing reads or writes that span multiple EEPROM pages, they have to be split into separate I2C communications, with each communication reading/writing from a single page.
+
 # Partitions
 
 1 : applicationSettings

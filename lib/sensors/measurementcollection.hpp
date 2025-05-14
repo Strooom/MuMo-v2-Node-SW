@@ -5,8 +5,8 @@
 
 #pragma once
 #include <stdint.h>
+#include <time.h>
 #include <nvs.hpp>
-#include <measurement.hpp>
 #include <linearbuffer.hpp>
 
 class measurementCollection {
@@ -29,6 +29,9 @@ class measurementCollection {
     static uint32_t measurementDeviceIndex(uint32_t measurementOffset);
     static uint32_t measurementChannelIndex(uint32_t measurementOffset);
     static float measurementValue(uint32_t measurementOffset);
+
+    static uint32_t getOldestMeasurementOffset() { return oldestMeasurementOffset; };
+    static uint32_t getNewMeasurementsOffset() { return newMeasurementsOffset; };
 
     static void dumpMeasurement(uint32_t addressOffset);
     static uint32_t dumpMeasurementGroup(uint32_t addressOffset);

@@ -9,7 +9,7 @@ void tearDown(void) {        // after each test
 }
 
 void test_isValidBlockIndex() {
-    TEST_ASSERT_TRUE(settingsCollection::isValidIndex(settingsCollection::settingIndex::nvsMapVersion));
+    TEST_ASSERT_TRUE(settingsCollection::isValidIndex(settingsCollection::settingIndex::mapVersion));
     TEST_ASSERT_TRUE(settingsCollection::isValidIndex(settingsCollection::settingIndex::unusedLoRaWAN2));
     TEST_ASSERT_FALSE(settingsCollection::isValidIndex(settingsCollection::settingIndex::numberOfSettings));
 }
@@ -30,11 +30,11 @@ void test_allBlocksWithinOnePage() {
 
 void test_write_read_setting() {
     uint8_t testByte{123};
-    settingsCollection::save<uint8_t>(testByte, settingsCollection::settingIndex::nvsMapVersion);
-    TEST_ASSERT_EQUAL_UINT8(testByte, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::nvsMapVersion));
+    settingsCollection::save<uint8_t>(testByte, settingsCollection::settingIndex::mapVersion);
+    TEST_ASSERT_EQUAL_UINT8(testByte, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mapVersion));
 
-    settingsCollection::save(testByte, settingsCollection::settingIndex::nvsMapVersion);
-    TEST_ASSERT_EQUAL_UINT8(testByte, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::nvsMapVersion));
+    settingsCollection::save(testByte, settingsCollection::settingIndex::mapVersion);
+    TEST_ASSERT_EQUAL_UINT8(testByte, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mapVersion));
 
     uint32_t testDoubleWord{0x55AA00FF};
     settingsCollection::save<uint32_t>(testDoubleWord, settingsCollection::settingIndex::uplinkFrameCounter);
@@ -52,9 +52,9 @@ void test_write_read_setting() {
 
 void test_is_initialized() {
     nonVolatileStorage::erase();
-    TEST_ASSERT_FALSE(settingsCollection::isInitialized());
-    settingsCollection::save<uint8_t>(0x01, settingsCollection::settingIndex::nvsMapVersion);
-    TEST_ASSERT_TRUE(settingsCollection::isInitialized());
+    TEST_ASSERT_FALSE(settingsCollection::isValid());
+    settingsCollection::save<uint8_t>(0x01, settingsCollection::settingIndex::mapVersion);
+    TEST_ASSERT_TRUE(settingsCollection::isValid());
 }
 
 

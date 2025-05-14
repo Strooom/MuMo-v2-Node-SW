@@ -62,8 +62,8 @@ void showUid() {
 }
 
 void initializeNvsVersion() {
-    settingsCollection::save(static_cast<uint8_t>(1U), settingsCollection::settingIndex::nvsMapVersion);
-    TEST_ASSERT_EQUAL_UINT8(1, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::nvsMapVersion));
+    settingsCollection::save(static_cast<uint8_t>(1U), settingsCollection::settingIndex::mapVersion);
+    TEST_ASSERT_EQUAL_UINT8(1, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mapVersion));
 }
 
 void initializeDisplayType() {

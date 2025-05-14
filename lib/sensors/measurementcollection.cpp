@@ -5,6 +5,7 @@
 #include <sensordevicecollection.hpp>
 #include <realtimeclock.hpp>
 #include <float.hpp>
+#include <stdio.h>
 
 uint32_t measurementCollection::oldestMeasurementOffset{0};
 uint32_t measurementCollection::newMeasurementsOffset{0};
@@ -240,9 +241,10 @@ void measurementCollection::dumpMeasurement(uint32_t measurementOffset) {
     }
 }
 
+
 uint32_t measurementCollection::dumpMeasurementGroup(uint32_t measurementGroupOffset) {
     uint32_t nmbrOfMeasurements = nmbrOfMeasurementsInGroup(measurementGroupOffset);
-    time_t timestamp           = timestampOfMeasurementsGroup(measurementGroupOffset);
+    time_t timestamp            = timestampOfMeasurementsGroup(measurementGroupOffset);
     logging::snprintf("%s", ctime(&timestamp));        // ctime appends a newline by itself..
 
     uint32_t measurementOffset   = measurementGroupOffset + 5;
@@ -270,7 +272,7 @@ void measurementCollection::dumpRaw(uint32_t offset, uint32_t nmbrOfBytes) {
     uint32_t nmbrOfRows = (nmbrOfBytes / 16);
 
     for (uint32_t row = 0; row < nmbrOfRows; row++) {
-        logging::snprintf("[%d] : ", (offset + row));
+        logging::snprintf("[%d] : ", (offset + (16 * row)));
         for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
             nonVolatileStorage::read(offsetToAddress(offset + (16 * row) + byteIndex), &rawByte, 1);
             logging::snprintf("%02x ", rawByte);

@@ -62,7 +62,7 @@ const uint32_t mainController::channelIndex[screen::nmbrOfMeasurementTextLines]{
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
-    logging::enable(logging::destination::uart1);
+    logging::enable(logging::destination::debugProbe);
     logging::enable(logging::source::applicationEvents);
     logging::enable(logging::source::settings);
     logging::enable(logging::source::lorawanMac);
@@ -91,13 +91,23 @@ void mainController::initialize() {
     spi::goSleep();
 
     i2c::wakeUp();
-    uint32_t nmbr64KBlocks = nonVolatileStorage::isPresent();
+    uint32_t nmbr64KBlocks = nonVolatileStorage::detectNmbr64KBanks();
     if (nmbr64KBlocks > 0) {
         logging::snprintf(logging::source::settings, "EEPROM   : %d * 64K present\n", nmbr64KBlocks);
     } else {
         logging::snprintf(logging::source::criticalError, "no EEPROM\n");
         state = mainState::fatalError;
         return;
+    }
+
+    uint32_t settingsMapVersion = settingsCollection::getMapVersion();
+    if (settingsCollection::isValid()) {
+        logging::snprintf(logging::source::settings, "settingsMapVersion : %d\n", settingsMapVersion);
+    } else {
+        logging::snprintf(logging::source::criticalError, "invalid settingsMapVersion %d\n", settingsMapVersion);
+        settingsCollection::save(1U, settingsCollection::settingIndex::mapVersion);
+        // state = mainState::fatalError;
+        // return;
     }
 
     batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
@@ -110,7 +120,7 @@ void mainController::initialize() {
         sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, 20);
     } else {
         logging::snprintf(logging::source::criticalError, "invalid BatteryType %d\n", static_cast<uint8_t>(theBatteryType));
-        // settingsCollection::save(static_cast<uint8_t>(batteryType::liFePO4_700mAh), settingsCollection::settingIndex::batteryType);        // comment out for setting the battery type
+        settingsCollection::save(static_cast<uint8_t>(batteryType::alkaline_1200mAh), settingsCollection::settingIndex::batteryType);
     }
 
     mcuType theMcuType = static_cast<mcuType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
@@ -120,9 +130,9 @@ void mainController::initialize() {
         sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)] = true;
     } else {
         logging::snprintf(logging::source::criticalError, "invalid RadioType %d\n", static_cast<uint8_t>(theMcuType));
-        // settingsCollection::save(static_cast<uint8_t>(mcuType::lowPower), settingsCollection::settingIndex::mcuType);        // comment out for setting the radio type
-        goTo(mainState::fatalError);
-        return;
+        settingsCollection::save(static_cast<uint8_t>(mcuType::highPower), settingsCollection::settingIndex::mcuType);
+        // goTo(mainState::fatalError);
+        // return;
     }
 
     sensorDeviceCollection::discover();
@@ -144,32 +154,30 @@ void mainController::initialize() {
     }
     logging::snprintf("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
 
-    // TODO : initialize measurementCollection
+    measurementCollection::initialize();
+    measurementCollection::findMeasurementsInEeprom();
+    uint32_t nmbrOfBytes = measurementCollection::nmbrOfMeasurementBytes();
+    logging::snprintf("%d bytes of measurements found\n", nmbrOfBytes);
+
+    measurementCollection::dumpRaw(measurementCollection::getOldestMeasurementOffset() +26, 256U);
+
+
+    static constexpr uint32_t tmpStringLength{128};
+    char tmpString[tmpStringLength];
+
+    // static constexpr uint32_t maxNmbrOfMeasurementsToDump{16};
+    // uint32_t bytesConsumed{0};
+    // measurementCollection::printMeasurementGroup(tmpString, measurementCollection::getOldestMeasurementOffset() + 26);
+    // logging::snprintf("%s", tmpString);
 
     gpio::enableGpio(gpio::group::rfControl);
 
     LoRaWAN::initialize();
-
-    // uint32_t toBeDevAddr            = 0x260B1723;
-    // const char toBeNetworkKey[]     = "687F33B28C045E0412383B50D8853984";
-    // const char toBeApplicationKey[] = "862DDA53CFB9A19169EDF0F4CC31480D";
-
-    // LoRaWAN::DevAddr.asUint32 = toBeDevAddr;
-    // LoRaWAN::networkKey.setFromHexString(toBeNetworkKey);
-    // LoRaWAN::applicationKey.setFromHexString(toBeApplicationKey);
-    // LoRaWAN::saveConfig();
-    // LoRaWAN::restoreConfig();
-
-    // Uncomment to reset MacLayer state and/or channels in the device
-    // Needs a matching MacLayer reset at the LoRaWAN Network Server
-    // LoRaWAN::resetState();           // TEST
-    // LoRaWAN::saveState();            // TEST
-    // LoRaWAN::resetChannels();        // TEST
-    // LoRaWAN::saveChannels();         // TEST
-    // LoRaWAN::initialize();           // TEST
-
-    static constexpr uint32_t tmpStringLength{64};
-    char tmpString[tmpStringLength];
+    if (!LoRaWAN::isValidConfig()) {
+        logging::snprintf(logging::source::criticalError, "invalid LoRaWAN config\n");
+        goTo(mainState::fatalError);
+        return;
+    }
     logging::snprintf("\n");
     hexAscii::uint32ToHexString(tmpString, LoRaWAN::DevAddr.asUint32);
     logging::snprintf("DevAddr  : %s\n", tmpString);
@@ -177,13 +185,11 @@ void mainController::initialize() {
     logging::snprintf("AppSKey  : %s\n", tmpString);
     hexAscii::byteArrayToHexString(tmpString, LoRaWAN::networkKey.asBytes(), 16);
     logging::snprintf("NwkSKey  : %s\n", tmpString);
-
-    if (!LoRaWAN::isValidConfig()) {
-        logging::snprintf(logging::source::criticalError, "invalid LoRaWAN config\n");
+    if (!LoRaWAN::isValidState()) {
+        logging::snprintf(logging::source::criticalError, "invalid LoRaWAN state\n");
         goTo(mainState::fatalError);
         return;
     }
-
     logging::snprintf("\n");
     logging::snprintf("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());
     logging::snprintf("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.toUint32());
@@ -191,22 +197,14 @@ void mainController::initialize() {
     logging::snprintf("DataRate : %u\n", LoRaWAN::currentDataRateIndex);
     logging::snprintf("rx1DROff : %u\n", LoRaWAN::rx1DataRateOffset);
     logging::snprintf("rx2DRIdx : %u\n", LoRaWAN::rx2DataRateIndex);
-
-    if (!LoRaWAN::isValidState()) {
-        logging::snprintf(logging::source::criticalError, "invalid LoRaWAN state\n");
-        goTo(mainState::fatalError);
-        return;
-    }
-
     logging::snprintf("\n");
     logging::snprintf("ActiveCh : %u\n", loRaTxChannelCollection::nmbrActiveChannels());
     for (uint32_t loRaTxChannelIndex = 0; loRaTxChannelIndex < loRaTxChannelCollection::maxNmbrChannels; loRaTxChannelIndex++) {
         logging::snprintf("Chan[%02u] : %u Hz, %u, %u\n", loRaTxChannelIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].frequencyInHz, loRaTxChannelCollection::channel[loRaTxChannelIndex].minimumDataRateIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].maximumDataRateIndex);
     }
 
-    applicationEventBuffer.initialize();        // clears RTCticks which may already have been generated
+    applicationEventBuffer.initialize();
     goTo(mainState::networkCheck);
-    // i2c::goSleep(); // TODO / BUG : this is a problem, as the I2C now sleeps during the networkCheck state... and so new settings cannot be stored in NVS
 }
 
 void mainController::handleEvents() {

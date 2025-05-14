@@ -5,10 +5,8 @@
 #include <float.hpp>
 #include <ctime>
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_addressFromOffset() {
     static constexpr uint32_t blockSize{128};
@@ -118,7 +116,7 @@ void test_findMeasurementsInEeprom() {
         TEST_ASSERT_EQUAL(expectedEnd, measurementCollection::newMeasurementsOffset);
     }
 
-    // Opposite scenario, with all eeprom full of data and only the minimyum gap somewhere
+    // Opposite scenario, with all eeprom full of data and only the minimum gap somewhere
 
     for (uint32_t testRun = 0; testRun <= ((measurementCollection::measurementsGap * 4) + nmbrNonEmptyBytes); testRun++) {
         memset(nonVolatileStorage::mockEepromMemory + nonVolatileStorage::measurementsStartAddress, 0x00, nonVolatileStorage::measurementsSize);

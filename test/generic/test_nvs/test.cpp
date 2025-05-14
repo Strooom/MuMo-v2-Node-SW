@@ -1,13 +1,54 @@
 #include <unity.h>
 #include <nvs.hpp>
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_isPresent() {
-    TEST_ASSERT_EQUAL(0, nonVolatileStorage::isPresent());        // on the desktop this calls a dummy which always returns 0. Real test is on the target HW
+    nonVolatileStorage::mockEepromNmbr64KPages = 0;
+    TEST_ASSERT_EQUAL(0, nonVolatileStorage::detectNmbr64KBanks());
+    nonVolatileStorage::mockEepromNmbr64KPages = 4;
+    TEST_ASSERT_EQUAL(4, nonVolatileStorage::detectNmbr64KBanks());
+}
+
+void test_totalSize() {
+    nonVolatileStorage::mockEepromNmbr64KPages = 1;
+    nonVolatileStorage::detectNmbr64KBanks();
+    TEST_ASSERT_EQUAL_UINT32(64 * 1024, nonVolatileStorage::totalSize());
+    nonVolatileStorage::mockEepromNmbr64KPages = 2;
+    nonVolatileStorage::detectNmbr64KBanks();
+    TEST_ASSERT_EQUAL_UINT32(128 * 1024, nonVolatileStorage::totalSize());
+    nonVolatileStorage::mockEepromNmbr64KPages = 4;
+    nonVolatileStorage::detectNmbr64KBanks();
+    TEST_ASSERT_EQUAL_UINT32(256 * 1024, nonVolatileStorage::totalSize());
+}
+
+void test_bankNumber() {
+    nonVolatileStorage::mockEepromNmbr64KPages = 8;
+    nonVolatileStorage::detectNmbr64KBanks();
+    for (uint32_t bankIndex = 0; bankIndex < nonVolatileStorage::detectNmbr64KBanks(); bankIndex++) {
+        TEST_ASSERT_EQUAL_UINT32(bankIndex, nonVolatileStorage::bankNumber(bankIndex * 64U * 1024U));
+        TEST_ASSERT_EQUAL_UINT32(bankIndex, nonVolatileStorage::bankNumber(((bankIndex + 1) * 64U * 1024U) - 1));
+    }
+}
+
+void test_bankI2cAddress() {
+    nonVolatileStorage::mockEepromNmbr64KPages = 8;
+    nonVolatileStorage::detectNmbr64KBanks();
+    for (uint32_t bankIndex = 0; bankIndex < nonVolatileStorage::detectNmbr64KBanks(); bankIndex++) {
+        TEST_ASSERT_EQUAL_UINT32(nonVolatileStorage::baseI2cAddress + bankIndex, nonVolatileStorage::bankI2cAddress(bankIndex * 64U * 1024U));
+        TEST_ASSERT_EQUAL_UINT32(nonVolatileStorage::baseI2cAddress + bankIndex, nonVolatileStorage::bankI2cAddress(((bankIndex + 1) * 64U * 1024U) - 1));
+    }
+}
+
+void test_bankOffset() {
+    nonVolatileStorage::mockEepromNmbr64KPages = 8;
+    nonVolatileStorage::detectNmbr64KBanks();
+    for (uint32_t bankIndex = 0; bankIndex < nonVolatileStorage::detectNmbr64KBanks(); bankIndex++) {
+        for (uint32_t offsetIndex = 0; offsetIndex < 64U * 1024U; offsetIndex++) {
+            TEST_ASSERT_EQUAL_UINT16(offsetIndex, nonVolatileStorage::bankOffset((bankIndex * 64U * 1024U) + offsetIndex));
+        }
+    }
 }
 
 void test_pageNumber() {
@@ -37,20 +78,75 @@ void test_bytesInCurrentPage() {
     TEST_ASSERT_EQUAL_UINT32(quarterPageSize, nonVolatileStorage::bytesInCurrentPage(threeQuarterPageSize, threeQuarterPageSize));
 }
 
-
 void test_write_read_bytes() {
-    uint32_t testAddress{0};
-    const uint32_t testDataLength{16};
-    uint8_t testBytesToWrite[testDataLength]{0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
-    uint8_t testBytesToRead[testDataLength]{};
+    nonVolatileStorage::mockEepromNmbr64KPages = 8;
+    nonVolatileStorage::detectNmbr64KBanks();
+    for (uint32_t address = 0; address < nonVolatileStorage::totalSize(); address++) {
+        nonVolatileStorage::write(address, 0xAA);
+        TEST_ASSERT_EQUAL_UINT8(0xAA, nonVolatileStorage::read(address));
+        nonVolatileStorage::write(address, 0x55);
+        TEST_ASSERT_EQUAL_UINT8(0x55, nonVolatileStorage::read(address));
+    }
+}
 
-    nonVolatileStorage::write(testAddress, testBytesToWrite, testDataLength);
-    nonVolatileStorage::read(testAddress, testBytesToRead, testDataLength);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(testBytesToWrite, testBytesToRead, testDataLength);
+void test_write_read_rangeOfBytesInPage() {
+    nonVolatileStorage::mockEepromNmbr64KPages = 8;
+    nonVolatileStorage::detectNmbr64KBanks();
+    const uint32_t numberOfPages{nonVolatileStorage::totalSize() / nonVolatileStorage::pageSize};
+
+    uint8_t testBytesToWrite[nonVolatileStorage::pageSize];
+    uint8_t testBytesToRead[nonVolatileStorage::pageSize]{};
+    for (uint32_t i = 0; i < nonVolatileStorage::pageSize; i++) {
+        testBytesToWrite[i] = static_cast<uint8_t>(i);
+    }
+
+    for (uint32_t page = 0; page < numberOfPages; page++) {
+        uint32_t testAddress = page * nonVolatileStorage::pageSize;
+        nonVolatileStorage::writeInPage(testAddress, testBytesToWrite, nonVolatileStorage::pageSize);
+        nonVolatileStorage::readInPage(testAddress, testBytesToRead, nonVolatileStorage::pageSize);
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(testBytesToWrite, testBytesToRead, nonVolatileStorage::pageSize);
+    }
+
+    for (uint32_t i = 0; i < nonVolatileStorage::pageSize; i++) {
+        testBytesToWrite[i] = testBytesToWrite[i] ^ 0xFF;
+    }
+
+    for (uint32_t page = 0; page < numberOfPages; page++) {
+        uint32_t testAddress = page * nonVolatileStorage::pageSize;
+        nonVolatileStorage::writeInPage(testAddress, testBytesToWrite, nonVolatileStorage::pageSize);
+        nonVolatileStorage::readInPage(testAddress, testBytesToRead, nonVolatileStorage::pageSize);
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(testBytesToWrite, testBytesToRead, nonVolatileStorage::pageSize);
+    }
+}
+
+void test_write_read_rangeOfBytesAcrossPages() {
+    nonVolatileStorage::mockEepromNmbr64KPages = 8;
+    nonVolatileStorage::detectNmbr64KBanks();
+    uint8_t testBytesToWrite[nonVolatileStorage::totalSize()];
+    uint8_t testBytesToRead[nonVolatileStorage::totalSize()]{};
+
+    for (uint32_t i = 0; i < nonVolatileStorage::totalSize(); i++) {
+        testBytesToWrite[i] = static_cast<uint8_t>(i % 256);
+    }
+
+    nonVolatileStorage::write(0, testBytesToWrite, nonVolatileStorage::totalSize());
+    nonVolatileStorage::read(0, testBytesToRead, nonVolatileStorage::totalSize());
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(testBytesToWrite, testBytesToRead, nonVolatileStorage::totalSize());
+
+    for (uint32_t i = 0; i < nonVolatileStorage::totalSize(); i++) {
+        testBytesToWrite[i] = testBytesToWrite[i] ^ 0xFF;
+    }
+
+    nonVolatileStorage::write(0, testBytesToWrite, nonVolatileStorage::totalSize());
+    nonVolatileStorage::read(0, testBytesToRead, nonVolatileStorage::totalSize());
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(testBytesToWrite, testBytesToRead, nonVolatileStorage::totalSize());
 }
 
 void test_erase() {
-    const uint32_t testDataLength{nonVolatileStorage::totalSize};
+    nonVolatileStorage::mockEepromNmbr64KPages = 8;
+    nonVolatileStorage::detectNmbr64KBanks();
+
+    const uint32_t testDataLength{nonVolatileStorage::totalSize()};
     uint8_t testBytesToRead[testDataLength]{};
     uint8_t expectedBytes[testDataLength];
     for (uint32_t i = 0; i < testDataLength; i++) {
@@ -63,7 +159,10 @@ void test_erase() {
 }
 
 void test_fill() {
-    const uint32_t testDataLength{nonVolatileStorage::totalSize};
+    nonVolatileStorage::mockEepromNmbr64KPages = 8;
+    nonVolatileStorage::detectNmbr64KBanks();
+
+    const uint32_t testDataLength{nonVolatileStorage::totalSize()};
     uint8_t testBytesToRead[testDataLength]{};
     uint8_t expectedBytes[testDataLength];
     for (uint32_t i = 0; i < testDataLength; i++) {
@@ -75,13 +174,18 @@ void test_fill() {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, testBytesToRead, testDataLength);
 }
 
-
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_isPresent);
+    RUN_TEST(test_totalSize);
+    RUN_TEST(test_bankNumber);
+    RUN_TEST(test_bankI2cAddress);
+    RUN_TEST(test_bankOffset);
     RUN_TEST(test_pageNumber);
     RUN_TEST(test_bytesInCurrentPage);
     RUN_TEST(test_write_read_bytes);
+    RUN_TEST(test_write_read_rangeOfBytesInPage);
+    RUN_TEST(test_write_read_rangeOfBytesAcrossPages);
     RUN_TEST(test_erase);
     RUN_TEST(test_fill);
     UNITY_END();

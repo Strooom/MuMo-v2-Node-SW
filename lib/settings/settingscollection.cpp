@@ -4,7 +4,7 @@
 const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::numberOfSettings)] = {
     // Important note : make sure that none of the settings are mapped into two pages of 128 Bytes, as the page-write of the EEPROM is limited to 128 Byte pages and the address will wrap around to the beginning of the page if addressing more than 128 Bytes. A unit test will check this
 
-    {0, 1},        // nvsMapVersion : 1 byte
+    {0, 1},        // mapVersion : 1 byte
     {1, 1},        // displayType : 1 byte
     {2, 1},        // batteryType : 1 byte
     {3, 1},        // eepromType : 1 byte
@@ -27,16 +27,20 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     {309, 1},         // dataRate : 1 byte
     {310, 1},         // rx1DataRateOffset : 1 byte
     {311, 1},         // rx2DataRateIndex : 1 byte
-    {312, 72},        // unusedLoRaWAN : extra settings can be inserted herea
+    {312, 72},        // unusedLoRaWAN : extra settings can be inserted here
 
     {384, 16 * 6},        // 16 Tx channels : 6 bytes / channel [frequency, minDR, maxDR]
     {480, 6},             // Rx channel : [frequency, rx1DataRateOffset, rx2DataRateIndex]
     {486, 26},            // unusedLoRaWAN : extra settings can be inserted hereafter
 };
 
-bool settingsCollection::isInitialized() {
-    uint8_t settingsCollectionVersion = read<uint8_t>(settingIndex::nvsMapVersion);
-    return (settingsCollectionVersion != nonVolatileStorage::blankEepromValue);
+bool settingsCollection::isValid() {
+    uint8_t settingsCollectionVersion = read<uint8_t>(settingIndex::mapVersion);
+    return (settingsCollectionVersion <= maxMapVersion);
+}
+
+uint32_t settingsCollection::getMapVersion() {
+    return read<uint8_t>(settingIndex::mapVersion);
 }
 
 void settingsCollection::saveByteArray(const uint8_t* dataIn, settingIndex theIndex) {

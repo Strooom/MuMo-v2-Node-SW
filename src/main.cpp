@@ -57,7 +57,7 @@ void executeRomBootloader();
 int main(void) {
     HAL_Init();
     SystemClock_Config();
-    // HAL_Delay(10000); // only required on STM32IDE to allow the debugger to connect
+    HAL_Delay(6000);
     __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
     gpio::initialize();
     if (gpio::isDebugProbePresent()) {

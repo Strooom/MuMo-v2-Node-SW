@@ -10,11 +10,12 @@
 #include "main.h"
 extern I2C_HandleTypeDef hi2c2;
 #else
-uint8_t nonVolatileStorage::mockEepromMemory[nonVolatileStorage::totalSize];
 #include <cstring>
+uint32_t nonVolatileStorage::mockEepromNmbr64KPages{2};
+uint8_t nonVolatileStorage::mockEepromMemory[mockEepromMemorySize];
 #endif
 
-uint32_t nonVolatileStorage::nmbr64KPages{0};
+uint32_t nonVolatileStorage::nmbr64KBanks{0};
 
 uint32_t nonVolatileStorage::bytesInCurrentPage(uint32_t address, uint32_t dataLength) {
     uint32_t startPage{pageNumber(address)};
@@ -32,8 +33,8 @@ void nonVolatileStorage::erase() {
 }
 
 void nonVolatileStorage::fill(uint8_t value) {
-    uint8_t data[128];        // writing data in chunks of 128 bytes as this is optimized for the EEPROM device TODO : make this work for different EEPROM sizes / page sizes
-    constexpr uint32_t nmbrOfPages{totalSize / pageSize};
+    uint8_t data[pageSize];
+    const uint32_t nmbrOfPages{totalSize() / pageSize};
 
     for (uint32_t i = 0; i < pageSize; i++) {
         data[i] = value;
@@ -44,48 +45,103 @@ void nonVolatileStorage::fill(uint8_t value) {
     }
 }
 
-uint32_t nonVolatileStorage::isPresent() {
-    nmbr64KPages = 0;
-    for (uint8_t blockIndex = 0; blockIndex < maxNmbr64KPages; blockIndex++) {
+uint32_t nonVolatileStorage::detectNmbr64KBanks() {
 #ifndef generic
-        if (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, static_cast<uint16_t>((i2cAddress + blockIndex) << 1), halTrialsIsPresent, halTimeoutIsPresent)) {
-            nmbr64KPages++;
+    nmbr64KBanks = 0;
+    for (uint8_t blockIndex = 0; blockIndex < maxNmbr64KBanks; blockIndex++) {
+        if (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, static_cast<uint16_t>((baseI2cAddress + blockIndex) << 1), halIsPresentNmbrOfTrials, halIsPresentTimeoutInMs)) {
+            nmbr64KBanks++;
         }
-#endif
     }
-    return nmbr64KPages;
+#else
+    nmbr64KBanks = mockEepromNmbr64KPages;
+#endif
+    return nmbr64KBanks;
 }
 
-void nonVolatileStorage::read(const uint32_t startAddress, uint8_t* data, const uint32_t dataLength) {
+// Reading and Writing a single byte. Simple but not efficient when you need to read or write a range of bytes
+
+uint8_t nonVolatileStorage::read(const uint32_t address) {
 #ifndef generic
-    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(startAddress), I2C_MEMADD_SIZE_16BIT, data, static_cast<uint16_t>(dataLength), halTimeoutIsPresent);        //
+    uint8_t result;
+    HAL_I2C_Mem_Read(&hi2c2, static_cast<uint16_t>(bankI2cAddress(address) << 1), bankOffset(address), I2C_MEMADD_SIZE_16BIT, &result, 1U, halIsPresentTimeoutInMs);
+    return result;
 #else
-    (void)memcpy(data, mockEepromMemory + startAddress, dataLength);
+    return mockEepromMemory[address];
 #endif
 }
 
-void nonVolatileStorage::write(const uint32_t startAddress, const uint8_t* data, const uint32_t dataLength) {
-    // This function can write accross eeprom page boundaries
-    uint8_t* remainingData{const_cast<uint8_t*>(data)};
+void nonVolatileStorage::write(const uint32_t address, const uint8_t data) {
+    uint8_t dataCopy{data};
+    disableWriteProtect();
+#ifndef generic
+    HAL_I2C_Mem_Write(&hi2c2, static_cast<uint16_t>(bankI2cAddress(address) << 1), bankOffset(address), I2C_MEMADD_SIZE_16BIT, &dataCopy, 1U, halIsPresentTimeoutInMs);
+    HAL_Delay(writeCycleBusyTimeInMs);        // wait for the EEPROM to internally finish writing
+#else
+    mockEepromMemory[address] = data;
+#endif
+    enableWriteProtect();
+}
+
+// Reading or Writing a range of bytes but all inside a single page
+
+void nonVolatileStorage::readInPage(const uint32_t startAddress, uint8_t* destination, const uint32_t dataLength) {
+#ifndef generic
+    HAL_I2C_Mem_Read(&hi2c2, bankI2cAddress(startAddress) << 1, bankOffset(startAddress), I2C_MEMADD_SIZE_16BIT, destination, static_cast<uint16_t>(dataLength), halIsPresentTimeoutInMs);
+#else
+    (void)memcpy(destination, mockEepromMemory + startAddress, dataLength);
+#endif
+}
+
+void nonVolatileStorage::writeInPage(const uint32_t startAddress, const uint8_t* source, const uint32_t dataLength) {
+    disableWriteProtect();
+#ifndef generic
+    uint8_t* data{const_cast<uint8_t*>(source)};
+    HAL_I2C_Mem_Write(&hi2c2, bankI2cAddress(startAddress) << 1, bankOffset(startAddress), I2C_MEMADD_SIZE_16BIT, data, static_cast<uint16_t>(dataLength), halIsPresentTimeoutInMs);
+    HAL_Delay(writeCycleBusyTimeInMs);        // wait for the EEPROM to finish writing
+#else
+    (void)memcpy(mockEepromMemory + startAddress, source, dataLength);
+#endif
+    enableWriteProtect();
+}
+
+// Reading and Writing a range of bytes. More complex because the range may span several pages and the HW can only read or write to a single page
+// We also apply it for reading, as a read may span multiple 64Kbanks
+
+void nonVolatileStorage::read(const uint32_t startAddress, uint8_t* destination, const uint32_t dataLength) {
+    uint8_t* remainingData{destination};
     uint32_t remainingLength{dataLength};
     uint32_t currentAddress{startAddress};
-#ifndef generic
-    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_RESET);        // Drive writeProtect LOW = enable write
-#endif
     while (remainingLength > 0) {
         uint32_t bytesInThisPage = bytesInCurrentPage(currentAddress, remainingLength);
-#ifndef generic
-        HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(currentAddress), I2C_MEMADD_SIZE_16BIT, remainingData, static_cast<uint16_t>(bytesInThisPage), halTimeoutIsPresent);        // my wrapper does not allow the to-be-written source data to be modified, but the STM32 HAL doesn't have a const uint8_t ptr
-        HAL_Delay(writeCycleTime);                                                                                                                                                                   // wait for the EEPROM to finish writing
-#else
-        (void)memcpy(mockEepromMemory + currentAddress, remainingData, bytesInThisPage);
-#endif
-
+        readInPage(currentAddress, remainingData, bytesInThisPage);
         currentAddress += bytesInThisPage;
         remainingData += bytesInThisPage;
         remainingLength -= bytesInThisPage;
     }
+}
+
+void nonVolatileStorage::write(const uint32_t startAddress, const uint8_t* source, const uint32_t dataLength) {
+    const uint8_t* remainingData{source};
+    uint32_t remainingLength{dataLength};
+    uint32_t currentAddress{startAddress};
+    while (remainingLength > 0) {
+        uint32_t bytesInThisPage = bytesInCurrentPage(currentAddress, remainingLength);
+        writeInPage(currentAddress, remainingData, bytesInThisPage);
+        currentAddress += bytesInThisPage;
+        remainingData += bytesInThisPage;
+        remainingLength -= bytesInThisPage;
+    }
+}
+
+void nonVolatileStorage::disableWriteProtect() {
 #ifndef generic
-    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_RESET);        // Drive writeProtect LOW = enable write = disable write-protect
+#endif
+}
+
+void nonVolatileStorage::enableWriteProtect() {
+#ifndef generic
+    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_SET);        // Drive writeProtect HIGH = disable write = enable write-protect
 #endif
 }
