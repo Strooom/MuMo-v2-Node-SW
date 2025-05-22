@@ -27,7 +27,7 @@
 #include <lptim.hpp>
 #include <qrcode.hpp>
 #include <hexascii.hpp>
-#include <mcutype.hpp>
+#include <radiotype.hpp>
 #include <sx126x.hpp>
 
 ADC_HandleTypeDef hadc;
@@ -117,8 +117,8 @@ int main(void) {
         logging::snprintf("SHT40   : %s\n", sht40::isPresent() ? "present" : "not present");
         batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
         logging::snprintf("Battery : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
-        mcuType theMcuType = static_cast<mcuType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
-        logging::snprintf("Radio   : %s (%d)\n", toString(theMcuType), static_cast<uint8_t>(theMcuType));
+        radioType theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
+        logging::snprintf("Radio   : %s (%d)\n", toString(theRadioType), static_cast<uint8_t>(theRadioType));
         i2c::goSleep();
 
         if (display::isPresent()) {

@@ -9,9 +9,9 @@ class settingsCollection {
     enum class settingIndex : uint32_t {
         mapVersion = 0,
         displayType,        // unused for now, as there is only one display type
-        batteryType,
-        eepromType,        // unused for now, as the different EEPROM types in use are software compatible, except for pagesize, which we always use as 128 bytes
-        mcuType,
+        batteryType,        // different types of batteries need different voltage to state of charge conversion
+        eepromType,         // unused for now, as the different EEPROM types in use are software compatible, except for pagesize, which we always use as 128 bytes
+        radioType,          // high power or low power radio, as there are  two types of Seeed Studio modules
         unusedHardware,
 
         activeLoggingSources,
@@ -49,6 +49,7 @@ class settingsCollection {
     static void saveByteArray(const uint8_t* dataIn, settingIndex theIndex);
     static void readByteArray(uint8_t* dataOut, settingIndex theIndex);
     static constexpr uint8_t maxMapVersion{1};
+
 #ifndef unitTesting
 
   private:

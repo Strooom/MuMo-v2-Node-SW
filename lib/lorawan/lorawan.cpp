@@ -76,30 +76,6 @@ void LoRaWAN::initialize() {
     restoreChannels();
 }
 
-void LoRaWAN::saveConfig() {
-    settingsCollection::save(DevAddr.asUint32, settingsCollection::settingIndex::DevAddr);
-    settingsCollection::saveByteArray(applicationKey.asBytes(), settingsCollection::settingIndex::applicationSessionKey);
-    settingsCollection::saveByteArray(networkKey.asBytes(), settingsCollection::settingIndex::networkSessionKey);
-}
-
-void LoRaWAN::saveState() {
-    settingsCollection::save(uplinkFrameCount.toUint32(), settingsCollection::settingIndex::uplinkFrameCounter);
-    settingsCollection::save(downlinkFrameCount.toUint32(), settingsCollection::settingIndex::downlinkFrameCounter);
-    settingsCollection::save(static_cast<uint8_t>(rx1DelayInSeconds), settingsCollection::settingIndex::rx1Delay);
-    settingsCollection::save(static_cast<uint8_t>(currentDataRateIndex), settingsCollection::settingIndex::dataRate);
-    settingsCollection::save(static_cast<uint8_t>(rx1DataRateOffset), settingsCollection::settingIndex::rx1DataRateOffset);
-    settingsCollection::save(static_cast<uint8_t>(rx2DataRateIndex), settingsCollection::settingIndex::rx2DataRateIndex);
-}
-
-void LoRaWAN::saveChannels() {
-    uint8_t tmpChannelData[loRaTxChannelCollection::maxNmbrChannels * loRaChannel::sizeInBytes];
-    for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
-        loRaTxChannelCollection::channel[channelIndex].toBytes(tmpChannelData + (channelIndex * loRaChannel::sizeInBytes));
-    }
-    settingsCollection::saveByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
-    settingsCollection::save(rx2FrequencyInHz, settingsCollection::settingIndex::rxChannel);
-}
-
 void LoRaWAN::restoreConfig() {
     DevAddr = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::DevAddr);
     uint8_t tmpKeyArray[aesKey::lengthInBytes];
@@ -107,25 +83,6 @@ void LoRaWAN::restoreConfig() {
     applicationKey.setFromByteArray(tmpKeyArray);
     settingsCollection::readByteArray(tmpKeyArray, settingsCollection::settingIndex::networkSessionKey);
     networkKey.setFromByteArray(tmpKeyArray);
-}
-
-void LoRaWAN::restoreState() {
-    rx1DelayInSeconds    = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1Delay);
-    uplinkFrameCount     = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::uplinkFrameCounter);
-    downlinkFrameCount   = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::downlinkFrameCounter);
-    currentDataRateIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::dataRate);
-    rx1DataRateOffset    = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1DataRateOffset);
-    rx2DataRateIndex     = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx2DataRateIndex);
-}
-
-void LoRaWAN::restoreChannels() {
-    uint8_t tmpChannelData[loRaTxChannelCollection::maxNmbrChannels * loRaChannel::sizeInBytes];
-    settingsCollection::readByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
-
-    for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
-        loRaTxChannelCollection::channel[channelIndex].fromBytes(tmpChannelData + (channelIndex * loRaChannel::sizeInBytes));
-    }
-    rx2FrequencyInHz = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::rxChannel);
 }
 
 bool LoRaWAN::isValidConfig() {
@@ -145,6 +102,29 @@ bool LoRaWAN::isValidConfig() {
     return true;
 }
 
+void LoRaWAN::initializeConfig() {
+    LoRaWAN::DevAddr.asUint32 = toBeDevAddr;
+    LoRaWAN::networkKey.setFromHexString(toBeNetworkKey);
+    LoRaWAN::applicationKey.setFromHexString(toBeApplicationKey);
+    LoRaWAN::saveConfig();
+    LoRaWAN::restoreConfig();
+}
+
+void LoRaWAN::saveConfig() {
+    settingsCollection::save(DevAddr.asUint32, settingsCollection::settingIndex::DevAddr);
+    settingsCollection::saveByteArray(applicationKey.asBytes(), settingsCollection::settingIndex::applicationSessionKey);
+    settingsCollection::saveByteArray(networkKey.asBytes(), settingsCollection::settingIndex::networkSessionKey);
+}
+
+void LoRaWAN::restoreState() {
+    rx1DelayInSeconds    = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1Delay);
+    uplinkFrameCount     = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::uplinkFrameCounter);
+    downlinkFrameCount   = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::downlinkFrameCounter);
+    currentDataRateIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::dataRate);
+    rx1DataRateOffset    = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1DataRateOffset);
+    rx2DataRateIndex     = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx2DataRateIndex);
+}
+
 bool LoRaWAN::isValidState() {
     if (!dataRates::isValidIndex(currentDataRateIndex)) {
         return false;
@@ -161,25 +141,65 @@ bool LoRaWAN::isValidState() {
     return true;
 }
 
-void LoRaWAN::resetMacLayer() {
-    resetState();
-    resetChannels();
+void LoRaWAN::resetState() {
+    uplinkFrameCount     = toBeUplinkFrameCount;
+    downlinkFrameCount   = toBeDownlinkFrameCount;
+    rx1DelayInSeconds    = toBeRx1DelayInSeconds;
+    currentDataRateIndex = toBeCurrentDataRateIndex;
+    rx1DataRateOffset    = toBeRx1DataRateOffset;
+    rx2DataRateIndex     = toBeRx2DataRateIndex;
 }
 
-void LoRaWAN::resetState() {
-    uplinkFrameCount     = 0;
-    downlinkFrameCount   = 0;
-    rx1DelayInSeconds    = 1;
-    currentDataRateIndex = 5;
-    rx1DataRateOffset    = 0;
-    rx2DataRateIndex     = 3;
-    // Note : state is reset, but not yet saved in the non-volatile memory
+void LoRaWAN::initializeState() {
+    resetState();
+    saveState();
+    restoreState();
+
+    resetChannels();
+    saveChannels();
+    restoreChannels();
+}
+
+void LoRaWAN::saveState() {
+    settingsCollection::save(uplinkFrameCount.toUint32(), settingsCollection::settingIndex::uplinkFrameCounter);
+    settingsCollection::save(downlinkFrameCount.toUint32(), settingsCollection::settingIndex::downlinkFrameCounter);
+    settingsCollection::save(static_cast<uint8_t>(rx1DelayInSeconds), settingsCollection::settingIndex::rx1Delay);
+    settingsCollection::save(static_cast<uint8_t>(currentDataRateIndex), settingsCollection::settingIndex::dataRate);
+    settingsCollection::save(static_cast<uint8_t>(rx1DataRateOffset), settingsCollection::settingIndex::rx1DataRateOffset);
+    settingsCollection::save(static_cast<uint8_t>(rx2DataRateIndex), settingsCollection::settingIndex::rx2DataRateIndex);
+}
+
+void LoRaWAN::restoreChannels() {
+    uint8_t tmpChannelData[loRaTxChannelCollection::maxNmbrChannels * loRaChannel::sizeInBytes];
+    settingsCollection::readByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
+
+    for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
+        loRaTxChannelCollection::channel[channelIndex].fromBytes(tmpChannelData + (channelIndex * loRaChannel::sizeInBytes));
+    }
+    rx2FrequencyInHz = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::rxChannel);
 }
 
 void LoRaWAN::resetChannels() {
     loRaTxChannelCollection::reset();
     // Note : channels are reset, but not yet saved in the non-volatile memory
 }
+
+void LoRaWAN::saveChannels() {
+    uint8_t tmpChannelData[loRaTxChannelCollection::maxNmbrChannels * loRaChannel::sizeInBytes];
+    for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
+        loRaTxChannelCollection::channel[channelIndex].toBytes(tmpChannelData + (channelIndex * loRaChannel::sizeInBytes));
+    }
+    settingsCollection::saveByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
+    settingsCollection::save(rx2FrequencyInHz, settingsCollection::settingIndex::rxChannel);
+}
+
+
+void LoRaWAN::resetMacLayer() {
+    resetState();
+    resetChannels();
+}
+
+
 
 #pragma endregion
 #pragma region 1 : managing the rawMessage Buffer

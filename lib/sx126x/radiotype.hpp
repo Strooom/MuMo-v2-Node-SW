@@ -6,11 +6,11 @@
 #pragma once
 #include <stdint.h>
 
-    enum class mcuType : uint8_t {
+    enum class radioType : uint8_t {
         lowPower,
         highPower,
-        nmbrMcuTypes
+        nmbrRadioTypes
     };
 
-constexpr uint32_t nmbrMcuTypes{static_cast<uint32_t>(mcuType::nmbrMcuTypes)};
-const char *toString(mcuType theVersion);
+constexpr uint32_t nmbrRadioTypes{static_cast<uint32_t>(radioType::nmbrRadioTypes)};
+const char *toString(radioType theVersion);

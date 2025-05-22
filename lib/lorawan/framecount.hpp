@@ -24,7 +24,7 @@ class frameCount {
 
 #ifndef unitTesting
 
-  private:
+  // private:
 #endif
     static constexpr uint32_t maximumGap{256};        // maximum gap between last (valid) received framecount and next received framecount.
     union {

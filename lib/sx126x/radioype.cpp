@@ -3,14 +3,14 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 
-#include <mcutype.hpp>
+#include <radiotype.hpp>
 
-const char *toString(mcuType theVersion) {
+const char *toString(radioType theVersion) {
     switch (theVersion) {
-        case mcuType::highPower:
+        case radioType::highPower:
             return "LoRa-E5-HF";
 
-        case mcuType::lowPower:
+        case radioType::lowPower:
             return "LoRa-E5-LE-HF";
 
         default:

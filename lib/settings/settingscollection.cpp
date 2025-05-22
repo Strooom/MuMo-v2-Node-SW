@@ -8,7 +8,7 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     {1, 1},        // displayType : 1 byte
     {2, 1},        // batteryType : 1 byte
     {3, 1},        // eepromType : 1 byte
-    {4, 1},        // mcuType : 1 byte
+    {4, 1},        // radioType : 1 byte
 
     {5, 59},         // unusedGeneral : extra hardware settings can be inserted hereafter
     {64, 4},         // activelogging::sources : 4 bytes
@@ -36,7 +36,7 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
 
 bool settingsCollection::isValid() {
     uint8_t settingsCollectionVersion = read<uint8_t>(settingIndex::mapVersion);
-    return (settingsCollectionVersion <= maxMapVersion);
+    return ((settingsCollectionVersion <= maxMapVersion) && (settingsCollectionVersion > 0));
 }
 
 uint32_t settingsCollection::getMapVersion() {

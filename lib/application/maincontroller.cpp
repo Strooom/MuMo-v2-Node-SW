@@ -33,7 +33,7 @@
 #include <uart.hpp>
 #include <uniqueid.hpp>
 #include <buildinfo.hpp>
-#include <mcutype.hpp>
+#include <radiotype.hpp>
 #include <sx126x.hpp>
 
 #ifndef generic
@@ -56,13 +56,13 @@ void MX_USART2_UART_Init(void);
 mainState mainController::state{mainState::boot};
 uint32_t mainController::requestCounter{0};
 uint32_t mainController::answerCounter{0};
-const uint32_t mainController::deviceIndex[screen::nmbrOfMeasurementTextLines]{2, 2, 3};
+const uint32_t mainController::deviceIndex[screen::nmbrOfMeasurementTextLines]{2, 2, 1};
 const uint32_t mainController::channelIndex[screen::nmbrOfMeasurementTextLines]{0, 1, 0};
 
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
-    logging::enable(logging::destination::debugProbe);
+    logging::enable(logging::destination::uart1);
     logging::enable(logging::source::applicationEvents);
     logging::enable(logging::source::settings);
     logging::enable(logging::source::lorawanMac);
@@ -100,40 +100,45 @@ void mainController::initialize() {
         return;
     }
 
-    uint32_t settingsMapVersion = settingsCollection::getMapVersion();
-    if (settingsCollection::isValid()) {
-        logging::snprintf(logging::source::settings, "settingsMapVersion : %d\n", settingsMapVersion);
-    } else {
-        logging::snprintf(logging::source::criticalError, "invalid settingsMapVersion %d\n", settingsMapVersion);
-        settingsCollection::save(1U, settingsCollection::settingIndex::mapVersion);
-        // state = mainState::fatalError;
-        // return;
+    if (!settingsCollection::isValid()) {
+        logging::snprintf(logging::source::criticalError, "invalid settingsMapVersion %d\n", settingsCollection::getMapVersion());
+        settingsCollection::save(settingsCollection::maxMapVersion, settingsCollection::settingIndex::mapVersion);
+    } else if (forceInitialization) {
+        settingsCollection::save(settingsCollection::maxMapVersion, settingsCollection::settingIndex::mapVersion);
+        logging::snprintf(logging::source::criticalError, "forced initialisation settingsMapVersion %d\n", settingsCollection::getMapVersion());
     }
+    logging::snprintf(logging::source::settings, "settingsMapVersion : %d\n", settingsCollection::getMapVersion());
 
     batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
-    if (battery::isValidType(theBatteryType)) {
-        battery::initialize(theBatteryType);
-        logging::snprintf(logging::source::settings, "Battery  : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
-        sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
+    if (!battery::isValidType(theBatteryType)) {
+        logging::snprintf(logging::source::criticalError, "invalid batteryType %d\n", static_cast<uint8_t>(theBatteryType));
+        settingsCollection::save(static_cast<uint8_t>(defaultBatteryType), settingsCollection::settingIndex::batteryType);
+        theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
+    } else if (forceInitialization) {
+        settingsCollection::save(static_cast<uint8_t>(defaultBatteryType), settingsCollection::settingIndex::batteryType);
+        theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
+        logging::snprintf(logging::source::criticalError, "forced initialisation batteryType %d\n", static_cast<uint8_t>(theBatteryType));
+    }
+    battery::initialize(theBatteryType);
+    logging::snprintf(logging::source::settings, "batteryType : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
+    sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 20);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, 20);
 
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 20);
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, 20);
-    } else {
-        logging::snprintf(logging::source::criticalError, "invalid BatteryType %d\n", static_cast<uint8_t>(theBatteryType));
-        settingsCollection::save(static_cast<uint8_t>(batteryType::alkaline_1200mAh), settingsCollection::settingIndex::batteryType);
+    radioType theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
+    if (!sx126x::isValidType(theRadioType)) {
+        logging::snprintf(logging::source::criticalError, "invalid radioType %d\n", static_cast<uint8_t>(theRadioType));
+        settingsCollection::save(static_cast<uint8_t>(defaultRadioType), settingsCollection::settingIndex::radioType);
+        theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
+    } else if (forceInitialization) {
+        settingsCollection::save(static_cast<uint8_t>(defaultRadioType), settingsCollection::settingIndex::radioType);
+        theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
+        logging::snprintf(logging::source::criticalError, "forced initialisation radioType %d\n", static_cast<uint8_t>(theRadioType));
     }
 
-    mcuType theMcuType = static_cast<mcuType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
-    if (sx126x::isValidType(theMcuType)) {
-        sx126x::initialize(theMcuType);
-        logging::snprintf(logging::source::settings, "Radio    : %s (%d)\n", toString(theMcuType), static_cast<uint8_t>(theMcuType));
-        sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)] = true;
-    } else {
-        logging::snprintf(logging::source::criticalError, "invalid RadioType %d\n", static_cast<uint8_t>(theMcuType));
-        settingsCollection::save(static_cast<uint8_t>(mcuType::highPower), settingsCollection::settingIndex::mcuType);
-        // goTo(mainState::fatalError);
-        // return;
-    }
+    sx126x::initialize(theRadioType);
+    logging::snprintf(logging::source::settings, "radioType : %s (%d)\n", toString(theRadioType), static_cast<uint8_t>(theRadioType));
+    sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)] = true;
 
     sensorDeviceCollection::discover();
 
@@ -154,13 +159,12 @@ void mainController::initialize() {
     }
     logging::snprintf("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
 
-    measurementCollection::initialize();
-    measurementCollection::findMeasurementsInEeprom();
-    uint32_t nmbrOfBytes = measurementCollection::nmbrOfMeasurementBytes();
-    logging::snprintf("%d bytes of measurements found\n", nmbrOfBytes);
+    // measurementCollection::initialize();
+    // measurementCollection::findMeasurementsInEeprom();
+    // uint32_t nmbrOfBytes = measurementCollection::nmbrOfMeasurementBytes();
+    // logging::snprintf("%d bytes of measurements found\n", nmbrOfBytes);
 
-    measurementCollection::dumpRaw(measurementCollection::getOldestMeasurementOffset() +26, 256U);
-
+    // measurementCollection::dumpRaw(measurementCollection::getOldestMeasurementOffset() + 26, 256U);
 
     static constexpr uint32_t tmpStringLength{128};
     char tmpString[tmpStringLength];
@@ -173,24 +177,29 @@ void mainController::initialize() {
     gpio::enableGpio(gpio::group::rfControl);
 
     LoRaWAN::initialize();
+    logging::snprintf("\n");
     if (!LoRaWAN::isValidConfig()) {
         logging::snprintf(logging::source::criticalError, "invalid LoRaWAN config\n");
-        goTo(mainState::fatalError);
-        return;
+        LoRaWAN::initializeConfig();
+    } else if (forceInitialization) {
+        LoRaWAN::initializeConfig();
+        logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN config\n");
     }
-    logging::snprintf("\n");
     hexAscii::uint32ToHexString(tmpString, LoRaWAN::DevAddr.asUint32);
     logging::snprintf("DevAddr  : %s\n", tmpString);
     hexAscii::byteArrayToHexString(tmpString, LoRaWAN::applicationKey.asBytes(), 16);
     logging::snprintf("AppSKey  : %s\n", tmpString);
     hexAscii::byteArrayToHexString(tmpString, LoRaWAN::networkKey.asBytes(), 16);
     logging::snprintf("NwkSKey  : %s\n", tmpString);
+
+    logging::snprintf("\n");
     if (!LoRaWAN::isValidState()) {
         logging::snprintf(logging::source::criticalError, "invalid LoRaWAN state\n");
-        goTo(mainState::fatalError);
-        return;
+        LoRaWAN::initializeState();
+    } else if (forceInitialization) {
+        LoRaWAN::initializeState();
+        logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN state\n");
     }
-    logging::snprintf("\n");
     logging::snprintf("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());
     logging::snprintf("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.toUint32());
     logging::snprintf("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
@@ -236,7 +245,7 @@ void mainController::handleEventsStateNetworkCheck(applicationEvent theEvent) {
         case applicationEvent::downlinkMacCommandReceived:
             answerCounter++;
             logging::snprintf(logging::source::lorawanMac, "answer : %u\n", static_cast<uint8_t>(answerCounter));
-            // showLoRaWanStatus();
+            showLoRaWanStatus();
             if (answerCounter >= minNmbrAnswers) {
                 goTo(mainState::idle);
             }
@@ -246,7 +255,7 @@ void mainController::handleEventsStateNetworkCheck(applicationEvent theEvent) {
             requestCounter++;
             logging::snprintf(logging::source::lorawanMac, "request : %u\n", static_cast<uint8_t>(requestCounter));
             miniAdr();
-            // showLoRaWanStatus();
+            showLoRaWanStatus();
             if (requestCounter >= maxNmbrRequests) {
                 goTo(mainState::fatalError);
             } else {
@@ -340,7 +349,7 @@ void mainController::runStateMachine() {
 
         case mainState::networking:
             if (LoRaWAN::isIdle()) {
-                // showMain();
+                showMain();
                 i2c::goSleep();
                 goTo(mainState::idle);
             }
@@ -470,10 +479,10 @@ void mainController::runDisplayUpdate() {
             break;
 
         default:
-            if (display::isPresent()) {
-                if (screen::isModified() || ((realTimeClock::tickCounter % display::refreshPeriodInTicks) == (display::refreshPeriodInTicks - 1))) {
-                    screen::update();
-                }
+            if (display::isPresent() && screen::isModified()) {
+                spi::wakeUp();
+                screen::update();
+                spi::goSleep();
             }
             break;
     }
