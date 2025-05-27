@@ -9,6 +9,7 @@
 
 class cli {
   public:
+    static void prompt();
     static void run();
     static constexpr uint32_t nmbrOfCommands{12};
     static cliCommand commands[nmbrOfCommands];

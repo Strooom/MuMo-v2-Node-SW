@@ -1,10 +1,14 @@
 #include <cli.hpp>
-#include <uart.hpp>
+#include <uart2.hpp>
 #include <cstring>        // for strcmp
 #include <clicommand.hpp>
 
+void cli::prompt() {
+    uart2::send("MuMo: ");
+}
+
 void setDevAddr() {
-    // TODO : implement this
+        uart2::send("changed devAddr to 123\n");
 }
 
 void showHelp() {
@@ -133,6 +137,7 @@ void cli::executeCommand(const char* commandLine) {
             commands[commandIndex].handler();
         }
     } else {
-        // respond with error message "unrecognized command 'xxxxx'"
+        uart2::send("unrecognized command\n");
     }
+    prompt();
 }

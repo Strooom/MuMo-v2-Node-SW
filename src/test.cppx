@@ -1,34 +1,38 @@
 #include "main.h"
+#include <buildinfo.hpp>
 #include <gpio.hpp>
-#include <logging.hpp>        // logging to SWO and/or UART
-#include <power.hpp>
-#include <version.hpp>
-#include <display.hpp>
-#include <graphics.hpp>
-#include <ux.hpp>
-#include <stdio.h>
-#include <maincontroller.hpp>
+#include <logging.hpp>
+#include <uart1.hpp>
+
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
-#include <sensordevicecollection.hpp>
-#include <buildinfo.hpp>
-#include <lorawan.hpp>
-#include <realtimeclock.hpp>
-#include <uniqueid.hpp>
-#include <settingscollection.hpp>
-#include <measurementcollection.hpp>
-#include <uart1.hpp>
-#include <spi.hpp>
-#include <i2c.hpp>
-#include <bme680.hpp>
-#include <tsl2591.hpp>
-#include <sht40.hpp>
-#include <battery.hpp>
-#include <lptim.hpp>
-#include <qrcode.hpp>
-#include <hexascii.hpp>
-#include <radiotype.hpp>
-#include <sx126x.hpp>
+
+#include <uart2.hpp>
+#include <cli.hpp>
+
+// #include <power.hpp>
+// #include <display.hpp>
+// #include <graphics.hpp>
+// #include <ux.hpp>
+// #include <stdio.h>
+// #include <maincontroller.hpp>
+// #include <sensordevicecollection.hpp>
+// #include <lorawan.hpp>
+// #include <realtimeclock.hpp>
+// #include <uniqueid.hpp>
+// #include <settingscollection.hpp>
+// #include <measurementcollection.hpp>
+// #include <spi.hpp>
+// #include <i2c.hpp>
+// #include <bme680.hpp>
+// #include <tsl2591.hpp>
+// #include <sht40.hpp>
+// #include <battery.hpp>
+// #include <lptim.hpp>
+// #include <qrcode.hpp>
+// #include <hexascii.hpp>
+// #include <radiotype.hpp>
+// #include <sx126x.hpp>
 
 ADC_HandleTypeDef hadc;
 CRYP_HandleTypeDef hcryp;
@@ -65,76 +69,21 @@ void executeRomBootloader();
 int main(void) {
     HAL_Init();
     SystemClock_Config();
-    MX_GPIO_Init();
-    __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
+    HAL_Delay(1000);
     gpio::initialize();
-    if (gpio::isDebugProbePresent()) {
-        HAL_Delay(3000);
-    } else {
-        gpio::disableGpio(gpio::group::debugPort);
-    }
 
-    if (power::hasUsbPower()) {
-        HAL_RCC_DeInit();
-        HAL_DeInit();
-        executeRomBootloader();
-    }
-
-    version::initialize();
     uart1::wakeUp();
     logging::enable(logging::destination::uart1);
-    gpio::enableGpio(gpio::group::other);
 
-    MX_RTC_Init();
-    MX_ADC_Init();
-    MX_AES_Init();
-    MX_RNG_Init();
-    MX_LPTIM1_Init();
-    // MX_SPI2_Init();
+    logging::snprintf("\n\n\nhttps://github.com/Strooom\n");
+    logging::snprintf("v%u.%u.%u - #%s\n", buildInfo::mainVersionDigit, buildInfo::minorVersionDigit, buildInfo::patchVersionDigit, buildInfo::lastCommitTag);
+    logging::snprintf("%s %s build - %s\n", toString(buildInfo::theBuildEnvironment), toString(buildInfo::theBuildType), buildInfo::buildTimeStamp);
 
-    uint32_t loopCount{0};
+    uart2::initialize();
+    cli::prompt();
 
     while (true) {
-        // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-
-        logging::snprintf("\n\n\n%d\n", loopCount);
-        logging::snprintf("https://github.com/Strooom - %s\n", version::getIsVersionAsString());
-        logging::snprintf("%s %s build - %s\n", toString(version::getBuildEnvironment()), toString(version::getBuildType()), buildInfo::buildTimeStamp);
-        logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n\n");
-        char tmpKeyAsHexAscii[17];
-        hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
-        logging::snprintf("UID     : %s\n", tmpKeyAsHexAscii);
-
-        spi::wakeUp();
-        display::detectPresence();
-        logging::snprintf("Display : %s\n", display::isPresent() ? "present" : "not present");
-        spi::goSleep();
-
-        i2c::wakeUp();
-        logging::snprintf("EEPROM  : %d * 64K present\n", nonVolatileStorage::isPresent());
-        logging::snprintf("BME68X  : %s\n", bme680::isPresent() ? "present" : "not present");
-        logging::snprintf("TSL2591 : %s\n", tsl2591::isPresent() ? "present" : "not present");
-        logging::snprintf("SHT40   : %s\n", sht40::isPresent() ? "present" : "not present");
-        batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
-        logging::snprintf("Battery : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
-        radioType theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
-        logging::snprintf("Radio   : %s (%d)\n", toString(theRadioType), static_cast<uint8_t>(theRadioType));
-        i2c::goSleep();
-
-        if (display::isPresent()) {
-            spi::wakeUp();
-            screen::setType(screenType::logo);
-            screen::update();
-            spi::goSleep();
-        }
-
-        logging::snprintf("goSleep...\n");
-        uart1::goSleep();
-        mainController::mcuStop2();
-        uart1::wakeUp();
-        logging::snprintf("... wakeUp\n");
-
-        loopCount++;
+cli::run();
     }
 }
 
@@ -383,7 +332,7 @@ static void MX_RTC_Init(void) {
         Error_Handler();
     }
 
-   if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
+    if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
         // if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 10000, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
         Error_Handler();
     }

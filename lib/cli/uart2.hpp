@@ -31,12 +31,14 @@ class uart2 {
   private:
 #endif
 
+    static bool initalized;
     static circularBuffer<uint8_t, commandBufferLength> rxBuffer;
     static circularBuffer<uint8_t, responseBufferLength> txBuffer;
     static uint32_t commandCounter;
 #ifdef generic
     static uint8_t mockReceivedChar;
     static uint8_t mockTransmittedChar;
+    static bool interruptEnabled;
 #endif
     friend class cli;
 };

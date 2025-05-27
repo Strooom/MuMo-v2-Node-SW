@@ -30,7 +30,7 @@
 #include <spi.hpp>
 #include <stdio.h>
 #include <tsl2591.hpp>
-#include <uart.hpp>
+#include <uart2.hpp>
 #include <uniqueid.hpp>
 #include <buildinfo.hpp>
 #include <radiotype.hpp>

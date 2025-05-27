@@ -5,30 +5,53 @@
 void setUp(void) {}
 void tearDown(void) {}
 
-void test_uart_rx() {
+void test_initialize() {
+    // initialized during construction
+    TEST_ASSERT_TRUE(uart2::rxBuffer.isEmpty());
+    TEST_ASSERT_TRUE(uart2::txBuffer.isEmpty());
+    TEST_ASSERT_EQUAL(0, uart2::commandCount());
+
+    // reinitialize after any error...
+    uart2::rxBuffer.push(0xAA);
+    uart2::txBuffer.push(0xBB);
+    uart2::commandCounter = 5;
+    uart2::initialize();
+    TEST_ASSERT_TRUE(uart2::rxBuffer.isEmpty());
+    TEST_ASSERT_TRUE(uart2::txBuffer.isEmpty());
+    TEST_ASSERT_EQUAL(0, uart2::commandCount());
+}
+
+void test_rx() {
+    uart2::initialize();
     uart2::mockReceivedChar = '?';
     uart2::rxNotEmpty();
+    TEST_ASSERT_EQUAL(1, uart2::rxBuffer.getLevel());
     TEST_ASSERT_EQUAL(0, uart2::commandCount());
 
     uart2::mockReceivedChar = '\n';
     uart2::rxNotEmpty();
+    TEST_ASSERT_EQUAL(2, uart2::rxBuffer.getLevel());
     TEST_ASSERT_EQUAL(1, uart2::commandCount());
 
     char receivedData[32]{};
     uart2::read(receivedData);
     TEST_ASSERT_EQUAL_STRING("?", receivedData);
+    TEST_ASSERT_TRUE(uart2::rxBuffer.isEmpty());
     TEST_ASSERT_EQUAL(0, uart2::commandCount());
 }
 
-void test_uart_tx() {
-    uart2::initialize();        // for coverage only
-    uart2::send("12");
-    TEST_ASSERT_EQUAL(2, uart2::txBuffer.getLevel());
+void test_tx() {
+    uart2::initialize();
+    uart2::send("12\n");
+    TEST_ASSERT_EQUAL(3, uart2::txBuffer.getLevel());
     uart2::txEmpty();
     TEST_ASSERT_EQUAL('1', uart2::mockTransmittedChar);
-    TEST_ASSERT_EQUAL(1, uart2::txBuffer.getLevel());
+    TEST_ASSERT_EQUAL(2, uart2::txBuffer.getLevel());
     uart2::txEmpty();
     TEST_ASSERT_EQUAL('2', uart2::mockTransmittedChar);
+    TEST_ASSERT_EQUAL(1, uart2::txBuffer.getLevel());
+    uart2::txEmpty();
+    TEST_ASSERT_EQUAL('\n', uart2::mockTransmittedChar);
     TEST_ASSERT_EQUAL(0, uart2::txBuffer.getLevel());
 
     const uint8_t testSendData[4]{'1', '2', '3', '4'};
@@ -144,18 +167,29 @@ void test_findCommandIndex() {
 }
 
 void test_parseCommandLine() {
-    char commandLine1[] = "help";
-    cli::executeCommand(commandLine1);
-    char commandLine2[] = "set-devaddr 12345678";
-    cli::executeCommand(commandLine2);
-    char commandLine3[] = "unknown command";
-    cli::executeCommand(commandLine3);
+    uart2::initialize();
+    uart2::mockReceivedChar = '?';
+    uart2::rxNotEmpty();
+    uart2::mockReceivedChar = '\n';
+    uart2::rxNotEmpty();
+
+    cli::run();
+    uart2::txEmpty();
+    TEST_ASSERT_EQUAL('A', uart2::mockTransmittedChar);
+    uart2::txEmpty();
+    TEST_ASSERT_EQUAL('v', uart2::mockTransmittedChar);
+    uart2::txEmpty();
+    TEST_ASSERT_EQUAL('a', uart2::mockTransmittedChar);
+    uart2::txEmpty();
+    TEST_ASSERT_EQUAL('i', uart2::mockTransmittedChar);
+   
 }
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
-    RUN_TEST(test_uart_rx);
-    RUN_TEST(test_uart_tx);
+    RUN_TEST(test_initialize);
+    RUN_TEST(test_rx);
+    RUN_TEST(test_tx);
     RUN_TEST(test_countArguments);
     RUN_TEST(test_getSeparatorPosition);
     RUN_TEST(test_getSegment);

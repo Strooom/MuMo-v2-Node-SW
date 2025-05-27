@@ -24,7 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include <applicationevent.hpp>
 #include <circularbuffer.hpp>
-#include <uart.hpp>
+#include <uart2.hpp>
 #include <realtimeclock.hpp>
 
 
@@ -250,7 +250,7 @@ void USART2_IRQHandler(void) {
         uart2::txEmpty();
     }
     /* USER CODE END USART2_IRQn 0 */
-    // HAL_UART_IRQHandler(&huart2);
+    HAL_UART_IRQHandler(&huart2);
     /* USER CODE BEGIN USART2_IRQn 1 */
 
     /* USER CODE END USART2_IRQn 1 */

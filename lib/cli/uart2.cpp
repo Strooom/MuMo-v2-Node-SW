@@ -1,4 +1,5 @@
-#include <uart.hpp>
+#include <uart2.hpp>
+#include <gpio.hpp>
 #ifndef generic
 #include "main.h"
 #include "stm32wlxx_ll_usart.h"
@@ -9,17 +10,21 @@ extern UART_HandleTypeDef huart2;
 // ### Initialization                                 ###
 // ######################################################
 
+bool uart2::initalized{false};
 circularBuffer<uint8_t, uart2::commandBufferLength> uart2::rxBuffer;
 circularBuffer<uint8_t, uart2::responseBufferLength> uart2::txBuffer;
 uint32_t uart2::commandCounter{0};
 #ifdef generic
 uint8_t uart2::mockReceivedChar;
 uint8_t uart2::mockTransmittedChar;
+bool uart2::interruptEnabled{false};
 #endif
 
-void uart2::initialize() {
-#ifndef generic
+//    if (!initalized) {
 
+void uart2::initialize() {
+    txBuffer.initialize();
+#ifndef generic
     RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
     PeriphClkInitStruct.PeriphClockSelection     = RCC_PERIPHCLK_USART2;
     PeriphClkInitStruct.Usart2ClockSelection     = RCC_USART2CLKSOURCE_PCLK1;
@@ -36,8 +41,13 @@ void uart2::initialize() {
     USART2->CR1 = USART2->CR1 | USART_CR1_RE;        // enable Rx direction
     USART2->CR1 = USART2->CR1 | USART_CR1_TE;        // enable Tx direction
     USART2->CR1 = USART2->CR1 | USART_CR1_UE;        // enable UART2
-
 #endif
+    gpio::enableGpio(gpio::group::uart2);
+#ifndef generic
+    HAL_Delay(10);        // after enabling the UART and IOs, some spurious character may be received. Wait a little, then clear the rxBuffer.
+#endif
+    rxBuffer.initialize();
+    commandCounter = 0;
 }
 
 // ######################################################
