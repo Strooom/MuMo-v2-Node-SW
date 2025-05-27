@@ -1,6 +1,6 @@
 #include <unity.h>
 #include <cli.hpp>
-#include <uart.hpp>
+#include <uart2.hpp>
 
 void setUp(void) {}
 void tearDown(void) {}
