@@ -13,6 +13,22 @@
 #include <screen.hpp>
 #include <applicationevent.hpp>
 
+// cliCommand cli::commands[nmbrOfCommands]{
+//     {"?", "help", 0, showHelp},
+//     {"ssw", "show-software", 0, nullptr},        // version, build date, build time
+//     {"shw", "show-hardware", 0, nullptr},        // settings, battery-voltage
+//     {"ss", "show-sensors", 0, nullptr},          // list sensors present and their channel settings
+//     {"sl", "show-lorawan", 0, nullptr},
+//     {"sda", "set-devaddr", 1, setDevAddr},
+//     {"snk", "set-nwkkey", 1, nullptr},
+//     {"sak", "set-appkey", 1, nullptr},
+//     {"rml", "reset-mac-layer", 0, nullptr},
+//     {"sn", "set-name", 0, nullptr},
+//     {"sls", "set-logging-sources", 1, nullptr},
+//     {"res", "restart", 0, nullptr}};        // will restart the software and jump to the bootloader for firmware update
+
+
+
 static constexpr bool forceInitialization{false};
 static constexpr batteryType defaultBatteryType{batteryType::alkaline_1200mAh};
 static constexpr radioType defaultRadioType{radioType::lowPower};
@@ -31,6 +47,7 @@ class mainController {
     static void runDisplayUpdate();
     static void runCli();
     static void runStateMachine();
+    static void runSleep();
     static void prepareSleep();
     static void goSleep();
     static void wakeUp();
@@ -52,6 +69,18 @@ class mainController {
 
     static void showLoRaWanStatus();
     static void showMain();
+    static void resetMacLayer();
+
+    // static void setDevAddr(const char* newDevAddr);
+    // static void setDevEui(const char* newDevEui);
+    // static void setAppEui(const char* newAppEui);
+    // static void setNwkKey(const char* newAppKey);
+    // static void setAppKey(const char* newAppKey);
+    // static void setBatteryType(batteryType newBatteryType);
+    // static void setRadioType(radioType newRadioType);
+    // static void setName(const char* newName);
+    // static void setUidAsHex(const char* newUidAsHex);
+
 
     static uint32_t requestCounter;
     static uint32_t answerCounter;

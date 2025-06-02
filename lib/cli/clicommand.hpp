@@ -9,11 +9,15 @@
 class cliCommand {
   public:
     static constexpr uint32_t maxCommandLineLength{128};
-    static constexpr uint32_t maxCommandOrArgumentLength{36};
+    static constexpr uint32_t maxCommandLength{4};
+    static constexpr uint32_t maxArgumentLength{36};
     static constexpr uint32_t maxNmbrOfArguments{4};
 
-    const char* shortName;
-    const char* longName;
-    const uint32_t nmbrOfArguments;
-    void (*const handler)();
+    static constexpr uint32_t help{'?'};
+
+
+    uint32_t nmbrOfArguments{0};
+    char commandAsString[maxCommandLineLength];
+    uint32_t commandHash{0};
+    char arguments[maxNmbrOfArguments][maxArgumentLength];
 };

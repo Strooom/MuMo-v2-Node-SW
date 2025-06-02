@@ -365,6 +365,14 @@ void mainController::goTo(mainState newState) {
     state = newState;
 }
 
+void mainController::runSleep() {
+    if (!power::hasUsbPower()) {
+        prepareSleep();
+        goSleep();
+        wakeUp();
+    }
+}
+
 void mainController::prepareSleep() {
     switch (state) {
         case mainState::idle:
@@ -381,6 +389,7 @@ void mainController::prepareSleep() {
             break;
     }
 }
+
 void mainController::goSleep() {
     switch (state) {
         case mainState::idle:
@@ -495,7 +504,24 @@ void mainController::runCli() {
 
         default:
             if (power::hasUsbPower()) {
-                cli::run();
+                if (cli::hasCommand()) {
+                    cliCommand theCommand;
+                    cli::getCommand(theCommand);
+                    switch (theCommand.commandHash) {
+                        case cliCommand::help:
+                            cli::sendResponse(
+                                "Available commands:\n"
+                                "  help - show this help\n"
+                                "  status - show the current status\n"
+                                "  reset - reset the device\n"
+                                "  sleep - prepare for sleep\n");
+                            break;
+
+                        default:
+                            logging::snprintf(logging::source::error, "unknown command: %s\n", theCommand.commandAsString);
+                            break;
+                    }
+                }
             }
             break;
     }
@@ -504,13 +530,11 @@ void mainController::runCli() {
 void mainController::runUsbPowerDetection() {
     if (power::isUsbConnected()) {
         applicationEventBuffer.push(applicationEvent::usbConnected);
-        // uart2::initialize();
-        // gpio::enableGpio(gpio::group::uart2);
-        // screen::setUsbStatus(true);
+        uart2::initialize();
+        screen::setUsbStatus(true);
     }
     if (power::isUsbRemoved()) {
         applicationEventBuffer.push(applicationEvent::usbRemoved);
-        // gpio::disableGpio(gpio::group::uart2);
-        // screen::setUsbStatus(false);
+        screen::setUsbStatus(false);
     }
 }

@@ -81,14 +81,12 @@ int main(void) {
 
     mainController ::initialize();
     while (true) {
-        //mainController::runUsbPowerDetection();
+        mainController::runUsbPowerDetection();
         mainController::runStateMachine();
-        //mainController::runCli();
         mainController::handleEvents();
+        mainController::runCli();
         mainController::runDisplayUpdate();
-        mainController::prepareSleep();
-        mainController::goSleep();
-        mainController::wakeUp();
+        mainController::runSleep();
     }
 }
 

@@ -9,25 +9,21 @@
 
 class cli {
   public:
-    static void prompt();
-    static void run();
-    static constexpr uint32_t nmbrOfCommands{12};
-    static cliCommand commands[nmbrOfCommands];
+    static bool hasCommand();
+    static void getCommand(cliCommand& aCommand);
+    static void sendResponse(const char* response);
 
 #ifndef unitTesting
 
   private:
 #endif
     static constexpr char commandArgumentSeparator{' '};
-    static char command[cliCommand::maxCommandOrArgumentLength];
-    static uint32_t nmbrOfArguments;
-    static char arguments[cliCommand::maxNmbrOfArguments][cliCommand::maxCommandOrArgumentLength];
-    static char error[cliCommand::maxCommandLineLength];
 
-    static void splitCommandLine(const char* commandLine);
+    static void parseCommandLine(cliCommand& aCommand, const char* commandLine);
     static uint32_t countArguments(const char* commandLine);
-    static int32_t findCommandIndex();
     static int32_t getSeparatorPosition(const char* commandLine, const uint32_t separatorIndex);
     static void getSegment(char* destination, const char* commandLine, const uint32_t segmentIndex);
-    static void executeCommand(const char* commandLine);
+    static uint32_t hash(const char* someCommand);
+    static uint8_t toLowerCase(const uint8_t characterToConvert);
+    static void toLowerCase(char* commandLine);
 };

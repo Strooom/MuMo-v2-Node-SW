@@ -99,7 +99,7 @@ void test_getSeparatorPosition() {
 }
 
 void test_getSegment() {
-    char segment[cliCommand::maxCommandOrArgumentLength]{};
+    char segment[cliCommand::maxArgumentLength]{};
 
     char commandLine1[] = "command arg1 arg2";
     TEST_ASSERT_EQUAL(2, cli::countArguments(commandLine1));
@@ -133,56 +133,43 @@ void test_getSegment() {
     TEST_ASSERT_EQUAL_STRING("", segment);
 }
 
-void test_splitCommandLine() {
-    char commandLine[] = "command arg1 arg2 arg3";
-    cli::splitCommandLine(commandLine);
-    TEST_ASSERT_EQUAL_STRING("command", cli::command);
-    TEST_ASSERT_EQUAL_STRING("arg1", cli::arguments[0]);
-    TEST_ASSERT_EQUAL_STRING("arg2", cli::arguments[1]);
-    TEST_ASSERT_EQUAL_STRING("arg3", cli::arguments[2]);
-    TEST_ASSERT_EQUAL_STRING("", cli::arguments[3]);
-
-    char commandLine2[] = "command";
-    cli::splitCommandLine(commandLine2);
-    TEST_ASSERT_EQUAL_STRING("command", cli::command);
-    TEST_ASSERT_EQUAL_STRING("", cli::arguments[0]);
-}
-
-void test_findCommandIndex() {
-    char commandLine1[] = "?";
-    cli::splitCommandLine(commandLine1);
-    TEST_ASSERT_EQUAL(0, cli::findCommandIndex());
-
-    char commandLine2[] = "help";
-    cli::splitCommandLine(commandLine2);
-    TEST_ASSERT_EQUAL(0, cli::findCommandIndex());
-
-    char commandLine3[] = "set-devaddr 12345678";
-    cli::splitCommandLine(commandLine3);
-    TEST_ASSERT_EQUAL(5, cli::findCommandIndex());
-
-    char commandLine4[] = "unknown command";
-    cli::splitCommandLine(commandLine4);
-    TEST_ASSERT_EQUAL(-1, cli::findCommandIndex());
-}
-
 void test_parseCommandLine() {
-    uart2::initialize();
-    uart2::mockReceivedChar = '?';
-    uart2::rxNotEmpty();
-    uart2::mockReceivedChar = '\n';
-    uart2::rxNotEmpty();
+    char testCommandLine[] = "comm arg1 arg2 arg3";
+    cliCommand testCommand;
+    cli::parseCommandLine(testCommand, testCommandLine);
 
-    cli::run();
-    uart2::txEmpty();
-    TEST_ASSERT_EQUAL('A', uart2::mockTransmittedChar);
-    uart2::txEmpty();
-    TEST_ASSERT_EQUAL('v', uart2::mockTransmittedChar);
-    uart2::txEmpty();
-    TEST_ASSERT_EQUAL('a', uart2::mockTransmittedChar);
-    uart2::txEmpty();
-    TEST_ASSERT_EQUAL('i', uart2::mockTransmittedChar);
-   
+    TEST_ASSERT_EQUAL(3, testCommand.nmbrOfArguments);
+    TEST_ASSERT_EQUAL_STRING("comm", testCommand.commandAsString);
+    TEST_ASSERT_EQUAL_STRING("arg1", testCommand.arguments[0]);
+    TEST_ASSERT_EQUAL_STRING("arg2", testCommand.arguments[1]);
+    TEST_ASSERT_EQUAL_STRING("arg3", testCommand.arguments[2]);
+    TEST_ASSERT_EQUAL_STRING("", testCommand.arguments[3]);
+}
+
+void test_hash() {
+    TEST_ASSERT_EQUAL(65, cli::hash("A"));
+    TEST_ASSERT_EQUAL(16705, cli::hash("AA"));
+    TEST_ASSERT_EQUAL(1751477360, cli::hash("help"));
+}
+
+void test_toLowerCase() {
+    TEST_ASSERT_EQUAL('a', cli::toLowerCase('A'));
+    TEST_ASSERT_EQUAL('z', cli::toLowerCase('Z'));
+    TEST_ASSERT_EQUAL('a', cli::toLowerCase('a'));
+    TEST_ASSERT_EQUAL('z', cli::toLowerCase('z'));
+    TEST_ASSERT_EQUAL('0', cli::toLowerCase('0'));
+
+    char testString[] = "HeLLo WoRLd!";
+    cli::toLowerCase(testString);
+    TEST_ASSERT_EQUAL_STRING("hello world!", testString);
+
+    char emptyString[] = "";
+    cli::toLowerCase(emptyString);
+    TEST_ASSERT_EQUAL_STRING("", emptyString);
+
+    char longString[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    cli::toLowerCase(longString);
+    TEST_ASSERT_EQUAL_STRING("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz0123456789", longString);
 }
 
 int main(int argc, char **argv) {
@@ -193,8 +180,8 @@ int main(int argc, char **argv) {
     RUN_TEST(test_countArguments);
     RUN_TEST(test_getSeparatorPosition);
     RUN_TEST(test_getSegment);
-    RUN_TEST(test_splitCommandLine);
-    RUN_TEST(test_findCommandIndex);
     RUN_TEST(test_parseCommandLine);
+    RUN_TEST(test_hash);
+    RUN_TEST(test_toLowerCase);
     UNITY_END();
 }
