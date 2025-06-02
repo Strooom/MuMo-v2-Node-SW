@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include <applicationevent.hpp>
 #include <circularbuffer.hpp>
+#include <uart1.hpp>
 #include <uart2.hpp>
 #include <realtimeclock.hpp>
 
@@ -65,6 +66,7 @@
 extern LPTIM_HandleTypeDef hlptim1;
 extern RTC_HandleTypeDef hrtc;
 extern SUBGHZ_HandleTypeDef hsubghz;
+extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
@@ -232,6 +234,21 @@ void RTC_WKUP_IRQHandler(void) {
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
     /* USER CODE END RTC_WKUP_IRQn 1 */
 }
+
+void USART1_IRQHandler(void) {
+    // Detect the interrupt source from the ISR
+    uint32_t isrflags = USART1->ISR;
+
+    if (isrflags & uart1::rdrNotEmpty) {
+        uart1::rxNotEmpty();
+    }
+
+    if (isrflags & uart1::tdrEmpty) {
+        uart1::txEmpty();
+    }
+    HAL_UART_IRQHandler(&huart1);
+}
+
 
 /**
  * @brief This function handles USART2 Interrupt.

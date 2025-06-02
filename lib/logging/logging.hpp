@@ -13,8 +13,8 @@ class logging {
     static void initialize();
     enum class destination : uint32_t {        // We can send logging to the following destinations, when they are connected and enabled :
         none,
-        debugProbe,
-        uart2usb,
+        swo,
+        uart2,
         uart1
     };
     enum class source : uint32_t {        // We can send logging from the following sources, when they are enabled :
@@ -40,17 +40,18 @@ class logging {
         activeSources      = 0;
         activeDestinations = 0;
     }
-    static uint32_t snprintf(const char *format, ...);                        // logs always
-    static uint32_t snprintf(source aSource, const char *format, ...);        // logs only if the source is active
-    static void enable(source aSource) { activeSources = activeSources | (0x01 << static_cast<uint32_t>(aSource)); }
-    static void disable(source aSource) { activeSources = activeSources & ~(0x01 << static_cast<uint32_t>(aSource)); }
-    static void enable(destination aDestination) { activeDestinations = activeDestinations | (0x01 << static_cast<uint32_t>(aDestination)); }
-    static void disable(destination aDestination) { activeDestinations = activeDestinations & ~(0x01 << static_cast<uint32_t>(aDestination)); }
-    static bool isActive(source aSource) {
+    static uint32_t snprintf(const char *format, ...);                                  // logs always, to all active destinations
+    static uint32_t snprintf(const source aSource, const char *format, ...);                  // logs to all active destinations, but only if the source is active
+    static uint32_t snprintf(const destination aDestination, const char *format, ...);        // logs to a specific destination
+    static void enable(const source aSource) { activeSources = activeSources | (0x01 << static_cast<uint32_t>(aSource)); }
+    static void disable(const source aSource) { activeSources = activeSources & ~(0x01 << static_cast<uint32_t>(aSource)); }
+    static void enable(const destination aDestination) { activeDestinations = activeDestinations | (0x01 << static_cast<uint32_t>(aDestination)); }
+    static void disable(const destination aDestination) { activeDestinations = activeDestinations & ~(0x01 << static_cast<uint32_t>(aDestination)); }
+    static bool isActive(const source aSource) {
         uint32_t mask = 0x01 << static_cast<uint32_t>(aSource);
         return ((activeSources & mask) != 0);
     }
-    static bool isActive(destination aDestination) {
+    static bool isActive(const destination aDestination) {
         uint32_t mask = 0x01 << static_cast<uint32_t>(aDestination);
         return ((activeDestinations & mask) != 0);
     }
@@ -58,9 +59,9 @@ class logging {
         return (activeDestinations != 0);
     }
     static uint32_t getActiveSources() { return activeSources; }
-    static void setActiveSources(uint32_t aSources) { activeSources = aSources; }
+    static void setActiveSources(const uint32_t aSources) { activeSources = aSources; }
     static uint32_t getActiveDestinations() { return activeDestinations; }
-    static void setActiveDestinations(uint32_t aDestinations) { activeDestinations = aDestinations; }
+    static void setActiveDestinations(const uint32_t aDestinations) { activeDestinations = aDestinations; }
 
     static void dump();
 #ifndef unitTesting
@@ -70,7 +71,8 @@ class logging {
     static char buffer[bufferLength];          // in this buffer the snprintf is expanded before the contents is being sent to one or more of the destinations
     static uint32_t activeSources;             // bitfield of active logging sources
     static uint32_t activeDestinations;        // bitfield of active logging destinations
-    static void write(uint32_t dataLength);
+    static void write(const uint32_t dataLength);
+    static void write(const destination aDestination, const uint32_t dataLength);
 };
 
 const char *toString(logging::source aSource);

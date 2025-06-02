@@ -315,7 +315,7 @@ void test_receivedDeviceAddress() {
 }
 
 void test_dump() {
-    logging::enable(logging::destination::uart2usb);
+    logging::enable(logging::destination::uart2);
     logging::enable(logging::source::lorawanData);
     logging::enable(logging::source::lorawanEvents);
     logging::enable(logging::source::lorawanMac);

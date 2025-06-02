@@ -9,12 +9,12 @@ bool cli::hasCommand() {
 
 void cli::getCommand(cliCommand& aCommand) {
     char commandLine[cliCommand::maxCommandLineLength];
-    uart2::read(commandLine);
+    uart2::receive(commandLine);
     parseCommandLine(aCommand, commandLine);
 }
 
 void cli::sendResponse(const char* response) {
-    uart2::send(response);
+    uart2::transmit(response);
 }
 
 uint32_t cli::countArguments(const char* commandLine) {

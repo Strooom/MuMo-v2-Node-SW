@@ -132,7 +132,7 @@ void test_dump() {
     LoRaWAN::dumpConfig();
     LoRaWAN::dumpState();
     LoRaWAN::dumpChannels();
-    logging::enable(logging::destination::uart2usb);
+    logging::enable(logging::destination::uart2);
     logging::enable(logging::source::lorawanData);
     logging::enable(logging::source::lorawanEvents);
     logging::enable(logging::source::lorawanMac);

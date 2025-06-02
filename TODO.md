@@ -37,3 +37,13 @@
 
 # ST HAL
   * remove HAL code from C++ wrapper
+
+
+# Power events
+when connecting / disconnection USB, this should be logged as an measurement-event and transmitted in the measurements
+
+# logging
+make logging to uart use interrupts io blocking
+
+# VUSB
+detect rising edge interrupt and wake mcu up immediately

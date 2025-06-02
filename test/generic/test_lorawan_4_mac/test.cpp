@@ -220,7 +220,7 @@ void test_process_unknown_MAC_command() {
 
 void test_dump() {
     TEST_MESSAGE("For Coverage only");
-    logging::enable(logging::destination::uart2usb);
+    logging::enable(logging::destination::uart2);
     logging::enable(logging::source::lorawanData);
     logging::enable(logging::source::lorawanEvents);
     logging::enable(logging::source::lorawanMac);

@@ -13,6 +13,8 @@
 #include <settingscollection.hpp>
 #include <i2c.hpp>
 #include <uart1.hpp>
+#include <uart2.hpp>
+#include <debugport.hpp>
 #ifndef generic
 #include "main.h"
 extern UART_HandleTypeDef huart1;
@@ -35,9 +37,9 @@ void logging::initialize() {
     }
 #endif
     if (power::hasUsbPower()) {
-        logging::enable(logging::destination::uart2usb);
+        logging::enable(logging::destination::uart2);
     }
-    if (!logging::isActive(logging::destination::debugProbe)) {
+    if (!logging::isActive(logging::destination::swo)) {
         gpio::disableGpio(gpio::group::debugPort);
     }
 }
@@ -54,7 +56,7 @@ uint32_t logging::snprintf(const char *format, ...) {
     return length;
 }
 
-uint32_t logging::snprintf(source aSource, const char *format, ...) {
+uint32_t logging::snprintf(const source aSource, const char *format, ...) {
     uint32_t length{0};
     if (activeDestinations != 00) {
         if (isActive(aSource)) {
@@ -68,21 +70,46 @@ uint32_t logging::snprintf(source aSource, const char *format, ...) {
     return length;
 }
 
-void logging::write(uint32_t dataLength) {
-    if (isActive(destination::debugProbe)) {
-        for (uint32_t index = 0; index < dataLength; index++) {
-#ifndef generic
-            ITM_SendChar(static_cast<uint32_t>(buffer[index]));
-#endif
-        }
+void logging::write(const destination aDestination, const uint32_t dataLength) {
+    switch (aDestination) {
+        case destination::swo:
+            debugPort::transmit(reinterpret_cast<const uint8_t *>(buffer), dataLength);
+            break;
+
+        case destination::uart2:
+            uart2::transmit(reinterpret_cast<const uint8_t *>(buffer), dataLength);
+            break;
+
+        case destination::uart1:
+            uart1::transmit(reinterpret_cast<const uint8_t *>(buffer), dataLength);
+            break;
+
+        default:
+            break;
     }
-    if (isActive(destination::uart2usb)) {
-#ifndef generic
-        HAL_UART_Transmit(&huart2, (uint8_t *)buffer, static_cast<const uint16_t>(dataLength), 1000);
-#endif
+}
+
+uint32_t logging::snprintf(const destination aDestination, const char *format, ...) {
+    uint32_t length{0};
+    if (activeDestinations != 00) {
+        va_list argList;
+        va_start(argList, format);
+        length = vsnprintf(buffer, bufferLength, format, argList);
+        va_end(argList);
+        write(aDestination, length);
+    }
+    return length;
+}
+
+void logging::write(const uint32_t dataLength) {
+    if (isActive(destination::swo)) {
+        write(destination::swo, dataLength);
     }
     if (isActive(destination::uart1)) {
-        uart1::transmit(buffer, dataLength);
+        write(destination::uart1, dataLength);
+    }
+    if (isActive(destination::uart2)) {
+        write(destination::uart2, dataLength);
     }
 }
 
@@ -107,7 +134,7 @@ void logging::dump() {
     }
     logging::snprintf("\n");
 }
-const char *toString(logging::source aSource) {
+const char *toString(const logging::source aSource) {
     switch (aSource) {
         case logging::source::applicationEvents:
             return "applicationEvents";
@@ -144,12 +171,12 @@ const char *toString(logging::source aSource) {
     }
 }
 
-const char *toString(logging::destination aDestination) {
+const char *toString(const logging::destination aDestination) {
     switch (aDestination) {
-        case logging::destination::debugProbe:
-            return "debugProbe";
-        case logging::destination::uart2usb:
-            return "uart2usb";
+        case logging::destination::swo:
+            return "swo";
+        case logging::destination::uart2:
+            return "uart2";
         case logging::destination::uart1:
             return "uart1";
         default:

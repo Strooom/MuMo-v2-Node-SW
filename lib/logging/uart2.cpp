@@ -20,8 +20,6 @@ uint8_t uart2::mockTransmittedChar;
 bool uart2::interruptEnabled{false};
 #endif
 
-//    if (!initalized) {
-
 void uart2::initialize() {
     txBuffer.initialize();
 #ifndef generic
@@ -108,11 +106,11 @@ void uart2::txEmpty() {
 #endif
 }
 
-void uart2::send(const char* data) {
-    send(reinterpret_cast<const uint8_t*>(data));
+void uart2::transmit(const char* data) {
+    transmit(reinterpret_cast<const uint8_t*>(data));
 }
 
-void uart2::send(const uint8_t* data) {
+void uart2::transmit(const uint8_t* data) {
     for (uint32_t index = 0; index < responseBufferLength; index++) {
         if (data[index] == 0) {
             break;
@@ -122,10 +120,7 @@ void uart2::send(const uint8_t* data) {
     startOrContinueTx();
 }
 
-void uart2::send(const uint8_t* data, uint32_t length) {
-    if (length > responseBufferLength) {
-        length = responseBufferLength;
-    }
+void uart2::transmit(const uint8_t* data, const uint32_t length) {
     for (uint32_t index = 0; index < length; index++) {
         txBuffer.push(data[index]);
     }
@@ -147,7 +142,7 @@ uint32_t uart2::commandCount() {
     return result;
 }
 
-void uart2::read(char* data) {
+void uart2::receive(char* data) {
     uint32_t index{0};
     uint8_t character{0};
     while (!rxBuffer.isEmpty()) {

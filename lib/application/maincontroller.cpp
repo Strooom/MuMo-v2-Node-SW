@@ -509,16 +509,41 @@ void mainController::runCli() {
                     cli::getCommand(theCommand);
                     switch (theCommand.commandHash) {
                         case cliCommand::help:
-                            cli::sendResponse(
-                                "Available commands:\n"
-                                "  help - show this help\n"
-                                "  status - show the current status\n"
-                                "  reset - reset the device\n"
-                                "  sleep - prepare for sleep\n");
+                            cli::sendResponse("help - show this help\n");
+                            break;
+
+                        case cliCommand::rml:
+                            cli::sendResponse("reset Mac Layer\n");
+                            break;
+
+                        case cliCommand::sda:
+                            cli::sendResponse("set device address : sda 260BF180\n");
+                            break;
+
+                        case cliCommand::snk:
+                            cli::sendResponse("set network key : snk 0DBC6EF938B83EB4F83C28E3CA7B4132\n");
+                            break;
+
+                        case cliCommand::sak:
+                            cli::sendResponse("set application key : ssk 7E22AA54A7F4C0842861A13F1D161DE2\n");
+                            break;
+
+                        case cliCommand::sn:
+                            cli::sendResponse("set name : sn Mini001\n");
+                            break;
+
+                        case cliCommand::sb:
+                            cli::sendResponse("set batteryType : sb 0\n");
+                            break;
+
+                        case cliCommand::sr:
+                            cli::sendResponse("set radioType : sr 0\n");
                             break;
 
                         default:
-                            logging::snprintf(logging::source::error, "unknown command: %s\n", theCommand.commandAsString);
+                            cli::sendResponse("unknown command : ");
+                            cli::sendResponse(theCommand.commandAsString);
+                            cli::sendResponse("\n");
                             break;
                     }
                 }

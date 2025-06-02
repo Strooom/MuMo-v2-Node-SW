@@ -34,7 +34,7 @@ void test_rx() {
     TEST_ASSERT_EQUAL(1, uart2::commandCount());
 
     char receivedData[32]{};
-    uart2::read(receivedData);
+    uart2::receive(receivedData);
     TEST_ASSERT_EQUAL_STRING("?", receivedData);
     TEST_ASSERT_TRUE(uart2::rxBuffer.isEmpty());
     TEST_ASSERT_EQUAL(0, uart2::commandCount());
@@ -42,7 +42,7 @@ void test_rx() {
 
 void test_tx() {
     uart2::initialize();
-    uart2::send("12\n");
+    uart2::transmit("12\n");
     TEST_ASSERT_EQUAL(3, uart2::txBuffer.getLevel());
     uart2::txEmpty();
     TEST_ASSERT_EQUAL('1', uart2::mockTransmittedChar);
@@ -56,7 +56,7 @@ void test_tx() {
 
     const uint8_t testSendData[4]{'1', '2', '3', '4'};
 
-    uart2::send(testSendData, 2);
+    uart2::transmit(testSendData, 2);
     TEST_ASSERT_EQUAL(2, uart2::txBuffer.getLevel());
     uart2::txEmpty();
     TEST_ASSERT_EQUAL('1', uart2::mockTransmittedChar);

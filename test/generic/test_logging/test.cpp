@@ -13,12 +13,12 @@ void tearDown(void) {        // after each test
 void test_initialize() {
     TEST_ASSERT_EQUAL_CHAR(0x00, logging::buffer[0]);
     TEST_ASSERT_FALSE(logging::isActive(logging::source::applicationEvents));
-    TEST_ASSERT_FALSE(logging::isActive(logging::destination::debugProbe));
-    logging::enable(logging::destination::debugProbe);
+    TEST_ASSERT_FALSE(logging::isActive(logging::destination::swo));
+    logging::enable(logging::destination::swo);
     logging::enable(logging::source::applicationEvents);
     logging::reset();
     TEST_ASSERT_FALSE(logging::isActive(logging::source::applicationEvents));
-    TEST_ASSERT_FALSE(logging::isActive(logging::destination::debugProbe));
+    TEST_ASSERT_FALSE(logging::isActive(logging::destination::swo));
 }
 
 void test_enable_disable() {
@@ -29,32 +29,32 @@ void test_enable_disable() {
     logging::disable(logging::source::applicationEvents);
     TEST_ASSERT_FALSE(logging::isActive(logging::source::applicationEvents));
 
-    TEST_ASSERT_FALSE(logging::isActive(logging::destination::debugProbe));
-    logging::enable(logging::destination::debugProbe);
-    TEST_ASSERT_TRUE(logging::isActive(logging::destination::debugProbe));
-    logging::disable(logging::destination::debugProbe);
-    TEST_ASSERT_FALSE(logging::isActive(logging::destination::debugProbe));
+    TEST_ASSERT_FALSE(logging::isActive(logging::destination::swo));
+    logging::enable(logging::destination::swo);
+    TEST_ASSERT_TRUE(logging::isActive(logging::destination::swo));
+    logging::disable(logging::destination::swo);
+    TEST_ASSERT_FALSE(logging::isActive(logging::destination::swo));
 }
 
 void test_output() {
     logging::reset();
     TEST_ASSERT_EQUAL(0, logging::snprintf("test"));          // before any destination is enabled
-    logging::enable(logging::destination::debugProbe);        //
+    logging::enable(logging::destination::swo);        //
     TEST_ASSERT_EQUAL(4, logging::snprintf("test"));          // after a destination is enabled
 }
 
 void test_output_source() {
     logging::reset();
-    logging::enable(logging::destination::debugProbe);
+    logging::enable(logging::destination::swo);
     TEST_ASSERT_EQUAL(0, logging::snprintf(logging::source::error, "test"));        // before any source is enabled
     logging::enable(logging::source::error);                                        //
     TEST_ASSERT_EQUAL(4, logging::snprintf(logging::source::error, "test"));        // after a source is enabled
 }
 
 void test_toString_destination() {
-    TEST_ASSERT_EQUAL_STRING("debugProbe", toString(logging::destination::debugProbe));
+    TEST_ASSERT_EQUAL_STRING("swo", toString(logging::destination::swo));
     TEST_ASSERT_EQUAL_STRING("uart1", toString(logging::destination::uart1));
-    TEST_ASSERT_EQUAL_STRING("uart2usb", toString(logging::destination::uart2usb));
+    TEST_ASSERT_EQUAL_STRING("uart2", toString(logging::destination::uart2));
     TEST_ASSERT_EQUAL_STRING("unknown", toString(static_cast<logging::destination>(99U)));
 }
 
