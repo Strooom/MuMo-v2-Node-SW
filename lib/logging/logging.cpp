@@ -29,7 +29,7 @@ void logging::initialize() {
 #ifndef generic
     if ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001) {        // is a SWD debugprobe connected ?
 #ifndef platformio                                                             // SWO TRACE is not working on PlatformIO
-        logging::enable(logging::destination::debugProbe);
+        logging::enable(logging::destination::swo);
 #endif
         LL_DBGMCU_EnableDBGStopMode();
     } else {
