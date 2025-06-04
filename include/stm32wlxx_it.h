@@ -42,7 +42,9 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-
+// WARNING : it is critical for an interrupt handler to be declared here. 
+// Even if the function is defined (eg in stm32wlxx_it.cpp), it will not be linked when not declared here.
+// The result is that a catch-all handler will be used, stopping code execution.
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -55,10 +57,10 @@ void SVC_Handler(void);
 void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
-void TAMP_STAMP_LSECSS_SSRU_IRQHandler(void);
+void USART1_IRQHandler(void);
+void USART2_IRQHandler(void);
 void EXTI3_IRQHandler(void);
 void RTC_WKUP_IRQHandler(void);
-void USART2_IRQHandler(void);
 void LPTIM1_IRQHandler(void);
 void SUBGHZ_Radio_IRQHandler(void);
 /* USER CODE BEGIN EFP */

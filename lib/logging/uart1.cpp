@@ -69,21 +69,21 @@ void uart1::initialize() {
     HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
     __HAL_RCC_USART1_CLK_ENABLE();
 
-    (void)USART1->RDR;        // read RDR to clear it
+    // (void)USART1->RDR;        // read RDR to clear it
 
-    USART1->BRR = 0x8B;                                          // 115200 baud
-    USART1->ICR = 0xFFFF;                                        // clear all pending interrupt flags
-    USART1->CR1 = USART1->CR1 | USART_CR1_RXNEIE_RXFNEIE;        // enable Receive data register not empty interrupt
+    USART1->BRR = 0x8B;          // 115200 baud
+    USART1->ICR = 0xFFFF;        // clear all pending interrupt flags
+    // USART1->CR1 = USART1->CR1 | USART_CR1_RXNEIE_RXFNEIE;        // enable Receive data register not empty interrupt
     HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
-    USART1->CR1 = USART1->CR1 | USART_CR1_RE;        // enable Rx direction
+    // USART1->CR1 = USART1->CR1 | USART_CR1_RE;        // enable Rx direction
     USART1->CR1 = USART1->CR1 | USART_CR1_TE;        // enable Tx direction
     USART1->CR1 = USART1->CR1 | USART_CR1_UE;        // enable UART1
 #endif
     gpio::enableGpio(gpio::group::uart1);
 #ifndef generic
-    HAL_Delay(10);            // after enabling the UART and IOs, some spurious character may be received. Wait a little, then clear the rxBuffer.
-    (void)USART1->RDR;        // read RDR to clear it
+    // HAL_Delay(10);            // after enabling the UART and IOs, some spurious character may be received. Wait a little, then clear the rxBuffer.
+    // (void)USART1->RDR;        // read RDR to clear it
 
 #endif
 }

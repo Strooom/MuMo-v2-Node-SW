@@ -28,7 +28,6 @@
 #include <uart2.hpp>
 #include <realtimeclock.hpp>
 
-
 // Some commment
 /* USER CODE END Includes */
 
@@ -209,16 +208,14 @@ void TAMP_STAMP_LSECSS_SSRU_IRQHandler(void) {
     /* USER CODE END TAMP_STAMP_LSECSS_SSRU_IRQn 1 */
 }
 
+void EXTI3_IRQHandler(void) {
+    /* USER CODE BEGIN EXTI3_IRQn 0 */
 
-void EXTI3_IRQHandler(void)
-{
-  /* USER CODE BEGIN EXTI3_IRQn 0 */
+    /* USER CODE END EXTI3_IRQn 0 */
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
+    /* USER CODE BEGIN EXTI3_IRQn 1 */
 
-  /* USER CODE END EXTI3_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
-  /* USER CODE BEGIN EXTI3_IRQn 1 */
-
-  /* USER CODE END EXTI3_IRQn 1 */
+    /* USER CODE END EXTI3_IRQn 1 */
 }
 
 /**
@@ -246,16 +243,10 @@ void USART1_IRQHandler(void) {
     if (isrflags & uart1::tdrEmpty) {
         uart1::txEmpty();
     }
-    HAL_UART_IRQHandler(&huart1);
+    //HAL_UART_IRQHandler(&huart1);
 }
 
-
-/**
- * @brief This function handles USART2 Interrupt.
- */
 void USART2_IRQHandler(void) {
-    /* USER CODE BEGIN USART2_IRQn 0 */
-
     // Detect the interrupt source from the ISR
     uint32_t isrflags = USART2->ISR;
 
@@ -266,11 +257,7 @@ void USART2_IRQHandler(void) {
     if (isrflags & uart2::tdrEmpty) {
         uart2::txEmpty();
     }
-    /* USER CODE END USART2_IRQn 0 */
-    HAL_UART_IRQHandler(&huart2);
-    /* USER CODE BEGIN USART2_IRQn 1 */
-
-    /* USER CODE END USART2_IRQn 1 */
+    //HAL_UART_IRQHandler(&huart2);
 }
 
 /**

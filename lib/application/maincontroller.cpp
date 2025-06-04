@@ -63,6 +63,7 @@ extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
     logging::enable(logging::destination::uart1);
+    logging::enable(logging::destination::uart2);
     logging::enable(logging::source::applicationEvents);
     logging::enable(logging::source::settings);
     logging::enable(logging::source::lorawanMac);

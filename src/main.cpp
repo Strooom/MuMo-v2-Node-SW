@@ -23,6 +23,9 @@
 #include <battery.hpp>
 #include <lptim.hpp>
 #include <qrcode.hpp>
+#include <debugport.hpp>
+#include <uart1.hpp>
+#include <uart2.hpp>
 
 // TODO : these handles have to move to the respective wrapper classes
 
@@ -44,6 +47,7 @@ circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void SystemClock_Config(void);
 static void MX_RTC_Init(void);
+void MX_USART1_UART_Init(void);
 void MX_USART2_UART_Init(void);
 void MX_SPI2_Init(void);
 void MX_ADC_Init(void);
@@ -51,7 +55,6 @@ void MX_I2C2_Init(void);
 void MX_AES_Init(void);
 void MX_RNG_Init(void);
 static void MX_LPTIM1_Init(void);
-void MX_USART1_UART_Init(void);
 void executeRomBootloader();
 
 int main(void) {
@@ -62,24 +65,27 @@ int main(void) {
 #endif
     __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
     gpio::initialize();
-    if (gpio::isDebugProbePresent()) {
+
+    if (debugPort::isDebugProbePresent()) {
         LL_DBGMCU_DisableDBGStopMode();
     } else {
         gpio::disableGpio(gpio::group::debugPort);
     }
 
-    if (power::hasUsbPower()) {
-        HAL_RCC_DeInit();
-        HAL_DeInit();
-        executeRomBootloader();
-    }
+//    if (power::hasUsbPower()) {
+//        HAL_RCC_DeInit();
+//        HAL_DeInit();
+//        executeRomBootloader();
+//    }
 
     MX_RTC_Init();
     MX_ADC_Init();
     MX_AES_Init();
     MX_RNG_Init();
     MX_LPTIM1_Init();
-    MX_USART1_UART_Init();
+
+    uart1::initialize();
+    uart2::initialize();
 
     mainController ::initialize();
     while (true) {
