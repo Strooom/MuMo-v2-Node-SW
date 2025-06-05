@@ -4,11 +4,11 @@
 #include <rcon.hpp>
 #include <hexascii.hpp>
 
- uint8_t* aesKey::asBytes() {
+uint8_t* aesKey::asBytes() {
     return key.asByte;
 }
 
- uint32_t* aesKey::asWords() {
+uint32_t* aesKey::asWords() {
     return key.asUint32;
 }
 
@@ -30,7 +30,7 @@ void aesKey::setFromHexString(const char* string) {
     expandKey();
 }
 
-uint32_t aesKey::swapLittleBigEndian( uint32_t wordIn) {
+uint32_t aesKey::swapLittleBigEndian(uint32_t wordIn) {
     // ARM Cortex-M4 stores uin32_t in little endian format, but STM32WLE5 AES peripheral expects big endian format. This function swaps the bytes in a word.
     uint32_t wordOut;
     wordOut = (wordIn & 0xFF000000) >> 24 | (wordIn & 0x00FF0000) >> 8 | (wordIn & 0x0000FF00) << 8 | (wordIn & 0x000000FF) << 24;

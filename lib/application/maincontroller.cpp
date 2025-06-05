@@ -56,14 +56,13 @@ void MX_USART2_UART_Init(void);
 mainState mainController::state{mainState::boot};
 uint32_t mainController::requestCounter{0};
 uint32_t mainController::answerCounter{0};
-const uint32_t mainController::deviceIndex[screen::nmbrOfMeasurementTextLines]{2, 2, 1};
+const uint32_t mainController::deviceIndex[screen::nmbrOfMeasurementTextLines]{2, 2, 3};
 const uint32_t mainController::channelIndex[screen::nmbrOfMeasurementTextLines]{0, 1, 0};
 
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
     logging::enable(logging::destination::uart1);
-    logging::enable(logging::destination::uart2);
     logging::enable(logging::source::applicationEvents);
     logging::enable(logging::source::settings);
     logging::enable(logging::source::lorawanMac);
@@ -75,12 +74,9 @@ void mainController::initialize() {
     logging::snprintf("\n\n\nhttps://github.com/Strooom\n");
     logging::snprintf("v%u.%u.%u - #%s\n", buildInfo::mainVersionDigit, buildInfo::minorVersionDigit, buildInfo::patchVersionDigit, buildInfo::lastCommitTag);
     logging::snprintf("%s %s build - %s\n", toString(buildInfo::theBuildEnvironment), toString(buildInfo::theBuildType), buildInfo::buildTimeStamp);
-    logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
+    logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n\n");
 
-    char tmpKeyAsHexAscii[17];
-    hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
-    logging::snprintf("\n");
-    logging::snprintf("UID      : %s\n", tmpKeyAsHexAscii);
+    logging::snprintf("UID      : %s\n", uniqueId::asHexString());
 
     spi::wakeUp();
     display::detectPresence();
@@ -378,12 +374,13 @@ void mainController::prepareSleep() {
     switch (state) {
         case mainState::idle:
             logging::snprintf("goSleep...\n");
-            gpio::disableGpio(gpio::group::usbPresent);
             i2c::goSleep();
+            spi::goSleep();
+            gpio::disableGpio(gpio::group::usbPresent);
+            gpio::disableGpio(gpio::group::rfControl);
             gpio::disableGpio(gpio::group::uart1);
-            // gpio::disableGpio(gpio::group::spiDisplay);
-            // gpio::disableGpio(gpio::group::uart2);
-            // gpio::disableGpio(gpio::group::rfControl);
+            gpio::disableGpio(gpio::group::uart2);
+            gpio::disableGpio(gpio::group::test0);
             break;
 
         default:
@@ -411,8 +408,9 @@ void mainController::wakeUp() {
             MX_RNG_Init();
             MX_USART1_UART_Init();
 #endif
-            // gpio::enableGpio(gpio::group::rfControl);
+            gpio::enableGpio(gpio::group::rfControl);
             gpio::enableGpio(gpio::group::uart1);
+            gpio::enableGpio(gpio::group::uart2);
             gpio::enableGpio(gpio::group::usbPresent);
             logging::snprintf("...wakeUp\n");
             break;
@@ -509,37 +507,96 @@ void mainController::runCli() {
                     cliCommand theCommand;
                     cli::getCommand(theCommand);
                     switch (theCommand.commandHash) {
+                        case cliCommand::prompt:
+                            cli::sendResponse("\n\nhttps://github.com/Strooom\n");
+                            cli::sendResponse("v%u.%u.%u - #%s\n", buildInfo::mainVersionDigit, buildInfo::minorVersionDigit, buildInfo::patchVersionDigit, buildInfo::lastCommitTag);
+                            cli::sendResponse("%s %s build - %s\n", toString(buildInfo::theBuildEnvironment), toString(buildInfo::theBuildType), buildInfo::buildTimeStamp);
+                            cli::sendResponse("Creative Commons 4.0 - BY-NC-SA\n\n");
+                            break;
+
                         case cliCommand::help:
-                            cli::sendResponse("help - show this help\n");
+                            cli::sendResponse("el : enable logging\n");
+                            cli::sendResponse("dl : disable logging\n");
+                            cli::sendResponse("gds : show device status\n");
+                            cli::sendResponse("gls : show LoRaWAN status\n");
+                            cli::sendResponse("rml : reset mac layer\n");
+                            cli::sendResponse("sn <newname> : set name\n");
+                            break;
+
+                        case cliCommand::el:
+                            cli::sendResponse("logging enabled\n");
+                            logging::enable(logging::destination::uart2);
+                            break;
+
+                        case cliCommand::dl:
+                            cli::sendResponse("logging disabled\n");
+                            logging::disable(logging::destination::uart2);
+                            break;
+
+                        case cliCommand::gds:
+                            cli::sendResponse("UID      : %s\n", uniqueId::asHexString());
+                            cli::sendResponse("Display  : %s\n", display::isPresent() ? "present" : "not present");
+                            cli::sendResponse("EEPROM   : %d * 64K present\n", nonVolatileStorage::detectNmbr64KBanks());
+                            cli::sendResponse("BME680   : %s\n", bme680::isPresent() ? "present" : "not present");
+                            cli::sendResponse("TSL2591  : %s\n", tsl2591::isPresent() ? "present" : "not present");
+                            cli::sendResponse("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
+                            break;
+
+                        case cliCommand::gls:
+                            cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.asHexString());
+
+                            cli::sendResponse("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());
+                            cli::sendResponse("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.toUint32());
+                            cli::sendResponse("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
+                            cli::sendResponse("DataRate : %u\n", LoRaWAN::currentDataRateIndex);
+                            cli::sendResponse("rx1DROff : %u\n", LoRaWAN::rx1DataRateOffset);
+                            cli::sendResponse("rx2DRIdx : %u\n\n", LoRaWAN::rx2DataRateIndex);
+                            cli::sendResponse("ActiveCh : %u\n", loRaTxChannelCollection::nmbrActiveChannels());
+                            for (uint32_t loRaTxChannelIndex = 0; loRaTxChannelIndex < loRaTxChannelCollection::maxNmbrChannels; loRaTxChannelIndex++) {
+                                cli::sendResponse("Chan[%02u] : %u Hz, %u, %u\n", loRaTxChannelIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].frequencyInHz, loRaTxChannelCollection::channel[loRaTxChannelIndex].minimumDataRateIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].maximumDataRateIndex);
+                            }
                             break;
 
                         case cliCommand::rml:
-                            cli::sendResponse("reset Mac Layer\n");
+                            LoRaWAN::resetMacLayer();
+                            cli::sendResponse("mac layer reset\n");
                             break;
 
-                        case cliCommand::sda:
-                            cli::sendResponse("set device address : sda 260BF180\n");
-                            break;
+                            // case cliCommand::sda:
+                            //     cli::sendResponse("set device address : sda 260BF180\n");
+                            //     break;
 
-                        case cliCommand::snk:
-                            cli::sendResponse("set network key : snk 0DBC6EF938B83EB4F83C28E3CA7B4132\n");
-                            break;
+                            // case cliCommand::snk:
+                            //     cli::sendResponse("set network key : snk 0DBC6EF938B83EB4F83C28E3CA7B4132\n");
+                            //     break;
 
-                        case cliCommand::sak:
-                            cli::sendResponse("set application key : ssk 7E22AA54A7F4C0842861A13F1D161DE2\n");
-                            break;
+                            // case cliCommand::sak:
+                            //     cli::sendResponse("set application key : ssk 7E22AA54A7F4C0842861A13F1D161DE2\n");
+                            //     break;
 
                         case cliCommand::sn:
-                            cli::sendResponse("set name : sn Mini001\n");
+                            if (theCommand.nmbrOfArguments == 1) {
+                                uint8_t newName[9]{0};
+                                size_t copyLen = strlen(theCommand.arguments[0]);
+                                if (copyLen > sizeof(newName) - 1) {
+                                    copyLen = sizeof(newName) - 1;
+                                }
+                                memcpy(newName, theCommand.arguments[0], copyLen);
+                                settingsCollection::saveByteArray(newName, settingsCollection::settingIndex::name);
+                                screen::setName(theCommand.arguments[0]);
+                                cli::sendResponse("name set : %s\n", theCommand.arguments[0]);
+                            } else {
+                                cli::sendResponse("invalid arguments\n");
+                            }
                             break;
 
-                        case cliCommand::sb:
-                            cli::sendResponse("set batteryType : sb 0\n");
-                            break;
+                            // case cliCommand::sb:
+                            //     cli::sendResponse("set batteryType : sb 0\n");
+                            //     break;
 
-                        case cliCommand::sr:
-                            cli::sendResponse("set radioType : sr 0\n");
-                            break;
+                            // case cliCommand::sr:
+                            //     cli::sendResponse("set radioType : sr 0\n");
+                            //     break;
 
                         default:
                             cli::sendResponse("unknown command : ");

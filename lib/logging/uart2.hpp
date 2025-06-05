@@ -18,6 +18,7 @@ class uart2 {
     static void transmit(const char* data);
     static void transmit(const uint8_t* data);
     static void transmit(const uint8_t* data, const uint32_t length);
+    static void transmit(const char* data, const uint32_t length);
     static uint32_t commandCount();
     static void receive(char* data);
 

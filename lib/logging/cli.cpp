@@ -1,7 +1,11 @@
 #include <cli.hpp>
 #include <uart2.hpp>
 #include <cstring>        // for strcmp
+#include <cstdarg>
+#include <cstdio>
 #include <clicommand.hpp>
+
+char cli::buffer[bufferLength]{};
 
 bool cli::hasCommand() {
     return (uart2::commandCount() > 0);
@@ -13,8 +17,15 @@ void cli::getCommand(cliCommand& aCommand) {
     parseCommandLine(aCommand, commandLine);
 }
 
-void cli::sendResponse(const char* response) {
-    uart2::transmit(response);
+uint32_t cli::sendResponse(const char* format, ...) {
+    uint32_t length{0};
+    va_list argList;
+    va_start(argList, format);
+    length = vsnprintf(buffer, bufferLength, format, argList);
+    va_end(argList);
+    uart2::transmit(buffer, length);
+    return length;
+
 }
 
 uint32_t cli::countArguments(const char* commandLine) {

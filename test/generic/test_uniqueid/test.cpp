@@ -7,17 +7,22 @@
 #include <ctime>
 
 
-void setUp(void) {
-}
-void tearDown(void) {
+void setUp(void) {}
+void tearDown(void) {}
+
+void test_getAsUint64() {
+    TEST_ASSERT_EQUAL(uniqueId::mockUniqueId, uniqueId::asUint64());
 }
 
-void test_get() {
-    TEST_ASSERT_EQUAL(uniqueId::mockUniqueId, uniqueId::get());
+void test_getAsString() {
+    char expected[17];
+    TEST_ASSERT_EQUAL_STRING("1122334455667788", uniqueId::asHexString());
 }
+
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
-    RUN_TEST(test_get);
+    RUN_TEST(test_getAsUint64);
+    RUN_TEST(test_getAsString);
     UNITY_END();
 }

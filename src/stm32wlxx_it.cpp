@@ -229,6 +229,7 @@ void RTC_WKUP_IRQHandler(void) {
     /* USER CODE BEGIN RTC_WKUP_IRQn 1 */
     realTimeClock::tickCounter++;
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
+    
     /* USER CODE END RTC_WKUP_IRQn 1 */
 }
 

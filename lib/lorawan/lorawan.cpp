@@ -194,10 +194,6 @@ void LoRaWAN::saveChannels() {
 }
 
 
-void LoRaWAN::resetMacLayer() {
-    resetState();
-    resetChannels();
-}
 
 
 
@@ -1357,4 +1353,11 @@ void LoRaWAN::correctDevAddrEndianness() {
         DevAddr.asUint32    = newAddress;
         saveConfig();
     }
+}
+
+void LoRaWAN::resetMacLayer() {
+    resetState();
+    saveState();
+    resetChannels();
+    saveChannels();
 }

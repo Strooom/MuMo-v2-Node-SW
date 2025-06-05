@@ -13,7 +13,12 @@ class cliCommand {
     static constexpr uint32_t maxArgumentLength{36};
     static constexpr uint32_t maxNmbrOfArguments{4};
 
-    static constexpr uint32_t help{'?'};                                 // show config and status of the device
+    static constexpr uint32_t prompt{0};                                 // show help
+    static constexpr uint32_t help{'?'};                                 // show help
+    static constexpr uint32_t gds{'g' * 65536 + 'd' * 256 + 's'};        // show config and status of the device
+    static constexpr uint32_t gls{'g' * 65536 + 'l' * 256 + 's'};        // show state of the LoRaWAN stack
+    static constexpr uint32_t el{'e' * 256 + 'l'};                       // enable logging
+    static constexpr uint32_t dl{'d' * 256 + 'l'};                       // disable logging
     static constexpr uint32_t rml{'r' * 65536 + 'm' * 256 + 'l'};        // reset Mac Layer
     static constexpr uint32_t sda{'s' * 65536 + 'd' * 256 + 'a'};        // set device address  : sda 260BF180
     static constexpr uint32_t snk{'s' * 65536 + 'n' * 256 + 'k'};        // set network key     : snk 0DBC6EF938B83EB4F83C28E3CA7B4132

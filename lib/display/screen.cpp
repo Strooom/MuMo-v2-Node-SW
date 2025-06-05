@@ -166,14 +166,11 @@ void screen::showConsole() {
 void screen::showUid() {
     display::clearAllPixels();
 
-    char tmpKeyAsHexAscii[17];
-    hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
-
-    qrCode::generate(tmpKeyAsHexAscii, 1, errorCorrectionLevel::quartile);
+    qrCode::generate(uniqueId::asHexString(), 1, errorCorrectionLevel::quartile);
     graphics::drawQrCode(ux::qrCodeXOffset, ux::qrCodeYOffset);
-    uint32_t width      = graphics::getTextwidth(lucidaConsole12, tmpKeyAsHexAscii);
+    uint32_t width      = graphics::getTextwidth(lucidaConsole12, uniqueId::asHexString());
     uint32_t leftOffset = (display::widthInPixels - width) / 2;
-    graphics::drawText(leftOffset, 2, lucidaConsole12, tmpKeyAsHexAscii);
+    graphics::drawText(leftOffset, 2, lucidaConsole12, uniqueId::asHexString());
 }
 
 void screen::showMeasurements() {

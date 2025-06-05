@@ -127,6 +127,14 @@ void uart2::transmit(const uint8_t* data, const uint32_t length) {
     startOrContinueTx();
 }
 
+void uart2::transmit(const char* data, const uint32_t length) {
+    for (uint32_t index = 0; index < length; index++) {
+        txBuffer.push(static_cast<uint8_t>(data[index]));
+    }
+    startOrContinueTx();
+}
+
+
 uint32_t uart2::commandCount() {
     uint32_t result{0};
 #ifndef generic
