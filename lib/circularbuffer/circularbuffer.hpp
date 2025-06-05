@@ -18,7 +18,7 @@ class circularBuffer {
   public:
     static constexpr uint32_t length = toBeLength;
 
-    circularBuffer(){
+    circularBuffer() {
         initialize();
     };
 
@@ -50,13 +50,11 @@ class circularBuffer {
         bool interrupts_enabled = (__get_PRIMASK() == 0);
         __disable_irq();
 #endif
-        itemType result;
+        itemType result{};        // default should be all zeroes, which is returned when popping from empty buffer
         if (level > 0) {
             result = buffer[head];
             head   = (head + 1) % length;
             level--;
-        } else {
-            result = static_cast<itemType>(0x00);
         }
 #ifndef generic
         if (interrupts_enabled) {
@@ -68,10 +66,6 @@ class circularBuffer {
 
     bool isEmpty() const {
         return level == 0;
-    };
-
-    bool hasEvents() const {
-        return level > 0;
     };
 
     uint32_t getLevel() const {

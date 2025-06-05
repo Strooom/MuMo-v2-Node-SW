@@ -214,7 +214,7 @@ void mainController::initialize() {
 }
 
 void mainController::handleEvents() {
-    while (applicationEventBuffer.hasEvents()) {
+    while (!applicationEventBuffer.isEmpty()) {
         applicationEvent theEvent = applicationEventBuffer.pop();
         logging::snprintf(logging::source::applicationEvents, "%s[%u] in %s[%u]\n", toString(theEvent), static_cast<uint8_t>(theEvent), toString(state), static_cast<uint32_t>(state));
 
