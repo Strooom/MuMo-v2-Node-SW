@@ -12,24 +12,24 @@
 
 void aesBlock::setByte(const uint32_t byteIndex, uint8_t newValue) {
     blockAsBytes[byteIndex] = newValue;
-    (void)memcpy(blockAsWords, blockAsBytes, lengthInBytes);
+    syncWordsFromBytes();
 }
 
 void aesBlock::setFromByteArray(const uint8_t bytesIn[lengthInBytes]) {
     (void)memcpy(blockAsBytes, bytesIn, lengthInBytes);
-    (void)memcpy(blockAsWords, blockAsBytes, lengthInBytes);
+    syncWordsFromBytes();
 }
 
 void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
     (void)memcpy(blockAsWords, wordsIn, lengthInBytes);
-    (void)memcpy(blockAsBytes, blockAsWords, lengthInBytes);
+    syncBytesFromWords();
 }
 
 void aesBlock::setFromHexString(const char *string) {
     uint8_t tmpBytes[lengthInBytes];
     hexAscii::hexStringToByteArray(tmpBytes, string, 32U);
-    (void)memcpy(blockAsBytes, tmpBytes, lengthInBytes);            // new
-    (void)memcpy(blockAsWords, blockAsBytes, lengthInBytes);        // new
+    (void)memcpy(blockAsBytes, tmpBytes, lengthInBytes);
+    syncWordsFromBytes();
 }
 
 uint32_t aesBlock::nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes) {
@@ -122,12 +122,14 @@ void aesBlock::substituteBytes() {
     for (uint32_t byteIndex = 0; byteIndex < lengthInBytes; byteIndex++) {
         blockAsBytes[byteIndex] = sbox::data[blockAsBytes[byteIndex]];
     }
+    syncWordsFromBytes();
 }
 
 void aesBlock::XOR(const uint8_t *data) {
     for (uint32_t byteIndex = 0; byteIndex < lengthInBytes; byteIndex++) {
         blockAsBytes[byteIndex] ^= data[byteIndex];
     }
+    syncWordsFromBytes();
 }
 
 void aesBlock::shiftRows() {
@@ -151,6 +153,8 @@ void aesBlock::shiftRows() {
     blockAsBytes[11] = blockAsBytes[7];
     blockAsBytes[7]  = blockAsBytes[3];
     blockAsBytes[3]  = temp;
+
+    syncWordsFromBytes();
 }
 
 void aesBlock::mixColumns() {
@@ -180,6 +184,7 @@ void aesBlock::mixColumns() {
     for (uint32_t i = 0; i < lengthInBytes; ++i) {
         blockAsBytes[i] = tempBytes[i];
     }
+    syncWordsFromBytes();
 }
 
 void aesBlock::shiftLeft() {
@@ -202,4 +207,12 @@ void aesBlock::shiftLeft() {
     for (uint32_t i = 0; i < lengthInBytes; ++i) {
         blockAsBytes[i] = tempBytes[i];
     }
+    syncWordsFromBytes();
+}
+
+void aesBlock::syncWordsFromBytes() {
+    (void)memcpy(blockAsWords, blockAsBytes, lengthInBytes);
+}
+void aesBlock::syncBytesFromWords() {
+    (void)memcpy(blockAsBytes, blockAsWords, lengthInBytes);
 }

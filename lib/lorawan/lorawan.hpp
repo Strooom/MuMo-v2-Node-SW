@@ -8,12 +8,12 @@
 #include <cstring>
 #include <applicationevent.hpp>
 #include <aeskey.hpp>
+#include <aesblock.hpp>
 #include <messagetype.hpp>
 #include <txrxcyclestate.hpp>
 #include <macheader.hpp>
 #include <deviceaddress.hpp>
 #include <framecount.hpp>
-#include <mic.hpp>
 #include <datarate.hpp>
 #include <txchannelcollection.hpp>
 #include <transmitpower.hpp>

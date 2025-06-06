@@ -328,20 +328,20 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
     tmpBlockBytes[3] = 0x00;
     tmpBlockBytes[4] = 0x00;
     tmpBlockBytes[5] = static_cast<uint8_t>(theDirection);
-    tmpBlockBytes[6] = DevAddr.asUint8[0];                   // LSByte
-    tmpBlockBytes[7] = DevAddr.asUint8[1];                   //
-    tmpBlockBytes[8] = DevAddr.asUint8[2];                   //
-    tmpBlockBytes[9] = DevAddr.asUint8[3];                   // MSByte
-    if (theDirection == linkDirection::uplink) {        //
-        tmpBlockBytes[10] = uplinkFrameCount[0];             // LSByte
-        tmpBlockBytes[11] = uplinkFrameCount[1];             //
-        tmpBlockBytes[12] = uplinkFrameCount[2];             //
-        tmpBlockBytes[13] = uplinkFrameCount[3];             // MSByte
-    } else {                                            //
-        tmpBlockBytes[10] = downlinkFrameCount[0];           // LSByte
-        tmpBlockBytes[11] = downlinkFrameCount[1];           //
-        tmpBlockBytes[12] = downlinkFrameCount[2];           //
-        tmpBlockBytes[13] = downlinkFrameCount[3];           // MSByte
+    tmpBlockBytes[6] = DevAddr.asUint8[0];                // LSByte
+    tmpBlockBytes[7] = DevAddr.asUint8[1];                //
+    tmpBlockBytes[8] = DevAddr.asUint8[2];                //
+    tmpBlockBytes[9] = DevAddr.asUint8[3];                // MSByte
+    if (theDirection == linkDirection::uplink) {          //
+        tmpBlockBytes[10] = uplinkFrameCount[0];          // LSByte
+        tmpBlockBytes[11] = uplinkFrameCount[1];          //
+        tmpBlockBytes[12] = uplinkFrameCount[2];          //
+        tmpBlockBytes[13] = uplinkFrameCount[3];          // MSByte
+    } else {                                              //
+        tmpBlockBytes[10] = downlinkFrameCount[0];        // LSByte
+        tmpBlockBytes[11] = downlinkFrameCount[1];        //
+        tmpBlockBytes[12] = downlinkFrameCount[2];        //
+        tmpBlockBytes[13] = downlinkFrameCount[3];        // MSByte
     }        //
     tmpBlockBytes[14] = 0x00;                                    //
     tmpBlockBytes[15] = static_cast<uint8_t>(blockIndex);        // Blocks Ai are indexed from 1..k, where k is the number of blocks
@@ -398,11 +398,10 @@ void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirecti
 }
 
 void LoRaWAN::generateKeysK1K2() {
-    bool msbSet;
     K1.setFromHexString("00000000000000000000000000000000");
-    K2.setFromHexString("00000000000000000000000000000000"); // why ? as it is initialized from K1 below
+    K2.setFromHexString("00000000000000000000000000000000");        // why ? as it is initialized from K1 below
     K1.encrypt(networkKey);
-    msbSet = ((K1.getAsByte(0) & 0x80) == 0x80);
+    bool msbSet = ((K1.getAsByte(0) & 0x80) == 0x80);
     K1.shiftLeft();
     if (msbSet) {
         K1.setByte(15, K1.getAsByte(15) ^ 0x87);
@@ -439,18 +438,18 @@ uint32_t LoRaWAN::calculateMic() {
     aesBlock tmpBlock;
     for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
         uint8_t* tmpOffset;
-        tmpOffset = rawMessage + (blockIndex * 16);
+        tmpOffset = rawMessage + (blockIndex * aesBlock::lengthInBytes);
         tmpBlock.setFromByteArray(tmpOffset);
         if (blockIndex == (nmbrOfBlocks - 1)) {
             if (hasIncompleteLastBlock) {
-                uint8_t tmpK2[16];
-                for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                uint8_t tmpK2[aesBlock::lengthInBytes];
+                for (uint32_t byteIndex = 0; byteIndex < aesBlock::lengthInBytes; byteIndex++) {
                     tmpK2[byteIndex] = K2.getAsByte(byteIndex);
                 }
                 tmpBlock.XOR(tmpK2);
             } else {
-                uint8_t tmpK1[16];
-                for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                uint8_t tmpK1[aesBlock::lengthInBytes];
+                for (uint32_t byteIndex = 0; byteIndex < aesBlock::lengthInBytes; byteIndex++) {
                     tmpK1[byteIndex] = K1.getAsByte(byteIndex);
                 }
                 tmpBlock.XOR(tmpK1);

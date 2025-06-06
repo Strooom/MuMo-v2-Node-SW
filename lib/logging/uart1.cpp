@@ -95,7 +95,8 @@ void uart1::initialize() {
 void uart1::rxNotEmpty() {
 #ifndef generic
     while (USART1->ISR & USART_CR1_RXNEIE_RXFNEIE) {
-        uint8_t receivedChar = static_cast<uint8_t>(USART1->RDR);
+        // uint8_t receivedChar = static_cast<uint8_t>(USART1->RDR);
+        (void)USART1->RDR;        // read RDR to clear it
 #else
     uint8_t receivedChar = mockReceivedChar;        // currently the data received on uart1 is ignored, as it us only used for debug/trace output
 #endif

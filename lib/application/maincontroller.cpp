@@ -535,9 +535,9 @@ void mainController::runCli() {
                             cli::sendResponse("UID      : %s\n", uniqueId::asHexString());
                             cli::sendResponse("Display  : %s\n", display::isPresent() ? "present" : "not present");
                             cli::sendResponse("EEPROM   : %d * 64K present\n", nonVolatileStorage::detectNmbr64KBanks());
-                            cli::sendResponse("BME680   : %s\n", bme680::isPresent() ? "present" : "not present");
-                            cli::sendResponse("TSL2591  : %s\n", tsl2591::isPresent() ? "present" : "not present");
-                            cli::sendResponse("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
+                            cli::sendResponse("BME680   : %s\n", sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)] ? "present" : "not present");
+                            cli::sendResponse("TSL2591  : %s\n", sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::tsl2591)] ? "present" : "not present");
+                            cli::sendResponse("SHT40    : %s\n", sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::sht40)] ? "present" : "not present");
                             break;
 
                         case cliCommand::gls:

@@ -1,2 +1,0 @@
-#include <mic.hpp>
-

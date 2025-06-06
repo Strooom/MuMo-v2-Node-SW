@@ -17,10 +17,6 @@ class aesBlock {
     void setFromWordArray(const uint32_t wordsIn[lengthInWords]);
     void setFromHexString(const char *string);
     void setByte(const uint32_t byteIndex, uint8_t newValue);
-    
-    // aesBlock &operator=(const aesBlock &block);
-    // uint8_t &operator[](std::size_t index);
-    // bool operator==(const aesBlock &block) const;
 
     static uint32_t nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes);
     static uint32_t incompleteLastBlockSizeFromBytes(uint32_t nmbrOfBytes);
@@ -48,6 +44,9 @@ class aesBlock {
     void substituteBytes();
     void shiftRows();
     void mixColumns();
+
+    void syncWordsFromBytes();
+    void syncBytesFromWords();
 
     uint8_t blockAsBytes[lengthInBytes]{};
     uint32_t blockAsWords[lengthInWords]{};
