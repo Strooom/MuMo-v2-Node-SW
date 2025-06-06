@@ -30,11 +30,10 @@ void test_initialize() {
 void test_initialize_config() {
     TEST_ASSERT_EQUAL(0, LoRaWAN::DevAddr.asUint32);
     TEST_ASSERT_EQUAL(1, LoRaWAN::rx1DelayInSeconds);
-    char tmpKeyAsHexString[33];
-    hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::applicationKey.asBytes(), 16);
-    TEST_ASSERT_EQUAL_STRING("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", tmpKeyAsHexString);
-    hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::networkKey.asBytes(), 16);
-    TEST_ASSERT_EQUAL_STRING("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", tmpKeyAsHexString);
+    for (int i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(0, LoRaWAN::applicationKey.getAsByte(i));
+        TEST_ASSERT_EQUAL_UINT8(0, LoRaWAN::networkKey.getAsByte(i));
+    }
 }
 
 void test_initialize_state() {
@@ -69,10 +68,9 @@ void test_save_restore_config() {
     LoRaWAN::restoreConfig();
     TEST_ASSERT_EQUAL(0x1234, LoRaWAN::DevAddr.asUint32);
     char tmpKeyAsHexString[33];
-    hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::applicationKey.asBytes(), 16);
-    TEST_ASSERT_EQUAL_STRING("000102030405060708090A0B0C0D0E0F", tmpKeyAsHexString);
-    hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::networkKey.asBytes(), 16);
-    TEST_ASSERT_EQUAL_STRING("101112131415161718191A1B1C1D1E1F", tmpKeyAsHexString);
+   
+    TEST_ASSERT_EQUAL_STRING("000102030405060708090A0B0C0D0E0F", LoRaWAN::applicationKey.getAsHexString());
+    TEST_ASSERT_EQUAL_STRING("101112131415161718191A1B1C1D1E1F", LoRaWAN::networkKey.getAsHexString());
 }
 
 void test_save_restore_state() {

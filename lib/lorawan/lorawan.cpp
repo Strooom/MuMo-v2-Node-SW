@@ -92,12 +92,11 @@ bool LoRaWAN::isValidConfig() {
     if ((DevAddr.asUint8[0] == 0x26) && (DevAddr.asUint8[1] == 0x0B)) {        // This detects an old incorrectly stored DevAddr
         return false;
     }
-    uint8_t tmpKeyArray[aesKey::lengthInBytes]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    if (memcmp(applicationKey.asBytes(), tmpKeyArray, aesKey::lengthInBytes) == 0) {
-        return false;
-    }
-    if (memcmp(networkKey.asBytes(), tmpKeyArray, aesKey::lengthInBytes) == 0) {
-        return false;
+
+    for (uint32_t index = 0; index < aesKey::lengthInBytes; index++) {
+        if (applicationKey.getAsByte(index) != nonVolatileStorage::blankEepromValue || networkKey.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
+            return false;
+        }
     }
     return true;
 }
@@ -112,8 +111,15 @@ void LoRaWAN::initializeConfig() {
 
 void LoRaWAN::saveConfig() {
     settingsCollection::save(DevAddr.asUint32, settingsCollection::settingIndex::DevAddr);
-    settingsCollection::saveByteArray(applicationKey.asBytes(), settingsCollection::settingIndex::applicationSessionKey);
-    settingsCollection::saveByteArray(networkKey.asBytes(), settingsCollection::settingIndex::networkSessionKey);
+    uint8_t tmpBytes[aesKey::lengthInBytes];
+    for (uint32_t index = 0; index < aesKey::lengthInBytes; index++) {
+        tmpBytes[index] = applicationKey.getAsByte(index);
+    }
+    settingsCollection::saveByteArray(tmpBytes, settingsCollection::settingIndex::applicationSessionKey);
+    for (uint32_t index = 0; index < aesKey::lengthInBytes; index++) {
+        tmpBytes[index] = networkKey.getAsByte(index);
+    }
+    settingsCollection::saveByteArray(tmpBytes, settingsCollection::settingIndex::networkSessionKey);
 }
 
 void LoRaWAN::restoreState() {
@@ -192,10 +198,6 @@ void LoRaWAN::saveChannels() {
     settingsCollection::saveByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
     settingsCollection::save(rx2FrequencyInHz, settingsCollection::settingIndex::rxChannel);
 }
-
-
-
-
 
 #pragma endregion
 #pragma region 1 : managing the rawMessage Buffer
@@ -318,29 +320,33 @@ uint32_t LoRaWAN::receivedMic() {
 #pragma region 2 : Encrypting / Decrypting application payload - Calculating MIC
 
 void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uint32_t blockIndex) {
-    theBlock[0] = 0x01;
-    theBlock[1] = 0x00;
-    theBlock[2] = 0x00;
-    theBlock[3] = 0x00;
-    theBlock[4] = 0x00;
-    theBlock[5] = static_cast<uint8_t>(theDirection);
-    theBlock[6] = DevAddr.asUint8[0];                   // LSByte
-    theBlock[7] = DevAddr.asUint8[1];                   //
-    theBlock[8] = DevAddr.asUint8[2];                   //
-    theBlock[9] = DevAddr.asUint8[3];                   // MSByte
+    uint8_t tmpBlockBytes[16];
+
+    tmpBlockBytes[0] = 0x01;
+    tmpBlockBytes[1] = 0x00;
+    tmpBlockBytes[2] = 0x00;
+    tmpBlockBytes[3] = 0x00;
+    tmpBlockBytes[4] = 0x00;
+    tmpBlockBytes[5] = static_cast<uint8_t>(theDirection);
+    tmpBlockBytes[6] = DevAddr.asUint8[0];                   // LSByte
+    tmpBlockBytes[7] = DevAddr.asUint8[1];                   //
+    tmpBlockBytes[8] = DevAddr.asUint8[2];                   //
+    tmpBlockBytes[9] = DevAddr.asUint8[3];                   // MSByte
     if (theDirection == linkDirection::uplink) {        //
-        theBlock[10] = uplinkFrameCount[0];             // LSByte
-        theBlock[11] = uplinkFrameCount[1];             //
-        theBlock[12] = uplinkFrameCount[2];             //
-        theBlock[13] = uplinkFrameCount[3];             // MSByte
+        tmpBlockBytes[10] = uplinkFrameCount[0];             // LSByte
+        tmpBlockBytes[11] = uplinkFrameCount[1];             //
+        tmpBlockBytes[12] = uplinkFrameCount[2];             //
+        tmpBlockBytes[13] = uplinkFrameCount[3];             // MSByte
     } else {                                            //
-        theBlock[10] = downlinkFrameCount[0];           // LSByte
-        theBlock[11] = downlinkFrameCount[1];           //
-        theBlock[12] = downlinkFrameCount[2];           //
-        theBlock[13] = downlinkFrameCount[3];           // MSByte
+        tmpBlockBytes[10] = downlinkFrameCount[0];           // LSByte
+        tmpBlockBytes[11] = downlinkFrameCount[1];           //
+        tmpBlockBytes[12] = downlinkFrameCount[2];           //
+        tmpBlockBytes[13] = downlinkFrameCount[3];           // MSByte
     }        //
-    theBlock[14] = 0x00;                                    //
-    theBlock[15] = static_cast<uint8_t>(blockIndex);        // Blocks Ai are indexed from 1..k, where k is the number of blocks
+    tmpBlockBytes[14] = 0x00;                                    //
+    tmpBlockBytes[15] = static_cast<uint8_t>(blockIndex);        // Blocks Ai are indexed from 1..k, where k is the number of blocks
+
+    theBlock.setFromByteArray(tmpBlockBytes);
 }
 
 void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirection) {
@@ -364,7 +370,10 @@ void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirecti
         stm32wle5_aes::read(tmpBlock);
         stm32wle5_aes::clearComputationComplete();
 
-        memcpy(tmpOffset, tmpBlock.asBytes(), aesBlock::lengthInBytes);
+        // was memcpy(tmpOffset, tmpBlock.asBytes(), aesBlock::lengthInBytes);
+        for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
+            tmpOffset[index] = tmpBlock.getAsByte(index);
+        }
     }
     stm32wle5_aes::disable();
 #else
@@ -377,11 +386,11 @@ void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirecti
 
         if (hasIncompleteLastBlock && (blockIndex == (nmbrOfBlocks - 1))) {
             for (uint32_t byteIndex = 0; byteIndex < incompleteLastBlockSize; byteIndex++) {
-                rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
+                rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock.getAsByte(byteIndex);
             }
         } else {
             for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
-                rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
+                rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock.getAsByte(byteIndex);
             }
         }
     }
@@ -391,18 +400,18 @@ void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirecti
 void LoRaWAN::generateKeysK1K2() {
     bool msbSet;
     K1.setFromHexString("00000000000000000000000000000000");
-    K2.setFromHexString("00000000000000000000000000000000");
+    K2.setFromHexString("00000000000000000000000000000000"); // why ? as it is initialized from K1 below
     K1.encrypt(networkKey);
-    msbSet = ((K1[0] & 0x80) == 0x80);
+    msbSet = ((K1.getAsByte(0) & 0x80) == 0x80);
     K1.shiftLeft();
     if (msbSet) {
-        K1[15] = K1[15] ^ 0x87;
+        K1.setByte(15, K1.getAsByte(15) ^ 0x87);
     }
     K2     = K1;
-    msbSet = ((K2[0] & 0x80) == 0x80);
+    msbSet = ((K2.getAsByte(0) & 0x80) == 0x80);
     K2.shiftLeft();
     if (msbSet) {
-        K2[15] = K2[15] ^ 0x87;
+        K2.setByte(15, K2.getAsByte(15) ^ 0x87);
     }
 }
 
@@ -434,9 +443,17 @@ uint32_t LoRaWAN::calculateMic() {
         tmpBlock.setFromByteArray(tmpOffset);
         if (blockIndex == (nmbrOfBlocks - 1)) {
             if (hasIncompleteLastBlock) {
-                tmpBlock.XOR(K2.asBytes());
+                uint8_t tmpK2[16];
+                for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                    tmpK2[byteIndex] = K2.getAsByte(byteIndex);
+                }
+                tmpBlock.XOR(tmpK2);
             } else {
-                tmpBlock.XOR(K1.asBytes());
+                uint8_t tmpK1[16];
+                for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                    tmpK1[byteIndex] = K1.getAsByte(byteIndex);
+                }
+                tmpBlock.XOR(tmpK1);
             }
         }
         stm32wle5_aes::write(tmpBlock);
@@ -447,7 +464,7 @@ uint32_t LoRaWAN::calculateMic() {
         stm32wle5_aes::clearComputationComplete();
     }
     stm32wle5_aes::disable();
-    uint32_t mic = tmpBlock.asWords()[0];
+    uint32_t mic = tmpBlock.getAsWord(0);
 
 #else
     uint32_t payloadLength      = micOffset;
@@ -466,8 +483,10 @@ uint32_t LoRaWAN::calculateMic() {
             outputBlock.setFromByteArray(rawMessage + (blockIndex * 16));        //  Copy data into block
             outputBlock.XOR(Old_Data);
             outputBlock.encrypt(networkKey);
-            (void)memcpy(outputAsBytes, outputBlock.asBytes(), 16);
 
+            for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                outputAsBytes[byteIndex] = outputBlock.getAsByte(byteIndex);
+            }
             for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
                 Old_Data[byteIndex] = outputAsBytes[byteIndex];
             }
@@ -477,7 +496,11 @@ uint32_t LoRaWAN::calculateMic() {
         if (incompleteLastBlockSize == 0) {
             outputBlock.setFromByteArray(rawMessage + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
             outputBlock.XOR(Old_Data);
-            outputBlock.XOR(K1.asBytes());
+            uint8_t tmpK1[16];
+            for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                tmpK1[byteIndex] = K1.getAsByte(byteIndex);
+            }
+            outputBlock.XOR(tmpK1);
             outputBlock.encrypt(networkKey);
 
         } else {
@@ -494,7 +517,11 @@ uint32_t LoRaWAN::calculateMic() {
             }
             outputBlock.setFromByteArray(outputAsBytes);
             outputBlock.XOR(Old_Data);
-            outputBlock.XOR(K2.asBytes());
+            uint8_t tmpK2[16];
+            for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                tmpK2[byteIndex] = K2.getAsByte(byteIndex);
+            }
+            outputBlock.XOR(tmpK2);
             outputBlock.encrypt(networkKey);
         }
 
@@ -505,11 +532,15 @@ uint32_t LoRaWAN::calculateMic() {
         }
 
         outputBlock.setFromByteArray(outputAsBytes);
-        outputBlock.XOR(K2.asBytes());
+        uint8_t tmpK2[16];
+        for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+            tmpK2[byteIndex] = K2.getAsByte(byteIndex);
+        }
+        outputBlock.XOR(tmpK2);
         outputBlock.XOR(Old_Data);        // I think this step is useless, as Old_Data is all zeroes
         outputBlock.encrypt(networkKey);
     }
-    uint32_t mic = ((outputBlock.asBytes()[3] << 24) + (outputBlock.asBytes()[2] << 16) + (outputBlock.asBytes()[1] << 8) + (outputBlock.asBytes()[0]));
+    uint32_t mic = ((outputBlock.getAsByte(3) << 24) + (outputBlock.getAsByte(2) << 16) + (outputBlock.getAsByte(1) << 8) + (outputBlock.getAsByte(0)));
 #endif
     return mic;
 }
@@ -1216,12 +1247,9 @@ void LoRaWAN::dumpConfig() {
         return;
     }
     logging::snprintf("LoRaWAN Config :\n");
-    logging::snprintf("  devAddr        = 0x%04X\n", DevAddr.asUint32);        // TODO : I think this should be 0x%08X
-    char tmpKeyAsHexAscii[33];
-    hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, applicationKey.asBytes(), 16);
-    logging::snprintf("  applicationKey = %s\n", tmpKeyAsHexAscii);
-    hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, networkKey.asBytes(), 16);
-    logging::snprintf("  networkKey     = %s\n", tmpKeyAsHexAscii);
+    logging::snprintf("  devAddr        = 0x%08X\n", DevAddr.asUint32);
+    logging::snprintf("  applicationKey = %s\n", applicationKey.getAsHexString());
+    logging::snprintf("  networkKey     = %s\n", networkKey.getAsHexString());
 }
 
 void LoRaWAN::dumpState() {

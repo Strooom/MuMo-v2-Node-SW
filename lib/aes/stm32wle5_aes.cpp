@@ -31,38 +31,40 @@ void stm32wle5_aes::disable() {
 
 void stm32wle5_aes::setKey(aesKey& theKey) {
 #ifndef generic
-    AES->KEYR0 = aesKey::swapLittleBigEndian(theKey.asWords()[3]);        // LeastSignificant bits
-    AES->KEYR1 = aesKey::swapLittleBigEndian(theKey.asWords()[2]);
-    AES->KEYR2 = aesKey::swapLittleBigEndian(theKey.asWords()[1]);
-    AES->KEYR3 = aesKey::swapLittleBigEndian(theKey.asWords()[0]);        // MostSignificant bits
+    AES->KEYR0 = aesKey::swapLittleBigEndian(theKey.getAsWord(3));        // LeastSignificant bits
+    AES->KEYR1 = aesKey::swapLittleBigEndian(theKey.getAsWord(2));
+    AES->KEYR2 = aesKey::swapLittleBigEndian(theKey.getAsWord(1));
+    AES->KEYR3 = aesKey::swapLittleBigEndian(theKey.getAsWord(0));        // MostSignificant bits
 #endif
 }
 
 void stm32wle5_aes::setInitializationVector( aesBlock& theBlock) {
 #ifndef generic
-    AES->IVR0 = aesBlock::swapLittleBigEndian(theBlock.asWords()[3]);
-    AES->IVR1 = aesBlock::swapLittleBigEndian(theBlock.asWords()[2]);
-    AES->IVR2 = aesBlock::swapLittleBigEndian(theBlock.asWords()[1]);
-    AES->IVR3 = aesBlock::swapLittleBigEndian(theBlock.asWords()[0]);
+    AES->IVR0 = aesBlock::swapLittleBigEndian(theBlock.getAsWord(3));
+    AES->IVR1 = aesBlock::swapLittleBigEndian(theBlock.getAsWord(2));
+    AES->IVR2 = aesBlock::swapLittleBigEndian(theBlock.getAsWord(1));
+    AES->IVR3 = aesBlock::swapLittleBigEndian(theBlock.getAsWord(0));
 #endif
 }
 
 void stm32wle5_aes::write(aesBlock& theBlock) {
 #ifndef generic
-    AES->DINR = theBlock.asWords()[0];
-    AES->DINR = theBlock.asWords()[1];
-    AES->DINR = theBlock.asWords()[2];
-    AES->DINR = theBlock.asWords()[3];
+    AES->DINR = theBlock.getAsWord(0);
+    AES->DINR = theBlock.getAsWord(1);
+    AES->DINR = theBlock.getAsWord(2);
+    AES->DINR = theBlock.getAsWord(3);
 #endif
 }
 
 void stm32wle5_aes::read(aesBlock& theBlock) {
-#ifndef generic
-    theBlock.asWords()[0] = AES->DOUTR;
-    theBlock.asWords()[1] = AES->DOUTR;
-    theBlock.asWords()[2] = AES->DOUTR;
-    theBlock.asWords()[3] = AES->DOUTR;
-#endif
+    uint32_t tmpWords[4];
+    #ifndef generic
+    tmpWords[0] = AES->DOUTR;
+    tmpWords[1] = AES->DOUTR;
+    tmpWords[2] = AES->DOUTR;
+    tmpWords[3] = AES->DOUTR;
+    #endif
+    theBlock.setFromWordArray(tmpWords);
 }
 
 void stm32wle5_aes::write(const uint32_t* wordsIn) {

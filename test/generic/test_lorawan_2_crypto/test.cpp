@@ -36,8 +36,12 @@ void test_prepareBlockAiTx() {
     LoRaWAN::uplinkFrameCount = 0xFFEEDDCC;
     uint32_t testBlockIndex{7};
     LoRaWAN::prepareBlockAi(testBlock, linkDirection::uplink, testBlockIndex);
-    aesBlock expectedBlock{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x07};
-    TEST_ASSERT_TRUE(expectedBlock == testBlock);
+
+    uint8_t expectedBytes[]{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x07};
+    for (size_t byteIndex = 0; byteIndex < aesBlock::lengthInBytes; ++byteIndex) {
+        TEST_ASSERT_EQUAL_UINT8(expectedBytes[byteIndex], testBlock.getAsByte(byteIndex));
+    }
+//    TEST_ASSERT_TRUE(expectedBlock == testBlock);
 }
 
 void test_prepareBlockAiRx() {
@@ -46,8 +50,12 @@ void test_prepareBlockAiRx() {
     LoRaWAN::downlinkFrameCount = 0xFFEEDDCC;
     uint32_t testBlockIndex{3};
     LoRaWAN::prepareBlockAi(testBlock, linkDirection::downlink, testBlockIndex);
-    aesBlock expectedBlock{0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x78, 0x56, 0x34, 0x12, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x03};
-    TEST_ASSERT_TRUE(expectedBlock == testBlock);
+    uint8_t expectedBytes[]{0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x78, 0x56, 0x34, 0x12, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x03};
+    for (size_t byteIndex = 0; byteIndex < aesBlock::lengthInBytes; ++byteIndex) {
+        TEST_ASSERT_EQUAL_UINT8(expectedBytes[byteIndex], testBlock.getAsByte(byteIndex));
+    }
+
+//    TEST_ASSERT_TRUE(expectedBlock == testBlock);
 }
 
 void test_encryptPayload() {
@@ -166,12 +174,20 @@ void test_keyGeneration() {
     LoRaWAN::generateKeysK1K2();
 
     aesBlock toBeK1;
-    hexAscii::hexStringToByteArray(toBeK1.asBytes(), "fbeed618357133667c85e08f7236a8de", 32U);
+    uint8_t tmpK1Bytes[aesBlock::lengthInBytes];
+    hexAscii::hexStringToByteArray(tmpK1Bytes, "fbeed618357133667c85e08f7236a8de", 32U);
+    toBeK1.setFromByteArray(tmpK1Bytes);
     aesBlock toBeK2;
-    hexAscii::hexStringToByteArray(toBeK2.asBytes(), "f7ddac306ae266ccf90bc11ee46d513b", 32U);
+    uint8_t tmpK2Bytes[aesBlock::lengthInBytes];
+    hexAscii::hexStringToByteArray(tmpK2Bytes, "f7ddac306ae266ccf90bc11ee46d513b", 32U);
+    toBeK2.setFromByteArray(tmpK2Bytes);
 
-    TEST_ASSERT_TRUE(toBeK1 == LoRaWAN::K1);
-    TEST_ASSERT_TRUE(toBeK2 == LoRaWAN::K2);
+    for (size_t byteIndex = 0; byteIndex < aesBlock::lengthInBytes; ++byteIndex) {
+        TEST_ASSERT_EQUAL_UINT8(toBeK1.getAsByte(byteIndex), LoRaWAN::K1.getAsByte(byteIndex));
+    }
+    for (size_t byteIndex = 0; byteIndex < aesBlock::lengthInBytes; ++byteIndex) {
+        TEST_ASSERT_EQUAL_UINT8(toBeK2.getAsByte(byteIndex), LoRaWAN::K2.getAsByte(byteIndex));
+    }
 }
 
 void test_calculateMic() {

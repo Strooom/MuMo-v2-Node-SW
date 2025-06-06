@@ -184,10 +184,8 @@ void mainController::initialize() {
     }
     hexAscii::uint32ToHexString(tmpString, LoRaWAN::DevAddr.asUint32);
     logging::snprintf("DevAddr  : %s\n", tmpString);
-    hexAscii::byteArrayToHexString(tmpString, LoRaWAN::applicationKey.asBytes(), 16);
-    logging::snprintf("AppSKey  : %s\n", tmpString);
-    hexAscii::byteArrayToHexString(tmpString, LoRaWAN::networkKey.asBytes(), 16);
-    logging::snprintf("NwkSKey  : %s\n", tmpString);
+    logging::snprintf("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());
+    logging::snprintf("NwkSKey  : %s\n", LoRaWAN::networkKey.getAsHexString());
 
     logging::snprintf("\n");
     if (!LoRaWAN::isValidState()) {

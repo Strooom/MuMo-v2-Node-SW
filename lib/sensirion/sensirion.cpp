@@ -64,6 +64,7 @@ void sensirion::insertCrc(uint8_t* data, uint32_t count) {
 }
 
 float sensirion::asFloat(const uint8_t* bytes) {
+    // TODO : get rid of this union for type punning - see float.hpp
     union {
         uint8_t asBytes[4];
         float asFloat;
