@@ -147,7 +147,7 @@ void test_setOffsetsAndLengthsRx() {
 }
 
 void test_insertBlockB0_uplink() {
-    LoRaWAN::DevAddr            = 0x12345678;
+    LoRaWAN::DevAddr.setFromWord(0x12345678);
     LoRaWAN::uplinkFrameCount   = 0xFFEEDDCC;
     LoRaWAN::downlinkFrameCount = 0x00112233;
     uint32_t testFramePayloadLength{16};
@@ -168,7 +168,7 @@ void test_insertBlockB0_downlink() {
 }
 
 void test_insertHeaders() {
-    LoRaWAN::DevAddr          = 0x12345678;
+    LoRaWAN::DevAddr.setFromWord(0x12345678);
     LoRaWAN::uplinkFrameCount = 0xFFEEDDCC;
     uint32_t testPayloadLength{0};
     uint32_t testFrameOptionsLength{0};

@@ -163,14 +163,6 @@ void mainController::initialize() {
 
     // measurementCollection::dumpRaw(measurementCollection::getOldestMeasurementOffset() + 26, 256U);
 
-    static constexpr uint32_t tmpStringLength{128};
-    char tmpString[tmpStringLength];
-
-    // static constexpr uint32_t maxNmbrOfMeasurementsToDump{16};
-    // uint32_t bytesConsumed{0};
-    // measurementCollection::printMeasurementGroup(tmpString, measurementCollection::getOldestMeasurementOffset() + 26);
-    // logging::snprintf("%s", tmpString);
-
     gpio::enableGpio(gpio::group::rfControl);
 
     LoRaWAN::initialize();
@@ -182,8 +174,7 @@ void mainController::initialize() {
         LoRaWAN::initializeConfig();
         logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN config\n");
     }
-    hexAscii::uint32ToHexString(tmpString, LoRaWAN::DevAddr.asUint32);
-    logging::snprintf("DevAddr  : %s\n", tmpString);
+    logging::snprintf("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
     logging::snprintf("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());
     logging::snprintf("NwkSKey  : %s\n", LoRaWAN::networkKey.getAsHexString());
 
@@ -541,7 +532,7 @@ void mainController::runCli() {
                             break;
 
                         case cliCommand::gls:
-                            cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.asHexString());
+                            cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
 
                             cli::sendResponse("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());
                             cli::sendResponse("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.toUint32());

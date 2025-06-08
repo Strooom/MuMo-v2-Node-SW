@@ -28,7 +28,7 @@ void test_initialize() {
 }
 
 void test_initialize_config() {
-    TEST_ASSERT_EQUAL(0, LoRaWAN::DevAddr.asUint32);
+    TEST_ASSERT_EQUAL(0, LoRaWAN::DevAddr.getAsWord());
     TEST_ASSERT_EQUAL(1, LoRaWAN::rx1DelayInSeconds);
     for (int i = 0; i < 16; ++i) {
         TEST_ASSERT_EQUAL_UINT8(0, LoRaWAN::applicationKey.getAsByte(i));
@@ -58,15 +58,15 @@ void test_initialize_channels() {
 }
 
 void test_save_restore_config() {
-    LoRaWAN::DevAddr = 0x1234;
+    LoRaWAN::DevAddr.setFromWord(0x1234);
     LoRaWAN::applicationKey.setFromHexString("000102030405060708090A0B0C0D0E0F");
     LoRaWAN::networkKey.setFromHexString("101112131415161718191A1B1C1D1E1F");
     LoRaWAN::saveConfig();
-    LoRaWAN::DevAddr = 0x0;
+    LoRaWAN::DevAddr.setFromWord(0x0);
     LoRaWAN::applicationKey.setFromHexString("00000000000000000000000000000000");
     LoRaWAN::networkKey.setFromHexString("00000000000000000000000000000000");
     LoRaWAN::restoreConfig();
-    TEST_ASSERT_EQUAL(0x1234, LoRaWAN::DevAddr.asUint32);
+    TEST_ASSERT_EQUAL(0x1234, LoRaWAN::DevAddr.getAsWord());
     char tmpKeyAsHexString[33];
    
     TEST_ASSERT_EQUAL_STRING("000102030405060708090A0B0C0D0E0F", LoRaWAN::applicationKey.getAsHexString());
