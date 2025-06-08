@@ -8,14 +8,13 @@
 #include <logging.hpp>
 #include <inttypes.h>
 
-    char uniqueId::uidAsHexAscii[17]{};
-
 #ifndef generic
 #include <main.h>
 #define UID ((UID_typeDef*)UID64_BASE)
 #else
 uint64_t uniqueId::mockUniqueId{0x1122334455667788};
 #endif
+char uniqueId::uidAsHexAscii[17]{};
 
 uint64_t uniqueId::asUint64() {
 #ifndef generic

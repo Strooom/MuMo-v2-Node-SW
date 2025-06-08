@@ -277,7 +277,7 @@ void test_construct_1() {
     LoRaWAN::applicationKey.setFromHexString("E54E4411F4FE8955904197C8D824BC2C");
     LoRaWAN::networkKey.setFromHexString("8DD6FEB76D7754A78538BA5089A834AA");
     LoRaWAN::generateKeysK1K2();
-    LoRaWAN::uplinkFrameCount = 13451;
+    LoRaWAN::uplinkFrameCount.setFromWord(13451);
 
     // LoRaWAN::sendUplink(testFramePort, testClearTextPayload, testClearTextPayloadLengthInBytes);
 
@@ -318,7 +318,7 @@ void test_construct_2() {
     LoRaWAN::applicationKey.setFromHexString("ECF61A5B18BFBF81EF4FA7DBA764CE8B");
     LoRaWAN::networkKey.setFromHexString("34CE07A8DDE81F4C29A0AED7B4F1D7BB");
     LoRaWAN::generateKeysK1K2();
-    LoRaWAN::uplinkFrameCount = 0;
+    LoRaWAN::uplinkFrameCount.setFromWord(0);
 
     // LoRaWAN::sendUplink(testFramePort, testClearTextPayload, testClearTextPayloadLengthInBytes);
 
