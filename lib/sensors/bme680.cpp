@@ -218,7 +218,7 @@ float bme680::calculateBarometricPressure() {
 
 bool bme680::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
-    bool result = (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
+    bool result = (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, static_cast<uint16_t>(addressToTest << 1), halTrials, halTimeout));
     return result;
 
 #else

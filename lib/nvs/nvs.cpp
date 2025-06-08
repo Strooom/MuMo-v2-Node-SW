@@ -87,7 +87,7 @@ void nonVolatileStorage::write(const uint32_t address, const uint8_t data) {
 
 void nonVolatileStorage::readInPage(const uint32_t startAddress, uint8_t* destination, const uint32_t dataLength) {
 #ifndef generic
-    HAL_I2C_Mem_Read(&hi2c2, bankI2cAddress(startAddress) << 1, bankOffset(startAddress), I2C_MEMADD_SIZE_16BIT, destination, static_cast<uint16_t>(dataLength), halIsPresentTimeoutInMs);
+    HAL_I2C_Mem_Read(&hi2c2, static_cast<uint16_t>(bankI2cAddress(startAddress) << 1), bankOffset(startAddress), I2C_MEMADD_SIZE_16BIT, destination, static_cast<uint16_t>(dataLength), halIsPresentTimeoutInMs);
 #else
     (void)memcpy(destination, mockEepromMemory + startAddress, dataLength);
 #endif
@@ -97,7 +97,7 @@ void nonVolatileStorage::writeInPage(const uint32_t startAddress, const uint8_t*
     disableWriteProtect();
 #ifndef generic
     uint8_t* data{const_cast<uint8_t*>(source)};
-    HAL_I2C_Mem_Write(&hi2c2, bankI2cAddress(startAddress) << 1, bankOffset(startAddress), I2C_MEMADD_SIZE_16BIT, data, static_cast<uint16_t>(dataLength), halIsPresentTimeoutInMs);
+    HAL_I2C_Mem_Write(&hi2c2, static_cast<uint16_t>(bankI2cAddress(startAddress) << 1), bankOffset(startAddress), I2C_MEMADD_SIZE_16BIT, data, static_cast<uint16_t>(dataLength), halIsPresentTimeoutInMs);
     HAL_Delay(writeCycleBusyTimeInMs);        // wait for the EEPROM to finish writing
 #else
     (void)memcpy(mockEepromMemory + startAddress, source, dataLength);

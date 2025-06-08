@@ -349,11 +349,13 @@ void executeRomBootloader() {
 
     SysMemBootJump();
     while (true) {
+        // If the bootloader returns, we loop here forever
     }
 }
 
 void Error_Handler(void) {
     __disable_irq();
     while (true) {
+        // Stops here, engage the debugger
     }
 }
