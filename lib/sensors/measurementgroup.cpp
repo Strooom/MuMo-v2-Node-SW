@@ -2,30 +2,7 @@
 #include <float.hpp>
 #include <realtimeclock.hpp>
 #include <stdio.h>
-
-bool measurementGroup::isValid() const {
-    return ((calculateChecksum() == checkSum) && (timestamp >= oldestPossibleTimestamp));
-}
-
-uint8_t measurementGroup::calculateChecksum() const {
-    uint8_t result                  = nmbrOfMeasurements;
-    const uint8_t* timestampAsBytes = realTimeClock::bytesFromTime_t(timestamp);
-    for (uint32_t byteIndex = 0; byteIndex < 4; byteIndex++) {
-        result = result ^ timestampAsBytes[byteIndex];
-    }
-    for (uint32_t measurementIndex = 0; measurementIndex < nmbrOfMeasurements; measurementIndex++) {
-        result                      = result ^ compressDeviceAndChannelIndex(measurements[measurementIndex].deviceIndex, measurements[measurementIndex].channelIndex);
-        const uint8_t* valueAsBytes = floatToBytes(measurements[measurementIndex].value);
-        for (uint32_t byteIndex = 0; byteIndex < 4; byteIndex++) {
-            result = result ^ valueAsBytes[byteIndex];
-        }
-    }
-    return result;
-}
-
-bool measurementGroup::isValidChecksum() const {
-    return (calculateChecksum() == checkSum);
-}
+#include <cstring>
 
 void measurementGroup::snprint(char* tmpString, uint32_t maxLength) const {
     snprintf(tmpString, maxLength, "%u measurements from %s", nmbrOfMeasurements, ctime(&timestamp));
@@ -38,12 +15,26 @@ void measurementGroup::addMeasurement(uint32_t deviceIndex, uint32_t channelInde
         measurements[nmbrOfMeasurements].value        = value;
         nmbrOfMeasurements++;
     }
-    checkSum = calculateChecksum();
 }
 
 void measurementGroup::setTimestamp(time_t newTimestamp) {
     timestamp = newTimestamp;
-    checkSum  = calculateChecksum();
+}
+
+void measurementGroup::toBytes(uint8_t* buffer, uint32_t bufferSize) const {
+    if (bufferSize < lengthInBytes(nmbrOfMeasurements)) {
+        return;
+    }
+
+    buffer[0]                       = nmbrOfMeasurements;
+    const uint8_t* timestampAsBytes = realTimeClock::bytesFromTime_t(timestamp);
+    memcpy(buffer + 1, timestampAsBytes, 4);
+    for (uint32_t measurementIndex = 0; measurementIndex < nmbrOfMeasurements; measurementIndex++) {
+        buffer[5 + (measurementIndex * 5)] = compressDeviceAndChannelIndex(measurements[measurementIndex].deviceIndex, measurements[measurementIndex].channelIndex);
+        const uint8_t* valueAsBytes        = floatToBytes(measurements[measurementIndex].value);
+        memcpy(buffer + 6 + (measurementIndex * 5), valueAsBytes, 4);
+    }
+    buffer[5 + (nmbrOfMeasurements * 5)] = calculateChecksum(buffer, lengthInBytes(nmbrOfMeasurements) - 1);
 }
 
 void measurementGroup::fromBytes(const uint8_t* source) {
@@ -61,16 +52,20 @@ void measurementGroup::fromBytes(const uint8_t* source) {
         return;
     }
 
-    nmbrOfMeasurements = tmpNmbrOfMeasurements;
+    nmbrOfMeasurements              = tmpNmbrOfMeasurements;
     const uint8_t* timestampAsBytes = source + 1;
     timestamp                       = realTimeClock::time_tFromBytes(timestampAsBytes);
-    checkSum                        = source[5];
     for (uint32_t measurementIndex = 0; measurementIndex < nmbrOfMeasurements; measurementIndex++) {
-        measurements[measurementIndex].deviceIndex  = source[6 + (measurementIndex * 5)];
-        measurements[measurementIndex].channelIndex = source[7 + (measurementIndex * 5)];
-        measurements[measurementIndex].value        = bytesToFloat(source + 8 + (measurementIndex * 5));
+        measurements[measurementIndex].deviceIndex  = getDeviceIndex(source[5 + (measurementIndex * 5)]);
+        measurements[measurementIndex].channelIndex = getChannelIndex(source[5 + (measurementIndex * 5)]);
+        measurements[measurementIndex].value        = bytesToFloat(source + 6 + (measurementIndex * 5));
     }
 }
 
-void measurementGroup::toBytes(uint8_t* buffer, uint32_t bufferSize) const {
+uint8_t measurementGroup::calculateChecksum(const uint8_t* buffer, uint32_t bufferSize) {
+    uint8_t result{0};
+    for (uint32_t index = 0; index < bufferSize; index++) {
+        result = result ^ buffer[index];
+    }
+    return result;
 }

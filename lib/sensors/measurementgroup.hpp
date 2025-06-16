@@ -9,7 +9,6 @@
 
 class measurementGroup {
   public:
-    bool isValid() const;
     void snprint(char* tmpString, uint32_t maxLength) const;
     void setTimestamp(time_t newTimestamp);
     void addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float value);
@@ -18,8 +17,8 @@ class measurementGroup {
     static uint32_t lengthInBytes(uint8_t someNmbrOfMeasurements){
       return ((someNmbrOfMeasurements * 5U) + 6U);        // 1 byte for nmbrOfMeasurements, 4 bytes for timestamp, 1 byte for checksum + 5 bytes per measurement : 1 byte DeviceChannelIndex + 4 byte float value
       };
-    uint8_t calculateChecksum() const;
-    bool isValidChecksum() const;
+    static uint8_t calculateChecksum(const uint8_t* buffer, uint32_t bufferSize);
+  
 
     static constexpr uint32_t maxNmbrOfMeasurements{16};
     static constexpr uint32_t oldestPossibleTimestamp{1577836800};        // Jan 01 2020 00:00:00 GMT+0000 // 0x5E0BE100
@@ -37,7 +36,7 @@ class measurementGroup {
         uint8_t channelIndex;
         float value;
     } measurements[maxNmbrOfMeasurements];
-    uint8_t checkSum{defaultChecksum};
+    
     static uint8_t compressDeviceAndChannelIndex(uint8_t deviceIndex, uint8_t channelIndex) {
         return (((deviceIndex << 3) & 0b11111000) | (channelIndex & 0b00000111));
     };
