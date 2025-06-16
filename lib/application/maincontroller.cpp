@@ -615,13 +615,13 @@ void mainController::runCli() {
                             }
                             break;
 
-                            // case cliCommand::sb:
-                            //     cli::sendResponse("set batteryType : sb 0\n");
-                            //     break;
+                            case cliCommand::sb:
+                                cli::sendResponse("set batteryType not yet implemented\n");
+                                break;
 
-                            // case cliCommand::sr:
-                            //     cli::sendResponse("set radioType : sr 0\n");
-                            //     break;
+                            case cliCommand::sr:
+                                cli::sendResponse("set radioType not yet implemented\n");
+                                break;
 
                         default:
                             cli::sendResponse("unknown command : ");
