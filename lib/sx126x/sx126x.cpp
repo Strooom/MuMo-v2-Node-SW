@@ -140,7 +140,7 @@ void sx126x::setModulationParameters(spreadingFactor theSpreadingFactor) {
     commandParameters[0] = static_cast<uint8_t>(theSpreadingFactor);        //
     commandParameters[1] = 0x4;                                             // LoRaWAN bandwidth is fixed to 125 kHz
     commandParameters[2] = 0x01;                                            // LoRaWAN is fixed to coding rate 4/5
-    commandParameters[3] = 0x00;                                            // TODO ?? LowDatarateOptimize // why would you NOT want to do this ??
+    commandParameters[3] = 0x00;                                            // LowDatarateOptimize // why would you NOT want to do this ??
                                                                             // the remaining 4 bytes are empty 0x00 for LoRa modulation
     executeSetCommand(command::setModulationParams, commandParameters, nmbrCommandParameters);
 }
@@ -198,10 +198,6 @@ void sx126x::initializeRadio() {
 
     commandParameters[0] = 0x01;        // DCDC powermode
     executeSetCommand(command::setRegulatorMode, commandParameters, 1);
-
-    // TODO : add SMPS maximum drive capability 60 mA (io 100mA default)
-    //    commandParameters[0] = 0x02;
-    //    writeRegisters(register::smpsMaximumDrive, commandParameters, 1);
 
     commandParameters[0] = 0x1E;
     writeRegisters(registerAddress ::TxClampConfig, commandParameters, 1);

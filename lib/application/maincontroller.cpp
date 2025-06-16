@@ -156,12 +156,8 @@ void mainController::initialize() {
     }
     logging::snprintf("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
 
-    // measurementCollection::initialize();
-    // measurementCollection::findMeasurementsInEeprom();
-    // uint32_t nmbrOfBytes = measurementCollection::nmbrOfMeasurementBytes();
-    // logging::snprintf("%d bytes of measurements found\n", nmbrOfBytes);
-
-    // measurementCollection::dumpRaw(measurementCollection::getOldestMeasurementOffset() + 26, 256U);
+    measurementCollection::initialize();
+    measurementCollection::findMeasurementsInEeprom();
 
     gpio::enableGpio(gpio::group::rfControl);
 
@@ -544,6 +540,10 @@ void mainController::runCli() {
                             for (uint32_t loRaTxChannelIndex = 0; loRaTxChannelIndex < loRaTxChannelCollection::maxNmbrChannels; loRaTxChannelIndex++) {
                                 cli::sendResponse("Chan[%02u] : %u Hz, %u, %u\n", loRaTxChannelIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].frequencyInHz, loRaTxChannelCollection::channel[loRaTxChannelIndex].minimumDataRateIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].maximumDataRateIndex);
                             }
+                            break;
+
+                        case cliCommand::gms:
+                            logging::snprintf("%d bytes of measurements found\n", measurementCollection::nmbrOfMeasurementBytes());
                             break;
 
                         case cliCommand::rml:
