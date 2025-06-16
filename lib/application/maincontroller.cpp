@@ -551,24 +551,60 @@ void mainController::runCli() {
                             cli::sendResponse("mac layer reset\n");
                             break;
 
-                            // case cliCommand::sda:
-                            //     cli::sendResponse("set device address : sda 260BF180\n");
-                            //     break;
+                        case cliCommand::sda:
+                            if (theCommand.nmbrOfArguments == 1) {
+                                char newDevAddrAsHex[deviceAddress::lengthAsHexAscii + 1]{0};
+                                size_t copyLen = strnlen(theCommand.arguments[0], maxNameLength);
+                                if (copyLen > maxNameLength) {
+                                    copyLen = maxNameLength;
+                                }
+                                memcpy(newDevAddrAsHex, theCommand.arguments[0], copyLen);
+                                LoRaWAN::DevAddr.setFromHexString(newDevAddrAsHex);
+                                LoRaWAN::saveConfig();
+                                cli::sendResponse("device address set : %s\n", LoRaWAN::DevAddr.getAsHexString());
+                            } else {
+                                cli::sendResponse("invalid arguments\n");
+                            }
+                            break;
 
-                            // case cliCommand::snk:
-                            //     cli::sendResponse("set network key : snk 0DBC6EF938B83EB4F83C28E3CA7B4132\n");
-                            //     break;
+                        case cliCommand::snk:
+                            if (theCommand.nmbrOfArguments == 1) {
+                                char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
+                                size_t copyLen = strnlen(theCommand.arguments[0], maxNameLength);
+                                if (copyLen > maxNameLength) {
+                                    copyLen = maxNameLength;
+                                }
+                                memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);
+                                LoRaWAN::networkKey.setFromHexString(newKeyAsHex);
+                                LoRaWAN::saveConfig();
+                                cli::sendResponse("network key set : %s\n", LoRaWAN::networkKey.getAsHexString());
+                            } else {
+                                cli::sendResponse("invalid arguments\n");
+                            }
+                            break;
 
-                            // case cliCommand::sak:
-                            //     cli::sendResponse("set application key : ssk 7E22AA54A7F4C0842861A13F1D161DE2\n");
-                            //     break;
+                        case cliCommand::sak:
+                            if (theCommand.nmbrOfArguments == 1) {
+                                char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
+                                size_t copyLen = strnlen(theCommand.arguments[0], maxNameLength);
+                                if (copyLen > maxNameLength) {
+                                    copyLen = maxNameLength;
+                                }
+                                memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);
+                                LoRaWAN::applicationKey.setFromHexString(newKeyAsHex);
+                                LoRaWAN::saveConfig();
+                                cli::sendResponse("application key set : %s\n", LoRaWAN::applicationKey.getAsHexString());
+                            } else {
+                                cli::sendResponse("invalid arguments\n");
+                            }
+                            break;
 
                         case cliCommand::sn:
                             if (theCommand.nmbrOfArguments == 1) {
-                                uint8_t newName[9]{0};
-                                size_t copyLen = strlen(theCommand.arguments[0]);
-                                if (copyLen > sizeof(newName) - 1) {
-                                    copyLen = sizeof(newName) - 1;
+                                uint8_t newName[maxNameLength + 1]{0};
+                                size_t copyLen = strnlen(theCommand.arguments[0], maxNameLength);
+                                if (copyLen > maxNameLength) {
+                                    copyLen = maxNameLength;
                                 }
                                 memcpy(newName, theCommand.arguments[0], copyLen);
                                 settingsCollection::saveByteArray(newName, settingsCollection::settingIndex::name);

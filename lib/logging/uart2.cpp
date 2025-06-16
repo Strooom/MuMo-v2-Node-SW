@@ -134,7 +134,6 @@ void uart2::transmit(const char* data, const uint32_t length) {
     startOrContinueTx();
 }
 
-
 uint32_t uart2::commandCount() {
     uint32_t result{0};
 #ifndef generic
@@ -165,4 +164,8 @@ void uart2::receive(char* data) {
     }
     data[index]    = 0;
     commandCounter = 0;
+}
+
+bool uart2::txBufferLessThanHalfFull() {
+    return txBuffer.getLevel() < (responseBufferLength / 2);
 }

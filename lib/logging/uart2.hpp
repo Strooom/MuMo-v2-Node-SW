@@ -14,6 +14,7 @@ class uart2 {
     static constexpr uint32_t commandBufferLength{cliCommand::maxCommandLineLength};
     static constexpr uint32_t responseBufferLength{2048};
     static constexpr uint8_t commandTerminator{'\n'};
+    static bool txBufferLessThanHalfFull();
 
     static void transmit(const char* data);
     static void transmit(const uint8_t* data);

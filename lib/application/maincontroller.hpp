@@ -16,7 +16,8 @@
 static constexpr bool forceInitialization{false};
 static constexpr batteryType defaultBatteryType{batteryType::alkaline_1200mAh};
 static constexpr radioType defaultRadioType{radioType::lowPower};
-static constexpr char toBeName[9] = "noName";
+static constexpr uint32_t maxNameLength{8U};        // maximum length of the node name, including the null terminator
+static constexpr char toBeName[maxNameLength + 1] = "noName";
 
 class mainController {
   public:
