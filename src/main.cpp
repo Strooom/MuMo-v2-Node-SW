@@ -343,7 +343,7 @@ void executeRomBootloader() {
     }
     __enable_irq();
 
-    SysMemBootJump = (void (*)(void))(*((uint32_t *)((BootAddr + 4))));
+    SysMemBootJump = (void (*)(void))(*((uint32_t *)(BootAddr + 4)));
 
     __set_MSP(*(uint32_t *)BootAddr);        // Set the main stack pointer to the boot loader stack
 
