@@ -194,7 +194,7 @@ float bme680::calculateRelativeHumidity() {
 
 float bme680::calculateBarometricPressure() {
     float var1   = ((calibrationCoefficientTemperature4 / 2.0f) - 64000.0f);
-    float var2   = var1 * var1 * ((calibrationCoefficientPressure6) / 131072.0f);
+    float var2   = var1 * var1 * (calibrationCoefficientPressure6 / 131072.0f);
     var2         = var2 + (var1 * calibrationCoefficientPressure5 * 2.0f);
     var2         = (var2 / 4.0f) + (calibrationCoefficientPressure4 * 65536.0f);
     var1         = ((((calibrationCoefficientPressure3 * var1 * var1) / 16384.0f) + (calibrationCoefficientPressure2 * var1)) / 524288.0f);

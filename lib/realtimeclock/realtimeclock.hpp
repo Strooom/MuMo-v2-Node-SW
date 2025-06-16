@@ -15,8 +15,8 @@ class realTimeClock {
     static void set(const tm& brokenDownTime);
     static time_t get();
     static const uint8_t* bytesFromTime_t(const time_t input);
-    static const time_t time_tFromBytes(const uint8_t* input);
-    static const time_t unixTimeFromGpsTime(const uint32_t gpsTime);
+    static  time_t time_tFromBytes(const uint8_t* input);
+    static  time_t unixTimeFromGpsTime(const uint32_t gpsTime);
     static bool needsSync();
     static constexpr uint32_t rtcSyncPeriodInTicks = 2 * 60 * 24 * 7;
     static uint32_t tickCounter;
