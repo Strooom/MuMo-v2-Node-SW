@@ -14,7 +14,7 @@ time_t realTimeClock::mockRealTimeClock{0};
 uint8_t realTimeClock::asBytes[4];
 uint32_t realTimeClock::tickCounter{0};
 
-time_t realTimeClock::unixTimeFromGpsTime(uint32_t gpsTime) {
+time_t realTimeClock::unixTimeFromGpsTime(const uint32_t gpsTime) {
     static constexpr uint32_t unixToGpsOffset{315964800};
     static constexpr uint32_t leapSecondsOffset{18};
     return (gpsTime + unixToGpsOffset - leapSecondsOffset);
@@ -86,7 +86,7 @@ time_t realTimeClock::get() {
 #endif
 }
 
-uint8_t* realTimeClock::bytesFromTime_t(const time_t input) {
+const uint8_t* realTimeClock::bytesFromTime_t(const time_t input) {
     auto asUint32 = static_cast<uint32_t>(input);
     std::memcpy(asBytes, &asUint32, 4);
     return asBytes;
