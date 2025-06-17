@@ -141,7 +141,6 @@ void mainController::initialize() {
 
     sensorDeviceCollection::discover();
 
-
     if (bme680::isPresent()) {
         sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, defaultPrescaler);
         sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, defaultPrescaler);
@@ -166,8 +165,8 @@ void mainController::initialize() {
 
     // measurementCollection::dumpRaw(measurementCollection::getOldestMeasurementOffset() + 26, 256U);
 
-    static constexpr uint32_t tmpStringLength{128};
-    char tmpString[tmpStringLength];
+    // static constexpr uint32_t tmpStringLength{128};
+    // char tmpString[tmpStringLength];
 
     // static constexpr uint32_t maxNmbrOfMeasurementsToDump{16};
     // uint32_t bytesConsumed{0};
@@ -563,9 +562,22 @@ void mainController::runCli() {
                             cli::sendResponse("mac layer reset\n");
                             break;
 
-                            // case cliCommand::sda:
-                            //     cli::sendResponse("set device address : sda 260BF180\n");
-                            //     break;
+                        case cliCommand::sda:
+                            if (theCommand.nmbrOfArguments == 1) {
+                                char newDevAddrAsHex[deviceAddress::lengthAsHexAscii + 1]{0};
+                                size_t copyLen = strnlen(theCommand.arguments[0], deviceAddress::lengthAsHexAscii);
+                                if (copyLen > deviceAddress::lengthAsHexAscii) {
+                                    copyLen = deviceAddress::lengthAsHexAscii;
+                                }
+                                memcpy(newDevAddrAsHex, theCommand.arguments[0], copyLen);
+                                LoRaWAN::DevAddr.setFromHexString(newDevAddrAsHex);
+                                LoRaWAN::saveConfig();
+
+                                cli::sendResponse("device address set : %s\n", LoRaWAN::DevAddr.getAsHexString());
+                            } else {
+                                cli::sendResponse("invalid arguments\n");
+                            }
+                            break;
 
                         case cliCommand::snk:
                             if (theCommand.nmbrOfArguments == 1) {
