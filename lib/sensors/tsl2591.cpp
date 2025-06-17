@@ -86,7 +86,7 @@ float tsl2591::calculateLux() {
 
 bool tsl2591::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
-    return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
+    return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, static_cast<uint16_t>(addressToTest << 1), halTrials, halTimeout));
 #else
     return mockTSL2591Present;
 #endif

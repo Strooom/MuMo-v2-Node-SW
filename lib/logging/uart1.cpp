@@ -68,24 +68,14 @@ void uart1::initialize() {
     PeriphClkInitStruct.Usart1ClockSelection     = RCC_USART1CLKSOURCE_PCLK2;
     HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
     __HAL_RCC_USART1_CLK_ENABLE();
-
-    // (void)USART1->RDR;        // read RDR to clear it
-
     USART1->BRR = 0x8B;          // 115200 baud
     USART1->ICR = 0xFFFF;        // clear all pending interrupt flags
-    // USART1->CR1 = USART1->CR1 | USART_CR1_RXNEIE_RXFNEIE;        // enable Receive data register not empty interrupt
     HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
-    // USART1->CR1 = USART1->CR1 | USART_CR1_RE;        // enable Rx direction
     USART1->CR1 = USART1->CR1 | USART_CR1_TE;        // enable Tx direction
     USART1->CR1 = USART1->CR1 | USART_CR1_UE;        // enable UART1
 #endif
     gpio::enableGpio(gpio::group::uart1);
-#ifndef generic
-    // HAL_Delay(10);            // after enabling the UART and IOs, some spurious character may be received. Wait a little, then clear the rxBuffer.
-    // (void)USART1->RDR;        // read RDR to clear it
-
-#endif
 }
 
 // ######################################################
@@ -95,11 +85,7 @@ void uart1::initialize() {
 void uart1::rxNotEmpty() {
 #ifndef generic
     while (USART1->ISR & USART_CR1_RXNEIE_RXFNEIE) {
-        uint8_t receivedChar = static_cast<uint8_t>(USART1->RDR);
-#else
-    uint8_t receivedChar = mockReceivedChar;        // currently the data received on uart1 is ignored, as it us only used for debug/trace output
-#endif
-#ifndef generic
+        (void)USART1->RDR;        // read RDR to clear it
     }
 #endif
 }
@@ -162,9 +148,3 @@ void uart1::transmit(const uint8_t* data, const uint32_t length) {
     }
     startOrContinueTx();
 }
-
-// void uart1::transmit(const uint8_t* data, uint32_t dataLength) {
-// #ifndef generic
-//     HAL_UART_Transmit(&huart1, data, static_cast<const uint16_t>(dataLength), 1000);
-// #endif
-// }
