@@ -15,6 +15,10 @@ uint32_t* aesKey::asWords() {
 void aesKey::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
     // old
     (void)memcpy(key.asByte, bytes, lengthInBytes);
+
+    // mid
+    (void)memcpy(key.asUint32, key.asByte, lengthInBytes);
+
     // new
     (void)memcpy(keyAsBytes, bytes, lengthInBytes);
     syncWordsFromBytes();
@@ -36,6 +40,9 @@ void aesKey::setFromHexString(const char* string) {
     uint8_t tmpBytes[lengthInBytes];
     hexAscii::hexStringToByteArray(tmpBytes, string, 32U);
     (void)memcpy(key.asByte, tmpBytes, lengthInBytes);
+
+    // mid
+    (void)memcpy(key.asUint32, key.asByte, lengthInBytes);
 
     //new
     hexAscii::hexStringToByteArray(keyAsBytes, string, 32U);

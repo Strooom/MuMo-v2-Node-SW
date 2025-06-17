@@ -37,9 +37,9 @@ class aesKey {
     void syncWordsFromBytes();
     void syncHexStringFromBytes();
 
-    union {
-        uint8_t asByte[lengthInBytes]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};        // interprete the data as 16 bytes
-        uint32_t asUint32[lengthInWords];                                                                                                     // interprete the data as 4 32bit words
+    struct {
+        uint8_t asByte[lengthInBytes]{};
+        uint32_t asUint32[lengthInWords]{};
     } key;
 
     // These are 3 representations of the same key data, in different formats for easy retrieval. They are synced when setting the key.
