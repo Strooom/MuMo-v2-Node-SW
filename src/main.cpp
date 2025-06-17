@@ -343,17 +343,19 @@ void executeRomBootloader() {
     }
     __enable_irq();
 
-    SysMemBootJump = (void (*)(void))(*((uint32_t *)((BootAddr + 4))));
+    SysMemBootJump = (void (*)(void))(*((uint32_t *)(BootAddr + 4)));
 
     __set_MSP(*(uint32_t *)BootAddr);        // Set the main stack pointer to the boot loader stack
 
     SysMemBootJump();
     while (true) {
+        // If the bootloader returns, we loop here forever
     }
 }
 
 void Error_Handler(void) {
     __disable_irq();
     while (true) {
+        // Stops here, engage the debugger
     }
 }
