@@ -22,10 +22,6 @@
 #include <linearbuffer.hpp>
 #include <maccommand.hpp>
 
-static constexpr uint32_t toBeDevAddr      = 0x260B595F;
-static constexpr char toBeNetworkKey[]     = "34003F8087158F6EA7036512F141BED3";
-static constexpr char toBeApplicationKey[] = "9912CA0E3F0D9E6DCD28F60A33ADBCA0";
-
 static constexpr uint32_t toBeCurrentDataRateIndex = 5;
 static constexpr uint32_t toBeRx1DataRateOffset  = 0;
 static constexpr uint32_t toBeRx2DataRateIndex  = 3;
@@ -86,8 +82,6 @@ class LoRaWAN {
     static void dumpTransmitParameterSetupRequest();
     static void dumpDownlinkChannelRequest();
     static void dumpDeviceTimeAnswer();
-
-    static void correctDevAddrEndianness();
 
     static uint32_t margin;
     static uint32_t gatewayCount;

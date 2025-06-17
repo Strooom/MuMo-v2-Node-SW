@@ -23,6 +23,12 @@ class deviceAddress {
 
   private:
     // These are 3 representations of the same address data, in different formats for easy retrieval and conversion. They are synced when setting the address.
+    // Example : "26 0B 17 23" on The Things Network
+    // 1. asHexString : "260B1723"
+    // 2. as array of bytes : {0x26, 0x0B, 0x17, 0x23}
+    //    asByte(0) = 0x26, asByte(1) = 0x0B, asByte(2) = 0x17, asByte(3) = 0x23
+    // 3. asWord = 0x23170B26
+
     uint8_t devAddrAsBytes[lengthInBytes]{};
     uint32_t devAddrAsWord{};
     char devAddrAsHexString[lengthAsHexAscii + 1]{};

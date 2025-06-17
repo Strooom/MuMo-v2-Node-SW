@@ -1,10 +1,8 @@
 #include <unity.h>
 #include <framecount.hpp>
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_initialize() {
     frameCount testFrameCount1;
@@ -14,6 +12,19 @@ void test_initialize() {
     TEST_ASSERT_EQUAL(0x12345678, testFrameCount2.getAsWord());
 }
 
+void test_setGet() {
+    frameCount testFrameCount;
+    testFrameCount.setFromWord(287454020);        // 0x11223344
+    TEST_ASSERT_EQUAL(0x44, testFrameCount.getAsByte(0));
+    TEST_ASSERT_EQUAL(0x33, testFrameCount.getAsByte(1));
+    TEST_ASSERT_EQUAL(0x22, testFrameCount.getAsByte(2));
+    TEST_ASSERT_EQUAL(0x11, testFrameCount.getAsByte(3));
+
+    uint8_t testbytes[4] = {0xDD, 0xCC, 0xBB, 0xAA};
+    testFrameCount.setFromByteArray(testbytes);
+    TEST_ASSERT_EQUAL(2864434397, testFrameCount.getAsWord());
+    
+}
 
 void test_operatorIncrement() {
     frameCount testFrameCount;
@@ -43,6 +54,7 @@ int main(int argc, char **argv) {
 #endif
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
+    RUN_TEST(test_setGet);
     RUN_TEST(test_operatorIncrement);
     RUN_TEST(test_guessFromUint16);
     UNITY_END();

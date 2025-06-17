@@ -19,9 +19,9 @@ void test_initialize() {
 
 void test_setFromByteArray() {
     deviceAddress testAddress;
-    uint8_t testBytes[4]{0x11, 0x22, 0x33, 0x44};
-    uint32_t expectedWord{0x44332211};
-    const char* expectedHexString = "11223344";
+    uint8_t testBytes[4]{0x26, 0x0B, 0xF1, 0x80};
+    uint32_t expectedWord{0x80F10B26};
+    const char* expectedHexString = "260BF180";
     testAddress.setFromByteArray(testBytes);
 
     for (int i = 0; i < 4; ++i) {
@@ -47,9 +47,9 @@ void test_setFromWord() {
 
 void test_setFromHexString() {
     deviceAddress testAddress;
-    const char* testHexString = "11223344";
-    uint8_t expectedBytes[4]{0x11, 0x22, 0x33, 0x44};
-    uint32_t expectedWord{0x44332211};
+    const char* testHexString = "260BF180";
+    uint8_t expectedBytes[4]{0x26, 0x0B, 0xF1, 0x80};
+    uint32_t expectedWord{0x80F10B26};
     testAddress.setFromHexString(testHexString);
 
     for (int i = 0; i < 4; ++i) {

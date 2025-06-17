@@ -87,24 +87,23 @@ void LoRaWAN::restoreConfig() {
 }
 
 bool LoRaWAN::isValidConfig() {
-    if ((DevAddr.getAsByte(0) == 0x26) && (DevAddr.getAsByte(1) == 0x0B)) {        // This detects an old incorrectly stored DevAddr
-        return false;
-    }
-
-    for (uint32_t index = 0; index < aesKey::lengthInBytes; index++) {
-        if (applicationKey.getAsByte(index) != nonVolatileStorage::blankEepromValue || networkKey.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
-            return false;
+    bool validDeviceAddress{false};
+    bool validNetworkKey{false};
+    bool validApplicationKey{false};
+    for (uint32_t index = 0; index < deviceAddress::lengthInBytes; index++) {
+        if (DevAddr.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
+            validDeviceAddress = true;
         }
     }
-    return true;
-}
-
-void LoRaWAN::initializeConfig() {
-    LoRaWAN::DevAddr.setFromWord(toBeDevAddr);
-    LoRaWAN::networkKey.setFromHexString(toBeNetworkKey);
-    LoRaWAN::applicationKey.setFromHexString(toBeApplicationKey);
-    LoRaWAN::saveConfig();
-    LoRaWAN::restoreConfig();
+    for (uint32_t index = 0; index < aesKey::lengthInBytes; index++) {
+        if (applicationKey.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
+            validApplicationKey = true;
+        }
+        if (networkKey.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
+            validNetworkKey = true;
+        }
+    }
+    return validDeviceAddress && validNetworkKey && validApplicationKey;
 }
 
 void LoRaWAN::saveConfig() {
@@ -121,11 +120,11 @@ void LoRaWAN::saveConfig() {
 }
 
 void LoRaWAN::restoreState() {
-    rx1DelayInSeconds    = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1Delay);
+    rx1DelayInSeconds = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1Delay);
     uint32_t tmpFrameCount;
-    tmpFrameCount        = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::uplinkFrameCounter);
+    tmpFrameCount = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::uplinkFrameCounter);
     uplinkFrameCount.setFromWord(tmpFrameCount);
-    tmpFrameCount        = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::downlinkFrameCounter);
+    tmpFrameCount = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::downlinkFrameCounter);
     downlinkFrameCount.setFromWord(tmpFrameCount);
     currentDataRateIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::dataRate);
     rx1DataRateOffset    = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1DataRateOffset);
@@ -249,10 +248,10 @@ void LoRaWAN::insertPayload(const uint8_t data[], const uint32_t length) {
 
 void LoRaWAN::insertHeaders(const uint8_t* theFrameOptions, const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort) {
     rawMessage[macHeaderOffset]         = macHeader(frameType::unconfirmedDataUp).asUint8();
-    rawMessage[deviceAddressOffset]     = DevAddr.getAsByte(0);
-    rawMessage[deviceAddressOffset + 1] = DevAddr.getAsByte(1);
-    rawMessage[deviceAddressOffset + 2] = DevAddr.getAsByte(2);
-    rawMessage[deviceAddressOffset + 3] = DevAddr.getAsByte(3);
+    rawMessage[deviceAddressOffset]     = DevAddr.getAsByte(3);
+    rawMessage[deviceAddressOffset + 1] = DevAddr.getAsByte(2);
+    rawMessage[deviceAddressOffset + 2] = DevAddr.getAsByte(1);
+    rawMessage[deviceAddressOffset + 3] = DevAddr.getAsByte(0);
 
     if (theFrameOptionslength > 15) {
         logging::snprintf(logging::source::error, "Error : frameOptionsLength > 15\n");
@@ -285,10 +284,10 @@ void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCount)
     rawMessage[3]  = 0;
     rawMessage[4]  = 0;
     rawMessage[5]  = static_cast<uint8_t>(theDirection);
-    rawMessage[6]  = DevAddr.getAsByte(0);
-    rawMessage[7]  = DevAddr.getAsByte(1);
-    rawMessage[8]  = DevAddr.getAsByte(2);
-    rawMessage[9]  = DevAddr.getAsByte(3);
+    rawMessage[6]  = DevAddr.getAsByte(3);
+    rawMessage[7]  = DevAddr.getAsByte(2);
+    rawMessage[8]  = DevAddr.getAsByte(1);
+    rawMessage[9]  = DevAddr.getAsByte(0);
     rawMessage[10] = aFrameCount.getAsByte(0);
     rawMessage[11] = aFrameCount.getAsByte(1);
     rawMessage[12] = aFrameCount.getAsByte(2);
@@ -329,16 +328,16 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
     tmpBlockBytes[3] = 0x00;
     tmpBlockBytes[4] = 0x00;
     tmpBlockBytes[5] = static_cast<uint8_t>(theDirection);
-    tmpBlockBytes[6] = DevAddr.getAsByte(0);                // LSByte
-    tmpBlockBytes[7] = DevAddr.getAsByte(1);                //
-    tmpBlockBytes[8] = DevAddr.getAsByte(2);                //
-    tmpBlockBytes[9] = DevAddr.getAsByte(3);                // MSByte
-    if (theDirection == linkDirection::uplink) {          //
+    tmpBlockBytes[6] = DevAddr.getAsByte(3);
+    tmpBlockBytes[7] = DevAddr.getAsByte(2);
+    tmpBlockBytes[8] = DevAddr.getAsByte(1);
+    tmpBlockBytes[9] = DevAddr.getAsByte(0);
+    if (theDirection == linkDirection::uplink) {
         tmpBlockBytes[10] = uplinkFrameCount.getAsByte(0);          // LSByte
         tmpBlockBytes[11] = uplinkFrameCount.getAsByte(1);          //
         tmpBlockBytes[12] = uplinkFrameCount.getAsByte(2);          //
         tmpBlockBytes[13] = uplinkFrameCount.getAsByte(3);          // MSByte
-    } else {                                              //
+    } else {                                                        //
         tmpBlockBytes[10] = downlinkFrameCount.getAsByte(0);        // LSByte
         tmpBlockBytes[11] = downlinkFrameCount.getAsByte(1);        //
         tmpBlockBytes[12] = downlinkFrameCount.getAsByte(2);        //
@@ -1114,7 +1113,7 @@ messageType LoRaWAN::decodeMessage() {
     // 2. Extract & guess the downLinkFrameCount, as we need this to check the MIC
     uint16_t receivedDownlinkFramecount = receivedFramecount();
     frameCount guessedDownlinkFramecount;
-    guessedDownlinkFramecount = downlinkFrameCount;
+    guessedDownlinkFramecount.setFromWord(downlinkFrameCount.getAsWord());
     guessedDownlinkFramecount.guessFromUint16(receivedDownlinkFramecount);
     logging::snprintf(logging::source::lorawanMac, "receivedFramecount = %u, lastFramecount = %u, guessedFramecount = %u\n", receivedDownlinkFramecount, downlinkFrameCount.getAsWord(), guessedDownlinkFramecount.getAsWord());
 
@@ -1284,7 +1283,7 @@ void LoRaWAN::dumpRawMessage() {
         logging::snprintf("[%03u]      : FramePort %02X\n", (framePortOffset - macHeaderOffset), rawMessage[framePortOffset]);
     }
     dumpRawMessagePayload();
-    logging::snprintf("[%03u..%03u] : MIC %02X %02X %02X %02X\n\n", (micOffset - macHeaderOffset), (micOffset - macHeaderOffset + 4), rawMessage[micOffset], rawMessage[micOffset + 1], rawMessage[micOffset + 2], rawMessage[micOffset + 3]);
+    logging::snprintf("[%03u..%03u] : MIC %02X %02X %02X %02X\n\n", (micOffset - macHeaderOffset), (micOffset - macHeaderOffset + 3), rawMessage[micOffset], rawMessage[micOffset + 1], rawMessage[micOffset + 2], rawMessage[micOffset + 3]);
 }
 
 void LoRaWAN::dumpRawMessageHeader() {
@@ -1371,17 +1370,6 @@ void LoRaWAN::dumpDeviceTimeAnswer() {
 
 void LoRaWAN::appendMacCommand(macCommand theMacCommand) {
     LoRaWAN::macOut.append(static_cast<uint8_t>(theMacCommand));
-}
-
-// This function can be removed once all devices with wrong DevAddr are updated
-
-void LoRaWAN::correctDevAddrEndianness() {
-    if ((DevAddr.getAsByte(0) == 0x26) && (DevAddr.getAsByte(1) == 0x0B)) {
-        uint32_t oldAddress = DevAddr.getAsWord();
-        uint32_t newAddress = swapLittleBigEndian(oldAddress);
-        DevAddr.setFromWord(newAddress);
-        saveConfig();
-    }
 }
 
 void LoRaWAN::resetMacLayer() {

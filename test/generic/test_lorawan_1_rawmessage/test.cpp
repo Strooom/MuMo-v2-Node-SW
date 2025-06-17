@@ -18,10 +18,7 @@ void setUp(void) {
     memset(allOnes, 0xFF, LoRaWAN::rawMessageLength);
 }
 
-void tearDown(void) {        // after each test
-}
-
-
+void tearDown(void) {}
 
 void test_constants() {
     TEST_ASSERT_EQUAL(16, LoRaWAN::b0BlockLength);
@@ -147,14 +144,14 @@ void test_setOffsetsAndLengthsRx() {
 }
 
 void test_insertBlockB0_uplink() {
-    LoRaWAN::DevAddr.setFromWord(0x12345678);
+    LoRaWAN::DevAddr.setFromHexString("260BF180");
     LoRaWAN::uplinkFrameCount.setFromWord(0xFFEEDDCC);
     LoRaWAN::downlinkFrameCount.setFromWord(0x00112233);
     uint32_t testFramePayloadLength{16};
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testFramePayloadLength, 0);
     LoRaWAN::insertBlockB0(linkDirection::uplink, LoRaWAN::uplinkFrameCount);
-    const uint8_t expectedTx[LoRaWAN::b0BlockLength]{0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, (LoRaWAN::macHeaderLength + LoRaWAN::frameHeaderLength + LoRaWAN::framePortLength + testFramePayloadLength)};
+    const uint8_t expectedTx[LoRaWAN::b0BlockLength]{0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xF1, 0x0B, 0x26, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, (LoRaWAN::macHeaderLength + LoRaWAN::frameHeaderLength + LoRaWAN::framePortLength + testFramePayloadLength)};
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedTx, LoRaWAN::rawMessage, LoRaWAN::b0BlockLength);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage + LoRaWAN::b0BlockLength, (LoRaWAN::rawMessageLength - LoRaWAN::b0BlockLength));
 }
@@ -168,7 +165,7 @@ void test_insertBlockB0_downlink() {
 }
 
 void test_insertHeaders() {
-    LoRaWAN::DevAddr.setFromWord(0x12345678);
+    LoRaWAN::DevAddr.setFromHexString("260BF180");
     LoRaWAN::uplinkFrameCount.setFromWord(0xFFEEDDCC);
     uint32_t testPayloadLength{0};
     uint32_t testFrameOptionsLength{0};
@@ -183,20 +180,20 @@ void test_insertHeaders() {
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testPayloadLength, testFrameOptionsLength);
     LoRaWAN::insertHeaders(testFrameOptions, testFrameOptionsLength, testPayloadLength, testFramePort);
-    const uint8_t expectedHeader1[23]{0b01000000, 0x78, 0x56, 0x34, 0x12, 0x00, 0xCC, 0xDD, 8};
+    const uint8_t expectedHeader1[23]{0b01000000, 0x80, 0xF1, 0x0B, 0x26, 0x00, 0xCC, 0xDD, 8};
 
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedHeader1, LoRaWAN::rawMessage + LoRaWAN::macHeaderOffset, LoRaWAN::macHeaderLength + LoRaWAN::frameHeaderLength + LoRaWAN::framePortLength);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::b0BlockLength);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage + LoRaWAN::framePayloadOffset, (LoRaWAN::rawMessageLength - (LoRaWAN::b0BlockLength + LoRaWAN::macHeaderLength + LoRaWAN::frameHeaderLength + LoRaWAN::framePortLength)));
 
-    // 2. some ayload + some frameoptions
+    // 2. some payload + some frameoptions
 
     testPayloadLength      = 24;
     testFrameOptionsLength = 8;
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testPayloadLength, testFrameOptionsLength);
     LoRaWAN::insertHeaders(testFrameOptions, testFrameOptionsLength, testPayloadLength, testFramePort);
-    const uint8_t expectedHeader2[23]{0b01000000, 0x78, 0x56, 0x34, 0x12, 0x08, 0xCC, 0xDD, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 8};
+    const uint8_t expectedHeader2[23]{0b01000000, 0x80, 0xF1, 0x0B, 0x26, 0x08, 0xCC, 0xDD, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 8};
 
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedHeader2, LoRaWAN::rawMessage + LoRaWAN::macHeaderOffset, LoRaWAN::macHeaderLength + LoRaWAN::frameHeaderLength + LoRaWAN::framePortLength);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::b0BlockLength);
@@ -209,7 +206,7 @@ void test_insertHeaders() {
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testPayloadLength, testFrameOptionsLength);
     LoRaWAN::insertHeaders(testFrameOptions, testFrameOptionsLength, testPayloadLength, testFramePort);
-    const uint8_t expectedHeader3[23]{0b01000000, 0x78, 0x56, 0x34, 0x12, 0x08, 0xCC, 0xDD, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87};
+    const uint8_t expectedHeader3[23]{0b01000000, 0x80, 0xF1, 0x0B, 0x26, 0x08, 0xCC, 0xDD, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87};
 
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedHeader3, LoRaWAN::rawMessage + LoRaWAN::macHeaderOffset, LoRaWAN::macHeaderLength + LoRaWAN::frameHeaderLength + LoRaWAN::framePortLength);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::b0BlockLength);
@@ -221,7 +218,7 @@ void test_insertHeaders() {
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testPayloadLength, testFrameOptionsLength);
     LoRaWAN::insertHeaders(testFrameOptions, testFrameOptionsLength, testPayloadLength, testFramePort);
-    const uint8_t expectedHeader4[23]{0b01000000, 0x78, 0x56, 0x34, 0x12, 0x00, 0xCC, 0xDD};
+    const uint8_t expectedHeader4[23]{0b01000000, 0x80, 0xF1, 0x0B, 0x26, 0x00, 0xCC, 0xDD};
 
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedHeader4, LoRaWAN::rawMessage + LoRaWAN::macHeaderOffset, LoRaWAN::macHeaderLength + LoRaWAN::frameHeaderLength + LoRaWAN::framePortLength);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(allZeroes, LoRaWAN::rawMessage, LoRaWAN::b0BlockLength);

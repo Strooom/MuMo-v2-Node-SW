@@ -165,10 +165,6 @@ void mainController::initialize() {
     logging::snprintf("\n");
     if (!LoRaWAN::isValidConfig()) {
         logging::snprintf(logging::source::criticalError, "invalid LoRaWAN config\n");
-        LoRaWAN::initializeConfig();
-    } else if (forceInitialization) {
-        LoRaWAN::initializeConfig();
-        logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN config\n");
     }
     logging::snprintf("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
     logging::snprintf("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());
@@ -178,9 +174,6 @@ void mainController::initialize() {
     if (!LoRaWAN::isValidState()) {
         logging::snprintf(logging::source::criticalError, "invalid LoRaWAN state\n");
         LoRaWAN::initializeState();
-    } else if (forceInitialization) {
-        LoRaWAN::initializeState();
-        logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN state\n");
     }
     logging::snprintf("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.getAsWord());
     logging::snprintf("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.getAsWord());
@@ -195,7 +188,12 @@ void mainController::initialize() {
     }
 
     applicationEventBuffer.initialize();
-    goTo(mainState::networkCheck);
+    if (LoRaWAN::isValidConfig()) {
+        goTo(mainState::networkCheck);
+    } else {
+        goTo(mainState::fatalError);
+        logging::snprintf(logging::source::criticalError, "waiting for valid LoRaWAN config\n");
+    }
 }
 
 void mainController::handleEvents() {
@@ -525,11 +523,13 @@ void mainController::runCli() {
                             cli::sendResponse("BME680   : %s\n", sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)] ? "present" : "not present");
                             cli::sendResponse("TSL2591  : %s\n", sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::tsl2591)] ? "present" : "not present");
                             cli::sendResponse("SHT40    : %s\n", sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::sht40)] ? "present" : "not present");
+                            // TODO show name of the device
                             break;
 
                         case cliCommand::gls:
                             cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
-
+                            cli::sendResponse("NetSKey  : %s\n", LoRaWAN::networkKey.getAsHexString());            // TODO : mask part of the key
+                            cli::sendResponse("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());        // TODO : mask part of the key
                             cli::sendResponse("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.getAsWord());
                             cli::sendResponse("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.getAsWord());
                             cli::sendResponse("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
@@ -554,13 +554,14 @@ void mainController::runCli() {
                         case cliCommand::sda:
                             if (theCommand.nmbrOfArguments == 1) {
                                 char newDevAddrAsHex[deviceAddress::lengthAsHexAscii + 1]{0};
-                                size_t copyLen = strnlen(theCommand.arguments[0], maxNameLength);
-                                if (copyLen > maxNameLength) {
-                                    copyLen = maxNameLength;
+                                size_t copyLen = strnlen(theCommand.arguments[0], deviceAddress::lengthAsHexAscii);
+                                if (copyLen > deviceAddress::lengthAsHexAscii) {
+                                    copyLen = deviceAddress::lengthAsHexAscii;
                                 }
                                 memcpy(newDevAddrAsHex, theCommand.arguments[0], copyLen);
                                 LoRaWAN::DevAddr.setFromHexString(newDevAddrAsHex);
                                 LoRaWAN::saveConfig();
+
                                 cli::sendResponse("device address set : %s\n", LoRaWAN::DevAddr.getAsHexString());
                             } else {
                                 cli::sendResponse("invalid arguments\n");
@@ -570,9 +571,9 @@ void mainController::runCli() {
                         case cliCommand::snk:
                             if (theCommand.nmbrOfArguments == 1) {
                                 char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
-                                size_t copyLen = strnlen(theCommand.arguments[0], maxNameLength);
-                                if (copyLen > maxNameLength) {
-                                    copyLen = maxNameLength;
+                                size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
+                                if (copyLen > aesKey::lengthAsHexAscii) {
+                                    copyLen = aesKey::lengthAsHexAscii;
                                 }
                                 memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);
                                 LoRaWAN::networkKey.setFromHexString(newKeyAsHex);
@@ -586,9 +587,10 @@ void mainController::runCli() {
                         case cliCommand::sak:
                             if (theCommand.nmbrOfArguments == 1) {
                                 char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
-                                size_t copyLen = strnlen(theCommand.arguments[0], maxNameLength);
-                                if (copyLen > maxNameLength) {
-                                    copyLen = maxNameLength;
+                                size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
+                                cli::sendResponse("arg[0].length = %d\n", copyLen);
+                                if (copyLen > aesKey::lengthAsHexAscii) {
+                                    copyLen = aesKey::lengthAsHexAscii;
                                 }
                                 memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);
                                 LoRaWAN::applicationKey.setFromHexString(newKeyAsHex);
@@ -615,13 +617,13 @@ void mainController::runCli() {
                             }
                             break;
 
-                            case cliCommand::sb:
-                                cli::sendResponse("set batteryType not yet implemented\n");
-                                break;
+                        case cliCommand::sb:
+                            cli::sendResponse("set batteryType not yet implemented\n");
+                            break;
 
-                            case cliCommand::sr:
-                                cli::sendResponse("set radioType not yet implemented\n");
-                                break;
+                        case cliCommand::sr:
+                            cli::sendResponse("set radioType not yet implemented\n");
+                            break;
 
                         default:
                             cli::sendResponse("unknown command : ");

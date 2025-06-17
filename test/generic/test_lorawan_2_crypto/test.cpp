@@ -32,7 +32,7 @@ void tearDown(void) {        // after each test
 
 void test_prepareBlockAiTx() {
     aesBlock testBlock;
-    LoRaWAN::DevAddr.setFromWord(0x12345678);
+    LoRaWAN::DevAddr.setFromHexString("12345678");
     LoRaWAN::uplinkFrameCount.setFromWord(0xFFEEDDCC);
     uint32_t testBlockIndex{7};
     LoRaWAN::prepareBlockAi(testBlock, linkDirection::uplink, testBlockIndex);
@@ -46,7 +46,7 @@ void test_prepareBlockAiTx() {
 
 void test_prepareBlockAiRx() {
     aesBlock testBlock;
-    LoRaWAN::DevAddr.setFromWord(0x12345678);
+    LoRaWAN::DevAddr.setFromHexString("12345678");
     LoRaWAN::downlinkFrameCount.setFromWord(0xFFEEDDCC);
     uint32_t testBlockIndex{3};
     LoRaWAN::prepareBlockAi(testBlock, linkDirection::downlink, testBlockIndex);
@@ -67,7 +67,7 @@ void test_encryptPayload() {
 
     LoRaWAN::clearRawMessage();
     LoRaWAN::applicationKey.setFromHexString("2B7E151628AED2A6ABF7158809CF4F3C");
-    LoRaWAN::DevAddr.setFromWord(0x12345678);
+    LoRaWAN::DevAddr.setFromHexString("12345678");
     LoRaWAN::uplinkFrameCount.setFromWord(0xFFEEDDCC);
 
     // Case 1 : 16 bytes payload = 1 block
@@ -119,7 +119,7 @@ void test_encryptPayload() {
 void test_decryptPayload() {
     const uint32_t numberOfHeaderBytes{13};        // MHDR[1] FHDR[7] FPORT[1] MIC[4]
     LoRaWAN::applicationKey.setFromHexString("2B7E151628AED2A6ABF7158809CF4F3C");
-    LoRaWAN::DevAddr.setFromWord(0x12345678);
+    LoRaWAN::DevAddr.setFromHexString("12345678");
     LoRaWAN::downlinkFrameCount.setFromWord(0xFFEEDDCC);
 
     // Case 1 : 16 bytes payload = 1 block
@@ -226,7 +226,7 @@ void test_calculateMic() {
 void test_calculateMicTx() {
     LoRaWAN::networkKey.setFromHexString("2B7E151628AED2A6ABF7158809CF4F3C");
     LoRaWAN::generateKeysK1K2();
-    LoRaWAN::DevAddr.setFromWord(0x12345678);
+    LoRaWAN::DevAddr.setFromHexString("12345678");
     LoRaWAN::uplinkFrameCount.setFromWord(0xFFEEDDCC);
 
     // Case 1 : no padding
@@ -278,7 +278,7 @@ void test_calculateMicTx() {
 void test_calculateMicRx() {
     LoRaWAN::networkKey.setFromHexString("2B7E151628AED2A6ABF7158809CF4F3C");
     LoRaWAN::generateKeysK1K2();
-    LoRaWAN::DevAddr.setFromWord(0x12345678);
+    LoRaWAN::DevAddr.setFromHexString("12345678");
     LoRaWAN::downlinkFrameCount.setFromWord(0xFFEEDDCC);
 
     // Case 1 : no padding
@@ -329,7 +329,7 @@ void test_calculateMicRx() {
 
     // Case 3 : actual downlink message captured on gateway
 
-    LoRaWAN::DevAddr.setFromWord(0x260B9911);
+    LoRaWAN::DevAddr.setFromHexString("260B9911");
     LoRaWAN::networkKey.setFromHexString("8DD6FEB76D7754A78538BA5089A834AA");
     LoRaWAN::generateKeysK1K2();
     LoRaWAN::downlinkFrameCount.setFromWord(176);
