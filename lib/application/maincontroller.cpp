@@ -35,6 +35,7 @@
 #include <buildinfo.hpp>
 #include <radiotype.hpp>
 #include <sx126x.hpp>
+#include <stdlib.h>        // atoi
 
 #ifndef generic
 #include "main.h"
@@ -116,7 +117,7 @@ void mainController::initialize() {
         theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
         logging::snprintf(logging::source::criticalError, "forced initialisation batteryType %d\n", static_cast<uint8_t>(theBatteryType));
     }
-    static constexpr uint32_t defaultPrescaler{1U};
+    static constexpr uint32_t defaultPrescaler{20U};
 
     battery::initialize(theBatteryType);
     logging::snprintf(logging::source::settings, "batteryType : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
@@ -514,12 +515,26 @@ void mainController::runCli() {
                             break;
 
                         case cliCommand::help:
+                            cli::sendResponse("<enter> :show build info and license\n");
+                            cli::sendResponse("? : show help\n");
+                            cli::sendResponse("gds : show device status\n");
+                            cli::sendResponse("gs : show sensor status\n");
+                            cli::sendResponse("gms : show recorded measurements status\n");
+                            cli::sendResponse("gls : show LoRaWAN status\n");
                             cli::sendResponse("el : enable logging\n");
                             cli::sendResponse("dl : disable logging\n");
-                            cli::sendResponse("gds : show device status\n");
-                            cli::sendResponse("gls : show LoRaWAN status\n");
+                            cli::sendResponse("er : enable radio\n");
+                            cli::sendResponse("dr : disable radio\n");
                             cli::sendResponse("rml : reset mac layer\n");
+                            cli::sendResponse("res : restart device - soft reset\n");
+                            cli::sendResponse("sda <address> : set device address\n");
+                            cli::sendResponse("snk <key> : set network key\n");
+                            cli::sendResponse("sak <key> : set application key\n");
                             cli::sendResponse("sn <newname> : set name\n");
+                            cli::sendResponse("sb <batteryType> : set battery type\n");
+                            cli::sendResponse("sr <radioType> : set radio type\n");
+                            cli::sendResponse("sd <line#> <deviceIndex> <channelIndex> : configure display\n");
+                            cli::sendResponse("ss <deviceIndex> <channelIndex> <oversampling> <prescaler> : configure sensor\n");
                             break;
 
                         case cliCommand::el:
@@ -603,7 +618,7 @@ void mainController::runCli() {
                                 if (copyLen > aesKey::lengthAsHexAscii) {
                                     copyLen = aesKey::lengthAsHexAscii;
                                 }
-                                memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);
+                                memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);        // TODO should use strlcpy which ensures terminating zero
                                 LoRaWAN::applicationKey.setFromHexString(newKeyAsHex);
                                 LoRaWAN::saveConfig();
                                 cli::sendResponse("application key set : %s\n", LoRaWAN::applicationKey.getAsHexString());
@@ -634,6 +649,35 @@ void mainController::runCli() {
 
                         case cliCommand::sr:
                             cli::sendResponse("set radioType not yet implemented\n");
+                            break;
+
+                        case cliCommand::gs:
+                            for (uint32_t sensorDeviceIndex = 0; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
+                                if (sensorDeviceCollection::isPresent[sensorDeviceIndex]) {
+                                    cli::sendResponse("[%d] %s\n", sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
+                                    for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(sensorDeviceIndex); channelIndex++) {
+                                        cli::sendResponse("  [%d] %s [%s] oversampling = %d, prescaler = %d\n", channelIndex, sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::units(sensorDeviceIndex, channelIndex), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getOversampling(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler());
+                                    }
+                                }
+                            }
+                            break;
+
+                        case cliCommand::ss:
+                            if (theCommand.nmbrOfArguments == 4) {
+                                uint32_t tmpDeviceIndex  = theCommand.argumentAsUint32(0);
+                                uint32_t tmpChannelIndex = theCommand.argumentAsUint32(1);
+                                uint32_t tmpOversampling = theCommand.argumentAsUint32(2);
+                                uint32_t tmpPrescaler    = theCommand.argumentAsUint32(3);
+                                sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).set(tmpOversampling, tmpPrescaler);
+                                cli::sendResponse("%s - %s set to oversampling = %d, prescaler = %d\n", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getOversampling(), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getPrescaler());
+                            } else {
+                                cli::sendResponse("invalid arguments\n");
+                            }
+
+                            break;
+
+                        case cliCommand::res:
+                            initialize();
                             break;
 
                         default:

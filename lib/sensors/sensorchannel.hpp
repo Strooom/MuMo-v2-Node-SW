@@ -25,6 +25,13 @@ class sensorChannel {
     void addSample(float theSample);
     float value() const;
 
+    uint32_t getOversampling() const {
+        return oversampling;
+    }
+    uint32_t getPrescaler() const {
+        return prescaling;
+    }
+
 #ifndef unitTesting
 
   private:
