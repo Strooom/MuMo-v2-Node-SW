@@ -13,7 +13,6 @@ class aesKey {
     static constexpr uint32_t lengthAsHexAscii{32};
 
     void setFromByteArray(const uint8_t bytes[lengthInBytes]);
-    void setFromWordArray(const uint32_t wordsIn[lengthInWords]);
     void setFromHexString(const char* string);
 
     uint8_t getAsByte(uint32_t index) const { return keyAsBytes[index]; }
@@ -22,8 +21,6 @@ class aesKey {
 
     static uint32_t swapLittleBigEndian(uint32_t wordIn);
 
-    uint8_t* asBytes();         // return the key as bytes
-    uint32_t* asWords();        // return the key as words
 
 #ifndef HARDWARE_AES
     uint8_t expandedKey[176];
@@ -37,10 +34,10 @@ class aesKey {
     void syncWordsFromBytes();
     void syncHexStringFromBytes();
 
-    struct {
-        uint8_t asByte[lengthInBytes]{};
-        uint32_t asUint32[lengthInWords]{};
-    } key;
+    // struct {
+    //     uint8_t asByte[lengthInBytes]{};
+    //     uint32_t asUint32[lengthInWords]{};
+    // } key;
 
     // These are 3 representations of the same key data, in different formats for easy retrieval. They are synced when setting the key.
     uint8_t keyAsBytes[lengthInBytes]{};

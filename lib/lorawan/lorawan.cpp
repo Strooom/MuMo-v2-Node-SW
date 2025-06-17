@@ -86,20 +86,24 @@ void LoRaWAN::restoreConfig() {
 }
 
 bool LoRaWAN::isValidConfig() {
-    if (DevAddr.asUint32 == 0xFFFFFFFF) {
-        return false;
+    //bool validDeviceAddress{false};
+    bool validNetworkKey{false};
+    bool validApplicationKey{false};
+    // TODO : re-enable after devAddr has been refactored
+    // for (uint32_t index = 0; index < deviceAddress::lengthInBytes; index++) {
+    //     if (DevAddr.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
+    //         validDeviceAddress = true;
+    //     }
+    // }
+    for (uint32_t index = 0; index < aesKey::lengthInBytes; index++) {
+        if (applicationKey.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
+            validApplicationKey = true;
+        }
+        if (networkKey.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
+            validNetworkKey = true;
+        }
     }
-    if ((DevAddr.asUint8[0] == 0x26) && (DevAddr.asUint8[1] == 0x0B)) {        // This detects an old incorrectly stored DevAddr
-        return false;
-    }
-    uint8_t tmpKeyArray[aesKey::lengthInBytes]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    if (memcmp(applicationKey.asBytes(), tmpKeyArray, aesKey::lengthInBytes) == 0) {
-        return false;
-    }
-    if (memcmp(networkKey.asBytes(), tmpKeyArray, aesKey::lengthInBytes) == 0) {
-        return false;
-    }
-    return true;
+    return /*validDeviceAddress && */validNetworkKey && validApplicationKey;
 }
 
 void LoRaWAN::initializeConfig() {
@@ -112,8 +116,19 @@ void LoRaWAN::initializeConfig() {
 
 void LoRaWAN::saveConfig() {
     settingsCollection::save(DevAddr.asUint32, settingsCollection::settingIndex::DevAddr);
-    settingsCollection::saveByteArray(applicationKey.asBytes(), settingsCollection::settingIndex::applicationSessionKey);
-    settingsCollection::saveByteArray(networkKey.asBytes(), settingsCollection::settingIndex::networkSessionKey);
+
+    // settingsCollection::saveByteArray(applicationKey.asBytes(), settingsCollection::settingIndex::applicationSessionKey);
+    // settingsCollection::saveByteArray(networkKey.asBytes(), settingsCollection::settingIndex::networkSessionKey);
+
+    uint8_t tmpBytes[aesKey::lengthInBytes];
+    for (uint32_t index = 0; index < aesKey::lengthInBytes; index++) {
+        tmpBytes[index] = applicationKey.getAsByte(index);
+    }
+    settingsCollection::saveByteArray(tmpBytes, settingsCollection::settingIndex::applicationSessionKey);
+    for (uint32_t index = 0; index < aesKey::lengthInBytes; index++) {
+        tmpBytes[index] = networkKey.getAsByte(index);
+    }
+    settingsCollection::saveByteArray(tmpBytes, settingsCollection::settingIndex::networkSessionKey);
 }
 
 void LoRaWAN::restoreState() {
@@ -192,10 +207,6 @@ void LoRaWAN::saveChannels() {
     settingsCollection::saveByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
     settingsCollection::save(rx2FrequencyInHz, settingsCollection::settingIndex::rxChannel);
 }
-
-
-
-
 
 #pragma endregion
 #pragma region 1 : managing the rawMessage Buffer
@@ -1216,12 +1227,9 @@ void LoRaWAN::dumpConfig() {
         return;
     }
     logging::snprintf("LoRaWAN Config :\n");
-    logging::snprintf("  devAddr        = 0x%04X\n", DevAddr.asUint32);        // TODO : I think this should be 0x%08X
-    char tmpKeyAsHexAscii[33];
-    hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, applicationKey.asBytes(), 16);
-    logging::snprintf("  applicationKey = %s\n", tmpKeyAsHexAscii);
-    hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, networkKey.asBytes(), 16);
-    logging::snprintf("  networkKey     = %s\n", tmpKeyAsHexAscii);
+    logging::snprintf("  devAddr        = 0x%04X\n", DevAddr.asUint32);
+    logging::snprintf("  applicationKey = %s\n", applicationKey.getAsHexString());
+    logging::snprintf("  networkKey     = %s\n", networkKey.getAsHexString());
 }
 
 void LoRaWAN::dumpState() {

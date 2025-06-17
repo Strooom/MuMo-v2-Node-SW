@@ -184,10 +184,8 @@ void mainController::initialize() {
     }
     hexAscii::uint32ToHexString(tmpString, LoRaWAN::DevAddr.asUint32);
     logging::snprintf("DevAddr  : %s\n", tmpString);
-    hexAscii::byteArrayToHexString(tmpString, LoRaWAN::applicationKey.asBytes(), 16);
-    logging::snprintf("AppSKey  : %s\n", tmpString);
-    hexAscii::byteArrayToHexString(tmpString, LoRaWAN::networkKey.asBytes(), 16);
-    logging::snprintf("NwkSKey  : %s\n", tmpString);
+    logging::snprintf("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());
+    logging::snprintf("NwkSKey  : %s\n", LoRaWAN::networkKey.getAsHexString());
 
     logging::snprintf("\n");
     if (!LoRaWAN::isValidState()) {
@@ -544,7 +542,8 @@ void mainController::runCli() {
 
                         case cliCommand::gls:
                             cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.asHexString());
-
+                            cli::sendResponse("NetSKey  : %s\n", LoRaWAN::networkKey.getAsHexString());            // TODO : mask part of the key
+                            cli::sendResponse("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());        // TODO : mask part of the key
                             cli::sendResponse("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());
                             cli::sendResponse("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.toUint32());
                             cli::sendResponse("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
@@ -566,20 +565,45 @@ void mainController::runCli() {
                             //     cli::sendResponse("set device address : sda 260BF180\n");
                             //     break;
 
-                            // case cliCommand::snk:
-                            //     cli::sendResponse("set network key : snk 0DBC6EF938B83EB4F83C28E3CA7B4132\n");
-                            //     break;
+                        case cliCommand::snk:
+                            if (theCommand.nmbrOfArguments == 1) {
+                                char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
+                                size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
+                                if (copyLen > aesKey::lengthAsHexAscii) {
+                                    copyLen = aesKey::lengthAsHexAscii;
+                                }
+                                memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);
+                                LoRaWAN::networkKey.setFromHexString(newKeyAsHex);
+                                LoRaWAN::saveConfig();
+                                cli::sendResponse("network key set : %s\n", LoRaWAN::networkKey.getAsHexString());
+                            } else {
+                                cli::sendResponse("invalid arguments\n");
+                            }
+                            break;
 
-                            // case cliCommand::sak:
-                            //     cli::sendResponse("set application key : ssk 7E22AA54A7F4C0842861A13F1D161DE2\n");
-                            //     break;
+                        case cliCommand::sak:
+                            if (theCommand.nmbrOfArguments == 1) {
+                                char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
+                                size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
+                                cli::sendResponse("arg[0].length = %d\n", copyLen);
+                                if (copyLen > aesKey::lengthAsHexAscii) {
+                                    copyLen = aesKey::lengthAsHexAscii;
+                                }
+                                memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);
+                                LoRaWAN::applicationKey.setFromHexString(newKeyAsHex);
+                                LoRaWAN::saveConfig();
+                                cli::sendResponse("application key set : %s\n", LoRaWAN::applicationKey.getAsHexString());
+                            } else {
+                                cli::sendResponse("invalid arguments\n");
+                            }
+                            break;
 
                         case cliCommand::sn:
                             if (theCommand.nmbrOfArguments == 1) {
-                                uint8_t newName[9]{0};
-                                size_t copyLen = strlen(theCommand.arguments[0]);
-                                if (copyLen > sizeof(newName) - 1) {
-                                    copyLen = sizeof(newName) - 1;
+                                uint8_t newName[maxNameLength + 1]{0};
+                                size_t copyLen = strnlen(theCommand.arguments[0], maxNameLength);
+                                if (copyLen > maxNameLength) {
+                                    copyLen = maxNameLength;
                                 }
                                 memcpy(newName, theCommand.arguments[0], copyLen);
                                 settingsCollection::saveByteArray(newName, settingsCollection::settingIndex::name);
@@ -590,13 +614,13 @@ void mainController::runCli() {
                             }
                             break;
 
-                            // case cliCommand::sb:
-                            //     cli::sendResponse("set batteryType : sb 0\n");
-                            //     break;
+                        case cliCommand::sb:
+                            cli::sendResponse("set batteryType not yet implemented\n");
+                            break;
 
-                            // case cliCommand::sr:
-                            //     cli::sendResponse("set radioType : sr 0\n");
-                            //     break;
+                        case cliCommand::sr:
+                            cli::sendResponse("set radioType not yet implemented\n");
+                            break;
 
                         default:
                             cli::sendResponse("unknown command : ");

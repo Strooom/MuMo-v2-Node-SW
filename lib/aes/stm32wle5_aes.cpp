@@ -31,10 +31,10 @@ void stm32wle5_aes::disable() {
 
 void stm32wle5_aes::setKey(aesKey& theKey) {
 #ifndef generic
-    AES->KEYR0 = aesKey::swapLittleBigEndian(theKey.asWords()[3]);        // LeastSignificant bits
-    AES->KEYR1 = aesKey::swapLittleBigEndian(theKey.asWords()[2]);
-    AES->KEYR2 = aesKey::swapLittleBigEndian(theKey.asWords()[1]);
-    AES->KEYR3 = aesKey::swapLittleBigEndian(theKey.asWords()[0]);        // MostSignificant bits
+    AES->KEYR0 = aesKey::swapLittleBigEndian(theKey.getAsWord(3));
+    AES->KEYR1 = aesKey::swapLittleBigEndian(theKey.getAsWord(2));
+    AES->KEYR2 = aesKey::swapLittleBigEndian(theKey.getAsWord(1));
+    AES->KEYR3 = aesKey::swapLittleBigEndian(theKey.getAsWord(0));
 #endif
 }
 

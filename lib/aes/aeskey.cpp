@@ -4,51 +4,19 @@
 #include <rcon.hpp>
 #include <hexascii.hpp>
 
-uint8_t* aesKey::asBytes() {
-    return key.asByte;
-}
-
-uint32_t* aesKey::asWords() {
-    return key.asUint32;
-}
-
 void aesKey::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
-    // old
-    (void)memcpy(key.asByte, bytes, lengthInBytes);
-
-    // mid
-    (void)memcpy(key.asUint32, key.asByte, lengthInBytes);
-
-    // new
     (void)memcpy(keyAsBytes, bytes, lengthInBytes);
     syncWordsFromBytes();
     syncHexStringFromBytes();
-
 #ifndef HARDWARE_AES
     expandKey();
 #endif
 }
 
-void aesKey::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
-    for (uint32_t wordIndex = 0; wordIndex < 4; wordIndex++) {
-        key.asUint32[wordIndex] = wordsIn[wordIndex];
-    }
-}
-
 void aesKey::setFromHexString(const char* string) {
-    // old
-    uint8_t tmpBytes[lengthInBytes];
-    hexAscii::hexStringToByteArray(tmpBytes, string, 32U);
-    (void)memcpy(key.asByte, tmpBytes, lengthInBytes);
-
-    // mid
-    (void)memcpy(key.asUint32, key.asByte, lengthInBytes);
-
-    //new
     hexAscii::hexStringToByteArray(keyAsBytes, string, 32U);
     syncWordsFromBytes();
     syncHexStringFromBytes();
-
 #ifndef HARDWARE_AES
     expandKey();
 #endif
