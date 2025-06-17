@@ -22,9 +22,9 @@
 #include <linearbuffer.hpp>
 #include <maccommand.hpp>
 
-static constexpr uint32_t toBeDevAddr      = 0x260B595F;
-static constexpr char toBeNetworkKey[]     = "34003F8087158F6EA7036512F141BED3";
-static constexpr char toBeApplicationKey[] = "9912CA0E3F0D9E6DCD28F60A33ADBCA0";
+static constexpr uint32_t toBeDevAddr      = 0x260BF180;
+static constexpr char toBeNetworkKey[]     = "0DBC6EF938B83EB4F83C28E3CA7B4132";
+static constexpr char toBeApplicationKey[] = "7E22AA54A7F4C0842861A13F1D161DE2";
 
 static constexpr uint32_t toBeCurrentDataRateIndex = 5;
 static constexpr uint32_t toBeRx1DataRateOffset  = 0;

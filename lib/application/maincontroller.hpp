@@ -13,7 +13,7 @@
 #include <screen.hpp>
 #include <applicationevent.hpp>
 
-static constexpr bool forceInitialization{false};
+static constexpr bool forceInitialization{true};
 static constexpr batteryType defaultBatteryType{batteryType::alkaline_1200mAh};
 static constexpr radioType defaultRadioType{radioType::lowPower};
 static constexpr char toBeName[9] = "noName";
