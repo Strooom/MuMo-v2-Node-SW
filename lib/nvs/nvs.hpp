@@ -16,10 +16,8 @@ class nonVolatileStorage {
     static constexpr uint32_t pageSize{128};
     static constexpr uint16_t baseI2cAddress{0x50};        // I2C address for the first 64K bank
 
-    static constexpr uint8_t halIsPresentNmbrOfTrials{0x03};        // ST-HAL parameter
-    static constexpr uint8_t halIsPresentTimeoutInMs{10};           // ST-HAL parameter
-    // static constexpr uint8_t halTrialsIsBusy{0x05};              // ST-HAL parameter
-    // static constexpr uint8_t halTimeoutIsBusy{1};                // ST-HAL parameter
+    static constexpr uint8_t halNmbrOfTrials{0x03};        // ST-HAL parameter
+    static constexpr uint8_t halTimeoutInMs{10};           // ST-HAL parameter
 
     static constexpr uint8_t halByteWriteTimeoutInMs{2};         // ST-HAL parameter needed
     static constexpr uint8_t halPageWriteTimeoutInMs{10};        // ST-HAL parameter needed

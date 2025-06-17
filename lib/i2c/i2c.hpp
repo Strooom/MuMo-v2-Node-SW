@@ -10,7 +10,10 @@ class i2c {
   public:
     static void wakeUp();
     static void goSleep();
-    static bool isInitialized() { return initalized; }  
+    static bool isActive() { return initalized; }
+
+    static constexpr bool isAwake{true};
+    static constexpr bool wasSleeping{false};
 
 #ifndef unitTesting
 
