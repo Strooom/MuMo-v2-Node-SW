@@ -13,8 +13,16 @@ uint32_t* aesKey::asWords() {
 }
 
 void aesKey::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
+    // old
     (void)memcpy(key.asByte, bytes, lengthInBytes);
+    // new
+    (void)memcpy(keyAsBytes, bytes, lengthInBytes);
+    syncWordsFromBytes();
+    syncHexStringFromBytes();
+
+#ifndef HARDWARE_AES
     expandKey();
+#endif
 }
 
 void aesKey::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
@@ -24,10 +32,19 @@ void aesKey::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
 }
 
 void aesKey::setFromHexString(const char* string) {
+    // old
     uint8_t tmpBytes[lengthInBytes];
     hexAscii::hexStringToByteArray(tmpBytes, string, 32U);
     (void)memcpy(key.asByte, tmpBytes, lengthInBytes);
+
+    //new
+    hexAscii::hexStringToByteArray(keyAsBytes, string, 32U);
+    syncWordsFromBytes();
+    syncHexStringFromBytes();
+
+#ifndef HARDWARE_AES
     expandKey();
+#endif
 }
 
 uint32_t aesKey::swapLittleBigEndian(uint32_t wordIn) {
@@ -37,6 +54,7 @@ uint32_t aesKey::swapLittleBigEndian(uint32_t wordIn) {
     return wordOut;
 }
 
+#ifndef HARDWARE_AES
 void aesKey::expandKey() {
     (void)memcpy(expandedKey, key.asByte, 16);
     for (uint8_t round = 1; round <= 10; round++) {
@@ -44,7 +62,9 @@ void aesKey::expandKey() {
         calculateRoundKey(round);
     }
 }
+#endif
 
+#ifndef HARDWARE_AES
 void aesKey::calculateRoundKey(uint8_t round) {
     unsigned char temp[4];
     uint8_t* expandedKeyPtr = expandedKey + (round * 16);
@@ -60,4 +80,12 @@ void aesKey::calculateRoundKey(uint8_t round) {
         expandedKeyPtr[index] ^= temp[index % 4];
         temp[index % 4] = expandedKeyPtr[index];
     }
+}
+#endif
+
+void aesKey::syncWordsFromBytes() {
+    (void)memcpy(keyAsWords, keyAsBytes, lengthInBytes);
+}
+void aesKey::syncHexStringFromBytes() {
+    hexAscii::byteArrayToHexString(keyAsHexString, keyAsBytes, lengthInBytes);
 }
