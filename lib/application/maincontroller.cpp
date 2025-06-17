@@ -116,11 +116,13 @@ void mainController::initialize() {
         theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
         logging::snprintf(logging::source::criticalError, "forced initialisation batteryType %d\n", static_cast<uint8_t>(theBatteryType));
     }
+    static constexpr uint32_t defaultPrescaler{1U};
+
     battery::initialize(theBatteryType);
     logging::snprintf(logging::source::settings, "batteryType : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
     sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 20);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, 20);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, defaultPrescaler);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, defaultPrescaler);
 
     radioType theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
     if (!sx126x::isValidType(theRadioType)) {
@@ -139,20 +141,21 @@ void mainController::initialize() {
 
     sensorDeviceCollection::discover();
 
+
     if (bme680::isPresent()) {
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 20);
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 20);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, defaultPrescaler);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, defaultPrescaler);
     }
     logging::snprintf("BME680   : %s\n", bme680::isPresent() ? "present" : "not present");
 
     if (tsl2591::isPresent()) {
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 20);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, defaultPrescaler);
     }
     logging::snprintf("TSL2591  : %s\n", tsl2591::isPresent() ? "present" : "not present");
 
     if (sht40::isPresent()) {
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, 20);
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, 20);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, defaultPrescaler);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, defaultPrescaler);
     }
     logging::snprintf("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
 
@@ -182,8 +185,7 @@ void mainController::initialize() {
         LoRaWAN::initializeConfig();
         logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN config\n");
     }
-    hexAscii::uint32ToHexString(tmpString, LoRaWAN::DevAddr.asUint32);
-    logging::snprintf("DevAddr  : %s\n", tmpString);
+    logging::snprintf("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
     logging::snprintf("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());
     logging::snprintf("NwkSKey  : %s\n", LoRaWAN::networkKey.getAsHexString());
 
@@ -541,7 +543,7 @@ void mainController::runCli() {
                             break;
 
                         case cliCommand::gls:
-                            cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.asHexString());
+                            cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
                             cli::sendResponse("NetSKey  : %s\n", LoRaWAN::networkKey.getAsHexString());            // TODO : mask part of the key
                             cli::sendResponse("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());        // TODO : mask part of the key
                             cli::sendResponse("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());

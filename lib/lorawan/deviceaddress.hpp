@@ -5,28 +5,41 @@
 
 #pragma once
 #include <stdint.h>
+#include <cstring>
+#include <hexascii.hpp>
 
 class deviceAddress {
   public:
     static constexpr uint32_t lengthInBytes{4};
-    static constexpr uint32_t lengthAsHexString{8};
-    explicit deviceAddress();
-    explicit deviceAddress(uint32_t theDeviceAddress);
+    static constexpr uint32_t lengthAsHexAscii{8};
 
-    deviceAddress& operator=(const uint32_t theDeviceAddress);
-    deviceAddress& operator=(const deviceAddress& theDeviceAddress);
-    bool operator==(const deviceAddress& theDeviceAddress) const;
-    bool operator!=(const deviceAddress& theDeviceAddress) const;
+    void setFromByteArray(const uint8_t bytes[lengthInBytes]);
+    void setFromWord(const uint32_t wordIn);
+    void setFromHexString(const char* string);
 
-    // TODO need to get rid of this punning via union
-    union {
-        uint32_t asUint32{0xFFFFFFFF};
-        uint8_t asUint8[lengthInBytes];
-    };
-    const char* asHexString();
-    // uint8_t asUint8(uint32_t index);
+    uint8_t getAsByte(uint32_t index) const { return devAddrAsBytes[index]; }
+    uint32_t getAsWord() const { return devAddrAsWord; }
+    const char* getAsHexString() const { return devAddrAsHexString; }
 
   private:
-    char asHexString_[lengthAsHexString + 1];
-    uint8_t asUint8_[lengthInBytes];
+    // These are 3 representations of the same address data, in different formats for easy retrieval and conversion. They are synced when setting the address.
+    // Example : "26 0B 17 23" on The Things Network
+    // 1. asHexString : "260B1723"
+    // 2. as array of bytes : {0x26, 0x0B, 0x17, 0x23}
+    //    asByte(0) = 0x26, asByte(1) = 0x0B, asByte(2) = 0x17, asByte(3) = 0x23
+    // 3. asWord = 0x23170B26
+
+    uint8_t devAddrAsBytes[lengthInBytes]{};
+    uint32_t devAddrAsWord{};
+    char devAddrAsHexString[lengthAsHexAscii + 1]{};
+
+    void syncWordFromBytes() {
+        (void)memcpy(&devAddrAsWord, devAddrAsBytes, lengthInBytes);
+    }
+    void syncBytesFromWord() {
+        (void)memcpy(devAddrAsBytes, &devAddrAsWord, lengthInBytes);
+    }
+    void syncHexStringFromBytes() {
+        hexAscii::byteArrayToHexStringReversed(devAddrAsHexString, devAddrAsBytes, lengthInBytes);
+    }
 };
