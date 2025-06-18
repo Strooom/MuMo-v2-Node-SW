@@ -101,7 +101,11 @@ void test_encrypt_step_by_step() {
     aBlock.setFromByteArray(clearText);
 
     // Step 1 XOR plaintext with key
-    aBlock.XOR(aKey.asBytes());
+    uint8_t tmpKey[16];
+    for (size_t byteIndex = 0; byteIndex < 16; ++byteIndex) {
+        tmpKey[byteIndex] = aKey.getAsByte(byteIndex);
+    }
+    aBlock.XOR(tmpKey);
     uint8_t expectedOutput0[16]{0x40, 0xbf, 0xab, 0xf4, 0x06, 0xee, 0x4d, 0x30, 0x42, 0xca, 0x6b, 0x99, 0x7a, 0x5c, 0x58, 0x16};        // follow along on https://www.cryptool.org/en/cto/aes-step-by-step
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedOutput0, aBlock.asBytes(), 16);
 
@@ -183,7 +187,11 @@ void test_XOR() {
     aesKey theKey;
     theKey.setFromHexString("2b7e151628aed2a6abf7158809cf4f3c");        // common NIST test vector key
 
-    aBlock.XOR(theKey.asBytes());
+    uint8_t tmpKey[16];
+    for (size_t byteIndex = 0; byteIndex < 16; ++byteIndex) {
+        tmpKey[byteIndex] = theKey.getAsByte(byteIndex);
+    }
+    aBlock.XOR(tmpKey);
 
     uint8_t expectedBytes[16]{0x40, 0xbf, 0xab, 0xf4, 0x06, 0xee, 0x4d, 0x30, 0x42, 0xca, 0x6b, 0x99, 0x7a, 0x5c, 0x58, 0x16};        // verified from https://www.cryptool.org/en/cto/aes-step-by-step
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), 16);

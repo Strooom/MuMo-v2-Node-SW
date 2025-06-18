@@ -31,7 +31,9 @@ uint32_t aesKey::swapLittleBigEndian(uint32_t wordIn) {
 
 #ifndef HARDWARE_AES
 void aesKey::expandKey() {
-    (void)memcpy(expandedKey, key.asByte, 16);
+    for (uint32_t index = 0; index < lengthInBytes; index++) {
+        expandedKey[index] = keyAsBytes[index];
+    }
     for (uint8_t round = 1; round <= 10; round++) {
         (void)memcpy(expandedKey + (round * 16), expandedKey + ((round - 1) * 16), 16);
         calculateRoundKey(round);
