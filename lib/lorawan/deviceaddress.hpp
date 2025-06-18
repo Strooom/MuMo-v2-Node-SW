@@ -29,6 +29,12 @@ class deviceAddress {
     //    asByte(0) = 0x26, asByte(1) = 0x0B, asByte(2) = 0x17, asByte(3) = 0x23
     // 3. asWord = 0x23170B26
 
+    // Warning : the conversions are not trivial, they are based on the format used by The Things Network
+    // Example : on the Things Network, the DevAddr is represented as "26 0B 1F 80".
+    // The representation as asHexString is (of course) "260B1F80".
+    // When this address appears in a LoRaWAN message, the byte order will be 0x80, 0x1F, 0x0B, 0x26.
+    // When the address is stored in a uint32_t variable, on the ARM cortex M4, it will have a value of 0x260B1F80.
+
     uint8_t devAddrAsBytes[lengthInBytes]{};
     uint32_t devAddrAsWord{};
     char devAddrAsHexString[lengthAsHexAscii + 1]{};
