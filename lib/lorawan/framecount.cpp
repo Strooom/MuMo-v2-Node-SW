@@ -10,19 +10,19 @@
 //     syncBytesFromWord();
 // };
 
-frameCount& frameCount::operator=(const uint32_t theFrameCount) {
-    asUint32         = theFrameCount;
-    frameCountAsWord = theFrameCount;
-    syncBytesFromWord();
-    return *this;
-}
+// frameCount& frameCount::operator=(const uint32_t theFrameCount) {
+//     asUint32         = theFrameCount;
+//     frameCountAsWord = theFrameCount;
+//     syncBytesFromWord();
+//     return *this;
+// }
 
-frameCount& frameCount::operator=(const frameCount& theFrameCount) {
-    asUint32         = theFrameCount.asUint32;
-    frameCountAsWord = theFrameCount.frameCountAsWord;
-    syncBytesFromWord();
-    return *this;
-}
+// frameCount& frameCount::operator=(const frameCount& theFrameCount) {
+//     asUint32         = theFrameCount.asUint32;
+//     frameCountAsWord = theFrameCount.frameCountAsWord;
+//     syncBytesFromWord();
+//     return *this;
+// }
 
 // bool frameCount::operator==(const frameCount& theFrameCount) const {
 //     return (asUint32 == theFrameCount.asUint32);
