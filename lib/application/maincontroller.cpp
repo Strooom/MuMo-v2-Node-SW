@@ -86,7 +86,7 @@ void mainController::initialize() {
     for (uint32_t index = 0; index < maxNameLength; ++index) {
         name[index] = tmpName[index];
     }
-    name[maxNameLength] = '\0'; // ensure null termination
+    name[maxNameLength] = '\0';        // ensure null termination
     logging::snprintf("name     : %s\n", name);
 
     spi::wakeUp();
@@ -566,52 +566,15 @@ void mainController::runCli() {
                             break;
 
                         case cliCommand::sb:
-                            if (theCommand.nmbrOfArguments == 1) {
-                                uint32_t tmpBatteryTypeIndex = theCommand.argumentAsUint32(0);
-                                settingsCollection::save(static_cast<uint8_t>(tmpBatteryTypeIndex), settingsCollection::settingIndex::batteryType);
-                                battery::setType(tmpBatteryTypeIndex);
-                                cli::sendResponse("Battery set : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
-
-                            } else {
-                                cli::sendResponse("invalid arguments\n");
-                            }
+                            setBatteryType(theCommand);
                             break;
 
                         case cliCommand::sr:
-                            if (theCommand.nmbrOfArguments == 1) {
-                                uint32_t tmpRadioTypeIndex = theCommand.argumentAsUint32(0);
-                                settingsCollection::save(static_cast<uint8_t>(tmpRadioTypeIndex), settingsCollection::settingIndex::radioType);
-                                cli::sendResponse("RadioType set : %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
-                                // TODO : also set the radio type in sx126x, so no restart is needed..
-                                // sx126x::setType(static_cast<radioType>(tmpRadioTypeIndex));
-                            } else {
-                                cli::sendResponse("invalid arguments\n");
-                            }
-                            break;
-
-                        case cliCommand::gs:
-                            for (uint32_t sensorDeviceIndex = 0; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
-                                if (sensorDeviceCollection::isPresent[sensorDeviceIndex]) {
-                                    cli::sendResponse("[%d] %s\n", sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
-                                    for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(sensorDeviceIndex); channelIndex++) {
-                                        cli::sendResponse("  [%d] %s [%s] oversampling = %d, prescaler = %d\n", channelIndex, sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::units(sensorDeviceIndex, channelIndex), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getOversampling(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler());
-                                    }
-                                }
-                            }
+                            setRadioType(theCommand);
                             break;
 
                         case cliCommand::ss:
-                            if (theCommand.nmbrOfArguments == 4) {
-                                uint32_t tmpDeviceIndex  = theCommand.argumentAsUint32(0);
-                                uint32_t tmpChannelIndex = theCommand.argumentAsUint32(1);
-                                uint32_t tmpOversampling = theCommand.argumentAsUint32(2);
-                                uint32_t tmpPrescaler    = theCommand.argumentAsUint32(3);
-                                sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).set(tmpOversampling, tmpPrescaler);
-                                cli::sendResponse("%s - %s set to oversampling = %d, prescaler = %d\n", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getOversampling(), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getPrescaler());
-                            } else {
-                                cli::sendResponse("invalid arguments\n");
-                            }
-
+                            setSensor(theCommand);
                             break;
 
                         case cliCommand::res:
@@ -654,7 +617,6 @@ void mainController::showHelp() {
     cli::sendResponse("<enter> :show build info and license\n");
     cli::sendResponse("? : show help\n");
     cli::sendResponse("gds : show device status\n");
-    cli::sendResponse("gs : show sensor status\n");
     cli::sendResponse("gms : show recorded measurements status\n");
     cli::sendResponse("gls : show LoRaWAN status\n");
     cli::sendResponse("el : enable logging\n");
@@ -680,9 +642,17 @@ void mainController::showDeviceStatus() {
     cli::sendResponse("EEPROM   : %d * 64K present\n", nonVolatileStorage::detectNmbr64KBanks());
     cli::sendResponse("battery  : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
     cli::sendResponse("radioType: %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
-    cli::sendResponse("BME680   : %s\n", bme680::isPresent() ? "present" : "not present");
-    cli::sendResponse("TSL2591  : %s\n", tsl2591::isPresent() ? "present" : "not present");
-    cli::sendResponse("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
+
+    for (uint32_t sensorDeviceIndex = 0; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
+        if (sensorDeviceCollection::isPresent[sensorDeviceIndex]) {
+            cli::sendResponse("[%d] %s\n", sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
+            for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(sensorDeviceIndex); channelIndex++) {
+                cli::sendResponse("  [%d] %s [%s] oversampling = %d, prescaler = %d\n", channelIndex, sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::units(sensorDeviceIndex, channelIndex), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getOversampling(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler());
+            }
+        } else {
+            cli::sendResponse("[%d] %s not found\n", sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
+        }
+    }
 }
 
 void mainController::showNetworkStatus() {
@@ -760,6 +730,46 @@ void mainController::setName(cliCommand& theCommand) {
         settingsCollection::saveByteArray(newName, settingsCollection::settingIndex::name);
         screen::setName(theCommand.arguments[0]);
         cli::sendResponse("name set : %s\n", theCommand.arguments[0]);
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+
+void mainController::setBatteryType(cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 1) {
+        uint32_t tmpBatteryTypeIndex = theCommand.argumentAsUint32(0);
+        settingsCollection::save(static_cast<uint8_t>(tmpBatteryTypeIndex), settingsCollection::settingIndex::batteryType);
+        battery::setType(tmpBatteryTypeIndex);
+        cli::sendResponse("Battery set : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
+
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+
+void mainController::setRadioType(cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 1) {
+        uint32_t tmpRadioTypeIndex = theCommand.argumentAsUint32(0);
+        settingsCollection::save(static_cast<uint8_t>(tmpRadioTypeIndex), settingsCollection::settingIndex::radioType);
+        cli::sendResponse("RadioType set : %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
+        // TODO : also set the radio type in sx126x, so no restart is needed..
+        // sx126x::setType(static_cast<radioType>(tmpRadioTypeIndex));
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+
+void mainController::setDisplay(cliCommand& theCommand) {
+}
+
+void mainController::setSensor(cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 4) {
+        uint32_t tmpDeviceIndex  = theCommand.argumentAsUint32(0);
+        uint32_t tmpChannelIndex = theCommand.argumentAsUint32(1);
+        uint32_t tmpOversampling = theCommand.argumentAsUint32(2);
+        uint32_t tmpPrescaler    = theCommand.argumentAsUint32(3);
+        sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).set(tmpOversampling, tmpPrescaler);
+        cli::sendResponse("%s - %s set to oversampling = %d, prescaler = %d\n", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getOversampling(), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getPrescaler());
     } else {
         cli::sendResponse("invalid arguments\n");
     }

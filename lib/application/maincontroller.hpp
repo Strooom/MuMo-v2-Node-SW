@@ -69,4 +69,8 @@ class mainController {
     static void setNetworkKey(cliCommand& aCommand);
     static void setApplicationKey(cliCommand& aCommand);
     static void setName(cliCommand& aCommand);
+    static void setBatteryType(cliCommand& aCommand);
+    static void setRadioType(cliCommand& aCommand);
+    static void setDisplay(cliCommand& aCommand);
+    static void setSensor(cliCommand& aCommand);
 };

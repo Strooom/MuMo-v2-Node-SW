@@ -40,7 +40,6 @@ class cliCommand {
     static constexpr uint32_t sr{'s' * 256 + 'r'};                       // set radioType       : sr 0
     static constexpr uint32_t sd{'s' * 256 + 'd'};                       // set display         : sd line# deviceIndex channelIndex
     static constexpr uint32_t ss{'s' * 256 + 's'};                       // set sensor          : sd deviceIndex channelIndex oversampling prescaler
-    static constexpr uint32_t gs{'g' * 256 + 's'};                       // get sensor, show sensor configuration
 
     uint32_t nmbrOfArguments{0};
     char commandAsString[maxCommandLineLength];
