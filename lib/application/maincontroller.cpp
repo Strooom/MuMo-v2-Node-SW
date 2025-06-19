@@ -657,8 +657,20 @@ void mainController::showDeviceStatus() {
 
 void mainController::showNetworkStatus() {
     cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
-    cli::sendResponse("NetSKey  : %s\n", LoRaWAN::networkKey.getAsHexString());            // TODO : mask part of the key
-    cli::sendResponse("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());        // TODO : mask part of the key
+
+    static constexpr uint32_t nmbrOfCharsToMask{2};
+    char tmpKey[aesKey::lengthAsHexAscii + 1];
+    strlcpy(tmpKey, LoRaWAN::networkKey.getAsHexString(), aesKey::lengthAsHexAscii + 1);
+    for (uint32_t index = nmbrOfCharsToMask; index < aesKey::lengthAsHexAscii - nmbrOfCharsToMask; index++) {
+        tmpKey[index] = '*';        // mask the key, except first and last two characters
+    }
+    cli::sendResponse("NetSKey  : %s\n", tmpKey);
+    strlcpy(tmpKey, LoRaWAN::applicationKey.getAsHexString(), aesKey::lengthAsHexAscii + 1);
+    for (uint32_t index = nmbrOfCharsToMask; index < aesKey::lengthAsHexAscii - nmbrOfCharsToMask; index++) {
+        tmpKey[index] = '*';
+    }
+    cli::sendResponse("AppSKey  : %s\n", tmpKey);
+
     cli::sendResponse("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());
     cli::sendResponse("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.toUint32());
     cli::sendResponse("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
