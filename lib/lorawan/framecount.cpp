@@ -57,6 +57,8 @@ void frameCount::guessFromUint16(uint16_t frameCount16Lsb) {
     for (uint32_t index = 0; index < maximumGap; index++) {
         if (((asUint32 + index) & 0x0000FFFF) == frameCount16Lsb) {
             asUint32 += index;
+            frameCountAsWord = asUint32;
+            syncBytesFromWord();
             return;
         }
     }

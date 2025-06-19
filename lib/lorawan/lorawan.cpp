@@ -314,10 +314,10 @@ void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCount)
     rawMessage[7]  = DevAddr.getAsByte(1);
     rawMessage[8]  = DevAddr.getAsByte(2);
     rawMessage[9]  = DevAddr.getAsByte(3);
-    rawMessage[10] = aFrameCount[0];
-    rawMessage[11] = aFrameCount[1];
-    rawMessage[12] = aFrameCount[2];
-    rawMessage[13] = aFrameCount[3];
+    rawMessage[10] = aFrameCount.getAsByte(0);
+    rawMessage[11] = aFrameCount.getAsByte(1);
+    rawMessage[12] = aFrameCount.getAsByte(2);
+    rawMessage[13] = aFrameCount.getAsByte(3);
     rawMessage[14] = 0;
     rawMessage[15] = static_cast<uint8_t>(macHeaderLength + frameHeaderLength + framePortLength + framePayloadLength);
 }
@@ -356,18 +356,18 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
     theBlock[7] = DevAddr.getAsByte(1);
     theBlock[8] = DevAddr.getAsByte(2);
     theBlock[9] = DevAddr.getAsByte(3);
-    if (theDirection == linkDirection::uplink) {        //
-        theBlock[10] = uplinkFrameCount[0];             // LSByte
-        theBlock[11] = uplinkFrameCount[1];             //
-        theBlock[12] = uplinkFrameCount[2];             //
-        theBlock[13] = uplinkFrameCount[3];             // MSByte
-    } else {                                            //
-        theBlock[10] = downlinkFrameCount[0];           // LSByte
-        theBlock[11] = downlinkFrameCount[1];           //
-        theBlock[12] = downlinkFrameCount[2];           //
-        theBlock[13] = downlinkFrameCount[3];           // MSByte
-    }        //
-    theBlock[14] = 0x00;                                    //
+    if (theDirection == linkDirection::uplink) {
+        theBlock[10] = uplinkFrameCount.getAsByte(0);
+        theBlock[11] = uplinkFrameCount.getAsByte(1);
+        theBlock[12] = uplinkFrameCount.getAsByte(2);
+        theBlock[13] = uplinkFrameCount.getAsByte(3);
+    } else {
+        theBlock[10] = downlinkFrameCount.getAsByte(0);
+        theBlock[11] = downlinkFrameCount.getAsByte(1);
+        theBlock[12] = downlinkFrameCount.getAsByte(2);
+        theBlock[13] = downlinkFrameCount.getAsByte(3);
+    }
+    theBlock[14] = 0x00;
     theBlock[15] = static_cast<uint8_t>(blockIndex);        // Blocks Ai are indexed from 1..k, where k is the number of blocks
 }
 
