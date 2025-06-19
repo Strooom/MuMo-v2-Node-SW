@@ -1,14 +1,14 @@
 #include <framecount.hpp>
 
-frameCount::frameCount() : asUint32(0) {
-    frameCountAsWord = 0;
-    syncBytesFromWord();
-};
+// frameCount::frameCount() : asUint32(0) {
+//     frameCountAsWord = 0;
+//     syncBytesFromWord();
+// };
 
-frameCount::frameCount(uint32_t initialValue) : asUint32(initialValue) {
-    frameCountAsWord = initialValue;
-    syncBytesFromWord();
-};
+// frameCount::frameCount(uint32_t initialValue) : asUint32(initialValue) {
+//     frameCountAsWord = initialValue;
+//     syncBytesFromWord();
+// };
 
 frameCount& frameCount::operator=(const uint32_t theFrameCount) {
     asUint32         = theFrameCount;
@@ -49,9 +49,9 @@ void frameCount::increment() {
     syncBytesFromWord();
 }
 
-uint8_t& frameCount::operator[](int index) {
-    return asUint8[index];
-}
+// uint8_t& frameCount::operator[](int index) {
+//     return asUint8[index];
+// }
 
 void frameCount::guessFromUint16(uint16_t frameCount16Lsb) {
     for (uint32_t index = 0; index < maximumGap; index++) {

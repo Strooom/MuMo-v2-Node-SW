@@ -26,8 +26,8 @@ aesKey LoRaWAN::applicationKey;
 aesKey LoRaWAN::networkKey;
 aesBlock LoRaWAN::K1;
 aesBlock LoRaWAN::K2;
-frameCount LoRaWAN::uplinkFrameCount(1);
-frameCount LoRaWAN::downlinkFrameCount(0);
+frameCount LoRaWAN::uplinkFrameCount;
+frameCount LoRaWAN::downlinkFrameCount;
 
 dataRates LoRaWAN::theDataRates;
 uint32_t LoRaWAN::currentDataRateIndex{5};

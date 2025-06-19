@@ -13,8 +13,8 @@ class frameCount {
     static constexpr uint32_t lengthInBytes{4};
     static constexpr uint32_t lengthInWords{1};
 // old
-    frameCount();
-    explicit frameCount(uint32_t theFrameCount);
+    // frameCount();
+    // explicit frameCount(uint32_t theFrameCount);
     frameCount& operator=(const uint32_t theFrameCount);
     frameCount& operator=(const frameCount& theFrameCount);
     //bool operator==(const frameCount& theFrameCount) const;
@@ -23,7 +23,7 @@ class frameCount {
     //frameCount& operator++(int);
     void guessFromUint16(uint16_t frameCount16Lsb);
     uint32_t toUint32() const { return asUint32; };
-    uint8_t& operator[](int);
+    //uint8_t& operator[](int);
 
   // new
     void setFromByteArray(const uint8_t bytes[lengthInBytes]);
