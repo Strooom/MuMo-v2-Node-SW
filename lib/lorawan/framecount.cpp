@@ -11,14 +11,14 @@ frameCount::frameCount(uint32_t initialValue) : asUint32(initialValue) {
 };
 
 frameCount& frameCount::operator=(const uint32_t theFrameCount) {
-    asUint32 = theFrameCount;
+    asUint32         = theFrameCount;
     frameCountAsWord = theFrameCount;
     syncBytesFromWord();
     return *this;
 }
 
 frameCount& frameCount::operator=(const frameCount& theFrameCount) {
-    asUint32 = theFrameCount.asUint32;
+    asUint32         = theFrameCount.asUint32;
     frameCountAsWord = theFrameCount.frameCountAsWord;
     syncBytesFromWord();
     return *this;
@@ -36,11 +36,17 @@ bool frameCount::operator>(const frameCount& theFrameCount) const {
     return (asUint32 > theFrameCount.asUint32);
 }
 
-frameCount& frameCount::operator++(int) {
-    asUint32++;
-    frameCountAsWord = asUint32;
+// frameCount& frameCount::operator++(int) {
+//     asUint32++;
+//     frameCountAsWord = asUint32;
+//     syncBytesFromWord();
+//     return *this;
+// }
+
+void frameCount::increment() {
+    ++frameCountAsWord;
+    asUint32 = frameCountAsWord;
     syncBytesFromWord();
-    return *this;
 }
 
 uint8_t& frameCount::operator[](int index) {
@@ -63,12 +69,6 @@ void frameCount::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
 }
 void frameCount::setFromWord(const uint32_t wordIn) {
     frameCountAsWord = wordIn;
-    asUint32 = wordIn;
-    syncBytesFromWord();
-}
-
-void frameCount::increment() {
-    ++frameCountAsWord;
-    asUint32 = frameCountAsWord;
+    asUint32         = wordIn;
     syncBytesFromWord();
 }
