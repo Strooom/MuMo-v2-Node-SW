@@ -25,6 +25,7 @@ class sx126x {
     sx126x() = delete;
     static bool isValidType(radioType someRadioType);
     static void initialize(radioType isPowerVersion);
+    static radioType getType() { return theRadioType; };
     static uint8_t getStatus();
     static void configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t *payload, uint32_t payloadLength);
     static void configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequency);

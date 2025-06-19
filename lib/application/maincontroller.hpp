@@ -12,12 +12,13 @@
 #include <mainstate.hpp>
 #include <screen.hpp>
 #include <applicationevent.hpp>
+#include <clicommand.hpp>
 
 static constexpr bool forceInitialization{false};
 static constexpr batteryType defaultBatteryType{batteryType::alkaline_1200mAh};
 static constexpr radioType defaultRadioType{radioType::lowPower};
 static constexpr uint32_t maxNameLength{8U};        // maximum length of the node name, including the null terminator
-static constexpr char toBeName[maxNameLength + 1] = "noName";
+static constexpr char toBeName[maxNameLength + 1] = "MuMo";
 
 class mainController {
   public:
@@ -39,6 +40,8 @@ class mainController {
 
     // private:
 #endif
+    static char name[maxNameLength + 1];
+
     static void goTo(mainState newState);
     static mainState state;
 
@@ -57,4 +60,13 @@ class mainController {
 
     static uint32_t requestCounter;
     static uint32_t answerCounter;
+
+    static void showPrompt();
+    static void showHelp();
+    static void showDeviceStatus();
+    static void showNetworkStatus();
+    static void setDeviceAddress(cliCommand& aCommand);
+    static void setNetworkKey(cliCommand& aCommand);
+    static void setApplicationKey(cliCommand& aCommand);
+    static void setName(cliCommand& aCommand);
 };

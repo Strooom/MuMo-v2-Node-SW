@@ -30,6 +30,7 @@
 #include <spi.hpp>
 #include <stdio.h>
 #include <tsl2591.hpp>
+#include <debugport.hpp>
 #include <uart2.hpp>
 #include <uniqueid.hpp>
 #include <buildinfo.hpp>
@@ -59,6 +60,7 @@ uint32_t mainController::requestCounter{0};
 uint32_t mainController::answerCounter{0};
 const uint32_t mainController::deviceIndex[screen::nmbrOfMeasurementTextLines]{2, 2, 3};
 const uint32_t mainController::channelIndex[screen::nmbrOfMeasurementTextLines]{0, 1, 0};
+char mainController::name[maxNameLength + 1]{};
 
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -79,11 +81,20 @@ void mainController::initialize() {
 
     logging::snprintf("UID      : %s\n", uniqueId::asHexString());
 
+    uint8_t tmpName[maxNameLength + 1]{};
+    settingsCollection::readByteArray(tmpName, settingsCollection::settingIndex::name);
+    for (uint32_t index = 0; index < maxNameLength; ++index) {
+        name[index] = tmpName[index];
+    }
+    name[maxNameLength] = '\0'; // ensure null termination
+    logging::snprintf("name     : %s\n", name);
+
     spi::wakeUp();
     display::detectPresence();
-    logging::snprintf(logging::source::settings, "Display  : %s\n", display::isPresent() ? "present" : "not present");
+    logging::snprintf(logging::source::settings, "display  : %s\n", display::isPresent() ? "present" : "not present");
     if (display::isPresent()) {
         screen::setType(screenType::logo);
+        screen::setName(name);
         screen::update();
     }
     spi::goSleep();
@@ -363,7 +374,7 @@ void mainController::goTo(mainState newState) {
 }
 
 void mainController::runSleep() {
-    if (!power::hasUsbPower()) {
+    if (!power::hasUsbPower() && !debugPort::isDebugProbePresent()) {
         prepareSleep();
         goSleep();
         wakeUp();
@@ -508,33 +519,11 @@ void mainController::runCli() {
                     cli::getCommand(theCommand);
                     switch (theCommand.commandHash) {
                         case cliCommand::prompt:
-                            cli::sendResponse("\n\nhttps://github.com/Strooom\n");
-                            cli::sendResponse("v%u.%u.%u - #%s\n", buildInfo::mainVersionDigit, buildInfo::minorVersionDigit, buildInfo::patchVersionDigit, buildInfo::lastCommitTag);
-                            cli::sendResponse("%s %s build - %s\n", toString(buildInfo::theBuildEnvironment), toString(buildInfo::theBuildType), buildInfo::buildTimeStamp);
-                            cli::sendResponse("Creative Commons 4.0 - BY-NC-SA\n\n");
+                            showPrompt();
                             break;
 
                         case cliCommand::help:
-                            cli::sendResponse("<enter> :show build info and license\n");
-                            cli::sendResponse("? : show help\n");
-                            cli::sendResponse("gds : show device status\n");
-                            cli::sendResponse("gs : show sensor status\n");
-                            cli::sendResponse("gms : show recorded measurements status\n");
-                            cli::sendResponse("gls : show LoRaWAN status\n");
-                            cli::sendResponse("el : enable logging\n");
-                            cli::sendResponse("dl : disable logging\n");
-                            cli::sendResponse("er : enable radio\n");
-                            cli::sendResponse("dr : disable radio\n");
-                            cli::sendResponse("rml : reset mac layer\n");
-                            cli::sendResponse("res : restart device - soft reset\n");
-                            cli::sendResponse("sda <address> : set device address\n");
-                            cli::sendResponse("snk <key> : set network key\n");
-                            cli::sendResponse("sak <key> : set application key\n");
-                            cli::sendResponse("sn <newname> : set name\n");
-                            cli::sendResponse("sb <batteryType> : set battery type\n");
-                            cli::sendResponse("sr <radioType> : set radio type\n");
-                            cli::sendResponse("sd <line#> <deviceIndex> <channelIndex> : configure display\n");
-                            cli::sendResponse("ss <deviceIndex> <channelIndex> <oversampling> <prescaler> : configure sensor\n");
+                            showHelp();
                             break;
 
                         case cliCommand::el:
@@ -548,28 +537,11 @@ void mainController::runCli() {
                             break;
 
                         case cliCommand::gds:
-                            cli::sendResponse("UID      : %s\n", uniqueId::asHexString());
-                            cli::sendResponse("Display  : %s\n", display::isPresent() ? "present" : "not present");
-                            cli::sendResponse("EEPROM   : %d * 64K present\n", nonVolatileStorage::detectNmbr64KBanks());
-                            cli::sendResponse("BME680   : %s\n", bme680::isPresent() ? "present" : "not present");
-                            cli::sendResponse("TSL2591  : %s\n", tsl2591::isPresent() ? "present" : "not present");
-                            cli::sendResponse("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
+                            showDeviceStatus();
                             break;
 
                         case cliCommand::gls:
-                            cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
-                            cli::sendResponse("NetSKey  : %s\n", LoRaWAN::networkKey.getAsHexString());            // TODO : mask part of the key
-                            cli::sendResponse("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());        // TODO : mask part of the key
-                            cli::sendResponse("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());
-                            cli::sendResponse("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.toUint32());
-                            cli::sendResponse("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
-                            cli::sendResponse("DataRate : %u\n", LoRaWAN::currentDataRateIndex);
-                            cli::sendResponse("rx1DROff : %u\n", LoRaWAN::rx1DataRateOffset);
-                            cli::sendResponse("rx2DRIdx : %u\n\n", LoRaWAN::rx2DataRateIndex);
-                            cli::sendResponse("ActiveCh : %u\n", loRaTxChannelCollection::nmbrActiveChannels());
-                            for (uint32_t loRaTxChannelIndex = 0; loRaTxChannelIndex < loRaTxChannelCollection::maxNmbrChannels; loRaTxChannelIndex++) {
-                                cli::sendResponse("Chan[%02u] : %u Hz, %u, %u\n", loRaTxChannelIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].frequencyInHz, loRaTxChannelCollection::channel[loRaTxChannelIndex].minimumDataRateIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].maximumDataRateIndex);
-                            }
+                            showNetworkStatus();
                             break;
 
                         case cliCommand::rml:
@@ -578,77 +550,43 @@ void mainController::runCli() {
                             break;
 
                         case cliCommand::sda:
-                            if (theCommand.nmbrOfArguments == 1) {
-                                char newDevAddrAsHex[deviceAddress::lengthAsHexAscii + 1]{0};
-                                size_t copyLen = strnlen(theCommand.arguments[0], deviceAddress::lengthAsHexAscii);
-                                if (copyLen > deviceAddress::lengthAsHexAscii) {
-                                    copyLen = deviceAddress::lengthAsHexAscii;
-                                }
-                                memcpy(newDevAddrAsHex, theCommand.arguments[0], copyLen);
-                                LoRaWAN::DevAddr.setFromHexString(newDevAddrAsHex);
-                                LoRaWAN::saveConfig();
-
-                                cli::sendResponse("device address set : %s\n", LoRaWAN::DevAddr.getAsHexString());
-                            } else {
-                                cli::sendResponse("invalid arguments\n");
-                            }
+                            setDeviceAddress(theCommand);
                             break;
 
                         case cliCommand::snk:
-                            if (theCommand.nmbrOfArguments == 1) {
-                                char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
-                                size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
-                                if (copyLen > aesKey::lengthAsHexAscii) {
-                                    copyLen = aesKey::lengthAsHexAscii;
-                                }
-                                memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);
-                                LoRaWAN::networkKey.setFromHexString(newKeyAsHex);
-                                LoRaWAN::saveConfig();
-                                cli::sendResponse("network key set : %s\n", LoRaWAN::networkKey.getAsHexString());
-                            } else {
-                                cli::sendResponse("invalid arguments\n");
-                            }
+                            setNetworkKey(theCommand);
                             break;
 
                         case cliCommand::sak:
-                            if (theCommand.nmbrOfArguments == 1) {
-                                char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
-                                size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
-                                cli::sendResponse("arg[0].length = %d\n", copyLen);
-                                if (copyLen > aesKey::lengthAsHexAscii) {
-                                    copyLen = aesKey::lengthAsHexAscii;
-                                }
-                                memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);        // TODO should use strlcpy which ensures terminating zero
-                                LoRaWAN::applicationKey.setFromHexString(newKeyAsHex);
-                                LoRaWAN::saveConfig();
-                                cli::sendResponse("application key set : %s\n", LoRaWAN::applicationKey.getAsHexString());
-                            } else {
-                                cli::sendResponse("invalid arguments\n");
-                            }
+                            setApplicationKey(theCommand);
                             break;
 
                         case cliCommand::sn:
+                            setName(theCommand);
+                            break;
+
+                        case cliCommand::sb:
                             if (theCommand.nmbrOfArguments == 1) {
-                                uint8_t newName[maxNameLength + 1]{0};
-                                size_t copyLen = strnlen(theCommand.arguments[0], maxNameLength);
-                                if (copyLen > maxNameLength) {
-                                    copyLen = maxNameLength;
-                                }
-                                memcpy(newName, theCommand.arguments[0], copyLen);
-                                settingsCollection::saveByteArray(newName, settingsCollection::settingIndex::name);
-                                screen::setName(theCommand.arguments[0]);
-                                cli::sendResponse("name set : %s\n", theCommand.arguments[0]);
+                                uint32_t tmpBatteryTypeIndex = theCommand.argumentAsUint32(0);
+                                settingsCollection::save(static_cast<uint8_t>(tmpBatteryTypeIndex), settingsCollection::settingIndex::batteryType);
+                                battery::setType(tmpBatteryTypeIndex);
+                                cli::sendResponse("Battery set : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
+
                             } else {
                                 cli::sendResponse("invalid arguments\n");
                             }
                             break;
 
-                        case cliCommand::sb:
-                            cli::sendResponse("set batteryType not yet implemented\n");
-                            break;
-
                         case cliCommand::sr:
-                            cli::sendResponse("set radioType not yet implemented\n");
+                            if (theCommand.nmbrOfArguments == 1) {
+                                uint32_t tmpRadioTypeIndex = theCommand.argumentAsUint32(0);
+                                settingsCollection::save(static_cast<uint8_t>(tmpRadioTypeIndex), settingsCollection::settingIndex::radioType);
+                                cli::sendResponse("RadioType set : %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
+                                // TODO : also set the radio type in sx126x, so no restart is needed..
+                                // sx126x::setType(static_cast<radioType>(tmpRadioTypeIndex));
+                            } else {
+                                cli::sendResponse("invalid arguments\n");
+                            }
                             break;
 
                         case cliCommand::gs:
@@ -701,5 +639,128 @@ void mainController::runUsbPowerDetection() {
     if (power::isUsbRemoved()) {
         applicationEventBuffer.push(applicationEvent::usbRemoved);
         screen::setUsbStatus(false);
+    }
+}
+
+void mainController::showPrompt() {
+    cli::sendResponse("\n\nhttps://github.com/Strooom\n");
+    cli::sendResponse("v%u.%u.%u - #%s\n", buildInfo::mainVersionDigit, buildInfo::minorVersionDigit, buildInfo::patchVersionDigit, buildInfo::lastCommitTag);
+    cli::sendResponse("%s %s build - %s\n", toString(buildInfo::theBuildEnvironment), toString(buildInfo::theBuildType), buildInfo::buildTimeStamp);
+    cli::sendResponse("Creative Commons 4.0 - BY-NC-SA\n");
+    cli::sendResponse("Type '?' for help\n\n");
+}
+
+void mainController::showHelp() {
+    cli::sendResponse("<enter> :show build info and license\n");
+    cli::sendResponse("? : show help\n");
+    cli::sendResponse("gds : show device status\n");
+    cli::sendResponse("gs : show sensor status\n");
+    cli::sendResponse("gms : show recorded measurements status\n");
+    cli::sendResponse("gls : show LoRaWAN status\n");
+    cli::sendResponse("el : enable logging\n");
+    cli::sendResponse("dl : disable logging\n");
+    cli::sendResponse("er : enable radio\n");
+    cli::sendResponse("dr : disable radio\n");
+    cli::sendResponse("rml : reset mac layer\n");
+    cli::sendResponse("res : restart device - soft reset\n");
+    cli::sendResponse("sda <address> : set device address\n");
+    cli::sendResponse("snk <key> : set network key\n");
+    cli::sendResponse("sak <key> : set application key\n");
+    cli::sendResponse("sn <newname> : set name\n");
+    cli::sendResponse("sb <batteryType> : set battery type\n");
+    cli::sendResponse("sr <radioType> : set radio type\n");
+    cli::sendResponse("sd <line#> <deviceIndex> <channelIndex> : configure display\n");
+    cli::sendResponse("ss <deviceIndex> <channelIndex> <oversampling> <prescaler> : configure sensor\n");
+}
+
+void mainController::showDeviceStatus() {
+    cli::sendResponse("UID      : %s\n", uniqueId::asHexString());
+    cli::sendResponse("name     : %s\n", name);
+    cli::sendResponse("display  : %s\n", display::isPresent() ? "present" : "not present");
+    cli::sendResponse("EEPROM   : %d * 64K present\n", nonVolatileStorage::detectNmbr64KBanks());
+    cli::sendResponse("battery  : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
+    cli::sendResponse("radioType: %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
+    cli::sendResponse("BME680   : %s\n", bme680::isPresent() ? "present" : "not present");
+    cli::sendResponse("TSL2591  : %s\n", tsl2591::isPresent() ? "present" : "not present");
+    cli::sendResponse("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
+}
+
+void mainController::showNetworkStatus() {
+    cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
+    cli::sendResponse("NetSKey  : %s\n", LoRaWAN::networkKey.getAsHexString());            // TODO : mask part of the key
+    cli::sendResponse("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());        // TODO : mask part of the key
+    cli::sendResponse("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());
+    cli::sendResponse("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.toUint32());
+    cli::sendResponse("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
+    cli::sendResponse("DataRate : %u\n", LoRaWAN::currentDataRateIndex);
+    cli::sendResponse("rx1DROff : %u\n", LoRaWAN::rx1DataRateOffset);
+    cli::sendResponse("rx2DRIdx : %u\n\n", LoRaWAN::rx2DataRateIndex);
+    cli::sendResponse("ActiveCh : %u\n", loRaTxChannelCollection::nmbrActiveChannels());
+    for (uint32_t loRaTxChannelIndex = 0; loRaTxChannelIndex < loRaTxChannelCollection::maxNmbrChannels; loRaTxChannelIndex++) {
+        cli::sendResponse("Chan[%02u] : %u Hz, %u, %u\n", loRaTxChannelIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].frequencyInHz, loRaTxChannelCollection::channel[loRaTxChannelIndex].minimumDataRateIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].maximumDataRateIndex);
+    }
+}
+
+void mainController::setDeviceAddress(cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 1) {
+        char newDevAddrAsHex[deviceAddress::lengthAsHexAscii + 1]{0};
+        size_t copyLen = strnlen(theCommand.arguments[0], deviceAddress::lengthAsHexAscii);
+        if (copyLen > deviceAddress::lengthAsHexAscii) {
+            copyLen = deviceAddress::lengthAsHexAscii;
+        }
+        memcpy(newDevAddrAsHex, theCommand.arguments[0], copyLen);
+        LoRaWAN::DevAddr.setFromHexString(newDevAddrAsHex);
+        LoRaWAN::saveConfig();
+
+        cli::sendResponse("device address set : %s\n", LoRaWAN::DevAddr.getAsHexString());
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+void mainController::setNetworkKey(cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 1) {
+        char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
+        size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
+        if (copyLen > aesKey::lengthAsHexAscii) {
+            copyLen = aesKey::lengthAsHexAscii;
+        }
+        memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);
+        LoRaWAN::networkKey.setFromHexString(newKeyAsHex);
+        LoRaWAN::saveConfig();
+        cli::sendResponse("network key set : %s\n", LoRaWAN::networkKey.getAsHexString());
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+void mainController::setApplicationKey(cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 1) {
+        char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
+        size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
+        cli::sendResponse("arg[0].length = %d\n", copyLen);
+        if (copyLen > aesKey::lengthAsHexAscii) {
+            copyLen = aesKey::lengthAsHexAscii;
+        }
+        memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);        // TODO should use strlcpy which ensures terminating zero
+        LoRaWAN::applicationKey.setFromHexString(newKeyAsHex);
+        LoRaWAN::saveConfig();
+        cli::sendResponse("application key set : %s\n", LoRaWAN::applicationKey.getAsHexString());
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+
+void mainController::setName(cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 1) {
+        uint8_t newName[maxNameLength + 1]{0};
+        size_t copyLen = strnlen(theCommand.arguments[0], maxNameLength);
+        if (copyLen > maxNameLength) {
+            copyLen = maxNameLength;
+        }
+        memcpy(newName, theCommand.arguments[0], copyLen);
+        settingsCollection::saveByteArray(newName, settingsCollection::settingIndex::name);
+        screen::setName(theCommand.arguments[0]);
+        cli::sendResponse("name set : %s\n", theCommand.arguments[0]);
+    } else {
+        cli::sendResponse("invalid arguments\n");
     }
 }
