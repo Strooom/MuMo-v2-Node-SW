@@ -28,13 +28,13 @@ frameCount& frameCount::operator=(const frameCount& theFrameCount) {
 //     return (asUint32 == theFrameCount.asUint32);
 // }
 
-bool frameCount::operator!=(const frameCount& theFrameCount) const {
-    return (asUint32 != theFrameCount.asUint32);
-}
+// bool frameCount::operator!=(const frameCount& theFrameCount) const {
+//     return (asUint32 != theFrameCount.asUint32);
+// }
 
-bool frameCount::operator>(const frameCount& theFrameCount) const {
-    return (asUint32 > theFrameCount.asUint32);
-}
+// bool frameCount::operator>(const frameCount& theFrameCount) const {
+//     return (asUint32 > theFrameCount.asUint32);
+// }
 
 // frameCount& frameCount::operator++(int) {
 //     asUint32++;

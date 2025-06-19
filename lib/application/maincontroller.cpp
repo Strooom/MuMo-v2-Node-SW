@@ -208,8 +208,8 @@ void mainController::initialize() {
         LoRaWAN::initializeState();
         logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN state\n");
     }
-    logging::snprintf("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());
-    logging::snprintf("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.toUint32());
+    logging::snprintf("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.getAsWord());
+    logging::snprintf("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.getAsWord());
     logging::snprintf("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
     logging::snprintf("DataRate : %u\n", LoRaWAN::currentDataRateIndex);
     logging::snprintf("rx1DROff : %u\n", LoRaWAN::rx1DataRateOffset);
@@ -671,8 +671,8 @@ void mainController::showNetworkStatus() {
     }
     cli::sendResponse("AppSKey  : %s\n", tmpKey);
 
-    cli::sendResponse("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());
-    cli::sendResponse("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.toUint32());
+    cli::sendResponse("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.getAsWord());
+    cli::sendResponse("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.getAsWord());
     cli::sendResponse("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
     cli::sendResponse("DataRate : %u\n", LoRaWAN::currentDataRateIndex);
     cli::sendResponse("rx1DROff : %u\n", LoRaWAN::rx1DataRateOffset);

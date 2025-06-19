@@ -291,8 +291,8 @@ void LoRaWAN::insertHeaders(const uint8_t* theFrameOptions, const uint32_t theFr
         }
     }
 
-    rawMessage[frameCountOffset]     = uplinkFrameCount[0];
-    rawMessage[frameCountOffset + 1] = uplinkFrameCount[1];
+    rawMessage[frameCountOffset]     = uplinkFrameCount.getAsByte(0);
+    rawMessage[frameCountOffset + 1] = uplinkFrameCount.getAsByte(1);
 
     if ((frameOptionsLength > 0) && (framePayloadLength > 0) && theFramePort == 0) {
         logging::snprintf(logging::source::error, "Error : illegal combination of frameOptions and framePort == 0\n");
@@ -1088,8 +1088,8 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
     goTo(txRxCycleState::waitForRandomTimeBeforeTransmit);
 
     // 3. txRxCycle is started..
-    //uplinkFrameCount++; // old
-    uplinkFrameCount.increment(); // new
+    // uplinkFrameCount++; // old
+    uplinkFrameCount.increment();        // new
     settingsCollection::save(uplinkFrameCount.toUint32(), settingsCollection::settingIndex::uplinkFrameCounter);
     settingsCollection::save(downlinkFrameCount.toUint32(), settingsCollection::settingIndex::downlinkFrameCounter);
     removeNonStickyMacStuff();
@@ -1198,7 +1198,7 @@ bool LoRaWAN::isValidDownlinkFrameCount(frameCount testFrameCount) {
     if (downlinkFrameCount.toUint32() == 0) {
         return true;        // no downlink received yet, so any frameCount is valid
     } else {
-        return (testFrameCount > downlinkFrameCount);
+        return (testFrameCount.toUint32() > downlinkFrameCount.toUint32());
     }
 }
 

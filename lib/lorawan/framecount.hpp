@@ -18,8 +18,8 @@ class frameCount {
     frameCount& operator=(const uint32_t theFrameCount);
     frameCount& operator=(const frameCount& theFrameCount);
     //bool operator==(const frameCount& theFrameCount) const;
-    bool operator!=(const frameCount& theFrameCount) const;
-    bool operator>(const frameCount& theFrameCount) const;
+    //bool operator!=(const frameCount& theFrameCount) const;
+    //bool operator>(const frameCount& theFrameCount) const;
     //frameCount& operator++(int);
     void guessFromUint16(uint16_t frameCount16Lsb);
     uint32_t toUint32() const { return asUint32; };
