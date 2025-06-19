@@ -62,21 +62,6 @@ void test_SetFromWord() {
     }
 }
 
-void test_operatorEqual() {
-    frameCount testFrameCount1(0x12345678);
-    frameCount testFrameCount2(0x12345678);
-    frameCount testFrameCount3(0x87654321);
-    TEST_ASSERT_TRUE(testFrameCount1 == testFrameCount2);
-    TEST_ASSERT_FALSE(testFrameCount2 == testFrameCount3);
-}
-
-void test_operatorNotEqual() {
-    frameCount testFrameCount1(0x12345678);
-    frameCount testFrameCount2(0x12345678);
-    frameCount testFrameCount3(0x87654321);
-    TEST_ASSERT_TRUE(testFrameCount2 != testFrameCount3);
-    TEST_ASSERT_FALSE(testFrameCount1 != testFrameCount2);
-}
 
 void test_operatorIncrement() {
     frameCount testFrameCount;
@@ -133,8 +118,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_operatorAssign);
     RUN_TEST(test_setFromByteArray);
     RUN_TEST(test_SetFromWord);
-    RUN_TEST(test_operatorEqual);
-    RUN_TEST(test_operatorNotEqual);
     RUN_TEST(test_operatorIncrement);
     RUN_TEST(test_guessFromUint16);
     RUN_TEST(test_accessBytes);

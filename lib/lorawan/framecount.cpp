@@ -24,9 +24,9 @@ frameCount& frameCount::operator=(const frameCount& theFrameCount) {
     return *this;
 }
 
-bool frameCount::operator==(const frameCount& theFrameCount) const {
-    return (asUint32 == theFrameCount.asUint32);
-}
+// bool frameCount::operator==(const frameCount& theFrameCount) const {
+//     return (asUint32 == theFrameCount.asUint32);
+// }
 
 bool frameCount::operator!=(const frameCount& theFrameCount) const {
     return (asUint32 != theFrameCount.asUint32);

@@ -17,7 +17,7 @@ class frameCount {
     explicit frameCount(uint32_t theFrameCount);
     frameCount& operator=(const uint32_t theFrameCount);
     frameCount& operator=(const frameCount& theFrameCount);
-    bool operator==(const frameCount& theFrameCount) const;
+    //bool operator==(const frameCount& theFrameCount) const;
     bool operator!=(const frameCount& theFrameCount) const;
     bool operator>(const frameCount& theFrameCount) const;
     frameCount& operator++(int);
