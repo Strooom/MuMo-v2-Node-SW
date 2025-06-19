@@ -1,18 +1,26 @@
 #include <unity.h>
 #include <framecount.hpp>
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_initialize() {
     frameCount testFrameCount1;
     TEST_ASSERT_EQUAL(0, testFrameCount1.toUint32());
+    TEST_ASSERT_EQUAL(0, testFrameCount1.getAsWord());
+    uint8_t expectedBytes1[frameCount::lengthInBytes]{0, 0, 0, 0};
+    for (uint32_t index = 0; index < frameCount::lengthInBytes; index++) {
+        TEST_ASSERT_EQUAL(expectedBytes1[index], testFrameCount1.getAsByte(index));
+    }
+
     frameCount testFrameCount2(0x12345678);
     TEST_ASSERT_EQUAL(0x12345678, testFrameCount2.toUint32());
+    TEST_ASSERT_EQUAL(0x12345678, testFrameCount2.getAsWord());
+    uint8_t expectedBytes2[frameCount::lengthInBytes]{0x78, 0x56, 0x34, 0x12};
+    for (uint32_t index = 0; index < frameCount::lengthInBytes; index++) {
+        TEST_ASSERT_EQUAL(expectedBytes2[index], testFrameCount2.getAsByte(index));
+    }
 }
-
 
 void test_operatorAssign() {
     frameCount testFrameCount1;
@@ -21,8 +29,37 @@ void test_operatorAssign() {
     TEST_ASSERT_EQUAL(0, testFrameCount2.toUint32());
     testFrameCount1 = 0x12345678;
     TEST_ASSERT_EQUAL(0x12345678, testFrameCount1.toUint32());
+    TEST_ASSERT_EQUAL(0x12345678, testFrameCount1.getAsWord());
+    uint8_t expectedBytes1[frameCount::lengthInBytes]{0x78, 0x56, 0x34, 0x12};
+    for (uint32_t index = 0; index < frameCount::lengthInBytes; index++) {
+        TEST_ASSERT_EQUAL(expectedBytes1[index], testFrameCount1.getAsByte(index));
+    }
     testFrameCount2 = testFrameCount1;
     TEST_ASSERT_EQUAL(0x12345678, testFrameCount2.toUint32());
+    TEST_ASSERT_EQUAL(0x12345678, testFrameCount2.getAsWord());
+    uint8_t expectedBytes2[frameCount::lengthInBytes]{0x78, 0x56, 0x34, 0x12};
+    for (uint32_t index = 0; index < frameCount::lengthInBytes; index++) {
+        TEST_ASSERT_EQUAL(expectedBytes2[index], testFrameCount2.getAsByte(index));
+    }
+}
+
+void test_setFromByteArray() {
+    frameCount testFrameCount;
+    uint8_t testBytes[frameCount::lengthInBytes]{0x78, 0x56, 0x34, 0x12};
+    testFrameCount.setFromByteArray(testBytes);
+    TEST_ASSERT_EQUAL(0x12345678, testFrameCount.toUint32());
+    TEST_ASSERT_EQUAL(0x12345678, testFrameCount.getAsWord());
+}
+
+void test_SetFromWord() {
+    frameCount testFrameCount;
+    testFrameCount.setFromWord(0x12345678);
+    TEST_ASSERT_EQUAL(0x12345678, testFrameCount.toUint32());
+    TEST_ASSERT_EQUAL(0x12345678, testFrameCount.getAsWord());
+    uint8_t expectedBytes[frameCount::lengthInBytes]{0x78, 0x56, 0x34, 0x12};
+    for (uint32_t index = 0; index < frameCount::lengthInBytes; index++) {
+        TEST_ASSERT_EQUAL(expectedBytes[index], testFrameCount.getAsByte(index));
+    }
 }
 
 void test_operatorEqual() {
@@ -62,6 +99,31 @@ void test_guessFromUint16() {
     TEST_ASSERT_EQUAL(0x12348109, testFrameCount.toUint32());
 }
 
+void test_accessBytes() {
+    frameCount testFrameCount;
+    testFrameCount.setFromWord(0x12345678);
+    TEST_ASSERT_EQUAL(0x12345678, testFrameCount.toUint32());
+    TEST_ASSERT_EQUAL(0x12345678, testFrameCount.getAsWord());
+    TEST_ASSERT_EQUAL(0x78, testFrameCount.getAsByte(0));
+    TEST_ASSERT_EQUAL(0x56, testFrameCount.getAsByte(1));
+    TEST_ASSERT_EQUAL(0x34, testFrameCount.getAsByte(2));
+    TEST_ASSERT_EQUAL(0x12, testFrameCount.getAsByte(3));
+    TEST_ASSERT_EQUAL(0x78, testFrameCount[0]);
+    TEST_ASSERT_EQUAL(0x56, testFrameCount[1]);
+    TEST_ASSERT_EQUAL(0x34, testFrameCount[2]);
+    TEST_ASSERT_EQUAL(0x12, testFrameCount[3]);
+}
+void test_increment2() {
+    frameCount testFrameCount;
+    testFrameCount.setFromWord(10);
+    testFrameCount.increment();
+    TEST_ASSERT_EQUAL(11, testFrameCount.getAsWord());
+    testFrameCount.increment();
+    TEST_ASSERT_EQUAL(12, testFrameCount.getAsWord());
+
+}
+
+
 int main(int argc, char **argv) {
 #ifndef generic
 // Here we could setup the STM32 for target unit testing
@@ -69,9 +131,13 @@ int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
     RUN_TEST(test_operatorAssign);
+    RUN_TEST(test_setFromByteArray);
+    RUN_TEST(test_SetFromWord);
     RUN_TEST(test_operatorEqual);
     RUN_TEST(test_operatorNotEqual);
     RUN_TEST(test_operatorIncrement);
     RUN_TEST(test_guessFromUint16);
+    RUN_TEST(test_accessBytes);
+    RUN_TEST(test_increment2);
     UNITY_END();
 }
