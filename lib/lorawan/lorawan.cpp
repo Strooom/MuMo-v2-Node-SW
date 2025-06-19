@@ -77,23 +77,9 @@ void LoRaWAN::initialize() {
 }
 
 void LoRaWAN::restoreConfig() {
-    // new
     uint8_t tmpDeviceAddressArray[deviceAddress::lengthInBytes];
     settingsCollection::readByteArray(tmpDeviceAddressArray, settingsCollection::settingIndex::DevAddr);
     DevAddr.setFromByteArray(tmpDeviceAddressArray);
-    // logging::snprintf("0x%02X 0x%02X 0x%02X 0x%02X\n", tmpDeviceAddressArray[0], tmpDeviceAddressArray[1], tmpDeviceAddressArray[2], tmpDeviceAddressArray[3]);
-
-    // old
-    // uint32_t tmpDeviceAddressAsWord;
-    // tmpDeviceAddressAsWord = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::DevAddr);
-    // DevAddr.asUint32       = tmpDeviceAddressAsWord;
-    // logging::snprintf("0x%08X\n", tmpDeviceAddressAsWord);
-
-    // for (uint32_t index = 0; index < deviceAddress::lengthInBytes; index++) {
-    //     logging::snprintf("%d : old = 0x%02X, new = 0x%02X\n", index, DevAddr.asUint8[index], DevAddr.getAsByte(index));
-    // }
-    // logging::snprintf("old = 0x%08X, new = 0x%08X\n", DevAddr.asUint32, DevAddr.getAsWord());
-
     uint8_t tmpKeyArray[aesKey::lengthInBytes];
     settingsCollection::readByteArray(tmpKeyArray, settingsCollection::settingIndex::applicationSessionKey);
     applicationKey.setFromByteArray(tmpKeyArray);
@@ -102,15 +88,14 @@ void LoRaWAN::restoreConfig() {
 }
 
 bool LoRaWAN::isValidConfig() {
-    // bool validDeviceAddress{false};
+    bool validDeviceAddress{false};
     bool validNetworkKey{false};
     bool validApplicationKey{false};
-    // TODO : re-enable after devAddr has been refactored
-    // for (uint32_t index = 0; index < deviceAddress::lengthInBytes; index++) {
-    //     if (DevAddr.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
-    //         validDeviceAddress = true;
-    //     }
-    // }
+    for (uint32_t index = 0; index < deviceAddress::lengthInBytes; index++) {
+        if (DevAddr.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
+            validDeviceAddress = true;
+        }
+    }
     for (uint32_t index = 0; index < aesKey::lengthInBytes; index++) {
         if (applicationKey.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
             validApplicationKey = true;
@@ -119,7 +104,7 @@ bool LoRaWAN::isValidConfig() {
             validNetworkKey = true;
         }
     }
-    return /*validDeviceAddress && */ validNetworkKey && validApplicationKey;
+    return validDeviceAddress && validNetworkKey && validApplicationKey;
 }
 
 void LoRaWAN::initializeConfig() {
@@ -1370,17 +1355,6 @@ void LoRaWAN::dumpDeviceTimeAnswer() {
 void LoRaWAN::appendMacCommand(macCommand theMacCommand) {
     LoRaWAN::macOut.append(static_cast<uint8_t>(theMacCommand));
 }
-
-// This function can be removed once all devices with wrong DevAddr are updated
-
-// void LoRaWAN::correctDevAddrEndianness() {
-//     if ((DevAddr.asUint8[0] == 0x26) && (DevAddr.asUint8[1] == 0x0B)) {
-//         uint32_t oldAddress = DevAddr.asUint32;
-//         uint32_t newAddress = swapLittleBigEndian(oldAddress);
-//         DevAddr.asUint32    = newAddress;
-//         saveConfig();
-//     }
-// }
 
 void LoRaWAN::resetMacLayer() {
     resetState();
