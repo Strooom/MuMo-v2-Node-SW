@@ -3,12 +3,10 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 #include <unity.h>
-#include "logging.hpp"
+#include <logging.hpp>
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_initialize() {
     TEST_ASSERT_EQUAL_CHAR(0x00, logging::buffer[0]);

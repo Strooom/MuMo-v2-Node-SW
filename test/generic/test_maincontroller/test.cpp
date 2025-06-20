@@ -9,10 +9,8 @@
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_miniAdr() {
     mainController::requestCounter = 0;
@@ -37,9 +35,9 @@ void test_miniAdr() {
 }
 
 void test_transitions_boot() {
-    // TEST_ASSERT_EQUAL(mainState::boot, mainController::state);
-    // mainController::initialize();
-    // TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
+    TEST_ASSERT_EQUAL(mainState::boot, mainController::state);
+    mainController::initialize();
+    TEST_ASSERT_EQUAL(mainState::networkCheck, mainController::state);
 }
 
 void test_transitions_networkCheck() {
@@ -87,15 +85,15 @@ void test_transitions_main() {
 }
 
 void test_usb_detection() {
-    // power::mockUsbPower = false;
-    // mainController::run();
-    // mainController::handleEvents();
-    // power::mockUsbPower = true;
-    // mainController::run();
-    // mainController::handleEvents();
-    // power::mockUsbPower = false;
-    // mainController::run();
-    // mainController::handleEvents();
+    power::mockUsbPower = false;
+    mainController::runUsbPowerDetection();
+    mainController::handleEvents();
+    power::mockUsbPower = true;
+    mainController::runUsbPowerDetection();
+    mainController::handleEvents();
+    power::mockUsbPower = false;
+    mainController::runUsbPowerDetection();
+    mainController::handleEvents();
 }
 
 void test_toString() {
@@ -109,7 +107,13 @@ void test_toString() {
     TEST_ASSERT_EQUAL_STRING("test", toString(mainState::test));
     TEST_ASSERT_EQUAL_STRING("unknown", toString(static_cast<mainState>(999U)));
 
-    mainController::showLoRaWanStatus(); // Coverage only -> Use Target unit test to validate
+    mainController::showLoRaWanStatus();        // Coverage only -> Use Target unit test to validate
+}
+
+void test_dummy() {
+    mainController::showHelp();
+    mainController::showPrompt();
+    TEST_IGNORE_MESSAGE("for coverage only");
 }
 
 int main(int argc, char **argv) {

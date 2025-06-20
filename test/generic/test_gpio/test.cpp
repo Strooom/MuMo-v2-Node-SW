@@ -5,8 +5,10 @@ void setUp(void) {}
 void tearDown(void) {}
 
 void test_enableDisable() {
+    gpio::initialize();
     gpio::enableGpio(gpio::group::usbPresent);
     gpio::disableGpio(gpio::group::debugPort);
+    TEST_ASSERT_FALSE(gpio::isDebugProbePresent());
     TEST_IGNORE_MESSAGE("For coverage only");
 }
 
