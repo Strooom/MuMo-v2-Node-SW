@@ -174,12 +174,7 @@ void mainController::initialize() {
     // measurementCollection::findMeasurementsInEeprom();
     // uint32_t nmbrOfBytes = measurementCollection::nmbrOfMeasurementBytes();
     // logging::snprintf("%d bytes of measurements found\n", nmbrOfBytes);
-
     // measurementCollection::dumpRaw(measurementCollection::getOldestMeasurementOffset() + 26, 256U);
-
-    // static constexpr uint32_t tmpStringLength{128};
-    // char tmpString[tmpStringLength];
-
     // static constexpr uint32_t maxNmbrOfMeasurementsToDump{16};
     // uint32_t bytesConsumed{0};
     // measurementCollection::printMeasurementGroup(tmpString, measurementCollection::getOldestMeasurementOffset() + 26);
@@ -751,7 +746,7 @@ void mainController::setBatteryType(cliCommand& theCommand) {
     if (theCommand.nmbrOfArguments == 1) {
         uint32_t tmpBatteryTypeIndex = theCommand.argumentAsUint32(0);
         settingsCollection::save(static_cast<uint8_t>(tmpBatteryTypeIndex), settingsCollection::settingIndex::batteryType);
-        battery::setType(tmpBatteryTypeIndex);
+        battery::setType(static_cast<uint8_t>(tmpBatteryTypeIndex));
         cli::sendResponse("Battery set : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
 
     } else {
@@ -772,6 +767,7 @@ void mainController::setRadioType(cliCommand& theCommand) {
 }
 
 void mainController::setDisplay(cliCommand& theCommand) {
+        cli::sendResponse("command not yet implemented\n");
 }
 
 void mainController::setSensor(cliCommand& theCommand) {

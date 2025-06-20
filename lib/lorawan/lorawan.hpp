@@ -74,20 +74,6 @@ class LoRaWAN {
     static void dumpRawMessageHeader();
     static void dumpRawMessagePayload();
     static void dumpTransmitSettings();
-    static void dumpLinkCheckAnswer();
-    static void dumpLinkAdaptiveDataRateRequest();
-    static void dumpDutyCycleRequest();
-    static void dumpDeviceStatusRequest();
-    static void dumpNewChannelRequest();
-    static void dumpNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate);
-    static void dumpReceiveParameterSetupRequest();
-    static void dumpReceiveTimingSetupRequest();
-    static void dumpReceiveTimingSetupRequest(uint32_t rx1Delay);
-    static void dumpTransmitParameterSetupRequest();
-    static void dumpDownlinkChannelRequest();
-    static void dumpDeviceTimeAnswer();
-
-    static void correctDevAddrEndianness();
 
     static uint32_t margin;
     static uint32_t gatewayCount;

@@ -21,7 +21,6 @@ class aesKey {
 
     static uint32_t swapLittleBigEndian(uint32_t wordIn);
 
-
 #ifndef HARDWARE_AES
     uint8_t expandedKey[176];
 #endif
@@ -30,19 +29,16 @@ class aesKey {
 
   private:
 #endif
-
-    void syncWordsFromBytes();
-    void syncHexStringFromBytes();
-
-    // struct {
-    //     uint8_t asByte[lengthInBytes]{};
-    //     uint32_t asUint32[lengthInWords]{};
-    // } key;
-
     // These are 3 representations of the same key data, in different formats for easy retrieval. They are synced when setting the key.
+    // representation as hexAscii aligns with how The Things Network shows the AES keys, so copy paste from there is possible.
+    // representation as bytes : first to hexAscii characters map to first byte of the array
+
     uint8_t keyAsBytes[lengthInBytes]{};
     uint32_t keyAsWords[lengthInWords]{};
     char keyAsHexString[lengthAsHexAscii + 1]{};
+
+    void syncWordsFromBytes();
+    void syncHexStringFromBytes();
 
 #ifndef HARDWARE_AES
     void expandKey();

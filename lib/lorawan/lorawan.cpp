@@ -1315,43 +1315,6 @@ void LoRaWAN::dumpTransmitSettings() {
     logging::snprintf("  frequency = %u\n\n", txFrequency);
 }
 
-void LoRaWAN::dumpLinkCheckAnswer() {
-    // TODO : implement
-}
-void LoRaWAN::dumpLinkAdaptiveDataRateRequest() {
-    // TODO : implement
-}
-void LoRaWAN::dumpDutyCycleRequest() {
-    // TODO : implement
-}
-void LoRaWAN::dumpDeviceStatusRequest() {
-    // TODO : implement
-}
-void LoRaWAN::dumpNewChannelRequest() {
-    // TODO : implement
-}
-void LoRaWAN::dumpNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate) {
-    // TODO : implement
-}
-void LoRaWAN::dumpReceiveParameterSetupRequest() {
-    // TODO : implement
-}
-void LoRaWAN::dumpReceiveTimingSetupRequest() {
-    // TODO : implement
-}
-void LoRaWAN::dumpReceiveTimingSetupRequest(uint32_t rx1Delay) {
-    // TODO : implement
-}
-void LoRaWAN::dumpTransmitParameterSetupRequest() {
-    // TODO : implement
-}
-void LoRaWAN::dumpDownlinkChannelRequest() {
-    // TODO : implement
-}
-void LoRaWAN::dumpDeviceTimeAnswer() {
-    // TODO : implement
-}
-
 void LoRaWAN::appendMacCommand(macCommand theMacCommand) {
     LoRaWAN::macOut.append(static_cast<uint8_t>(theMacCommand));
 }
