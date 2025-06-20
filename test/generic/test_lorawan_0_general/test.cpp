@@ -33,8 +33,8 @@ void test_initialize_config() {
 }
 
 void test_initialize_state() {
-    TEST_ASSERT_EQUAL(1, LoRaWAN::uplinkFrameCount.asUint32);
-    TEST_ASSERT_EQUAL(0, LoRaWAN::downlinkFrameCount.asUint32);
+    TEST_ASSERT_EQUAL(0, LoRaWAN::uplinkFrameCount.getAsWord());
+    TEST_ASSERT_EQUAL(0, LoRaWAN::downlinkFrameCount.getAsWord());
     TEST_ASSERT_EQUAL(5, LoRaWAN::currentDataRateIndex);
     TEST_ASSERT_EQUAL(3, LoRaWAN::rx2DataRateIndex);
     TEST_ASSERT_EQUAL(0, LoRaWAN::rx1DataRateOffset);
@@ -69,22 +69,22 @@ void test_save_restore_config() {
 
 void test_save_restore_state() {
     LoRaWAN::rx1DelayInSeconds    = 0x05;
-    LoRaWAN::uplinkFrameCount     = 0x1234;
-    LoRaWAN::downlinkFrameCount   = 0x5678;
+    LoRaWAN::uplinkFrameCount.setFromWord(0x1234);
+    LoRaWAN::downlinkFrameCount.setFromWord(0x5678);
     LoRaWAN::currentDataRateIndex = 0x02;
     LoRaWAN::rx2DataRateIndex     = 0x03;
     LoRaWAN::rx1DataRateOffset    = 0x04;
     LoRaWAN::saveState();
     LoRaWAN::rx1DelayInSeconds    = 0x0;
-    LoRaWAN::uplinkFrameCount     = 0;
-    LoRaWAN::downlinkFrameCount   = 0;
+    LoRaWAN::uplinkFrameCount.setFromWord(0);
+    LoRaWAN::downlinkFrameCount.setFromWord(0);
     LoRaWAN::currentDataRateIndex = 0;
     LoRaWAN::rx2DataRateIndex     = 0;
     LoRaWAN::rx1DataRateOffset    = 0;
     LoRaWAN::restoreState();
     TEST_ASSERT_EQUAL(0x05, LoRaWAN::rx1DelayInSeconds);
-    TEST_ASSERT_EQUAL(0x1234, LoRaWAN::uplinkFrameCount.asUint32);
-    TEST_ASSERT_EQUAL(0x5678, LoRaWAN::downlinkFrameCount.asUint32);
+    TEST_ASSERT_EQUAL(0x1234, LoRaWAN::uplinkFrameCount.getAsWord());
+    TEST_ASSERT_EQUAL(0x5678, LoRaWAN::downlinkFrameCount.getAsWord());
     TEST_ASSERT_EQUAL(0x02, LoRaWAN::currentDataRateIndex);
     TEST_ASSERT_EQUAL(0x03, LoRaWAN::rx2DataRateIndex);
     TEST_ASSERT_EQUAL(0x04, LoRaWAN::rx1DataRateOffset);
@@ -109,14 +109,15 @@ void test_save_restore_channels() {
 }
 
 void test_isValidDownlinkFrameCount() {
-    LoRaWAN::downlinkFrameCount = 0;
-    frameCount testFrameCount(10);
+    LoRaWAN::downlinkFrameCount.setFromWord(0);
+    frameCount testFrameCount;
+    testFrameCount.setFromWord(10);
     TEST_ASSERT_TRUE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
-    LoRaWAN::downlinkFrameCount = 9;
+    LoRaWAN::downlinkFrameCount.setFromWord(9);
     TEST_ASSERT_TRUE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
-    LoRaWAN::downlinkFrameCount = 10;
+    LoRaWAN::downlinkFrameCount.setFromWord(10);
     TEST_ASSERT_FALSE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
-    LoRaWAN::downlinkFrameCount = 11;
+    LoRaWAN::downlinkFrameCount.setFromWord(11);
     TEST_ASSERT_FALSE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
 }
 
