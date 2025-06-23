@@ -219,19 +219,21 @@ void gpio::disableGpio(group theGroup) {
             break;
 
         case gpio::group::spiDisplay:
-            // V2 hardware cannot remove power from the display, so we must keep at least the reset pin enabled. A floating reset pin will reset the display and wakes it up from its deep sleep, increasing power.
-            // V3 hardware removes power, so we need to disable all output pins (or put them to GND), otherwise the display will draw leaking current from these pins.
+            // we need to distinguish between v2 and v3 hardware here, because the v3 hardware can remove power from the display by switching of a FET, while the v2 hardware cannot and relies on the display being put into deeo sleep.
 #ifdef v3
+            // V3 hardware removes power, so we need to disable all output pins (or put them to GND), otherwise the display will draw leaking current from these pins.
             HAL_GPIO_DeInit(GPIOA, displayReset_Pin);        // PA0     ------> displayReset
             HAL_GPIO_DeInit(GPIOA, GPIO_PIN_10);             // PA10     ------> SPI2_MOSI
             HAL_GPIO_DeInit(GPIOB, GPIO_PIN_13);             // PB13     ------> SPI2_SCK
             HAL_GPIO_DeInit(GPIOB, GPIO_PIN_14);             // PB14     ------> displayDataCommand
             HAL_GPIO_DeInit(GPIOB, GPIO_PIN_5);              // PB5      ------> displayChipSelect
 #else
+            // V2 hardware cannot remove power from the display, so we must keep at least the reset pin enabled. A floating reset pin will reset the display and wakes it up from its deep sleep, increasing power and damages the display in the long run.
             HAL_GPIO_WritePin(GPIOA, displayReset_Pin, GPIO_PIN_SET);        // PA0     ------> displayReset - keep high to prevent display reset which wakes it up
 #endif
-            // displayBusy is an input an increases current consumption with 100 uA when enabled
-            // All other IOs for display are outputs and apparently increase current consumption with ~15 uA when disabled, so in V2 we keep them enabled
+            // displayBusy is an input with pulldown, and is driven HIGH from the display during deep sleep.
+            // Not disabling the input increases current consumption with ~100 uA
+            // All other IOs for display are outputs and apparently increase current consumption with ~15 uA when disabled (don't understand exactly why yet...), so in V2 we keep them enabled
             HAL_GPIO_DeInit(GPIOB, displayBusy_Pin);        // PB10     ------> displayBusy
             break;
 
