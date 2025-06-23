@@ -72,11 +72,11 @@ int main(void) {
         gpio::disableGpio(gpio::group::debugPort);
     }
 
-//    if (power::hasUsbPower()) {
-//        HAL_RCC_DeInit();
-//        HAL_DeInit();
-//        executeRomBootloader();
-//    }
+   if (power::hasUsbPower()) {
+       HAL_RCC_DeInit();
+       HAL_DeInit();
+       executeRomBootloader();
+   }
 
     MX_RTC_Init();
     MX_ADC_Init();
