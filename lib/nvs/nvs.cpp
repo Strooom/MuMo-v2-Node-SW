@@ -11,7 +11,6 @@
 extern I2C_HandleTypeDef hi2c2;
 #else
 #include <cstring>
-uint32_t nonVolatileStorage::mockEepromNmbr64KPages{2};
 uint8_t nonVolatileStorage::mockEepromMemory[mockEepromMemorySize];
 #endif
 
@@ -51,12 +50,14 @@ uint32_t nonVolatileStorage::detectNmbr64KBanks() {
     for (uint8_t blockIndex = 0; blockIndex < maxNmbr64KBanks; blockIndex++) {
         if (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, static_cast<uint16_t>((baseI2cAddress + blockIndex) << 1), halNmbrOfTrials, halTimeoutInMs)) {
             nmbr64KBanks++;
+        } else {
+            return nmbr64KBanks;
         }
     }
-#else
-    nmbr64KBanks = mockEepromNmbr64KPages;
-#endif
     return nmbr64KBanks;
+#else
+    return mockEepromNmbr64KPages;
+#endif
 }
 
 // Reading and Writing a single byte. Simple but not efficient when you need to read or write a range of bytes
@@ -171,7 +172,7 @@ void nonVolatileStorage::write(const uint32_t startAddress, const uint8_t* sourc
         remainingData += bytesInThisPage;
         remainingLength -= bytesInThisPage;
     }
-        if (i2cState == i2c::wasSleeping) {
+    if (i2cState == i2c::wasSleeping) {
         i2c::goSleep();
     }
 }

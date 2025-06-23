@@ -1,0 +1,32 @@
+// ######################################################################################
+// ### Author : Pascal Roobrouck - https://github.com/Strooom                         ###
+// ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
+// ######################################################################################
+
+#pragma once
+#include <stdint.h>
+#include <measurementgroup.hpp>
+#include <nvs.hpp>
+
+class measurementGroupCollection {
+  public:
+    static void initialize();
+    static void reset();
+    static void eraseOldest();
+    static void addNewMeasurementGroup(measurementGroup &aMeasurementGroup);
+    static void getMeasurementGroup(measurementGroup &aMeasurementGroup);
+    static void getMeasurementGroup(measurementGroup &aMeasurementGroup, uint32_t offset);
+
+    static uint32_t getOldestMeasurementOffset() { return oldestMeasurementOffset; };
+    static uint32_t getNewMeasurementsOffset() { return newMeasurementsOffset; };
+    static uint32_t getFreeSpace() { return nonVolatileStorage::measurementsSize + oldestMeasurementOffset - newMeasurementsOffset; };
+
+#ifndef unitTesting
+
+  private:
+#endif
+    static uint32_t oldestMeasurementOffset;
+    static uint32_t newMeasurementsOffset;
+    static bool isValid() { return ((oldestMeasurementOffset != 0xFFFFFFFF) && (newMeasurementsOffset != 0xFFFFFFFF)); };
+    static uint32_t getAddressFromOffset(uint32_t offset) { return nonVolatileStorage::measurementsStartAddress + (offset % nonVolatileStorage::measurementsSize); };
+};
