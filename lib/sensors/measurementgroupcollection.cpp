@@ -60,28 +60,6 @@ void measurementGroupCollection::eraseOldest() {
     settingsCollection::save(oldestMeasurementOffset, settingsCollection::settingIndex::oldestMeasurementOffset);
 }
 
-void measurementGroupCollection::getMeasurementGroup(measurementGroup& theMeasurementGroup) {
-    uint32_t lengthInBytes = measurementGroup::lengthInBytes(nonVolatileStorage::read(getAddressFromOffset(oldestMeasurementOffset)));
-    uint8_t buffer[lengthInBytes];
-
-    uint8_t* remainingData{buffer};
-    uint32_t remainingLength{lengthInBytes};
-    uint32_t currentOffset{oldestMeasurementOffset};
-
-    // TODO : wakeUp NVS if needed
-
-    while (remainingLength > 0) {
-        uint32_t bytesInThisPage = nonVolatileStorage::bytesInCurrentPage(getAddressFromOffset(currentOffset), remainingLength);
-        nonVolatileStorage::readInPage(getAddressFromOffset(currentOffset), remainingData, bytesInThisPage);
-        currentOffset += bytesInThisPage;
-        remainingData += bytesInThisPage;
-        remainingLength -= bytesInThisPage;
-    }
-
-    theMeasurementGroup.fromBytes(buffer);
-
-    // TODO : put NVS back to sleep if it was sleeping
-}
 
 void measurementGroupCollection::getMeasurementGroup(measurementGroup &aMeasurementGroup, uint32_t offset) {
 

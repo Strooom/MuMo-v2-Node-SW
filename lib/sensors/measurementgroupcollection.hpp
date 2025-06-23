@@ -14,7 +14,6 @@ class measurementGroupCollection {
     static void reset();
     static void eraseOldest();
     static void addNewMeasurementGroup(measurementGroup &aMeasurementGroup);
-    static void getMeasurementGroup(measurementGroup &aMeasurementGroup);
     static void getMeasurementGroup(measurementGroup &aMeasurementGroup, uint32_t offset);
 
     static uint32_t getOldestMeasurementOffset() { return oldestMeasurementOffset; };

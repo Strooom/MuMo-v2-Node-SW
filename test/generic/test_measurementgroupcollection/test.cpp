@@ -117,13 +117,8 @@ void test_add_and_read_back(void) {
     measurementGroupCollection::addNewMeasurementGroup(testMeasurementGroupToWrite);
 
     measurementGroup testMeasurementGroupToRead;
-    measurementGroupCollection::getMeasurementGroup(testMeasurementGroupToRead);
-
+    measurementGroupCollection::getMeasurementGroup(testMeasurementGroupToRead, 0);
     TEST_ASSERT_EQUAL_UINT32(2, testMeasurementGroupToRead.getNumberOfMeasurements());
-
-    measurementGroup testMeasurementGroupToRead2;
-    measurementGroupCollection::getMeasurementGroup(testMeasurementGroupToRead2, 0);
-    TEST_ASSERT_EQUAL_UINT32(2, testMeasurementGroupToRead2.getNumberOfMeasurements());
 }
 
 void test_eraseOldest() {
