@@ -84,6 +84,7 @@ int main(void) {
     MX_RNG_Init();
     MX_LPTIM1_Init();
 
+    gpio::enableGpio(gpio::group::usbPresent);
     uart1::initialize();
     uart2::initialize();
 

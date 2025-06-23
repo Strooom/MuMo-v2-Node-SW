@@ -137,11 +137,13 @@ void gpio::enableGpio(group theGroup) {
         case gpio::group::usbPresent:
             // PB4     ------> usbPowerPresent
             GPIO_InitStruct.Pin  = usbPowerPresent_Pin;
-            GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+            GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
             GPIO_InitStruct.Pull = GPIO_PULLDOWN;
             HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-            break;
 
+            HAL_NVIC_SetPriority(EXTI4_IRQn, 6, 0);
+            HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+            break;
         case gpio::group::enableDisplayPower:
 // PA9 = Wio-E5 pin 21 - charge the display power rail without a current peak, prevents brownout of the MCU
 // PC0 = Wio-E5 pin 13 - switches the 3.3V towards the epaper display
@@ -259,6 +261,7 @@ void gpio::disableGpio(group theGroup) {
         case gpio::group::usbPresent:
             // PB4     ------> usbPowerPresent
             HAL_GPIO_DeInit(GPIOB, usbPowerPresent_Pin);
+            HAL_NVIC_DisableIRQ(EXTI4_IRQn);
             break;
 
         case gpio::group::enableDisplayPower:
