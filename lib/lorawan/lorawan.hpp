@@ -27,15 +27,17 @@ static constexpr char toBeNetworkKey[]     = "0DBC6EF938B83EB4F83C28E3CA7B4132";
 static constexpr char toBeApplicationKey[] = "7E22AA54A7F4C0842861A13F1D161DE2";
 
 static constexpr uint32_t toBeCurrentDataRateIndex = 5;
-static constexpr uint32_t toBeRx1DataRateOffset  = 0;
-static constexpr uint32_t toBeRx2DataRateIndex  = 3;
-static constexpr uint32_t toBeRx1DelayInSeconds = 1;
-static constexpr uint32_t toBeUplinkFrameCount = 0;
-static constexpr uint32_t toBeDownlinkFrameCount = 0;
+static constexpr uint32_t toBeRx1DataRateOffset    = 0;
+static constexpr uint32_t toBeRx2DataRateIndex     = 3;
+static constexpr uint32_t toBeRx1DelayInSeconds    = 1;
+static constexpr uint32_t toBeUplinkFrameCount     = 0;
+static constexpr uint32_t toBeDownlinkFrameCount   = 0;
 
 class LoRaWAN {
   public:
     static void initialize();
+    static void setEnableRadio(bool enable) { enableRadio = enable; };
+    static bool isRadioEnabled() { return enableRadio; };
 
     static void restoreConfig();
     static bool isValidConfig();
@@ -91,6 +93,8 @@ class LoRaWAN {
 #ifndef unitTesting
   private:
 #endif
+
+    static bool enableRadio;
 
     static txRxCycleState state;
     static void goTo(txRxCycleState newState);

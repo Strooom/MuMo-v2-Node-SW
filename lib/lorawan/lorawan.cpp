@@ -21,6 +21,7 @@ extern LPTIM_HandleTypeDef hlptim1;
 
 #pragma region Instantiate and Initialize the Static members
 
+bool LoRaWAN::enableRadio{true};
 deviceAddress LoRaWAN::DevAddr;
 aesKey LoRaWAN::applicationKey;
 aesKey LoRaWAN::networkKey;
@@ -134,7 +135,7 @@ void LoRaWAN::saveConfig() {
 }
 
 void LoRaWAN::restoreState() {
-    rx1DelayInSeconds    = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1Delay);
+    rx1DelayInSeconds = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1Delay);
     uplinkFrameCount.setFromWord(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::uplinkFrameCounter));
     downlinkFrameCount.setFromWord(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::downlinkFrameCounter));
     currentDataRateIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::dataRate);

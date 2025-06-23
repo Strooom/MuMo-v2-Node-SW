@@ -341,9 +341,16 @@ void mainController::runStateMachine() {
 
                 uint32_t payloadLength        = measurementCollection::nmbrOfBytesToTransmit();
                 const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
-                LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
-                measurementCollection::setTransmitted(0, payloadLength);        // TODO : get correct frame counter *before* call to sendUplink
-                goTo(mainState::networking);
+
+                if (LoRaWAN::isRadioEnabled()) {
+                    LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
+                    measurementCollection::setTransmitted(0, payloadLength);        // TODO : get correct frame counter *before* call to sendUplink
+                    goTo(mainState::networking);
+                } else {
+                    showMain();
+                    i2c::goSleep();
+                    goTo(mainState::idle);
+                }
             } else {
                 i2c::goSleep();
                 goTo(mainState::idle);
@@ -529,6 +536,16 @@ void mainController::runCli() {
                         case cliCommand::dl:
                             cli::sendResponse("logging disabled\n");
                             logging::disable(logging::destination::uart2);
+                            break;
+
+                        case cliCommand::er:
+                            LoRaWAN::setEnableRadio(true);
+                            cli::sendResponse("radio enabled\n");
+                            break;
+
+                        case cliCommand::dr:
+                            LoRaWAN::setEnableRadio(false);
+                            cli::sendResponse("radio disabled\n");
                             break;
 
                         case cliCommand::gds:
