@@ -414,10 +414,10 @@ void mainController::wakeUp() {
             MX_RNG_Init();
             MX_USART1_UART_Init();
 #endif
-            gpio::enableGpio(gpio::group::rfControl);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : gpio::enableGpio(gpio::group::usbPresent);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : gpio::enableGpio(gpio::group::rfControl);
             gpio::enableGpio(gpio::group::uart1);
             gpio::enableGpio(gpio::group::uart2);
-            gpio::enableGpio(gpio::group::usbPresent);
             logging::snprintf("...wakeUp\n");
             break;
 
@@ -767,7 +767,7 @@ void mainController::setRadioType(cliCommand& theCommand) {
 }
 
 void mainController::setDisplay(cliCommand& theCommand) {
-        cli::sendResponse("command not yet implemented\n");
+    cli::sendResponse("command not yet implemented\n");
 }
 
 void mainController::setSensor(cliCommand& theCommand) {
