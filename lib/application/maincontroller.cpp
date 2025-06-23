@@ -668,6 +668,7 @@ void mainController::showDeviceStatus() {
 }
 
 void mainController::showNetworkStatus() {
+    cli::sendResponse("radio %s\n", LoRaWAN::isRadioEnabled() ? "enabled" : "disabled");
     cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
 
     static constexpr uint32_t nmbrOfCharsToMask{2};
