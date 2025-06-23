@@ -201,7 +201,7 @@ void gpio::disableGpio(group theGroup) {
         case gpio::group::rfControl:
             // PA4     ------> rfControl1
             // PA5     ------> rfControl2
-            HAL_GPIO_DeInit(GPIOA, rfControl1_Pin | rfControl2_Pin);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled : HAL_GPIO_DeInit(GPIOA, rfControl1_Pin | rfControl2_Pin);
             break;
 
         case gpio::group::i2c:
@@ -213,7 +213,7 @@ void gpio::disableGpio(group theGroup) {
 
         case gpio::group::writeProtect:
             // PB9     ------> writeProtect
-            HAL_GPIO_DeInit(GPIOB, writeProtect_Pin);
+            // Powering down these pin has no effect on power consumption, so we keep them enabled : HAL_GPIO_DeInit(GPIOB, writeProtect_Pin);
             break;
 
         case gpio::group::spiDisplay:
@@ -221,14 +221,16 @@ void gpio::disableGpio(group theGroup) {
             // V3 hardware removes power, so we need to disable all output pins (or put them to GND), otherwise the display will draw leaking current from these pins.
 #ifdef v3
             HAL_GPIO_DeInit(GPIOA, displayReset_Pin);        // PA0     ------> displayReset
+            HAL_GPIO_DeInit(GPIOA, GPIO_PIN_10);             // PA10     ------> SPI2_MOSI
+            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_13);             // PB13     ------> SPI2_SCK
+            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_14);             // PB14     ------> displayDataCommand
+            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_5);              // PB5      ------> displayChipSelect
 #else
             HAL_GPIO_WritePin(GPIOA, displayReset_Pin, GPIO_PIN_SET);        // PA0     ------> displayReset - keep high to prevent display reset which wakes it up
 #endif
-            HAL_GPIO_DeInit(GPIOA, GPIO_PIN_10);            // PA10     ------> SPI2_MOSI
+            // displayBusy is an input an increases current consumption with 100 uA when enabled
+            // All other IOs for display are outputs and apparently increase current consumption with ~15 uA when disabled, so in V2 we keep them enabled
             HAL_GPIO_DeInit(GPIOB, displayBusy_Pin);        // PB10     ------> displayBusy
-            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_13);            // PB13     ------> SPI2_SCK
-            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_14);            // PB14     ------> displayDataCommand
-            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_5);             // PB5      ------> displayChipSelect
             break;
 
         case gpio::group::debugPort:
@@ -256,7 +258,7 @@ void gpio::disableGpio(group theGroup) {
 
         case gpio::group::usbPresent:
             // PB4     ------> usbPowerPresent
-            HAL_GPIO_DeInit(GPIOB, usbPowerPresent_Pin);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : HAL_GPIO_DeInit(GPIOB, usbPowerPresent_Pin);
             break;
 
         case gpio::group::enableDisplayPower:
