@@ -201,7 +201,7 @@ void gpio::disableGpio(group theGroup) {
         case gpio::group::rfControl:
             // PA4     ------> rfControl1
             // PA5     ------> rfControl2
-            // Powering down these pins has no effect on power consumption, so we keep them enabled : HAL_GPIO_DeInit(GPIOA, rfControl1_Pin | rfControl2_Pin);
+            HAL_GPIO_DeInit(GPIOA, rfControl1_Pin | rfControl2_Pin);
             break;
 
         case gpio::group::i2c:
@@ -213,7 +213,7 @@ void gpio::disableGpio(group theGroup) {
 
         case gpio::group::writeProtect:
             // PB9     ------> writeProtect
-            // Powering down these pin has no effect on power consumption, so we keep them enabled : HAL_GPIO_DeInit(GPIOB, writeProtect_Pin);
+            HAL_GPIO_DeInit(GPIOB, writeProtect_Pin);
             break;
 
         case gpio::group::spiDisplay:
@@ -258,7 +258,7 @@ void gpio::disableGpio(group theGroup) {
 
         case gpio::group::usbPresent:
             // PB4     ------> usbPowerPresent
-            // Powering down these pins has no effect on power consumption, so we keep them enabled  : HAL_GPIO_DeInit(GPIOB, usbPowerPresent_Pin);
+            HAL_GPIO_DeInit(GPIOB, usbPowerPresent_Pin);
             break;
 
         case gpio::group::enableDisplayPower:

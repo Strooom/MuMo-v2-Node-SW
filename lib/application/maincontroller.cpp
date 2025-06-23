@@ -382,8 +382,8 @@ void mainController::prepareSleep() {
             logging::snprintf("goSleep...\n");
             i2c::goSleep();
             spi::goSleep();
-            gpio::disableGpio(gpio::group::usbPresent);
-            gpio::disableGpio(gpio::group::rfControl);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : gpio::disableGpio(gpio::group::usbPresent);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : gpio::disableGpio(gpio::group::rfControl);
             gpio::disableGpio(gpio::group::uart1);
             gpio::disableGpio(gpio::group::uart2);
             gpio::disableGpio(gpio::group::test0);
