@@ -25,6 +25,8 @@ class cliCommand {
     static constexpr uint32_t help{'?'};                                 // show help
     static constexpr uint32_t gds{'g' * 65536 + 'd' * 256 + 's'};        // show config and status of the device
     static constexpr uint32_t gms{'g' * 65536 + 'm' * 256 + 's'};        // show recorded measurements status
+    static constexpr uint32_t gm{'g' * 256 + 'm'};                       // show recorded measurements : gm <offset = 0>
+
     static constexpr uint32_t gls{'g' * 65536 + 'l' * 256 + 's'};        // show state of the LoRaWAN stack
     static constexpr uint32_t el{'e' * 256 + 'l'};                       // enable logging
     static constexpr uint32_t dl{'d' * 256 + 'l'};                       // disable logging

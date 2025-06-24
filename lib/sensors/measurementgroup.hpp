@@ -21,7 +21,7 @@ class measurementGroup {
     void addMeasurement(uint32_t deviceIndex, uint32_t channelIndex, float value);
     void fromBytes(const uint8_t* source);
     void toBytes(uint8_t* buffer, uint32_t bufferSize) const;
-    static uint32_t lengthInBytes(uint8_t someNmbrOfMeasurements) {
+    static uint32_t lengthInBytes(uint32_t someNmbrOfMeasurements) {
         return ((someNmbrOfMeasurements * 5U) + 6U);        // 1 byte for nmbrOfMeasurements, 4 bytes for timestamp, 1 byte for checksum + 5 bytes per measurement : 1 byte DeviceChannelIndex + 4 byte float value
     };
     static uint8_t calculateChecksum(const uint8_t* buffer, uint32_t bufferSize);
