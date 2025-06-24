@@ -288,6 +288,11 @@ void SUBGHZ_Radio_IRQHandler(void) {
     /* USER CODE END SUBGHZ_Radio_IRQn 1 */
 }
 
+
+void EXTI4_IRQHandler(void) {
+    HAL_GPIO_EXTI_IRQHandler(usbPowerPresent_Pin);
+}
+
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */

@@ -137,11 +137,13 @@ void gpio::enableGpio(group theGroup) {
         case gpio::group::usbPresent:
             // PB4     ------> usbPowerPresent
             GPIO_InitStruct.Pin  = usbPowerPresent_Pin;
-            GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+            GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
             GPIO_InitStruct.Pull = GPIO_PULLDOWN;
             HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-            break;
 
+            HAL_NVIC_SetPriority(EXTI4_IRQn, 6, 0);
+            HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+            break;
         case gpio::group::enableDisplayPower:
 // PA9 = Wio-E5 pin 21 - charge the display power rail without a current peak, prevents brownout of the MCU
 // PC0 = Wio-E5 pin 13 - switches the 3.3V towards the epaper display
@@ -217,18 +219,22 @@ void gpio::disableGpio(group theGroup) {
             break;
 
         case gpio::group::spiDisplay:
-            // V2 hardware cannot remove power from the display, so we must keep at least the reset pin enabled. A floating reset pin will reset the display and wakes it up from its deep sleep, increasing power.
-            // V3 hardware removes power, so we need to disable all output pins (or put them to GND), otherwise the display will draw leaking current from these pins.
+            // we need to distinguish between v2 and v3 hardware here, because the v3 hardware can remove power from the display by switching of a FET, while the v2 hardware cannot and relies on the display being put into deeo sleep.
 #ifdef v3
+            // V3 hardware removes power, so we need to disable all output pins (or put them to GND), otherwise the display will draw leaking current from these pins.
             HAL_GPIO_DeInit(GPIOA, displayReset_Pin);        // PA0     ------> displayReset
+            HAL_GPIO_DeInit(GPIOA, GPIO_PIN_10);             // PA10     ------> SPI2_MOSI
+            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_13);             // PB13     ------> SPI2_SCK
+            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_14);             // PB14     ------> displayDataCommand
+            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_5);              // PB5      ------> displayChipSelect
 #else
+            // V2 hardware cannot remove power from the display, so we must keep at least the reset pin enabled. A floating reset pin will reset the display and wakes it up from its deep sleep, increasing power and damages the display in the long run.
             HAL_GPIO_WritePin(GPIOA, displayReset_Pin, GPIO_PIN_SET);        // PA0     ------> displayReset - keep high to prevent display reset which wakes it up
 #endif
-            HAL_GPIO_DeInit(GPIOA, GPIO_PIN_10);            // PA10     ------> SPI2_MOSI
+            // displayBusy is an input with pulldown, and is driven HIGH from the display during deep sleep.
+            // Not disabling the input increases current consumption with ~100 uA
+            // All other IOs for display are outputs and apparently increase current consumption with ~15 uA when disabled (don't understand exactly why yet...), so in V2 we keep them enabled
             HAL_GPIO_DeInit(GPIOB, displayBusy_Pin);        // PB10     ------> displayBusy
-            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_13);            // PB13     ------> SPI2_SCK
-            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_14);            // PB14     ------> displayDataCommand
-            HAL_GPIO_DeInit(GPIOB, GPIO_PIN_5);             // PB5      ------> displayChipSelect
             break;
 
         case gpio::group::debugPort:
@@ -257,6 +263,7 @@ void gpio::disableGpio(group theGroup) {
         case gpio::group::usbPresent:
             // PB4     ------> usbPowerPresent
             HAL_GPIO_DeInit(GPIOB, usbPowerPresent_Pin);
+            HAL_NVIC_DisableIRQ(EXTI4_IRQn);
             break;
 
         case gpio::group::enableDisplayPower:
