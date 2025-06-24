@@ -39,7 +39,7 @@ class cliCommand {
     static constexpr uint32_t sn{'s' * 256 + 'n'};                       // set name            : sn Mini001
     static constexpr uint32_t sb{'s' * 256 + 'b'};                       // set batteryType     : sb 0
     static constexpr uint32_t sr{'s' * 256 + 'r'};                       // set radioType       : sr 0
-                                                                         //    static constexpr uint32_t sd{'s' * 256 + 'd'};                       // set display         : sd line# deviceIndex channelIndex
+    static constexpr uint32_t sd{'s' * 256 + 'd'};                       // set display         : sd line# deviceIndex channelIndex
     static constexpr uint32_t ss{'s' * 256 + 's'};                       // set sensor          : sd deviceIndex channelIndex oversampling prescaler
     static constexpr uint32_t swr{'s' * 65536 + 'w' * 256 + 'r'};        // restart device - soft reset
     static constexpr uint32_t hwr{'h' * 256 + 'w' * 256 + 'r'};          // reset device - arm for hard reset, reset occurs after removing USB to prevent going into bootloader mode

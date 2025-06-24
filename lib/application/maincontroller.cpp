@@ -544,6 +544,10 @@ void mainController::runCli() {
                             setSensor(theCommand);
                             break;
 
+                        case cliCommand::sd:
+                            cli::sendResponse("not yet implemented\n");
+                            break;
+
                         case cliCommand::swr:
                             initialize();
                             break;

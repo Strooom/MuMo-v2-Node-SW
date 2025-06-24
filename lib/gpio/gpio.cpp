@@ -267,16 +267,14 @@ void gpio::disableGpio(group theGroup) {
             break;
 
         case gpio::group::enableDisplayPower:
-// PA9 = Wio-E5 pin 21 - charge the display power rail without a current peak, prevents brownout of the MCU
-// PC0 = Wio-E5 pin 13 - switches the 3.3V towards the epaper display
-// We do not disable these pins but rather drive it high in order to keep power off from this rail
+            // PA9 = Wio-E5 pin 21 - charge the display power rail without a current peak, prevents brownout of the MCU
+            // PC0 = Wio-E5 pin 13 - switches the 3.3V towards the epaper display
+            // We do not disable these pins but rather drive it high in order to keep power off from this rail
 #ifdef v3
             HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
 #endif
-
-            // HAL_GPIO_DeInit(GPIOA, GPIO_PIN_9);
-            // HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0);
+            // v2 does not have these pins connected
             break;
 
         case gpio::group::enableSensorsEepromPower:
@@ -284,7 +282,6 @@ void gpio::disableGpio(group theGroup) {
             // We do not disable this pin but rather drive it high in order to keep power off from this rail
             // HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
             HAL_GPIO_DeInit(GPIOC, GPIO_PIN_1);
-
             break;
 
         case gpio::group::test0:

@@ -30,7 +30,7 @@ aesBlock LoRaWAN::K2;
 frameCount LoRaWAN::uplinkFrameCount;
 frameCount LoRaWAN::downlinkFrameCount;
 
-dataRates LoRaWAN::theDataRates;
+// dataRates LoRaWAN::theDataRates;
 uint32_t LoRaWAN::currentDataRateIndex{5};
 uint32_t LoRaWAN::rx1DelayInSeconds{1};
 uint32_t LoRaWAN::rx1DataRateOffset{0};
@@ -599,8 +599,8 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                     lptim::stop();
                     lptim::start(lptim::ticksFromSeconds(1U));
                     uint32_t rxFrequency = loRaTxChannelCollection::channel[loRaTxChannelCollection::getCurrentChannelIndex()].frequencyInHz;
-                    uint32_t rxTimeout   = getReceiveTimeout(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor);
-                    sx126x::configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
+                    uint32_t rxTimeout   = getReceiveTimeout(dataRates::theDataRates[currentDataRateIndex].theSpreadingFactor);
+                    sx126x::configForReceive(dataRates::theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
                     sx126x::startReceive(rxTimeout);
                     goTo(txRxCycleState::waitForRx1CompleteOrTimeout);
                     return;
@@ -650,8 +650,8 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
             switch (theEvent) {
                 case applicationEvent::lowPowerTimerExpired: {
                     lptim::stop();
-                    sx126x::configForReceive(theDataRates.theDataRates[rx2DataRateIndex].theSpreadingFactor, rx2FrequencyInHz);
-                    uint32_t rxTimeout = getReceiveTimeout(theDataRates.theDataRates[rx2DataRateIndex].theSpreadingFactor);
+                    sx126x::configForReceive(dataRates::theDataRates[rx2DataRateIndex].theSpreadingFactor, rx2FrequencyInHz);
+                    uint32_t rxTimeout = getReceiveTimeout(dataRates::theDataRates[rx2DataRateIndex].theSpreadingFactor);
                     sx126x::startReceive(rxTimeout);
                     goTo(txRxCycleState::waitForRx2CompleteOrTimeout);
                     return;
@@ -1032,7 +1032,7 @@ void LoRaWAN::processDeviceTimeAnswer() {
 #pragma endregion
 
 uint32_t LoRaWAN::getMaxApplicationPayloadLength() {
-    return (theDataRates.theDataRates[currentDataRateIndex].maximumPayloadLength - macOut.getLevel());
+    return (dataRates::theDataRates[currentDataRateIndex].maximumPayloadLength - macOut.getLevel());
 }
 
 void LoRaWAN::sendUplink(measurementGroup& aMeasurementGroup) {
@@ -1070,7 +1070,7 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
     // 2. Configure the radio, and start stateMachine for transmitting the payload
     loRaTxChannelCollection::selectRandomChannelIndex();        // randomize the channel index
     uint32_t txFrequency = loRaTxChannelCollection::channel[loRaTxChannelCollection::getCurrentChannelIndex()].frequencyInHz;
-    spreadingFactor csf  = theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor;
+    spreadingFactor csf  = dataRates::theDataRates[currentDataRateIndex].theSpreadingFactor;
     sx126x::configForTransmit(csf, txFrequency, rawMessage + macHeaderOffset, loRaPayloadLength);
 
     if (logging::isActive(logging::source::lorawanMac)) {
@@ -1315,7 +1315,7 @@ void LoRaWAN::dumpTransmitSettings() {
     }
 
     uint32_t txFrequency = loRaTxChannelCollection::channel[loRaTxChannelCollection::getCurrentChannelIndex()].frequencyInHz;
-    spreadingFactor csf  = theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor;
+    spreadingFactor csf  = dataRates::theDataRates[currentDataRateIndex].theSpreadingFactor;
     logging::snprintf("Uplink :\n");
     logging::snprintf("  dataRate = %u\n", currentDataRateIndex);
     logging::snprintf("  spreadingFactor = %s\n", toString(csf));
