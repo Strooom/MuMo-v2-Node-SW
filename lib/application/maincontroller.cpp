@@ -110,49 +110,30 @@ void mainController::initialize() {
     }
 
     if (!settingsCollection::isValid()) {
-        logging::snprintf(logging::source::criticalError, "invalid settingsMapVersion %d\n", settingsCollection::getMapVersion());
         settingsCollection::save(settingsCollection::maxMapVersion, settingsCollection::settingIndex::mapVersion);
-    } else if (forceInitialization) {
-        settingsCollection::save(settingsCollection::maxMapVersion, settingsCollection::settingIndex::mapVersion);
-        logging::snprintf(logging::source::criticalError, "forced initialisation settingsMapVersion %d\n", settingsCollection::getMapVersion());
     }
     logging::snprintf(logging::source::settings, "settingsMapVersion : %d\n", settingsCollection::getMapVersion());
 
     batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
     if (!battery::isValidType(theBatteryType)) {
-        logging::snprintf(logging::source::criticalError, "invalid batteryType %d\n", static_cast<uint8_t>(theBatteryType));
         settingsCollection::save(static_cast<uint8_t>(defaultBatteryType), settingsCollection::settingIndex::batteryType);
         theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
-    } else if (forceInitialization) {
-        settingsCollection::save(static_cast<uint8_t>(defaultBatteryType), settingsCollection::settingIndex::batteryType);
-        theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
-        logging::snprintf(logging::source::criticalError, "forced initialisation batteryType %d\n", static_cast<uint8_t>(theBatteryType));
     }
-    static constexpr uint32_t defaultPrescaler{20U};
-
     battery::initialize(theBatteryType);
     logging::snprintf(logging::source::settings, "batteryType : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
-    // sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true; // NOTE : also setting this in discover
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, defaultPrescaler);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, defaultPrescaler);
-
+    
     radioType theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
     if (!sx126x::isValidType(theRadioType)) {
-        logging::snprintf(logging::source::criticalError, "invalid radioType %d\n", static_cast<uint8_t>(theRadioType));
         settingsCollection::save(static_cast<uint8_t>(defaultRadioType), settingsCollection::settingIndex::radioType);
         theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
-    } else if (forceInitialization) {
-        settingsCollection::save(static_cast<uint8_t>(defaultRadioType), settingsCollection::settingIndex::radioType);
-        theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
-        logging::snprintf(logging::source::criticalError, "forced initialisation radioType %d\n", static_cast<uint8_t>(theRadioType));
     }
-
     sx126x::initialize(theRadioType);
     logging::snprintf(logging::source::settings, "radioType : %s (%d)\n", toString(theRadioType), static_cast<uint8_t>(theRadioType));
-    // sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)] = true; // NOTE : also setting this in discover
-
+    
     sensorDeviceCollection::discover();
-
+    static constexpr uint32_t defaultPrescaler{20U};
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, defaultPrescaler);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, defaultPrescaler);
     if (bme680::isPresent()) {
         sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, defaultPrescaler);
         sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, defaultPrescaler);
@@ -765,7 +746,30 @@ void mainController::setSensor(cliCommand& theCommand) {
 }
 
 void mainController::showMeasurementsStatus() {
-    cli::sendResponse("oldest : %d\n", measurementGroupCollection::getOldestMeasurementOffset());
-    cli::sendResponse("newest : %d\n", measurementGroupCollection::getNewMeasurementsOffset());
+    measurementGroup tmpGroup;
+    uint32_t startOffset = measurementGroupCollection::getOldestMeasurementOffset();
+    uint32_t endOffset   = measurementGroupCollection::getNewMeasurementsOffset();
+    if (endOffset < startOffset) {
+        endOffset += nonVolatileStorage::measurementsSize;
+    }
+    uint32_t offset{startOffset};
+    uint32_t nmbrOfGroups{0};
+    uint32_t nmbrOfMeasurements{0};
+    time_t oldestMeasurementTime;
+    time_t newestMeasurementTime;
+
+    measurementGroupCollection::get(tmpGroup, offset);
+    oldestMeasurementTime = tmpGroup.getTimeStamp();
+
+    while (offset < endOffset) {
+        measurementGroupCollection::get(tmpGroup, offset);
+        nmbrOfGroups++;
+        nmbrOfMeasurements += tmpGroup.getNumberOfMeasurements();
+        newestMeasurementTime = tmpGroup.getTimeStamp();
+        offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
+    }
+    cli::sendResponse("%d measurements in %d groups\n", nmbrOfMeasurements, nmbrOfGroups);
+    cli::sendResponse("oldest : %s UTC", ctime(&oldestMeasurementTime));
+    cli::sendResponse("newest : %s UTC", ctime(&newestMeasurementTime));
     cli::sendResponse("%d bytes available\n", measurementGroupCollection::getFreeSpace());
 }
