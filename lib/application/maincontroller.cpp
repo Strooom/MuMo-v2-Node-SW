@@ -21,7 +21,7 @@
 #include <lptim.hpp>
 #include <maccommand.hpp>
 #include <maincontroller.hpp>
-#include <measurementcollection.hpp>
+#include <measurementgroupcollection.hpp>
 #include <power.hpp>
 #include <realtimeclock.hpp>
 #include <screen.hpp>
@@ -110,49 +110,30 @@ void mainController::initialize() {
     }
 
     if (!settingsCollection::isValid()) {
-        logging::snprintf(logging::source::criticalError, "invalid settingsMapVersion %d\n", settingsCollection::getMapVersion());
         settingsCollection::save(settingsCollection::maxMapVersion, settingsCollection::settingIndex::mapVersion);
-    } else if (forceInitialization) {
-        settingsCollection::save(settingsCollection::maxMapVersion, settingsCollection::settingIndex::mapVersion);
-        logging::snprintf(logging::source::criticalError, "forced initialisation settingsMapVersion %d\n", settingsCollection::getMapVersion());
     }
     logging::snprintf(logging::source::settings, "settingsMapVersion : %d\n", settingsCollection::getMapVersion());
 
     batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
     if (!battery::isValidType(theBatteryType)) {
-        logging::snprintf(logging::source::criticalError, "invalid batteryType %d\n", static_cast<uint8_t>(theBatteryType));
         settingsCollection::save(static_cast<uint8_t>(defaultBatteryType), settingsCollection::settingIndex::batteryType);
         theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
-    } else if (forceInitialization) {
-        settingsCollection::save(static_cast<uint8_t>(defaultBatteryType), settingsCollection::settingIndex::batteryType);
-        theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
-        logging::snprintf(logging::source::criticalError, "forced initialisation batteryType %d\n", static_cast<uint8_t>(theBatteryType));
     }
-    static constexpr uint32_t defaultPrescaler{20U};
-
     battery::initialize(theBatteryType);
     logging::snprintf(logging::source::settings, "batteryType : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
-    sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, defaultPrescaler);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, defaultPrescaler);
 
     radioType theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
     if (!sx126x::isValidType(theRadioType)) {
-        logging::snprintf(logging::source::criticalError, "invalid radioType %d\n", static_cast<uint8_t>(theRadioType));
         settingsCollection::save(static_cast<uint8_t>(defaultRadioType), settingsCollection::settingIndex::radioType);
         theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
-    } else if (forceInitialization) {
-        settingsCollection::save(static_cast<uint8_t>(defaultRadioType), settingsCollection::settingIndex::radioType);
-        theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
-        logging::snprintf(logging::source::criticalError, "forced initialisation radioType %d\n", static_cast<uint8_t>(theRadioType));
     }
-
     sx126x::initialize(theRadioType);
     logging::snprintf(logging::source::settings, "radioType : %s (%d)\n", toString(theRadioType), static_cast<uint8_t>(theRadioType));
-    sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)] = true;
 
     sensorDeviceCollection::discover();
-
+    static constexpr uint32_t defaultPrescaler{20U};
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, defaultPrescaler);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, defaultPrescaler);
     if (bme680::isPresent()) {
         sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, defaultPrescaler);
         sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, defaultPrescaler);
@@ -170,15 +151,7 @@ void mainController::initialize() {
     }
     logging::snprintf("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
 
-    // measurementCollection::initialize();
-    // measurementCollection::findMeasurementsInEeprom();
-    // uint32_t nmbrOfBytes = measurementCollection::nmbrOfMeasurementBytes();
-    // logging::snprintf("%d bytes of measurements found\n", nmbrOfBytes);
-    // measurementCollection::dumpRaw(measurementCollection::getOldestMeasurementOffset() + 26, 256U);
-    // static constexpr uint32_t maxNmbrOfMeasurementsToDump{16};
-    // uint32_t bytesConsumed{0};
-    // measurementCollection::printMeasurementGroup(tmpString, measurementCollection::getOldestMeasurementOffset() + 26);
-    // logging::snprintf("%s", tmpString);
+    measurementGroupCollection::initialize();
 
     gpio::enableGpio(gpio::group::rfControl);
 
@@ -283,13 +256,10 @@ void mainController::handleEventsStateNetworkCheck(applicationEvent theEvent) {
 void mainController::handleEventsStateIdle(applicationEvent theEvent) {
     switch (theEvent) {
         case applicationEvent::realTimeClockTick:
-            if (realTimeClock::needsSync()) {
-                LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
-            }
             if (sensorDeviceCollection::needsSampling()) {
                 i2c::wakeUp();
                 sensorDeviceCollection::startSampling();
-                goTo(mainState::measuring);
+                goTo(mainState::sampling);
             } else {
                 sensorDeviceCollection::updateCounters();
             }
@@ -322,38 +292,19 @@ void mainController::runStateMachine() {
         case mainState::networkCheck:
             break;
 
-        case mainState::measuring:
+        case mainState::sampling:
             sensorDeviceCollection::run();
             if (sensorDeviceCollection::isSamplingReady()) {
-                sensorDeviceCollection::updateCounters();
-                goTo(mainState::logging);
-            }
-            break;
-
-        case mainState::logging:
-            if (sensorDeviceCollection::hasNewMeasurements()) {
-                if (logging::isActive(logging::source::sensorData)) {
-                    sensorDeviceCollection::log();
-                }
-
-                sensorDeviceCollection::collectNewMeasurements();
-                measurementCollection::saveNewMeasurementsToEeprom();
-
-                uint32_t payloadLength        = measurementCollection::nmbrOfBytesToTransmit();
-                const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
-
-                if (LoRaWAN::isRadioEnabled()) {
-                    LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
-                    measurementCollection::setTransmitted(0, payloadLength);        // TODO : get correct frame counter *before* call to sendUplink
+                if (sensorDeviceCollection::hasNewMeasurements()) {
+                    sensorDeviceCollection::collectNewMeasurements();
+                    measurementGroupCollection::addNew(sensorDeviceCollection::newMeasurements);
+                    LoRaWAN::sendUplink(sensorDeviceCollection::newMeasurements);
                     goTo(mainState::networking);
                 } else {
-                    showMain();
                     i2c::goSleep();
                     goTo(mainState::idle);
                 }
-            } else {
-                i2c::goSleep();
-                goTo(mainState::idle);
+                sensorDeviceCollection::updateCounters();
             }
             break;
 
@@ -552,6 +503,10 @@ void mainController::runCli() {
                             showDeviceStatus();
                             break;
 
+                        case cliCommand::gms:
+                            showMeasurementsStatus();
+                            break;
+
                         case cliCommand::gls:
                             showNetworkStatus();
                             break;
@@ -589,7 +544,7 @@ void mainController::runCli() {
                             setSensor(theCommand);
                             break;
 
-                        case cliCommand::res:
+                        case cliCommand::swr:
                             initialize();
                             break;
 
@@ -656,7 +611,7 @@ void mainController::showDeviceStatus() {
     cli::sendResponse("radioType: %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
 
     for (uint32_t sensorDeviceIndex = 0; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
-        if (sensorDeviceCollection::isPresent[sensorDeviceIndex]) {
+        if (sensorDeviceCollection::isPresent(sensorDeviceIndex)) {
             cli::sendResponse("[%d] %s\n", sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
             for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(sensorDeviceIndex); channelIndex++) {
                 cli::sendResponse("  [%d] %s [%s] oversampling = %d, prescaler = %d\n", channelIndex, sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::units(sensorDeviceIndex, channelIndex), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getOversampling(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler());
@@ -670,7 +625,6 @@ void mainController::showDeviceStatus() {
 void mainController::showNetworkStatus() {
     cli::sendResponse("radio %s\n", LoRaWAN::isRadioEnabled() ? "enabled" : "disabled");
     cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
-
     static constexpr uint32_t nmbrOfCharsToMask{2};
     char tmpKey[aesKey::lengthAsHexAscii + 1];
     strncpy(tmpKey, LoRaWAN::networkKey.getAsHexString(), aesKey::lengthAsHexAscii + 1);
@@ -799,4 +753,33 @@ void mainController::setSensor(cliCommand& theCommand) {
     } else {
         cli::sendResponse("invalid arguments\n");
     }
+}
+
+void mainController::showMeasurementsStatus() {
+    measurementGroup tmpGroup;
+    uint32_t startOffset = measurementGroupCollection::getOldestMeasurementOffset();
+    uint32_t endOffset   = measurementGroupCollection::getNewMeasurementsOffset();
+    if (endOffset < startOffset) {
+        endOffset += nonVolatileStorage::measurementsSize;
+    }
+    uint32_t offset{startOffset};
+    uint32_t nmbrOfGroups{0};
+    uint32_t nmbrOfMeasurements{0};
+    time_t oldestMeasurementTime;
+    time_t newestMeasurementTime;
+
+    measurementGroupCollection::get(tmpGroup, offset);
+    oldestMeasurementTime = tmpGroup.getTimeStamp();
+
+    while (offset < endOffset) {
+        measurementGroupCollection::get(tmpGroup, offset);
+        nmbrOfGroups++;
+        nmbrOfMeasurements += tmpGroup.getNumberOfMeasurements();
+        newestMeasurementTime = tmpGroup.getTimeStamp();
+        offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
+    }
+    cli::sendResponse("%d measurements in %d groups\n", nmbrOfMeasurements, nmbrOfGroups);
+    cli::sendResponse("oldest : %s UTC", ctime(&oldestMeasurementTime));
+    cli::sendResponse("newest : %s UTC", ctime(&newestMeasurementTime));
+    cli::sendResponse("%d bytes available\n", measurementGroupCollection::getFreeSpace());
 }

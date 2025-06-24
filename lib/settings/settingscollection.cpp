@@ -15,7 +15,9 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     {68, 8},         // nodeName
     {76, 52},        // unusedGeneral : extra settings can be inserted hereafter
 
-    {128, 128},        // unusedMeasurements : 128 bytes
+    {128, 4},          // oldestMeasurementOffset : 4 bytes
+    {132, 4},          // newMeasurementsOffset : 4 bytes
+    {136, 120},        // unusedMeasurements : 120 bytes
 
     {256, 8},         // DevEUI : 64 bits
     {264, 4},         // DevAddr : 32 bits

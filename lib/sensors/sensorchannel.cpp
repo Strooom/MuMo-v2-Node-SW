@@ -14,14 +14,13 @@ void sensorChannel::set(uint32_t newOversampling, uint32_t newPrescaler) {
     prescaleCounter     = 0;
 }
 
-bool sensorChannel::needsSampling()  const{
-    action anAction = getNextAction();
-    return ((anAction == action::sample) || (anAction == action::sampleAndOutput));
-};
+bool sensorChannel::needsSampling() const {
+    return (isActive() && prescaleCounter == 0);
+}
 
 bool sensorChannel::hasOutput() const {
-    return (getNextAction() == action::sampleAndOutput);
-};
+    return (isActive() && (prescaleCounter == 0) && (oversamplingCounter == 0));
+}
 
 void sensorChannel::limitOversamplingAndPrescaler() {
     if (oversampling > maxOversampling) {

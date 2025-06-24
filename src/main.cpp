@@ -1,31 +1,12 @@
 #include "main.h"
-#include <gpio.hpp>
-#include <logging.hpp>
-#include <power.hpp>
-#include <display.hpp>
-#include <graphics.hpp>
-#include <ux.hpp>
-#include <stdio.h>
-#include <maincontroller.hpp>
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
-#include <sensordevicecollection.hpp>
-#include <buildinfo.hpp>
-#include <lorawan.hpp>
-#include <realtimeclock.hpp>
-#include <uniqueid.hpp>
-#include <settingscollection.hpp>
-#include <measurementcollection.hpp>
-#include <spi.hpp>
-#include <i2c.hpp>
-#include <bme680.hpp>
-#include <tsl2591.hpp>
-#include <battery.hpp>
-#include <lptim.hpp>
-#include <qrcode.hpp>
+#include <gpio.hpp>
 #include <debugport.hpp>
 #include <uart1.hpp>
 #include <uart2.hpp>
+#include <maincontroller.hpp>
+#include <power.hpp>
 
 // TODO : these handles have to move to the respective wrapper classes
 

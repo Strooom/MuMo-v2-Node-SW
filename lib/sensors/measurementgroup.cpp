@@ -56,8 +56,8 @@ void measurementGroup::fromBytes(const uint8_t* source) {
     const uint8_t* timestampAsBytes = source + 1;
     timestamp                       = realTimeClock::time_tFromBytes(timestampAsBytes);
     for (uint32_t measurementIndex = 0; measurementIndex < nmbrOfMeasurements; measurementIndex++) {
-        measurements[measurementIndex].deviceIndex  = getDeviceIndex(source[5 + (measurementIndex * 5)]);
-        measurements[measurementIndex].channelIndex = getChannelIndex(source[5 + (measurementIndex * 5)]);
+        measurements[measurementIndex].deviceIndex  = extractDeviceIndex(source[5 + (measurementIndex * 5)]);
+        measurements[measurementIndex].channelIndex = extractChannelIndex(source[5 + (measurementIndex * 5)]);
         measurements[measurementIndex].value        = bytesToFloat(source + 6 + (measurementIndex * 5));
     }
 }

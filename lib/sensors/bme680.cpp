@@ -8,7 +8,6 @@
 #include <settingscollection.hpp>
 #include <logging.hpp>
 #include <float.hpp>
-#include <measurementcollection.hpp>
 #include <i2c.hpp>
 
 #ifndef generic
@@ -106,7 +105,7 @@ void bme680::initialize() {
 #endif
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
         channels[channelIndex].set(0, 0);
-        channels[channelIndex].hasNewValue = false;
+        // channels[channelIndex].hasNewValue = false;
     }
     state = sensorDeviceState::sleeping;
 }
@@ -119,7 +118,7 @@ void bme680::run() {
             float bme680Temperature = calculateTemperature();
             channels[temperature].addSample(bme680Temperature);
             if (channels[temperature].hasOutput()) {
-                channels[temperature].hasNewValue = true;
+                // channels[temperature].hasNewValue = true;
             }
         }
 
@@ -127,7 +126,7 @@ void bme680::run() {
             float bme680RelativeHumidity = calculateRelativeHumidity();
             channels[relativeHumidity].addSample(bme680RelativeHumidity);
             if (channels[relativeHumidity].hasOutput()) {
-                channels[relativeHumidity].hasNewValue = true;
+                // channels[relativeHumidity].hasNewValue = true;
             }
         }
 
@@ -135,7 +134,7 @@ void bme680::run() {
             float bme680BarometricPressure = calculateBarometricPressure();
             channels[barometricPressure].addSample(bme680BarometricPressure);
             if (channels[barometricPressure].hasOutput()) {
-                channels[barometricPressure].hasNewValue = true;
+                // channels[barometricPressure].hasNewValue = true;
             }
         }
 

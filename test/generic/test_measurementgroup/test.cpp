@@ -22,12 +22,19 @@ void test_addMeasurement() {
     measurementGroup testGroup;
     testGroup.addMeasurement(0, 0, 3.0F);
     TEST_ASSERT_EQUAL(1, testGroup.nmbrOfMeasurements);
+    TEST_ASSERT_EQUAL(1, testGroup.getNumberOfMeasurements());
+
     TEST_ASSERT_EQUAL(0, testGroup.measurements[0].deviceIndex);
+    TEST_ASSERT_EQUAL(0, testGroup.getDeviceIndex(0));
+
     TEST_ASSERT_EQUAL(0, testGroup.measurements[0].channelIndex);
-    TEST_ASSERT_EQUAL(3.0F, testGroup.measurements[0].value);        // hex value is 0x40400000 so it has no effect on the checksum
+    TEST_ASSERT_EQUAL(0, testGroup.getChannelIndex(0));
+
+    TEST_ASSERT_EQUAL(3.0F, testGroup.measurements[0].value);
+    TEST_ASSERT_EQUAL(3.0F, testGroup.getValue(0));        // hex value is 0x40400000 so it has no effect on the checksum
 
     testGroup.addMeasurement(1, 2, 12.0F);        // 12.0F in hex is 0x41400000, device and channel is 0b00001'010
-    TEST_ASSERT_EQUAL(2, testGroup.nmbrOfMeasurements);
+    TEST_ASSERT_EQUAL(2, testGroup.getNumberOfMeasurements());
 }
 
 void test_addMeasurement2() {

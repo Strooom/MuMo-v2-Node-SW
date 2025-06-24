@@ -58,10 +58,9 @@ class nonVolatileStorage {
 
 #ifdef generic
     static uint32_t mockEepromNmbr64KPages;
-    static constexpr uint32_t mockEepromMemorySize{maxNmbr64KBanks * 64 * 1024};
-    static uint8_t mockEepromMemory[mockEepromMemorySize];
+    static uint8_t mockEepromMemory[maxNmbr64KBanks * 64 * 1024];
 #endif
 
     friend class settingsCollection;
-    friend class measurementCollection;
+    friend class measurementGroupCollection;
 };

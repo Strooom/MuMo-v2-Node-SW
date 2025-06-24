@@ -18,6 +18,8 @@ class settingsCollection {
         name,
         unusedGeneral,
 
+        oldestMeasurementOffset,
+        newMeasurementsOffset,
         unusedMeasurements,
 
         DevEUI,

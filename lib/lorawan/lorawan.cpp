@@ -1035,6 +1035,13 @@ uint32_t LoRaWAN::getMaxApplicationPayloadLength() {
     return (theDataRates.theDataRates[currentDataRateIndex].maximumPayloadLength - macOut.getLevel());
 }
 
+void LoRaWAN::sendUplink(measurementGroup& aMeasurementGroup) {
+    uint32_t lengthInBytes = measurementGroup::lengthInBytes(aMeasurementGroup.getNumberOfMeasurements());
+    uint8_t buffer[lengthInBytes];
+    aMeasurementGroup.toBytes(buffer, lengthInBytes);
+    sendUplink(17, buffer, lengthInBytes - 1);        // we send the lengthInBytes - 1, as the last byte is the checksum not needed for LoRaWAN as there is enough integrity protection in the protocol
+}
+
 void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], uint32_t applicationDataLength) {
     if ((theFramePort == 0) && (applicationDataLength > 0)) {
         logging::snprintf(logging::source::error, "Error : cannot send application payload on framePort 0\n");

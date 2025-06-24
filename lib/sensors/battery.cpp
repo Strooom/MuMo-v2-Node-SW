@@ -39,7 +39,7 @@ void battery::initialize(batteryType newBatteryType) {
     state = sensorDeviceState::sleeping;
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
         channels[channelIndex].set(0, 0);
-        channels[channelIndex].hasNewValue = false;
+        // channels[channelIndex].hasNewValue = false;
     }
 }
 
@@ -52,13 +52,13 @@ void battery::run() {
         if (channels[voltage].needsSampling()) {
             channels[voltage].addSample(batteryVoltage);
             if (channels[voltage].hasOutput()) {
-                channels[voltage].hasNewValue = true;
+                // channels[voltage].hasNewValue = true;
             }
         }
         if (channels[stateOfCharge].needsSampling()) {
             channels[stateOfCharge].addSample(batteryPercentCharged);
             if (channels[stateOfCharge].hasOutput()) {
-                channels[stateOfCharge].hasNewValue = true;
+                // channels[stateOfCharge].hasNewValue = true;
             }
         }
         state = sensorDeviceState::sleeping;

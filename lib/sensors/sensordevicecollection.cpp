@@ -6,25 +6,39 @@
 #include <sht40.hpp>
 #include <tsl2591.hpp>
 // All known sensordevices' include files are to be added here
-#include <measurementcollection.hpp>
-#include <float.hpp>
+// #include <measurementcollection.hpp>
+#include <float.hpp>        // only needed for logging.. can be removed later
+#include <realtimeclock.hpp>
 
-bool sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)]{false};
+bool sensorDeviceCollection::present[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)]{false};
 sensorChannel sensorDeviceCollection::dummy = {0, "", ""};
+measurementGroup sensorDeviceCollection::newMeasurements;
+
+void sensorDeviceCollection::reset() {
+    for (auto index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
+        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(index); channelIndex++) {
+            channel(index, channelIndex).set(0, 0);
+        }
+        present[index] = false;
+    }
+}
 
 void sensorDeviceCollection::discover() {
-    isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)] = bme680::isPresent();
-    if (isPresent[static_cast<uint32_t>(sensorDeviceType::bme680)]) {
+    present[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
+    present[static_cast<uint32_t>(sensorDeviceType::mcu)]     = true;
+
+    present[static_cast<uint32_t>(sensorDeviceType::bme680)] = bme680::isPresent();
+    if (present[static_cast<uint32_t>(sensorDeviceType::bme680)]) {
         bme680::initialize();
     }
 
-    isPresent[static_cast<uint32_t>(sensorDeviceType::sht40)] = sht40::isPresent();
-    if (isPresent[static_cast<uint32_t>(sensorDeviceType::sht40)]) {
+    present[static_cast<uint32_t>(sensorDeviceType::sht40)] = sht40::isPresent();
+    if (present[static_cast<uint32_t>(sensorDeviceType::sht40)]) {
         sht40::initialize();
     }
 
-    isPresent[static_cast<uint32_t>(sensorDeviceType::tsl2591)] = tsl2591::isPresent();
-    if (isPresent[static_cast<uint32_t>(sensorDeviceType::tsl2591)]) {
+    present[static_cast<uint32_t>(sensorDeviceType::tsl2591)] = tsl2591::isPresent();
+    if (present[static_cast<uint32_t>(sensorDeviceType::tsl2591)]) {
         tsl2591::initialize();
     }
     // Add more types of sensors here
@@ -64,7 +78,7 @@ void sensorDeviceCollection::startSampling() {
 
 void sensorDeviceCollection::run() {
     for (auto index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
-        if (isPresent[index]) {
+        if (present[index]) {
             switch (static_cast<sensorDeviceType>(index)) {
                 case sensorDeviceType::battery:
                     battery::run();
@@ -88,7 +102,7 @@ void sensorDeviceCollection::run() {
 
 bool sensorDeviceCollection::isSamplingReady() {
     for (auto index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
-        if (isPresent[index]) {
+        if (present[index]) {
             switch (static_cast<sensorDeviceType>(index)) {
                 case sensorDeviceType::battery:
                     if (battery::getState() != sensorDeviceState::sleeping) {
@@ -129,11 +143,9 @@ bool sensorDeviceCollection::needsSampling() {
 }
 
 bool sensorDeviceCollection::needsSampling(uint32_t deviceIndex) {
-    if (isValid(deviceIndex)) {
-        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
-            if (needsSampling(deviceIndex, channelIndex)) {
-                return true;
-            }
+    for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
+        if (needsSampling(deviceIndex, channelIndex)) {
+            return true;
         }
     }
     return false;
@@ -153,10 +165,8 @@ void sensorDeviceCollection::updateCounters() {
 }
 
 void sensorDeviceCollection::updateCounters(uint32_t deviceIndex) {
-    if (isValid(deviceIndex)) {
-        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
-            updateCounters(deviceIndex, channelIndex);
-        }
+    for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
+        updateCounters(deviceIndex, channelIndex);
     }
 }
 
@@ -176,12 +186,10 @@ bool sensorDeviceCollection::hasNewMeasurements() {
 }
 
 bool sensorDeviceCollection::hasNewMeasurements(uint32_t deviceIndex) {
-    if (isValid(deviceIndex)) {
-        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
-            if (isValid(deviceIndex, channelIndex)) {
-                if (hasNewMeasurement(deviceIndex, channelIndex)) {
-                    return true;
-                }
+    for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
+        if (isValid(deviceIndex, channelIndex)) {
+            if (hasNewMeasurement(deviceIndex, channelIndex)) {
+                return true;
             }
         }
     }
@@ -190,7 +198,7 @@ bool sensorDeviceCollection::hasNewMeasurements(uint32_t deviceIndex) {
 
 bool sensorDeviceCollection::hasNewMeasurement(uint32_t deviceIndex, uint32_t channelIndex) {
     if (isValid(deviceIndex, channelIndex)) {
-        return channel(deviceIndex, channelIndex).hasNewValue;
+        return channel(deviceIndex, channelIndex).hasOutput();
     }
     return false;
 }
@@ -207,6 +215,16 @@ const char* sensorDeviceCollection::name(uint32_t index) {
             return "SHT40";
         case sensorDeviceType::tsl2591:
             return "TSL2591";
+        case sensorDeviceType::lis3dh:
+            return "LIS3DH";
+        case sensorDeviceType::sths34:
+            return "STHS34";
+        case sensorDeviceType::scd40:
+            return "SCD40";
+        case sensorDeviceType::sps30:
+            return "SPS30";
+        case sensorDeviceType::xa1110:
+            return "XA1110";
         // Add more types of sensors here
         default:
             return "invalid deviceIndex";
@@ -214,31 +232,19 @@ const char* sensorDeviceCollection::name(uint32_t index) {
 }
 
 float sensorDeviceCollection::value(uint32_t deviceIndex, uint32_t channelIndex) {
-    if (isValid(deviceIndex, channelIndex)) {
-        return channel(deviceIndex, channelIndex).value();
-    }
-    return 0.0F;
+    return channel(deviceIndex, channelIndex).value();
 }
 
 uint32_t sensorDeviceCollection::decimals(uint32_t deviceIndex, uint32_t channelIndex) {
-    if (isValid(deviceIndex, channelIndex)) {
-        return channel(deviceIndex, channelIndex).decimals;
-    }
-    return 0;
+    return channel(deviceIndex, channelIndex).decimals;
 }
 
 const char* sensorDeviceCollection::name(uint32_t deviceIndex, uint32_t channelIndex) {
-    if (isValid(deviceIndex, channelIndex)) {
-        return channel(deviceIndex, channelIndex).name;
-    }
-    return "invalid index";
+    return channel(deviceIndex, channelIndex).name;
 }
 
 const char* sensorDeviceCollection::units(uint32_t deviceIndex, uint32_t channelIndex) {
-    if (isValid(deviceIndex, channelIndex)) {
-        return channel(deviceIndex, channelIndex).unit;
-    }
-    return "invalid index";
+    return channel(deviceIndex, channelIndex).unit;
 }
 
 void sensorDeviceCollection::log() {
@@ -269,7 +275,6 @@ void sensorDeviceCollection::log(uint32_t deviceIndex, uint32_t channelIndex) {
     }
 }
 
-
 uint32_t sensorDeviceCollection::nmbrOfNewMeasurements() {
     uint32_t result{0};
     for (uint32_t deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
@@ -280,12 +285,10 @@ uint32_t sensorDeviceCollection::nmbrOfNewMeasurements() {
 
 uint32_t sensorDeviceCollection::nmbrOfNewMeasurements(uint32_t deviceIndex) {
     uint32_t result{0};
-    if (isValid(deviceIndex)) {
-        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
-            if (isValid(deviceIndex, channelIndex)) {
-                if (channel(deviceIndex, channelIndex).hasNewValue) {
-                    result++;
-                }
+    for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
+        if (isValid(deviceIndex, channelIndex)) {
+            if (channel(deviceIndex, channelIndex).hasOutput()) {
+                result++;
             }
         }
     }
@@ -293,38 +296,38 @@ uint32_t sensorDeviceCollection::nmbrOfNewMeasurements(uint32_t deviceIndex) {
 }
 
 void sensorDeviceCollection::collectNewMeasurements() {
+    newMeasurements.reset();
+    newMeasurements.setTimestamp(realTimeClock::get());
     for (uint32_t deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
         collectNewMeasurements(deviceIndex);
     }
 }
 
 void sensorDeviceCollection::collectNewMeasurements(uint32_t deviceIndex) {
-    if (isValid(deviceIndex)) {
-        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
-            if (isValid(deviceIndex, channelIndex)) {
-                if (channel(deviceIndex, channelIndex).hasNewValue) {
-                    measurementCollection::addMeasurement(deviceIndex, channelIndex, channel(deviceIndex, channelIndex).value());
-                }
+    for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
+        if (isValid(deviceIndex, channelIndex)) {
+            if (channel(deviceIndex, channelIndex).hasOutput()) {
+                newMeasurements.addMeasurement(deviceIndex, channelIndex, channel(deviceIndex, channelIndex).value());
             }
         }
     }
 }
 
-void sensorDeviceCollection::clearNewMeasurements() {
-    for (uint32_t deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
-        clearNewMeasurements(deviceIndex);
-    }
-}
+// void sensorDeviceCollection::clearNewMeasurements() {
+//     for (uint32_t deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
+//         clearNewMeasurements(deviceIndex);
+//     }
+// }
 
-void sensorDeviceCollection::clearNewMeasurements(uint32_t deviceIndex) {
-    if (isValid(deviceIndex)) {
-        for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
-            if (isValid(deviceIndex, channelIndex)) {
-                channel(deviceIndex, channelIndex).hasNewValue = false;
-            }
-        }
-    }
-}
+// void sensorDeviceCollection::clearNewMeasurements(uint32_t deviceIndex) {
+//     if (isValid(deviceIndex)) {
+//         for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
+//             if (isValid(deviceIndex, channelIndex)) {
+//                 channel(deviceIndex, channelIndex).hasNewValue = false;
+//             }
+//         }
+//     }
+// }
 
 uint32_t sensorDeviceCollection::nmbrOfChannels(uint32_t deviceIndex) {
     if (isValid(deviceIndex)) {
@@ -374,7 +377,7 @@ sensorChannel& sensorDeviceCollection::channel(uint32_t deviceIndex, uint32_t ch
 
 bool sensorDeviceCollection::isValid(uint32_t deviceIndex) {
     if (deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)) {
-        return isPresent[deviceIndex];
+        return present[deviceIndex];
     }
     return false;
 }
