@@ -75,7 +75,7 @@ void test_add(void) {
     static constexpr uint32_t expectLengthInBytes{16};
     TEST_ASSERT_EQUAL(expectLengthInBytes, lengthInBytes);
 
-    measurementGroupCollection::addNewMeasurementGroup(testMeasurementGroup);
+    measurementGroupCollection::addNew(testMeasurementGroup);
     TEST_ASSERT_EQUAL_UINT32(lengthInBytes, measurementGroupCollection::getNewMeasurementsOffset());
     TEST_ASSERT_EQUAL_UINT32(0, measurementGroupCollection::getOldestMeasurementOffset());
 
@@ -97,7 +97,7 @@ void test_add_wrap(void) {        // addresses in NVS need to wrap around end of
     uint32_t lengthInBytes = measurementGroup::lengthInBytes(testMeasurementGroup.getNumberOfMeasurements());
     TEST_ASSERT_EQUAL(expectLengthInBytes, lengthInBytes);
 
-    measurementGroupCollection::addNewMeasurementGroup(testMeasurementGroup);
+    measurementGroupCollection::addNew(testMeasurementGroup);
     TEST_ASSERT_EQUAL_UINT32(expectLengthInBytes / 2, measurementGroupCollection::getNewMeasurementsOffset());
 
     uint8_t expectedBytes[expectLengthInBytes];
@@ -114,10 +114,10 @@ void test_add_and_read_back(void) {
     measurementGroup testMeasurementGroupToWrite;
     testMeasurementGroupToWrite.addMeasurement(0, 0, 0.0f);
     testMeasurementGroupToWrite.addMeasurement(0, 0, 0.0f);
-    measurementGroupCollection::addNewMeasurementGroup(testMeasurementGroupToWrite);
+    measurementGroupCollection::addNew(testMeasurementGroupToWrite);
 
     measurementGroup testMeasurementGroupToRead;
-    measurementGroupCollection::getMeasurementGroup(testMeasurementGroupToRead, 0);
+    measurementGroupCollection::get(testMeasurementGroupToRead, 0);
     TEST_ASSERT_EQUAL_UINT32(2, testMeasurementGroupToRead.getNumberOfMeasurements());
 }
 
@@ -127,7 +127,7 @@ void test_eraseOldest() {
     measurementGroup testMeasurementGroupToWrite;
     testMeasurementGroupToWrite.addMeasurement(0, 0, 0.0f);
     testMeasurementGroupToWrite.addMeasurement(0, 0, 0.0f);
-    measurementGroupCollection::addNewMeasurementGroup(testMeasurementGroupToWrite);
+    measurementGroupCollection::addNew(testMeasurementGroupToWrite);
 
     measurementGroupCollection::eraseOldest();
     TEST_ASSERT_EQUAL_UINT32(expectLengthInBytes, measurementGroupCollection::getOldestMeasurementOffset());

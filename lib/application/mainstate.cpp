@@ -16,11 +16,8 @@ const char *toString(mainState aState) {
         case mainState::idle:
             return "idle";
             break;
-        case mainState::measuring:
-            return "measuring";
-            break;
-        case mainState::logging:
-            return "logging";
+        case mainState::sampling:
+            return "sampling";
             break;
         case mainState::networking:
             return "networking";

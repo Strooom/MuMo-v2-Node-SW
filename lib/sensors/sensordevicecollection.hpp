@@ -53,14 +53,13 @@ class sensorDeviceCollection {
     // static void clearNewMeasurements();
     // static void clearNewMeasurements(uint32_t deviceIndex);
 
-    static sensorChannel& channel(uint32_t deviceIndex, uint32_t channelIndex);
+    static sensorChannel& channel(uint32_t deviceIndex, uint32_t channelIndex);        // I don't like these being public, so need to find a better way
+    static measurementGroup newMeasurements;                                           // I don't like this being public, so need to find a better way
 
 #ifndef unitTesting
 
   private:
 #endif
-
-    static measurementGroup newMeasurements;
 
     static bool present[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)];
     static sensorChannel dummy;        // dummy, so we can return a valid reference to a channel in edge cases

@@ -98,8 +98,7 @@ void test_usb_detection() {
 
 void test_toString() {
     TEST_ASSERT_EQUAL_STRING("idle", toString(mainState::idle));
-    TEST_ASSERT_EQUAL_STRING("measuring", toString(mainState::measuring));
-    TEST_ASSERT_EQUAL_STRING("logging", toString(mainState::logging));
+    TEST_ASSERT_EQUAL_STRING("sampling", toString(mainState::sampling));
     TEST_ASSERT_EQUAL_STRING("networking", toString(mainState::networking));
     TEST_ASSERT_EQUAL_STRING("boot", toString(mainState::boot));
     TEST_ASSERT_EQUAL_STRING("networkCheck", toString(mainState::networkCheck));

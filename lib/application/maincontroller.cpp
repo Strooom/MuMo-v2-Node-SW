@@ -283,13 +283,10 @@ void mainController::handleEventsStateNetworkCheck(applicationEvent theEvent) {
 void mainController::handleEventsStateIdle(applicationEvent theEvent) {
     switch (theEvent) {
         case applicationEvent::realTimeClockTick:
-            if (realTimeClock::needsSync()) {
-                LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
-            }
             if (sensorDeviceCollection::needsSampling()) {
                 i2c::wakeUp();
                 sensorDeviceCollection::startSampling();
-                goTo(mainState::measuring);
+                goTo(mainState::sampling);
             } else {
                 sensorDeviceCollection::updateCounters();
             }
@@ -322,31 +319,19 @@ void mainController::runStateMachine() {
         case mainState::networkCheck:
             break;
 
-        case mainState::measuring:
+        case mainState::sampling:
             sensorDeviceCollection::run();
             if (sensorDeviceCollection::isSamplingReady()) {
-                sensorDeviceCollection::updateCounters();
-                goTo(mainState::logging);
-            }
-            break;
-
-        case mainState::logging:
-            if (sensorDeviceCollection::hasNewMeasurements()) {
-                if (logging::isActive(logging::source::sensorData)) {
-                    sensorDeviceCollection::log();
+                if (sensorDeviceCollection::hasNewMeasurements()) {
+                    sensorDeviceCollection::collectNewMeasurements();
+                    measurementGroupCollection::addNew(sensorDeviceCollection::newMeasurements);
+                    LoRaWAN::sendUplink(sensorDeviceCollection::newMeasurements);
+                    goTo(mainState::networking);
+                } else {
+                    i2c::goSleep();
+                    goTo(mainState::idle);
                 }
-
-                sensorDeviceCollection::collectNewMeasurements();
-                // measurementCollection::saveNewMeasurementsToEeprom();
-
-                // uint32_t payloadLength        = measurementCollection::nmbrOfBytesToTransmit();
-                // const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
-                // LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
-                // measurementCollection::setTransmitted(0, payloadLength);        // TODO : get correct frame counter *before* call to sendUplink
-                goTo(mainState::networking);
-            } else {
-                i2c::goSleep();
-                goTo(mainState::idle);
+                sensorDeviceCollection::updateCounters();
             }
             break;
 
@@ -767,7 +752,7 @@ void mainController::setRadioType(cliCommand& theCommand) {
 }
 
 void mainController::setDisplay(cliCommand& theCommand) {
-        cli::sendResponse("command not yet implemented\n");
+    cli::sendResponse("command not yet implemented\n");
 }
 
 void mainController::setSensor(cliCommand& theCommand) {

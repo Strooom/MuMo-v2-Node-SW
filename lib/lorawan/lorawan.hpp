@@ -21,17 +21,18 @@
 #include <spreadingfactor.hpp>
 #include <linearbuffer.hpp>
 #include <maccommand.hpp>
+#include <measurementgroup.hpp>
 
 static constexpr uint32_t toBeDevAddr      = 0x260BF180;
 static constexpr char toBeNetworkKey[]     = "0DBC6EF938B83EB4F83C28E3CA7B4132";
 static constexpr char toBeApplicationKey[] = "7E22AA54A7F4C0842861A13F1D161DE2";
 
 static constexpr uint32_t toBeCurrentDataRateIndex = 5;
-static constexpr uint32_t toBeRx1DataRateOffset  = 0;
-static constexpr uint32_t toBeRx2DataRateIndex  = 3;
-static constexpr uint32_t toBeRx1DelayInSeconds = 1;
-static constexpr uint32_t toBeUplinkFrameCount = 0;
-static constexpr uint32_t toBeDownlinkFrameCount = 0;
+static constexpr uint32_t toBeRx1DataRateOffset    = 0;
+static constexpr uint32_t toBeRx2DataRateIndex     = 3;
+static constexpr uint32_t toBeRx1DelayInSeconds    = 1;
+static constexpr uint32_t toBeUplinkFrameCount     = 0;
+static constexpr uint32_t toBeDownlinkFrameCount   = 0;
 
 class LoRaWAN {
   public:
@@ -58,6 +59,8 @@ class LoRaWAN {
     static void handleEvents(applicationEvent theEvent);
     static uint32_t getMaxApplicationPayloadLength();
     static void sendUplink(uint8_t framePort, const uint8_t payload[], uint32_t payloadLength);
+    static void sendUplink(measurementGroup &aMeasurementGroup);
+
     static void appendMacCommand(macCommand theMacCommand);
     static void getReceivedDownlinkMessage();
     static txRxCycleState getState();
