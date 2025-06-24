@@ -121,7 +121,7 @@ void mainController::initialize() {
     }
     battery::initialize(theBatteryType);
     logging::snprintf(logging::source::settings, "batteryType : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
-    
+
     radioType theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
     if (!sx126x::isValidType(theRadioType)) {
         settingsCollection::save(static_cast<uint8_t>(defaultRadioType), settingsCollection::settingIndex::radioType);
@@ -129,7 +129,7 @@ void mainController::initialize() {
     }
     sx126x::initialize(theRadioType);
     logging::snprintf(logging::source::settings, "radioType : %s (%d)\n", toString(theRadioType), static_cast<uint8_t>(theRadioType));
-    
+
     sensorDeviceCollection::discover();
     static constexpr uint32_t defaultPrescaler{20U};
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, defaultPrescaler);
@@ -340,8 +340,8 @@ void mainController::prepareSleep() {
             logging::snprintf("goSleep...\n");
             i2c::goSleep();
             spi::goSleep();
-            gpio::disableGpio(gpio::group::usbPresent);
-            gpio::disableGpio(gpio::group::rfControl);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : gpio::disableGpio(gpio::group::usbPresent);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : gpio::disableGpio(gpio::group::rfControl);
             gpio::disableGpio(gpio::group::uart1);
             gpio::disableGpio(gpio::group::uart2);
             gpio::disableGpio(gpio::group::test0);
@@ -372,10 +372,10 @@ void mainController::wakeUp() {
             MX_RNG_Init();
             MX_USART1_UART_Init();
 #endif
-            gpio::enableGpio(gpio::group::rfControl);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : gpio::enableGpio(gpio::group::usbPresent);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : gpio::enableGpio(gpio::group::rfControl);
             gpio::enableGpio(gpio::group::uart1);
             gpio::enableGpio(gpio::group::uart2);
-            gpio::enableGpio(gpio::group::usbPresent);
             logging::snprintf("...wakeUp\n");
             break;
 
@@ -487,6 +487,16 @@ void mainController::runCli() {
                         case cliCommand::dl:
                             cli::sendResponse("logging disabled\n");
                             logging::disable(logging::destination::uart2);
+                            break;
+
+                        case cliCommand::er:
+                            LoRaWAN::setEnableRadio(true);
+                            cli::sendResponse("radio enabled\n");
+                            break;
+
+                        case cliCommand::dr:
+                            LoRaWAN::setEnableRadio(false);
+                            cli::sendResponse("radio disabled\n");
                             break;
 
                         case cliCommand::gds:
@@ -613,8 +623,8 @@ void mainController::showDeviceStatus() {
 }
 
 void mainController::showNetworkStatus() {
+    cli::sendResponse("radio %s\n", LoRaWAN::isRadioEnabled() ? "enabled" : "disabled");
     cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
-
     static constexpr uint32_t nmbrOfCharsToMask{2};
     char tmpKey[aesKey::lengthAsHexAscii + 1];
     strncpy(tmpKey, LoRaWAN::networkKey.getAsHexString(), aesKey::lengthAsHexAscii + 1);
