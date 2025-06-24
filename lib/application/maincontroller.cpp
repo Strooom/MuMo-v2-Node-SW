@@ -170,15 +170,7 @@ void mainController::initialize() {
     }
     logging::snprintf("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
 
-    // measurementCollection::initialize();
-    // measurementCollection::findMeasurementsInEeprom();
-    // uint32_t nmbrOfBytes = measurementCollection::nmbrOfMeasurementBytes();
-    // logging::snprintf("%d bytes of measurements found\n", nmbrOfBytes);
-    // measurementCollection::dumpRaw(measurementCollection::getOldestMeasurementOffset() + 26, 256U);
-    // static constexpr uint32_t maxNmbrOfMeasurementsToDump{16};
-    // uint32_t bytesConsumed{0};
-    // measurementCollection::printMeasurementGroup(tmpString, measurementCollection::getOldestMeasurementOffset() + 26);
-    // logging::snprintf("%s", tmpString);
+    measurementGroupCollection::initialize();
 
     gpio::enableGpio(gpio::group::rfControl);
 
@@ -520,6 +512,10 @@ void mainController::runCli() {
                             showDeviceStatus();
                             break;
 
+                        case cliCommand::gms:
+                            showMeasurementsStatus();
+                            break;
+
                         case cliCommand::gls:
                             showNetworkStatus();
                             break;
@@ -557,7 +553,7 @@ void mainController::runCli() {
                             setSensor(theCommand);
                             break;
 
-                        case cliCommand::res:
+                        case cliCommand::swr:
                             initialize();
                             break;
 
@@ -766,4 +762,10 @@ void mainController::setSensor(cliCommand& theCommand) {
     } else {
         cli::sendResponse("invalid arguments\n");
     }
+}
+
+void mainController::showMeasurementsStatus() {
+    cli::sendResponse("oldest : %d\n", measurementGroupCollection::getOldestMeasurementOffset());
+    cli::sendResponse("newest : %d\n", measurementGroupCollection::getNewMeasurementsOffset());
+    cli::sendResponse("%d bytes available\n", measurementGroupCollection::getFreeSpace());
 }

@@ -215,6 +215,16 @@ const char* sensorDeviceCollection::name(uint32_t index) {
             return "SHT40";
         case sensorDeviceType::tsl2591:
             return "TSL2591";
+        case sensorDeviceType::lis3dh:
+            return "LIS3DH";
+        case sensorDeviceType::sths34:
+            return "STHS34";
+        case sensorDeviceType::scd40:
+            return "SCD40";
+        case sensorDeviceType::sps30:
+            return "SPS30";
+        case sensorDeviceType::xa1110:
+            return "XA1110";
         // Add more types of sensors here
         default:
             return "invalid deviceIndex";
