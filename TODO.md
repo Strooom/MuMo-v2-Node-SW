@@ -3,10 +3,8 @@
 
 ### Priority High
 
-* VUSB
-detect rising edge interrupt and wake mcu up immediately
 
-* measurementsCollection
+* measurementsGroupCollection
   * make it work for variable amount of EEPROM memory
   * target unit test for wait time after page write into eeprom
 
