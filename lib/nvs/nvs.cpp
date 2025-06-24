@@ -11,7 +11,8 @@
 extern I2C_HandleTypeDef hi2c2;
 #else
 #include <cstring>
-uint8_t nonVolatileStorage::mockEepromMemory[mockEepromMemorySize];
+uint32_t nonVolatileStorage::mockEepromNmbr64KPages{2};
+uint8_t nonVolatileStorage::mockEepromMemory[maxNmbr64KBanks * 64 * 1024];
 #endif
 
 uint32_t nonVolatileStorage::nmbr64KBanks{0};
@@ -54,10 +55,10 @@ uint32_t nonVolatileStorage::detectNmbr64KBanks() {
             return nmbr64KBanks;
         }
     }
-    return nmbr64KBanks;
 #else
-    return mockEepromNmbr64KPages;
+    nmbr64KBanks = mockEepromNmbr64KPages;
 #endif
+    return nmbr64KBanks;
 }
 
 // Reading and Writing a single byte. Simple but not efficient when you need to read or write a range of bytes

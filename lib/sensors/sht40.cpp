@@ -7,7 +7,6 @@
 #include <settingscollection.hpp>
 #include <float.hpp>
 #include <logging.hpp>
-#include <measurementcollection.hpp>
 #include <i2c.hpp>
 
 #ifndef generic
@@ -46,7 +45,7 @@ bool sht40::isPresent() {
 void sht40::initialize() {
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
         channels[channelIndex].set(0, 0);
-        channels[channelIndex].hasNewValue = false;
+        // channels[channelIndex].hasNewValue = false;
     }
     state = sensorDeviceState::sleeping;
 }
@@ -58,14 +57,14 @@ void sht40::run() {
             float sht40Temperature = calculateTemperature();
             channels[temperature].addSample(sht40Temperature);
             if (channels[temperature].hasOutput()) {
-                channels[temperature].hasNewValue = true;
+                // channels[temperature].hasNewValue = true;
             }
         }
         if (channels[relativeHumidity].needsSampling()) {
             float sht40RelativeHumidity = calculateRelativeHumidity();
             channels[relativeHumidity].addSample(sht40RelativeHumidity);
             if (channels[relativeHumidity].hasOutput()) {
-                channels[relativeHumidity].hasNewValue = true;
+                // channels[relativeHumidity].hasNewValue = true;
             }
         }
         state = sensorDeviceState::sleeping;

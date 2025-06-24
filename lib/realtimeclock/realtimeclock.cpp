@@ -1,7 +1,7 @@
 #include <realtimeclock.hpp>
-#include <buildinfo.hpp>
 #include <cstring>
-#include <logging.hpp>
+// #include <buildinfo.hpp>
+// #include <logging.hpp>
 
 #ifndef generic
 #include "main.h"

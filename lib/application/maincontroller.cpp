@@ -21,7 +21,7 @@
 #include <lptim.hpp>
 #include <maccommand.hpp>
 #include <maincontroller.hpp>
-#include <measurementcollection.hpp>
+#include <measurementgroupcollection.hpp>
 #include <power.hpp>
 #include <realtimeclock.hpp>
 #include <screen.hpp>
@@ -132,7 +132,7 @@ void mainController::initialize() {
 
     battery::initialize(theBatteryType);
     logging::snprintf(logging::source::settings, "batteryType : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
-    sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
+    // sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true; // NOTE : also setting this in discover
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, defaultPrescaler);
     sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, defaultPrescaler);
 
@@ -149,7 +149,7 @@ void mainController::initialize() {
 
     sx126x::initialize(theRadioType);
     logging::snprintf(logging::source::settings, "radioType : %s (%d)\n", toString(theRadioType), static_cast<uint8_t>(theRadioType));
-    sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)] = true;
+    // sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)] = true; // NOTE : also setting this in discover
 
     sensorDeviceCollection::discover();
 
@@ -337,12 +337,12 @@ void mainController::runStateMachine() {
                 }
 
                 sensorDeviceCollection::collectNewMeasurements();
-                measurementCollection::saveNewMeasurementsToEeprom();
+                // measurementCollection::saveNewMeasurementsToEeprom();
 
-                uint32_t payloadLength        = measurementCollection::nmbrOfBytesToTransmit();
-                const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
-                LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
-                measurementCollection::setTransmitted(0, payloadLength);        // TODO : get correct frame counter *before* call to sendUplink
+                // uint32_t payloadLength        = measurementCollection::nmbrOfBytesToTransmit();
+                // const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
+                // LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
+                // measurementCollection::setTransmitted(0, payloadLength);        // TODO : get correct frame counter *before* call to sendUplink
                 goTo(mainState::networking);
             } else {
                 i2c::goSleep();
@@ -639,7 +639,7 @@ void mainController::showDeviceStatus() {
     cli::sendResponse("radioType: %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
 
     for (uint32_t sensorDeviceIndex = 0; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
-        if (sensorDeviceCollection::isPresent[sensorDeviceIndex]) {
+        if (sensorDeviceCollection::isPresent(sensorDeviceIndex)) {
             cli::sendResponse("[%d] %s\n", sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
             for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(sensorDeviceIndex); channelIndex++) {
                 cli::sendResponse("  [%d] %s [%s] oversampling = %d, prescaler = %d\n", channelIndex, sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::units(sensorDeviceIndex, channelIndex), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getOversampling(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler());

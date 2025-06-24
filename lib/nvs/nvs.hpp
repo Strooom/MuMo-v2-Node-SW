@@ -57,9 +57,8 @@ class nonVolatileStorage {
     static uint16_t bankOffset(uint32_t address) { return static_cast<uint16_t>(address % (64U * 1024U)); };
 
 #ifdef generic
-    static constexpr uint32_t mockEepromNmbr64KPages{2};
-    static constexpr uint32_t mockEepromMemorySize{mockEepromNmbr64KPages * 64 * 1024};
-    static uint8_t mockEepromMemory[mockEepromMemorySize];
+    static uint32_t mockEepromNmbr64KPages;
+    static uint8_t mockEepromMemory[maxNmbr64KBanks * 64 * 1024];
 #endif
 
     friend class settingsCollection;

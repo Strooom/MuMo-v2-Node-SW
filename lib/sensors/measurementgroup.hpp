@@ -9,6 +9,7 @@
 
 class measurementGroup {
   public:
+    void reset() { nmbrOfMeasurements = 0; };
     uint32_t getNumberOfMeasurements() const { return nmbrOfMeasurements; };
     time_t getTimeStamp() const { return timestamp; };
     uint32_t getDeviceIndex(uint32_t measurementIndex) const { return measurements[measurementIndex].deviceIndex; };

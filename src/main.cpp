@@ -15,7 +15,7 @@
 #include <realtimeclock.hpp>
 #include <uniqueid.hpp>
 #include <settingscollection.hpp>
-#include <measurementcollection.hpp>
+#include <measurementgroupcollection.hpp>
 #include <spi.hpp>
 #include <i2c.hpp>
 #include <bme680.hpp>
