@@ -37,10 +37,9 @@ class sensorChannel {
   private:
 #endif
     bool initialized{false};
-    // bool hasNewValue{false};
 
-    uint32_t oversampling;
-    uint32_t prescaling;
+    uint32_t oversampling{0};
+    uint32_t prescaling{0};
     uint32_t oversamplingCounter{0};
     uint32_t prescaleCounter{0};
 

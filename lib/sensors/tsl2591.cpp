@@ -44,7 +44,6 @@ void tsl2591::initialize() {
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels;
          channelIndex++) {
         channels[channelIndex].set(0, 0);
-        // channels[channelIndex].hasNewValue = false;
     }
     goSleep();
 }
@@ -123,9 +122,6 @@ void tsl2591::run() {
             readSample();
             if (channels[visibleLight].needsSampling()) {
                 channels[visibleLight].addSample(calculateLux());
-                if (channels[visibleLight].hasOutput()) {
-                    // channels[visibleLight].hasNewValue = true;
-                }
             }
             goSleep();
         }

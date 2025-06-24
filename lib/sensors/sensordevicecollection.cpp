@@ -313,21 +313,6 @@ void sensorDeviceCollection::collectNewMeasurements(uint32_t deviceIndex) {
     }
 }
 
-// void sensorDeviceCollection::clearNewMeasurements() {
-//     for (uint32_t deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
-//         clearNewMeasurements(deviceIndex);
-//     }
-// }
-
-// void sensorDeviceCollection::clearNewMeasurements(uint32_t deviceIndex) {
-//     if (isValid(deviceIndex)) {
-//         for (uint32_t channelIndex = 0U; channelIndex < nmbrOfChannels(deviceIndex); channelIndex++) {
-//             if (isValid(deviceIndex, channelIndex)) {
-//                 channel(deviceIndex, channelIndex).hasNewValue = false;
-//             }
-//         }
-//     }
-// }
 
 uint32_t sensorDeviceCollection::nmbrOfChannels(uint32_t deviceIndex) {
     if (isValid(deviceIndex)) {

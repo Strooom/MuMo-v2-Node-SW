@@ -105,7 +105,6 @@ void bme680::initialize() {
 #endif
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
         channels[channelIndex].set(0, 0);
-        // channels[channelIndex].hasNewValue = false;
     }
     state = sensorDeviceState::sleeping;
 }
@@ -117,25 +116,16 @@ void bme680::run() {
         if (channels[temperature].needsSampling()) {
             float bme680Temperature = calculateTemperature();
             channels[temperature].addSample(bme680Temperature);
-            if (channels[temperature].hasOutput()) {
-                // channels[temperature].hasNewValue = true;
-            }
         }
 
         if (channels[relativeHumidity].needsSampling()) {
             float bme680RelativeHumidity = calculateRelativeHumidity();
             channels[relativeHumidity].addSample(bme680RelativeHumidity);
-            if (channels[relativeHumidity].hasOutput()) {
-                // channels[relativeHumidity].hasNewValue = true;
-            }
         }
 
         if (channels[barometricPressure].needsSampling()) {
             float bme680BarometricPressure = calculateBarometricPressure();
             channels[barometricPressure].addSample(bme680BarometricPressure);
-            if (channels[barometricPressure].hasOutput()) {
-                // channels[barometricPressure].hasNewValue = true;
-            }
         }
 
         state = sensorDeviceState::sleeping;

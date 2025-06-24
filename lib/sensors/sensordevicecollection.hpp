@@ -50,9 +50,6 @@ class sensorDeviceCollection {
     static void updateCounters(uint32_t deviceIndex);
     static void updateCounters(uint32_t deviceIndex, uint32_t channelIndex);
 
-    // static void clearNewMeasurements();
-    // static void clearNewMeasurements(uint32_t deviceIndex);
-
     static sensorChannel& channel(uint32_t deviceIndex, uint32_t channelIndex);        // I don't like these being public, so need to find a better way
     static measurementGroup newMeasurements;                                           // I don't like this being public, so need to find a better way
 

@@ -245,7 +245,6 @@ void USART1_IRQHandler(void) {
     if (isrflags & uart1::tdrEmpty) {
         uart1::txEmpty();
     }
-    // HAL_UART_IRQHandler(&huart1);
 }
 
 void USART2_IRQHandler(void) {
@@ -259,7 +258,6 @@ void USART2_IRQHandler(void) {
     if (isrflags & uart2::tdrEmpty) {
         uart2::txEmpty();
     }
-    // HAL_UART_IRQHandler(&huart2);
 }
 
 /**
@@ -287,7 +285,6 @@ void SUBGHZ_Radio_IRQHandler(void) {
 
     /* USER CODE END SUBGHZ_Radio_IRQn 1 */
 }
-
 
 void EXTI4_IRQHandler(void) {
     HAL_GPIO_EXTI_IRQHandler(usbPowerPresent_Pin);

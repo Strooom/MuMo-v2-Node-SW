@@ -63,7 +63,6 @@ void sps30::tick() {
     }
 
     if (anyChannelNeedsSampling()) {
-        // clearNewMeasurements();
         startSampling();
         state = sensorDeviceState::sampling;
     } else {

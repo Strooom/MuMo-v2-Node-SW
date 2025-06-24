@@ -16,9 +16,7 @@ bool power::usbPower{false};
 
 bool power::hasUsbPower() {
 #ifndef generic
-    //gpio::enableGpio(gpio::group::usbPresent); Should be enabled in the main function and remain enabled all the time
     bool pinState = (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOB, usbPowerPresent_Pin));
-    //gpio::disableGpio(gpio::group::usbPresent);
     return pinState;
 #else
     return mockUsbPower;
