@@ -28,7 +28,12 @@ void measurementGroupCollection::reset() {
 }
 
 void measurementGroupCollection::addNew(measurementGroup& aMeasurementGroup) {
-    uint32_t lengthInBytes = measurementGroup::lengthInBytes(aMeasurementGroup.getNumberOfMeasurements());
+    uint32_t lengthInBytes   = measurementGroup::lengthInBytes(aMeasurementGroup.getNumberOfMeasurements());
+    uint32_t nmbrOfFreeBytes = getFreeSpace();
+    while (nmbrOfFreeBytes < lengthInBytes) {
+        eraseOldest();
+        nmbrOfFreeBytes = getFreeSpace();
+    }
     uint8_t buffer[lengthInBytes];
     aMeasurementGroup.toBytes(buffer, lengthInBytes);
 
@@ -60,9 +65,7 @@ void measurementGroupCollection::eraseOldest() {
     settingsCollection::save(oldestMeasurementOffset, settingsCollection::settingIndex::oldestMeasurementOffset);
 }
 
-
-void measurementGroupCollection::get(measurementGroup &aMeasurementGroup, uint32_t offset) {
-
+void measurementGroupCollection::get(measurementGroup& aMeasurementGroup, uint32_t offset) {
     uint32_t lengthInBytes = measurementGroup::lengthInBytes(nonVolatileStorage::read(getAddressFromOffset(offset)));
     uint8_t buffer[lengthInBytes];
 
