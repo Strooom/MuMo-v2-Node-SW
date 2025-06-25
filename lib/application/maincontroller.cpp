@@ -689,7 +689,6 @@ void mainController::setApplicationKey(const cliCommand& theCommand) {
     if (theCommand.nmbrOfArguments == 1) {
         char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
         size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
-        cli::sendResponse("arg[0].length = %d\n", copyLen);
         if (copyLen > aesKey::lengthAsHexAscii) {
             copyLen = aesKey::lengthAsHexAscii;
         }
@@ -783,7 +782,7 @@ void mainController::showMeasurementsStatus() {
         offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
     }
     cli::sendResponse("%d measurements in %d groups\n", nmbrOfMeasurements, nmbrOfGroups);
-    cli::sendResponse("oldest : %s UTC", ctime(&oldestMeasurementTime));
-    cli::sendResponse("newest : %s UTC", ctime(&newestMeasurementTime));
+    cli::sendResponse("oldest : %s", ctime(&oldestMeasurementTime));
+    cli::sendResponse("newest : %s", ctime(&newestMeasurementTime));
     cli::sendResponse("%d bytes available\n", measurementGroupCollection::getFreeSpace());
 }
