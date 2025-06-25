@@ -779,7 +779,7 @@ void mainController::showMeasurementsStatus() {
     uint32_t startOffset = measurementGroupCollection::getOldestMeasurementOffset();
     uint32_t endOffset   = measurementGroupCollection::getNewMeasurementsOffset();
     if (endOffset < startOffset) {
-        endOffset += nonVolatileStorage::measurementsSize;
+        endOffset += nonVolatileStorage::getMeasurementsAreaSize();
     }
     uint32_t offset{startOffset};
     uint32_t nmbrOfGroups{0};
@@ -808,7 +808,7 @@ void mainController::showMeasurements() {
     uint32_t startOffset = measurementGroupCollection::getOldestMeasurementOffset();
     uint32_t endOffset   = measurementGroupCollection::getNewMeasurementsOffset();
     if (endOffset < startOffset) {
-        endOffset += nonVolatileStorage::measurementsSize;
+        endOffset += nonVolatileStorage::getMeasurementsAreaSize();
     }
     uint32_t offset{startOffset};
     uint32_t nmbrOfGroups{0};

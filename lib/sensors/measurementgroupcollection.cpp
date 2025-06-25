@@ -53,7 +53,7 @@ void measurementGroupCollection::addNew(measurementGroup& aMeasurementGroup) {
 
     // TODO : put NVS back to sleep if it was sleeping
 
-    newMeasurementsOffset = (newMeasurementsOffset + lengthInBytes) % nonVolatileStorage::measurementsSize;
+    newMeasurementsOffset = (newMeasurementsOffset + lengthInBytes) % nonVolatileStorage::getMeasurementsAreaSize();
     settingsCollection::save(newMeasurementsOffset, settingsCollection::settingIndex::newMeasurementsOffset);
 }
 
@@ -61,7 +61,7 @@ void measurementGroupCollection::eraseOldest() {
     measurementGroup oldestMeasurementGroup;
     uint32_t nmbrOfMeasurements = nonVolatileStorage::read(getAddressFromOffset(oldestMeasurementOffset));
     uint32_t lengthInBytes      = measurementGroup::lengthInBytes(nmbrOfMeasurements);
-    oldestMeasurementOffset     = (oldestMeasurementOffset + lengthInBytes) % nonVolatileStorage::measurementsSize;
+    oldestMeasurementOffset     = (oldestMeasurementOffset + lengthInBytes) % nonVolatileStorage::getMeasurementsAreaSize();
     settingsCollection::save(oldestMeasurementOffset, settingsCollection::settingIndex::oldestMeasurementOffset);
 }
 
