@@ -830,20 +830,19 @@ void mainController::showMeasurements() {
             uint32_t decimals = sensorDeviceCollection::decimals(tmpDeviceIndex, tmpChannelIndex);
             uint32_t intPart  = integerPart(tmpValue, decimals);
 
-            cli::sendResponse(" %s", sensorDeviceCollection::name(tmpDeviceIndex));
+            cli::sendResponse("  %s", sensorDeviceCollection::name(tmpDeviceIndex));
             cli::sendResponse(" %s", sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex));
 
             if (decimals > 0) {
                 uint32_t fracPart;
                 fracPart = fractionalPart(tmpValue, decimals);
-                cli::sendResponse(" %d.%d\n", intPart, fracPart);
+                cli::sendResponse(" %d.%d", intPart, fracPart);
             } else {
-                cli::sendResponse(" %d\n", intPart);
+                cli::sendResponse(" %d", intPart);
             }
 
             cli::sendResponse(" %s\n", sensorDeviceCollection::units(tmpDeviceIndex, tmpChannelIndex));
         }
-
         nmbrOfGroups++;
         offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
     }
