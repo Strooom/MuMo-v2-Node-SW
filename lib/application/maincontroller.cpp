@@ -715,8 +715,13 @@ void mainController::setName(const cliCommand& theCommand) {
         }
         memcpy(newName, theCommand.arguments[0], copyLen);
         settingsCollection::saveByteArray(newName, settingsCollection::settingIndex::name);
-        screen::setName(theCommand.arguments[0]);
-        cli::sendResponse("name set : %s\n", theCommand.arguments[0]);
+        settingsCollection::readByteArray(newName, settingsCollection::settingIndex::name);
+        for (uint32_t index = 0; index < maxNameLength; ++index) {
+            name[index] = newName[index];
+        }
+        name[maxNameLength] = '\0';        // ensure null termination
+        screen::setName(name);
+        cli::sendResponse("name set : %s\n", name);
     } else {
         cli::sendResponse("invalid arguments\n");
     }
