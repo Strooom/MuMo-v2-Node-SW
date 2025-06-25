@@ -654,7 +654,7 @@ void mainController::showNetworkStatus() {
     }
 }
 
-void mainController::setDeviceAddress(cliCommand& theCommand) {
+void mainController::setDeviceAddress(const cliCommand& theCommand) {
     if (theCommand.nmbrOfArguments == 1) {
         char newDevAddrAsHex[deviceAddress::lengthAsHexAscii + 1]{0};
         size_t copyLen = strnlen(theCommand.arguments[0], deviceAddress::lengthAsHexAscii);
@@ -670,7 +670,7 @@ void mainController::setDeviceAddress(cliCommand& theCommand) {
         cli::sendResponse("invalid arguments\n");
     }
 }
-void mainController::setNetworkKey(cliCommand& theCommand) {
+void mainController::setNetworkKey(const cliCommand& theCommand) {
     if (theCommand.nmbrOfArguments == 1) {
         char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
         size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
@@ -685,7 +685,7 @@ void mainController::setNetworkKey(cliCommand& theCommand) {
         cli::sendResponse("invalid arguments\n");
     }
 }
-void mainController::setApplicationKey(cliCommand& theCommand) {
+void mainController::setApplicationKey(const cliCommand& theCommand) {
     if (theCommand.nmbrOfArguments == 1) {
         char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
         size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
@@ -702,7 +702,7 @@ void mainController::setApplicationKey(cliCommand& theCommand) {
     }
 }
 
-void mainController::setName(cliCommand& theCommand) {
+void mainController::setName(const cliCommand& theCommand) {
     if (theCommand.nmbrOfArguments == 1) {
         uint8_t newName[maxNameLength + 1]{0};
         size_t copyLen = strnlen(theCommand.arguments[0], maxNameLength);
@@ -718,7 +718,7 @@ void mainController::setName(cliCommand& theCommand) {
     }
 }
 
-void mainController::setBatteryType(cliCommand& theCommand) {
+void mainController::setBatteryType(const cliCommand& theCommand) {
     if (theCommand.nmbrOfArguments == 1) {
         uint32_t tmpBatteryTypeIndex = theCommand.argumentAsUint32(0);
         settingsCollection::save(static_cast<uint8_t>(tmpBatteryTypeIndex), settingsCollection::settingIndex::batteryType);
@@ -730,7 +730,7 @@ void mainController::setBatteryType(cliCommand& theCommand) {
     }
 }
 
-void mainController::setRadioType(cliCommand& theCommand) {
+void mainController::setRadioType(const cliCommand& theCommand) {
     if (theCommand.nmbrOfArguments == 1) {
         uint32_t tmpRadioTypeIndex = theCommand.argumentAsUint32(0);
         settingsCollection::save(static_cast<uint8_t>(tmpRadioTypeIndex), settingsCollection::settingIndex::radioType);
@@ -742,11 +742,11 @@ void mainController::setRadioType(cliCommand& theCommand) {
     }
 }
 
-void mainController::setDisplay(cliCommand& theCommand) {
+void mainController::setDisplay(const cliCommand& theCommand) {
     cli::sendResponse("command not yet implemented\n");
 }
 
-void mainController::setSensor(cliCommand& theCommand) {
+void mainController::setSensor(const cliCommand& theCommand) {
     if (theCommand.nmbrOfArguments == 4) {
         uint32_t tmpDeviceIndex  = theCommand.argumentAsUint32(0);
         uint32_t tmpChannelIndex = theCommand.argumentAsUint32(1);
