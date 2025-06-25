@@ -15,8 +15,12 @@ typedef struct
 
 class uniqueId {
   public:
-    static uint64_t get();
+    static uint64_t asUint64();
+    static const char* asHexString();
 #ifdef generic
     static uint64_t mockUniqueId;
 #endif
+
+  private:
+    static char uidAsHexAscii[17];
 };

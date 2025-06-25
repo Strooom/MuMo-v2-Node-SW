@@ -8,12 +8,12 @@
 #include <cstring>
 #include <applicationevent.hpp>
 #include <aeskey.hpp>
+#include <aesblock.hpp>
 #include <messagetype.hpp>
 #include <txrxcyclestate.hpp>
 #include <macheader.hpp>
 #include <deviceaddress.hpp>
 #include <framecount.hpp>
-#include <mic.hpp>
 #include <datarate.hpp>
 #include <txchannelcollection.hpp>
 #include <transmitpower.hpp>
@@ -21,18 +21,35 @@
 #include <spreadingfactor.hpp>
 #include <linearbuffer.hpp>
 #include <maccommand.hpp>
+#include <measurementgroup.hpp>
+
+static constexpr uint32_t toBeDevAddr      = 0x260BF180;
+static constexpr char toBeNetworkKey[]     = "0DBC6EF938B83EB4F83C28E3CA7B4132";
+static constexpr char toBeApplicationKey[] = "7E22AA54A7F4C0842861A13F1D161DE2";
+
+static constexpr uint32_t toBeCurrentDataRateIndex = 5;
+static constexpr uint32_t toBeRx1DataRateOffset    = 0;
+static constexpr uint32_t toBeRx2DataRateIndex     = 3;
+static constexpr uint32_t toBeRx1DelayInSeconds    = 1;
+static constexpr uint32_t toBeUplinkFrameCount     = 0;
+static constexpr uint32_t toBeDownlinkFrameCount   = 0;
 
 class LoRaWAN {
   public:
     static void initialize();
+    static void setEnableRadio(bool enable) { enableRadio = enable; };
+    static bool isRadioEnabled() { return enableRadio; };
 
     static void restoreConfig();
-    static void restoreState();
-    static void restoreChannels();
     static bool isValidConfig();
-    static bool isValidState();
-
+    static void initializeConfig();
     static void saveConfig();
+
+    static void restoreState();
+    static bool isValidState();
+    static void initializeState();
+    static void restoreChannels();
+
     static void saveState();
     static void saveChannels();
 
@@ -44,6 +61,8 @@ class LoRaWAN {
     static void handleEvents(applicationEvent theEvent);
     static uint32_t getMaxApplicationPayloadLength();
     static void sendUplink(uint8_t framePort, const uint8_t payload[], uint32_t payloadLength);
+    static void sendUplink(measurementGroup &aMeasurementGroup);
+
     static void appendMacCommand(macCommand theMacCommand);
     static void getReceivedDownlinkMessage();
     static txRxCycleState getState();
@@ -60,20 +79,6 @@ class LoRaWAN {
     static void dumpRawMessageHeader();
     static void dumpRawMessagePayload();
     static void dumpTransmitSettings();
-    static void dumpLinkCheckAnswer();
-    static void dumpLinkAdaptiveDataRateRequest();
-    static void dumpDutyCycleRequest();
-    static void dumpDeviceStatusRequest();
-    static void dumpNewChannelRequest();
-    static void dumpNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate);
-    static void dumpReceiveParameterSetupRequest();
-    static void dumpReceiveTimingSetupRequest();
-    static void dumpReceiveTimingSetupRequest(uint32_t rx1Delay);
-    static void dumpTransmitParameterSetupRequest();
-    static void dumpDownlinkChannelRequest();
-    static void dumpDeviceTimeAnswer();
-
-    static void correctDevAddrEndianness();
 
     static uint32_t margin;
     static uint32_t gatewayCount;
@@ -91,6 +96,8 @@ class LoRaWAN {
 #ifndef unitTesting
   private:
 #endif
+
+    static bool enableRadio;
 
     static txRxCycleState state;
     static void goTo(txRxCycleState newState);

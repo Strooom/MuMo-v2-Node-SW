@@ -21,7 +21,7 @@
 #include <lptim.hpp>
 #include <maccommand.hpp>
 #include <maincontroller.hpp>
-#include <measurementcollection.hpp>
+#include <measurementgroupcollection.hpp>
 #include <power.hpp>
 #include <realtimeclock.hpp>
 #include <screen.hpp>
@@ -30,11 +30,13 @@
 #include <spi.hpp>
 #include <stdio.h>
 #include <tsl2591.hpp>
-#include <uart.hpp>
+#include <debugport.hpp>
+#include <uart2.hpp>
 #include <uniqueid.hpp>
 #include <buildinfo.hpp>
-#include <mcutype.hpp>
+#include <radiotype.hpp>
 #include <sx126x.hpp>
+#include <stdlib.h>        // atoi
 
 #ifndef generic
 #include "main.h"
@@ -58,6 +60,7 @@ uint32_t mainController::requestCounter{0};
 uint32_t mainController::answerCounter{0};
 const uint32_t mainController::deviceIndex[screen::nmbrOfMeasurementTextLines]{2, 2, 3};
 const uint32_t mainController::channelIndex[screen::nmbrOfMeasurementTextLines]{0, 1, 0};
+char mainController::name[maxNameLength + 1]{};
 
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
@@ -65,7 +68,6 @@ void mainController::initialize() {
     logging::enable(logging::destination::uart1);
     logging::enable(logging::source::applicationEvents);
     logging::enable(logging::source::settings);
-    // logging::enable(logging::source::sensorData);
     logging::enable(logging::source::lorawanMac);
     logging::enable(logging::source::lorawanData);
     logging::enable(logging::source::error);
@@ -75,24 +77,30 @@ void mainController::initialize() {
     logging::snprintf("\n\n\nhttps://github.com/Strooom\n");
     logging::snprintf("v%u.%u.%u - #%s\n", buildInfo::mainVersionDigit, buildInfo::minorVersionDigit, buildInfo::patchVersionDigit, buildInfo::lastCommitTag);
     logging::snprintf("%s %s build - %s\n", toString(buildInfo::theBuildEnvironment), toString(buildInfo::theBuildType), buildInfo::buildTimeStamp);
-    logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n");
+    logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n\n");
 
-    char tmpKeyAsHexAscii[17];
-    hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
-    logging::snprintf("\n");
-    logging::snprintf("UID      : %s\n", tmpKeyAsHexAscii);
+    logging::snprintf("UID      : %s\n", uniqueId::asHexString());
+
+    uint8_t tmpName[maxNameLength + 1]{};
+    settingsCollection::readByteArray(tmpName, settingsCollection::settingIndex::name);
+    for (uint32_t index = 0; index < maxNameLength; ++index) {
+        name[index] = tmpName[index];
+    }
+    name[maxNameLength] = '\0';        // ensure null termination
+    logging::snprintf("name     : %s\n", name);
 
     spi::wakeUp();
     display::detectPresence();
-    logging::snprintf(logging::source::settings, "Display  : %s\n", display::isPresent() ? "present" : "not present");
+    logging::snprintf(logging::source::settings, "display  : %s\n", display::isPresent() ? "present" : "not present");
     if (display::isPresent()) {
         screen::setType(screenType::logo);
+        screen::setName(name);
         screen::update();
     }
     spi::goSleep();
 
     i2c::wakeUp();
-    uint32_t nmbr64KBlocks = nonVolatileStorage::isPresent();
+    uint32_t nmbr64KBlocks = nonVolatileStorage::detectNmbr64KBanks();
     if (nmbr64KBlocks > 0) {
         logging::snprintf(logging::source::settings, "EEPROM   : %d * 64K present\n", nmbr64KBlocks);
     } else {
@@ -101,105 +109,93 @@ void mainController::initialize() {
         return;
     }
 
+    if (!settingsCollection::isValid()) {
+        settingsCollection::save(settingsCollection::maxMapVersion, settingsCollection::settingIndex::mapVersion);
+    }
+    logging::snprintf(logging::source::settings, "settingsMapVersion : %d\n", settingsCollection::getMapVersion());
+
     batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
-    if (battery::isValidType(theBatteryType)) {
-        battery::initialize(theBatteryType);
-        logging::snprintf(logging::source::settings, "Battery  : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
-        sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
-
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, 20);
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, 20);
-    } else {
-        logging::snprintf(logging::source::criticalError, "invalid BatteryType %d\n", static_cast<uint8_t>(theBatteryType));
+    if (!battery::isValidType(theBatteryType)) {
+        settingsCollection::save(static_cast<uint8_t>(defaultBatteryType), settingsCollection::settingIndex::batteryType);
+        theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
     }
+    battery::initialize(theBatteryType);
+    logging::snprintf(logging::source::settings, "batteryType : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
 
-    mcuType theMcuType = static_cast<mcuType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
-    if (sx126x::isValidType(theMcuType)) {
-        sx126x::initialize(theMcuType);
-        logging::snprintf(logging::source::settings, "Radio    : %s (%d)\n", toString(theMcuType), static_cast<uint8_t>(theMcuType));
-        sensorDeviceCollection::isPresent[static_cast<uint32_t>(sensorDeviceType::mcu)] = true;
-    } else {
-        logging::snprintf(logging::source::criticalError, "invalid RadioType %d\n", static_cast<uint8_t>(theMcuType));
-        goTo(mainState::fatalError);
-        return;
+    radioType theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
+    if (!sx126x::isValidType(theRadioType)) {
+        settingsCollection::save(static_cast<uint8_t>(defaultRadioType), settingsCollection::settingIndex::radioType);
+        theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
     }
+    sx126x::initialize(theRadioType);
+    logging::snprintf(logging::source::settings, "radioType : %s (%d)\n", toString(theRadioType), static_cast<uint8_t>(theRadioType));
 
     sensorDeviceCollection::discover();
-
+    static constexpr uint32_t defaultPrescaler{20U};
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, defaultPrescaler);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, defaultPrescaler);
     if (bme680::isPresent()) {
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, 20);
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, 20);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, defaultPrescaler);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, defaultPrescaler);
     }
     logging::snprintf("BME680   : %s\n", bme680::isPresent() ? "present" : "not present");
 
     if (tsl2591::isPresent()) {
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, 20);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, defaultPrescaler);
     }
     logging::snprintf("TSL2591  : %s\n", tsl2591::isPresent() ? "present" : "not present");
 
     if (sht40::isPresent()) {
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, 20);
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, 20);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, defaultPrescaler);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, defaultPrescaler);
     }
     logging::snprintf("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
 
-    // TODO : initialize measurementCollection
+    measurementGroupCollection::initialize();
 
     gpio::enableGpio(gpio::group::rfControl);
 
     LoRaWAN::initialize();
-
-    // Uncomment to reset MacLayer state and/or channels in the device
-    // Needs a matching MacLayer reset at the LoRaWAN Network Server
-    // LoRaWAN::resetState();           // TEST
-    // LoRaWAN::saveState();            // TEST
-    // LoRaWAN::resetChannels();        // TEST
-    // LoRaWAN::saveChannels();         // TEST
-    // LoRaWAN::initialize();           // TEST
-
-    static constexpr uint32_t tmpStringLength{64};
-    char tmpString[tmpStringLength];
     logging::snprintf("\n");
-    hexAscii::uint32ToHexString(tmpString, LoRaWAN::DevAddr.asUint32);
-    logging::snprintf("DevAddr  : %s\n", tmpString);
-    hexAscii::byteArrayToHexString(tmpString, LoRaWAN::applicationKey.asBytes(), 16);
-    logging::snprintf("AppSKey  : %s\n", tmpString);
-    hexAscii::byteArrayToHexString(tmpString, LoRaWAN::networkKey.asBytes(), 16);
-    logging::snprintf("NwkSKey  : %s\n", tmpString);
-
     if (!LoRaWAN::isValidConfig()) {
         logging::snprintf(logging::source::criticalError, "invalid LoRaWAN config\n");
-        goTo(mainState::fatalError);
-        return;
+        LoRaWAN::initializeConfig();
+    } else if (forceInitialization) {
+        LoRaWAN::initializeConfig();
+        logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN config\n");
     }
+    logging::snprintf("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
+    logging::snprintf("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());
+    logging::snprintf("NwkSKey  : %s\n", LoRaWAN::networkKey.getAsHexString());
 
     logging::snprintf("\n");
-    logging::snprintf("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.toUint32());
-    logging::snprintf("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.toUint32());
+    if (!LoRaWAN::isValidState()) {
+        logging::snprintf(logging::source::criticalError, "invalid LoRaWAN state\n");
+        LoRaWAN::initializeState();
+    } else if (forceInitialization) {
+        LoRaWAN::initializeState();
+        logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN state\n");
+    }
+    logging::snprintf("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.getAsWord());
+    logging::snprintf("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.getAsWord());
     logging::snprintf("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
     logging::snprintf("DataRate : %u\n", LoRaWAN::currentDataRateIndex);
     logging::snprintf("rx1DROff : %u\n", LoRaWAN::rx1DataRateOffset);
     logging::snprintf("rx2DRIdx : %u\n", LoRaWAN::rx2DataRateIndex);
-
-    if (!LoRaWAN::isValidState()) {
-        logging::snprintf(logging::source::criticalError, "invalid LoRaWAN state\n");
-        goTo(mainState::fatalError);
-        return;
-    }
-
     logging::snprintf("\n");
     logging::snprintf("ActiveCh : %u\n", loRaTxChannelCollection::nmbrActiveChannels());
     for (uint32_t loRaTxChannelIndex = 0; loRaTxChannelIndex < loRaTxChannelCollection::maxNmbrChannels; loRaTxChannelIndex++) {
         logging::snprintf("Chan[%02u] : %u Hz, %u, %u\n", loRaTxChannelIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].frequencyInHz, loRaTxChannelCollection::channel[loRaTxChannelIndex].minimumDataRateIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].maximumDataRateIndex);
     }
 
-    applicationEventBuffer.initialize();        // clears RTCticks which may already have been generated
+    applicationEventBuffer.initialize();
+    requestCounter = 0;
+    answerCounter  = 0;
     goTo(mainState::networkCheck);
-    // i2c::goSleep(); // TODO / BUG : this is a problem, as the I2C now sleeps during the networkCheck state... and so new settings cannot be stored in NVS
 }
 
 void mainController::handleEvents() {
-    while (applicationEventBuffer.hasEvents()) {
+    while (!applicationEventBuffer.isEmpty()) {
         applicationEvent theEvent = applicationEventBuffer.pop();
         logging::snprintf(logging::source::applicationEvents, "%s[%u] in %s[%u]\n", toString(theEvent), static_cast<uint8_t>(theEvent), toString(state), static_cast<uint32_t>(state));
 
@@ -227,7 +223,7 @@ void mainController::handleEventsStateNetworkCheck(applicationEvent theEvent) {
         case applicationEvent::downlinkMacCommandReceived:
             answerCounter++;
             logging::snprintf(logging::source::lorawanMac, "answer : %u\n", static_cast<uint8_t>(answerCounter));
-            // showLoRaWanStatus();
+            showLoRaWanStatus();
             if (answerCounter >= minNmbrAnswers) {
                 goTo(mainState::idle);
             }
@@ -237,7 +233,7 @@ void mainController::handleEventsStateNetworkCheck(applicationEvent theEvent) {
             requestCounter++;
             logging::snprintf(logging::source::lorawanMac, "request : %u\n", static_cast<uint8_t>(requestCounter));
             miniAdr();
-            // showLoRaWanStatus();
+            showLoRaWanStatus();
             if (requestCounter >= maxNmbrRequests) {
                 goTo(mainState::fatalError);
             } else {
@@ -262,13 +258,10 @@ void mainController::handleEventsStateNetworkCheck(applicationEvent theEvent) {
 void mainController::handleEventsStateIdle(applicationEvent theEvent) {
     switch (theEvent) {
         case applicationEvent::realTimeClockTick:
-            if (realTimeClock::needsSync()) {
-                LoRaWAN::appendMacCommand(macCommand::deviceTimeRequest);
-            }
             if (sensorDeviceCollection::needsSampling()) {
                 i2c::wakeUp();
                 sensorDeviceCollection::startSampling();
-                goTo(mainState::measuring);
+                goTo(mainState::sampling);
             } else {
                 sensorDeviceCollection::updateCounters();
             }
@@ -301,37 +294,25 @@ void mainController::runStateMachine() {
         case mainState::networkCheck:
             break;
 
-        case mainState::measuring:
+        case mainState::sampling:
             sensorDeviceCollection::run();
             if (sensorDeviceCollection::isSamplingReady()) {
-                sensorDeviceCollection::updateCounters();
-                goTo(mainState::logging);
-            }
-            break;
-
-        case mainState::logging:
-            if (sensorDeviceCollection::hasNewMeasurements()) {
-                if (logging::isActive(logging::source::sensorData)) {
-                    sensorDeviceCollection::log();
+                if (sensorDeviceCollection::hasNewMeasurements()) {
+                    sensorDeviceCollection::collectNewMeasurements();
+                    measurementGroupCollection::addNew(sensorDeviceCollection::newMeasurements);
+                    LoRaWAN::sendUplink(sensorDeviceCollection::newMeasurements);
+                    goTo(mainState::networking);
+                } else {
+                    i2c::goSleep();
+                    goTo(mainState::idle);
                 }
-
-                sensorDeviceCollection::collectNewMeasurements();
-                measurementCollection::saveNewMeasurementsToEeprom();
-
-                uint32_t payloadLength        = measurementCollection::nmbrOfBytesToTransmit();
-                const uint8_t* payLoadDataPtr = measurementCollection::getTransmitBuffer();
-                LoRaWAN::sendUplink(17, payLoadDataPtr, payloadLength);
-                measurementCollection::setTransmitted(0, payloadLength);        // TODO : get correct frame counter *before* call to sendUplink
-                goTo(mainState::networking);
-            } else {
-                i2c::goSleep();
-                goTo(mainState::idle);
+                sensorDeviceCollection::updateCounters();
             }
             break;
 
         case mainState::networking:
             if (LoRaWAN::isIdle()) {
-                // showMain();
+                showMain();
                 i2c::goSleep();
                 goTo(mainState::idle);
             }
@@ -347,23 +328,35 @@ void mainController::goTo(mainState newState) {
     state = newState;
 }
 
+void mainController::runSleep() {
+    if (!power::hasUsbPower() && !debugPort::isDebugProbePresent()) {
+        prepareSleep();
+        goSleep();
+        wakeUp();
+    }
+}
+
 void mainController::prepareSleep() {
     switch (state) {
-        case mainState::idle:        // Intentional fallthrough
-                                     // case mainState::networkCheck:
-
+        case mainState::idle:
             logging::snprintf("goSleep...\n");
-            gpio::disableAllGpio();
+            i2c::goSleep();
+            spi::goSleep();
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : gpio::disableGpio(gpio::group::usbPresent);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : gpio::disableGpio(gpio::group::rfControl);
+            gpio::disableGpio(gpio::group::uart1);
+            gpio::disableGpio(gpio::group::uart2);
+            gpio::disableGpio(gpio::group::test0);
             break;
 
         default:
             break;
     }
 }
+
 void mainController::goSleep() {
     switch (state) {
-        case mainState::idle:        // Intentional fallthrough
-                                     // case mainState::networkCheck:
+        case mainState::idle:
             mcuStop2();
             break;
 
@@ -374,20 +367,17 @@ void mainController::goSleep() {
 
 void mainController::wakeUp() {
     switch (state) {
-        case mainState::idle:        // Intentional fallthrough
-                                     // case mainState::networkCheck:
+        case mainState::idle:
 #ifndef generic
-            MX_I2C2_Init();
             MX_ADC_Init();
             MX_AES_Init();
             MX_RNG_Init();
-            MX_USART1_UART_Init();        // Should only do this when UART0 is being used for logging...
+            MX_USART1_UART_Init();
 #endif
-            gpio::enableGpio(gpio::group::rfControl);
-            gpio::enableGpio(gpio::group::usbPresent);
-            gpio::enableGpio(gpio::group::i2c);
-            gpio::enableGpio(gpio::group::writeProtect);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : gpio::enableGpio(gpio::group::usbPresent);
+            // Powering down these pins has no effect on power consumption, so we keep them enabled  : gpio::enableGpio(gpio::group::rfControl);
             gpio::enableGpio(gpio::group::uart1);
+            gpio::enableGpio(gpio::group::uart2);
             logging::snprintf("...wakeUp\n");
             break;
 
@@ -463,10 +453,10 @@ void mainController::runDisplayUpdate() {
             break;
 
         default:
-            if (display::isPresent()) {
-                if (screen::isModified() || ((realTimeClock::tickCounter % display::refreshPeriodInTicks) == (display::refreshPeriodInTicks - 1))) {
-                    screen::update();
-                }
+            if (display::isPresent() && screen::isModified()) {
+                spi::wakeUp();
+                screen::update();
+                spi::goSleep();
             }
             break;
     }
@@ -479,7 +469,102 @@ void mainController::runCli() {
 
         default:
             if (power::hasUsbPower()) {
-                cli::run();
+                if (cli::hasCommand()) {
+                    cliCommand theCommand;
+                    cli::getCommand(theCommand);
+                    switch (theCommand.commandHash) {
+                        case cliCommand::prompt:
+                            showPrompt();
+                            break;
+
+                        case cliCommand::help:
+                            showHelp();
+                            break;
+
+                        case cliCommand::el:
+                            cli::sendResponse("logging enabled\n");
+                            logging::enable(logging::destination::uart2);
+                            break;
+
+                        case cliCommand::dl:
+                            cli::sendResponse("logging disabled\n");
+                            logging::disable(logging::destination::uart2);
+                            break;
+
+                        case cliCommand::er:
+                            LoRaWAN::setEnableRadio(true);
+                            cli::sendResponse("radio enabled\n");
+                            break;
+
+                        case cliCommand::dr:
+                            LoRaWAN::setEnableRadio(false);
+                            cli::sendResponse("radio disabled\n");
+                            break;
+
+                        case cliCommand::gds:
+                            showDeviceStatus();
+                            break;
+
+                        case cliCommand::gms:
+                            showMeasurementsStatus();
+                            break;
+
+                        case cliCommand::gm:
+                            showMeasurements();
+                            break;
+
+                        case cliCommand::gls:
+                            showNetworkStatus();
+                            break;
+
+                        case cliCommand::rml:
+                            LoRaWAN::resetMacLayer();
+                            cli::sendResponse("mac layer reset\n");
+                            break;
+
+                        case cliCommand::sda:
+                            setDeviceAddress(theCommand);
+                            break;
+
+                        case cliCommand::snk:
+                            setNetworkKey(theCommand);
+                            break;
+
+                        case cliCommand::sak:
+                            setApplicationKey(theCommand);
+                            break;
+
+                        case cliCommand::sn:
+                            setName(theCommand);
+                            break;
+
+                        case cliCommand::sb:
+                            setBatteryType(theCommand);
+                            break;
+
+                        case cliCommand::sr:
+                            setRadioType(theCommand);
+                            break;
+
+                        case cliCommand::ss:
+                            setSensor(theCommand);
+                            break;
+
+                        case cliCommand::sd:
+                            cli::sendResponse("not yet implemented\n");
+                            break;
+
+                        case cliCommand::swr:
+                            initialize();
+                            break;
+
+                        default:
+                            cli::sendResponse("unknown command : ");
+                            cli::sendResponse(theCommand.commandAsString);
+                            cli::sendResponse("\n");
+                            break;
+                    }
+                }
             }
             break;
     }
@@ -488,13 +573,277 @@ void mainController::runCli() {
 void mainController::runUsbPowerDetection() {
     if (power::isUsbConnected()) {
         applicationEventBuffer.push(applicationEvent::usbConnected);
-        // uart2::initialize();
-        // gpio::enableGpio(gpio::group::uart2);
-        // screen::setUsbStatus(true);
+        uart2::initialize();
+        screen::setUsbStatus(true);
     }
     if (power::isUsbRemoved()) {
         applicationEventBuffer.push(applicationEvent::usbRemoved);
-        // gpio::disableGpio(gpio::group::uart2);
-        // screen::setUsbStatus(false);
+        screen::setUsbStatus(false);
+    }
+}
+
+void mainController::showPrompt() {
+    cli::sendResponse("\n\nhttps://github.com/Strooom\n");
+    cli::sendResponse("v%u.%u.%u - #%s\n", buildInfo::mainVersionDigit, buildInfo::minorVersionDigit, buildInfo::patchVersionDigit, buildInfo::lastCommitTag);
+    cli::sendResponse("%s %s build - %s\n", toString(buildInfo::theBuildEnvironment), toString(buildInfo::theBuildType), buildInfo::buildTimeStamp);
+    cli::sendResponse("Creative Commons 4.0 - BY-NC-SA\n");
+    cli::sendResponse("Type '?' for help\n\n");
+}
+
+void mainController::showHelp() {
+    cli::sendResponse("<enter> :show build info and license\n");
+    cli::sendResponse("? : show help\n");
+    cli::sendResponse("gds : show device status\n");
+    cli::sendResponse("gms : show recorded measurements status\n");
+    cli::sendResponse("gls : show LoRaWAN status\n");
+    cli::sendResponse("el : enable logging\n");
+    cli::sendResponse("dl : disable logging\n");
+    cli::sendResponse("er : enable radio\n");
+    cli::sendResponse("dr : disable radio\n");
+    cli::sendResponse("rml : reset mac layer\n");
+    cli::sendResponse("res : restart device - soft reset\n");
+    cli::sendResponse("sda <address> : set device address\n");
+    cli::sendResponse("snk <key> : set network key\n");
+    cli::sendResponse("sak <key> : set application key\n");
+    cli::sendResponse("sn <newname> : set name\n");
+    cli::sendResponse("sb <batteryType> : set battery type\n");
+    cli::sendResponse("sr <radioType> : set radio type\n");
+    cli::sendResponse("sd <line#> <deviceIndex> <channelIndex> : configure display\n");
+    cli::sendResponse("ss <deviceIndex> <channelIndex> <oversampling> <prescaler> : configure sensor\n");
+}
+
+void mainController::showDeviceStatus() {
+    cli::sendResponse("UID      : %s\n", uniqueId::asHexString());
+    cli::sendResponse("name     : %s\n", name);
+    cli::sendResponse("display  : %s\n", display::isPresent() ? "present" : "not present");
+    cli::sendResponse("EEPROM   : %d * 64K present\n", nonVolatileStorage::detectNmbr64KBanks());
+    cli::sendResponse("battery  : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
+    cli::sendResponse("radioType: %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
+
+    for (uint32_t sensorDeviceIndex = 0; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
+        if (sensorDeviceCollection::isPresent(sensorDeviceIndex)) {
+            cli::sendResponse("[%d] %s\n", sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
+            for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(sensorDeviceIndex); channelIndex++) {
+                cli::sendResponse("  [%d] %s [%s]", channelIndex, sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::units(sensorDeviceIndex, channelIndex));
+                if (sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler() > 0) {
+                    cli::sendResponse(" oversampling = %d, prescaler = %d\n", sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getOversampling(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler());
+                } else {
+                    cli::sendResponse(" disabled\n");
+                }
+            }
+        } else {
+            cli::sendResponse("[%d] %s not found\n", sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
+        }
+    }
+}
+
+void mainController::showNetworkStatus() {
+    cli::sendResponse("radio %s\n", LoRaWAN::isRadioEnabled() ? "enabled" : "disabled");
+    cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
+    static constexpr uint32_t nmbrOfCharsToMask{2};
+    char tmpKey[aesKey::lengthAsHexAscii + 1];
+    strncpy(tmpKey, LoRaWAN::networkKey.getAsHexString(), aesKey::lengthAsHexAscii + 1);
+    for (uint32_t index = nmbrOfCharsToMask; index < aesKey::lengthAsHexAscii - nmbrOfCharsToMask; index++) {
+        tmpKey[index] = '*';        // mask the key, except first and last two characters
+    }
+    cli::sendResponse("NetSKey  : %s\n", tmpKey);
+    strncpy(tmpKey, LoRaWAN::applicationKey.getAsHexString(), aesKey::lengthAsHexAscii + 1);
+    for (uint32_t index = nmbrOfCharsToMask; index < aesKey::lengthAsHexAscii - nmbrOfCharsToMask; index++) {
+        tmpKey[index] = '*';
+    }
+    cli::sendResponse("AppSKey  : %s\n", tmpKey);
+
+    cli::sendResponse("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.getAsWord());
+    cli::sendResponse("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.getAsWord());
+    cli::sendResponse("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
+    cli::sendResponse("DataRate : %u\n", LoRaWAN::currentDataRateIndex);
+    cli::sendResponse("rx1DROff : %u\n", LoRaWAN::rx1DataRateOffset);
+    cli::sendResponse("rx2DRIdx : %u\n\n", LoRaWAN::rx2DataRateIndex);
+    cli::sendResponse("ActiveCh : %u\n", loRaTxChannelCollection::nmbrActiveChannels());
+    for (uint32_t loRaTxChannelIndex = 0; loRaTxChannelIndex < loRaTxChannelCollection::maxNmbrChannels; loRaTxChannelIndex++) {
+        cli::sendResponse("Chan[%02u] : %u Hz, %u, %u\n", loRaTxChannelIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].frequencyInHz, loRaTxChannelCollection::channel[loRaTxChannelIndex].minimumDataRateIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].maximumDataRateIndex);
+    }
+}
+
+void mainController::setDeviceAddress(const cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 1) {
+        char newDevAddrAsHex[deviceAddress::lengthAsHexAscii + 1]{0};
+        size_t copyLen = strnlen(theCommand.arguments[0], deviceAddress::lengthAsHexAscii);
+        if (copyLen > deviceAddress::lengthAsHexAscii) {
+            copyLen = deviceAddress::lengthAsHexAscii;
+        }
+        memcpy(newDevAddrAsHex, theCommand.arguments[0], copyLen);
+        LoRaWAN::DevAddr.setFromHexString(newDevAddrAsHex);
+        LoRaWAN::saveConfig();
+
+        cli::sendResponse("device address set : %s\n", LoRaWAN::DevAddr.getAsHexString());
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+void mainController::setNetworkKey(const cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 1) {
+        char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
+        size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
+        if (copyLen > aesKey::lengthAsHexAscii) {
+            copyLen = aesKey::lengthAsHexAscii;
+        }
+        memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);
+        LoRaWAN::networkKey.setFromHexString(newKeyAsHex);
+        LoRaWAN::saveConfig();
+        cli::sendResponse("network key set : %s\n", LoRaWAN::networkKey.getAsHexString());
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+void mainController::setApplicationKey(const cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 1) {
+        char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
+        size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
+        if (copyLen > aesKey::lengthAsHexAscii) {
+            copyLen = aesKey::lengthAsHexAscii;
+        }
+        memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);        // TODO should use strlcpy which ensures terminating zero
+        LoRaWAN::applicationKey.setFromHexString(newKeyAsHex);
+        LoRaWAN::saveConfig();
+        cli::sendResponse("application key set : %s\n", LoRaWAN::applicationKey.getAsHexString());
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+
+void mainController::setName(const cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 1) {
+        uint8_t newName[maxNameLength + 1]{0};
+        size_t copyLen = strnlen(theCommand.arguments[0], maxNameLength);
+        if (copyLen > maxNameLength) {
+            copyLen = maxNameLength;
+        }
+        memcpy(newName, theCommand.arguments[0], copyLen);
+        settingsCollection::saveByteArray(newName, settingsCollection::settingIndex::name);
+        settingsCollection::readByteArray(newName, settingsCollection::settingIndex::name);
+        for (uint32_t index = 0; index < maxNameLength; ++index) {
+            name[index] = newName[index];
+        }
+        name[maxNameLength] = '\0';        // ensure null termination
+        screen::setName(name);
+        cli::sendResponse("name set : %s\n", name);
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+
+void mainController::setBatteryType(const cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 1) {
+        uint32_t tmpBatteryTypeIndex = theCommand.argumentAsUint32(0);
+        settingsCollection::save(static_cast<uint8_t>(tmpBatteryTypeIndex), settingsCollection::settingIndex::batteryType);
+        battery::setType(static_cast<uint8_t>(tmpBatteryTypeIndex));
+        cli::sendResponse("Battery set : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
+
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+
+void mainController::setRadioType(const cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 1) {
+        uint32_t tmpRadioTypeIndex = theCommand.argumentAsUint32(0);
+        settingsCollection::save(static_cast<uint8_t>(tmpRadioTypeIndex), settingsCollection::settingIndex::radioType);
+        radioType theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
+        sx126x::initialize(theRadioType);
+        cli::sendResponse("RadioType set : %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+
+void mainController::setDisplay(const cliCommand& theCommand) {
+    cli::sendResponse("command not yet implemented\n");
+}
+
+void mainController::setSensor(const cliCommand& theCommand) {
+    if (theCommand.nmbrOfArguments == 4) {
+        uint32_t tmpDeviceIndex  = theCommand.argumentAsUint32(0);
+        uint32_t tmpChannelIndex = theCommand.argumentAsUint32(1);
+        uint32_t tmpOversampling = theCommand.argumentAsUint32(2);
+        uint32_t tmpPrescaler    = theCommand.argumentAsUint32(3);
+        sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).set(tmpOversampling, tmpPrescaler);
+        cli::sendResponse("%s - %s set to oversampling = %d, prescaler = %d\n", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getOversampling(), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getPrescaler());
+    } else {
+        cli::sendResponse("invalid arguments\n");
+    }
+}
+
+void mainController::showMeasurementsStatus() {
+    measurementGroup tmpGroup;
+    uint32_t startOffset = measurementGroupCollection::getOldestMeasurementOffset();
+    uint32_t endOffset   = measurementGroupCollection::getNewMeasurementsOffset();
+    if (endOffset < startOffset) {
+        endOffset += nonVolatileStorage::measurementsSize;
+    }
+    uint32_t offset{startOffset};
+    uint32_t nmbrOfGroups{0};
+    uint32_t nmbrOfMeasurements{0};
+    time_t oldestMeasurementTime;
+    time_t newestMeasurementTime;
+
+    measurementGroupCollection::get(tmpGroup, offset);
+    oldestMeasurementTime = tmpGroup.getTimeStamp();
+
+    while (offset < endOffset) {
+        measurementGroupCollection::get(tmpGroup, offset);
+        nmbrOfGroups++;
+        nmbrOfMeasurements += tmpGroup.getNumberOfMeasurements();
+        newestMeasurementTime = tmpGroup.getTimeStamp();
+        offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
+    }
+    cli::sendResponse("%d measurements in %d groups\n", nmbrOfMeasurements, nmbrOfGroups);
+    cli::sendResponse("oldest : %s", ctime(&oldestMeasurementTime));
+    cli::sendResponse("newest : %s", ctime(&newestMeasurementTime));
+    cli::sendResponse("%d bytes available\n", measurementGroupCollection::getFreeSpace());
+}
+
+void mainController::showMeasurements() {
+    measurementGroup tmpGroup;
+    uint32_t startOffset = measurementGroupCollection::getOldestMeasurementOffset();
+    uint32_t endOffset   = measurementGroupCollection::getNewMeasurementsOffset();
+    if (endOffset < startOffset) {
+        endOffset += nonVolatileStorage::measurementsSize;
+    }
+    uint32_t offset{startOffset};
+    uint32_t nmbrOfGroups{0};
+    uint32_t nmbrOfMeasurements{0};
+    time_t oldestMeasurementTime;
+
+    measurementGroupCollection::get(tmpGroup, offset);
+    oldestMeasurementTime = tmpGroup.getTimeStamp();
+
+    while (offset < endOffset) {
+        measurementGroupCollection::get(tmpGroup, offset);
+        cli::sendResponse("%d %s", nmbrOfGroups, ctime(&oldestMeasurementTime));        // 1 line per measurementGroup
+        nmbrOfMeasurements = tmpGroup.getNumberOfMeasurements();
+        for (uint32_t measurementIndex = 0; measurementIndex < nmbrOfMeasurements; measurementIndex++) {        // then per measurement part of this group
+            uint32_t tmpDeviceIndex  = tmpGroup.getDeviceIndex(measurementIndex);
+            uint32_t tmpChannelIndex = tmpGroup.getChannelIndex(measurementIndex);
+            float tmpValue           = tmpGroup.getValue(measurementIndex);
+
+            uint32_t decimals = sensorDeviceCollection::decimals(tmpDeviceIndex, tmpChannelIndex);
+            uint32_t intPart  = integerPart(tmpValue, decimals);
+
+            cli::sendResponse("  %s", sensorDeviceCollection::name(tmpDeviceIndex));
+            cli::sendResponse(" %s", sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex));
+
+            if (decimals > 0) {
+                uint32_t fracPart;
+                fracPart = fractionalPart(tmpValue, decimals);
+                cli::sendResponse(" %d.%d", intPart, fracPart);
+            } else {
+                cli::sendResponse(" %d", intPart);
+            }
+
+            cli::sendResponse(" %s\n", sensorDeviceCollection::units(tmpDeviceIndex, tmpChannelIndex));
+        }
+        nmbrOfGroups++;
+        offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
     }
 }

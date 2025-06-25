@@ -10,8 +10,7 @@ enum class mainState : uint32_t {
     boot,
     networkCheck,
     idle,
-    measuring,
-    logging,
+    sampling,
     networking,
     fatalError,
     test

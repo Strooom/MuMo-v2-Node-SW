@@ -4,7 +4,7 @@
 loRaChannel::loRaChannel(uint32_t theFrequency, uint8_t theMinimumDataRateIndex, uint8_t theMaximumDataRateIndex) : frequencyInHz{theFrequency}, minimumDataRateIndex{theMinimumDataRateIndex}, maximumDataRateIndex{theMaximumDataRateIndex} {
 }
 
-void loRaChannel::toBytes(uint8_t *bytes) {
+void loRaChannel::toBytes(uint8_t *bytes) const {
     bytes[0] = bigEndianWordToByte0(frequencyInHz);
     bytes[1] = bigEndianWordToByte1(frequencyInHz);
     bytes[2] = bigEndianWordToByte2(frequencyInHz);

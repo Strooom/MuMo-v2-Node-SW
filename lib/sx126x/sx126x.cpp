@@ -19,14 +19,14 @@ uint8_t mockSX126xCommandData[256][8];
 #include <cstring>
 #endif
 
-mcuType sx126x::theMcuType{mcuType::nmbrMcuTypes};
+radioType sx126x::theRadioType{radioType::nmbrRadioTypes};
 
-bool sx126x::isValidType(mcuType someMcuType) {
-    return (someMcuType < mcuType::nmbrMcuTypes);
+bool sx126x::isValidType(radioType someRadioType) {
+    return (someRadioType < radioType::nmbrRadioTypes);
 }
 
-void sx126x::initialize(mcuType isPowerVersion) {
-    theMcuType = isPowerVersion;
+void sx126x::initialize(radioType isPowerVersion) {
+    theRadioType = isPowerVersion;
     initializeInterface();
     initializeRadio();
     goSleep();
@@ -140,7 +140,7 @@ void sx126x::setModulationParameters(spreadingFactor theSpreadingFactor) {
     commandParameters[0] = static_cast<uint8_t>(theSpreadingFactor);        //
     commandParameters[1] = 0x4;                                             // LoRaWAN bandwidth is fixed to 125 kHz
     commandParameters[2] = 0x01;                                            // LoRaWAN is fixed to coding rate 4/5
-    commandParameters[3] = 0x00;                                            // TODO ?? LowDatarateOptimize // why would you NOT want to do this ??
+    commandParameters[3] = 0x00;                                            // LowDatarateOptimize // why would you NOT want to do this ??
                                                                             // the remaining 4 bytes are empty 0x00 for LoRa modulation
     executeSetCommand(command::setModulationParams, commandParameters, nmbrCommandParameters);
 }
@@ -199,10 +199,6 @@ void sx126x::initializeRadio() {
     commandParameters[0] = 0x01;        // DCDC powermode
     executeSetCommand(command::setRegulatorMode, commandParameters, 1);
 
-    // TODO : add SMPS maximum drive capability 60 mA (io 100mA default)
-    //    commandParameters[0] = 0x02;
-    //    writeRegisters(register::smpsMaximumDrive, commandParameters, 1);
-
     commandParameters[0] = 0x1E;
     writeRegisters(registerAddress ::TxClampConfig, commandParameters, 1);
 
@@ -234,8 +230,8 @@ void sx126x::initializeRadio() {
     commandParameters[3] = 0x99;
     executeSetCommand(command::setRfFRequency, commandParameters, 4);
 
-    switch (theMcuType) {
-        case mcuType::lowPower:        // lowPower Amp : Wio-E5-LE-HF 14 dBm
+    switch (theRadioType) {
+        case radioType::lowPower:        // lowPower Amp : Wio-E5-LE-HF 14 dBm
             commandParameters[0] = 0x04;
             commandParameters[1] = 0x00;
             commandParameters[2] = 0x01;

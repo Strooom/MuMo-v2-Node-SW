@@ -2,10 +2,8 @@
 
 #include <circularbuffer.hpp>
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_initialize() {
     constexpr uint32_t testBufferLength{4};
@@ -14,7 +12,6 @@ void test_initialize() {
     TEST_ASSERT_EQUAL_UINT32(0, theBuffer.level);
     TEST_ASSERT_EQUAL_UINT32(testBufferLength, theBuffer.length);
     TEST_ASSERT_TRUE(theBuffer.isEmpty());
-    TEST_ASSERT_FALSE(theBuffer.hasEvents());
 }
 
 void test_push_pop() {
@@ -27,7 +24,6 @@ void test_push_pop() {
     TEST_ASSERT_EQUAL_UINT32(testBufferLength, theBuffer.level);
     TEST_ASSERT_EQUAL_UINT32(0, theBuffer.head);
     TEST_ASSERT_FALSE(theBuffer.isEmpty());
-    TEST_ASSERT_TRUE(theBuffer.hasEvents());
 
     TEST_ASSERT_EQUAL_UINT32(0x11, theBuffer.pop());
     TEST_ASSERT_EQUAL_UINT32(0x22, theBuffer.pop());
@@ -36,7 +32,6 @@ void test_push_pop() {
     TEST_ASSERT_EQUAL_UINT32(0, theBuffer.level);
     TEST_ASSERT_EQUAL_UINT32(0, theBuffer.head);
     TEST_ASSERT_TRUE(theBuffer.isEmpty());
-    TEST_ASSERT_FALSE(theBuffer.hasEvents());
 }
 
 void test_push_pop_wrap() {

@@ -24,9 +24,9 @@
 /* USER CODE BEGIN Includes */
 #include <applicationevent.hpp>
 #include <circularbuffer.hpp>
-#include <uart.hpp>
+#include <uart1.hpp>
+#include <uart2.hpp>
 #include <realtimeclock.hpp>
-
 
 // Some commment
 /* USER CODE END Includes */
@@ -65,6 +65,7 @@
 extern LPTIM_HandleTypeDef hlptim1;
 extern RTC_HandleTypeDef hrtc;
 extern SUBGHZ_HandleTypeDef hsubghz;
+extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
@@ -81,7 +82,8 @@ void NMI_Handler(void) {
 
     /* USER CODE END NonMaskableInt_IRQn 0 */
     /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
-    while (1) {
+    while (true) {
+        // Stops here, engage the debugger
     }
     /* USER CODE END NonMaskableInt_IRQn 1 */
 }
@@ -93,7 +95,7 @@ void HardFault_Handler(void) {
     /* USER CODE BEGIN HardFault_IRQn 0 */
 
     /* USER CODE END HardFault_IRQn 0 */
-    while (1) {
+    while (true) {
         /* USER CODE BEGIN W1_HardFault_IRQn 0 */
         /* USER CODE END W1_HardFault_IRQn 0 */
     }
@@ -106,7 +108,7 @@ void MemManage_Handler(void) {
     /* USER CODE BEGIN MemoryManagement_IRQn 0 */
 
     /* USER CODE END MemoryManagement_IRQn 0 */
-    while (1) {
+    while (true) {
         /* USER CODE BEGIN W1_MemoryManagement_IRQn 0 */
         /* USER CODE END W1_MemoryManagement_IRQn 0 */
     }
@@ -119,7 +121,7 @@ void BusFault_Handler(void) {
     /* USER CODE BEGIN BusFault_IRQn 0 */
 
     /* USER CODE END BusFault_IRQn 0 */
-    while (1) {
+    while (true) {
         /* USER CODE BEGIN W1_BusFault_IRQn 0 */
         /* USER CODE END W1_BusFault_IRQn 0 */
     }
@@ -132,7 +134,7 @@ void UsageFault_Handler(void) {
     /* USER CODE BEGIN UsageFault_IRQn 0 */
 
     /* USER CODE END UsageFault_IRQn 0 */
-    while (1) {
+    while (true) {
         /* USER CODE BEGIN W1_UsageFault_IRQn 0 */
         /* USER CODE END W1_UsageFault_IRQn 0 */
     }
@@ -207,16 +209,14 @@ void TAMP_STAMP_LSECSS_SSRU_IRQHandler(void) {
     /* USER CODE END TAMP_STAMP_LSECSS_SSRU_IRQn 1 */
 }
 
+void EXTI3_IRQHandler(void) {
+    /* USER CODE BEGIN EXTI3_IRQn 0 */
 
-void EXTI3_IRQHandler(void)
-{
-  /* USER CODE BEGIN EXTI3_IRQn 0 */
+    /* USER CODE END EXTI3_IRQn 0 */
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
+    /* USER CODE BEGIN EXTI3_IRQn 1 */
 
-  /* USER CODE END EXTI3_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
-  /* USER CODE BEGIN EXTI3_IRQn 1 */
-
-  /* USER CODE END EXTI3_IRQn 1 */
+    /* USER CODE END EXTI3_IRQn 1 */
 }
 
 /**
@@ -230,15 +230,24 @@ void RTC_WKUP_IRQHandler(void) {
     /* USER CODE BEGIN RTC_WKUP_IRQn 1 */
     realTimeClock::tickCounter++;
     applicationEventBuffer.push(applicationEvent::realTimeClockTick);
+
     /* USER CODE END RTC_WKUP_IRQn 1 */
 }
 
-/**
- * @brief This function handles USART2 Interrupt.
- */
-void USART2_IRQHandler(void) {
-    /* USER CODE BEGIN USART2_IRQn 0 */
+void USART1_IRQHandler(void) {
+    // Detect the interrupt source from the ISR
+    uint32_t isrflags = USART1->ISR;
 
+    if (isrflags & uart1::rdrNotEmpty) {
+        uart1::rxNotEmpty();
+    }
+
+    if (isrflags & uart1::tdrEmpty) {
+        uart1::txEmpty();
+    }
+}
+
+void USART2_IRQHandler(void) {
     // Detect the interrupt source from the ISR
     uint32_t isrflags = USART2->ISR;
 
@@ -249,11 +258,6 @@ void USART2_IRQHandler(void) {
     if (isrflags & uart2::tdrEmpty) {
         uart2::txEmpty();
     }
-    /* USER CODE END USART2_IRQn 0 */
-    // HAL_UART_IRQHandler(&huart2);
-    /* USER CODE BEGIN USART2_IRQn 1 */
-
-    /* USER CODE END USART2_IRQn 1 */
 }
 
 /**
@@ -280,6 +284,10 @@ void SUBGHZ_Radio_IRQHandler(void) {
     /* USER CODE BEGIN SUBGHZ_Radio_IRQn 1 */
 
     /* USER CODE END SUBGHZ_Radio_IRQn 1 */
+}
+
+void EXTI4_IRQHandler(void) {
+    HAL_GPIO_EXTI_IRQHandler(usbPowerPresent_Pin);
 }
 
 /* USER CODE BEGIN 1 */

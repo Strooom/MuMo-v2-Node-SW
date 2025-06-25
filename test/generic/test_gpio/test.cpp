@@ -1,15 +1,14 @@
 #include <unity.h>
 #include <gpio.hpp>
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
 void test_enableDisable() {
+    gpio::initialize();
     gpio::enableGpio(gpio::group::usbPresent);
     gpio::disableGpio(gpio::group::debugPort);
-    gpio::disableAllGpio();
+    TEST_ASSERT_FALSE(gpio::isDebugProbePresent());
     TEST_IGNORE_MESSAGE("For coverage only");
 }
 

@@ -1,6 +1,7 @@
 #include <ux.hpp>
 #include <graphics.hpp>
 #include <display.hpp>
+#include <qrcode.hpp>
 
 void graphics::drawPixel(const uint32_t x, const uint32_t y, const color theColor) {
     if (theColor == color::black) {
@@ -222,10 +223,10 @@ void graphics::sort(uint32_t &c1, uint32_t &c2) {
     }
 }
 
-void graphics::drawQrcode(const uint32_t xStart, const uint32_t yStart, QRCode &theQrCode) {
-    for (uint8_t y = 0; y < theQrCode.size; y++) {
-        for (uint8_t x = 0; x < theQrCode.size; x++) {
-            if (qrcode_getModule(&theQrCode, x, y)) {
+void graphics::drawQrCode(const uint32_t xStart, const uint32_t yStart) {
+    for (uint8_t y = 0; y < qrCode::size(); y++) {
+        for (uint8_t x = 0; x < qrCode::size(); x++) {
+            if (qrCode::getModule(x, y)) {
                 graphics::drawFilledRectangle(xStart + (x * ux::qrCodeScale), yStart + (y * ux::qrCodeScale), xStart + ((x + 1) * ux::qrCodeScale), yStart + ((y + 1) * ux::qrCodeScale), graphics::color::black);
             }
         }

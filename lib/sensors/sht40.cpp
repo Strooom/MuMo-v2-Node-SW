@@ -7,7 +7,6 @@
 #include <settingscollection.hpp>
 #include <float.hpp>
 #include <logging.hpp>
-#include <measurementcollection.hpp>
 #include <i2c.hpp>
 
 #ifndef generic
@@ -46,7 +45,6 @@ bool sht40::isPresent() {
 void sht40::initialize() {
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
         channels[channelIndex].set(0, 0);
-        channels[channelIndex].hasNewValue = false;
     }
     state = sensorDeviceState::sleeping;
 }
@@ -57,16 +55,10 @@ void sht40::run() {
         if (channels[temperature].needsSampling()) {
             float sht40Temperature = calculateTemperature();
             channels[temperature].addSample(sht40Temperature);
-            if (channels[temperature].hasOutput()) {
-                channels[temperature].hasNewValue = true;
-            }
         }
         if (channels[relativeHumidity].needsSampling()) {
             float sht40RelativeHumidity = calculateRelativeHumidity();
             channels[relativeHumidity].addSample(sht40RelativeHumidity);
-            if (channels[relativeHumidity].hasOutput()) {
-                channels[relativeHumidity].hasNewValue = true;
-            }
         }
         state = sensorDeviceState::sleeping;
     }
@@ -119,7 +111,7 @@ float sht40::calculateRelativeHumidity() {
 
 bool sht40::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
-    return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
+    return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, static_cast<uint16_t>(addressToTest << 1), halTrials, halTimeout));
 #else
     return mockSHT40Present;
 #endif
@@ -128,7 +120,7 @@ bool sht40::testI2cAddress(uint8_t addressToTest) {
 void sht40::write(command aCommand) {
     uint8_t pCommand = static_cast<uint8_t>(aCommand);
 #ifndef generic
-    HAL_I2C_Master_Transmit(&hi2c2, i2cAddress << 1, &pCommand, 1, halTimeout);
+    HAL_I2C_Master_Transmit(&hi2c2, static_cast<uint16_t>(i2cAddress << 1), &pCommand, 1, halTimeout);
 #else
 // TODO add mock for generic Unit testing
 #endif
@@ -136,7 +128,7 @@ void sht40::write(command aCommand) {
 
 void sht40::read(uint8_t* response, uint32_t responseLength) {
 #ifndef generic
-    HAL_I2C_Master_Receive(&hi2c2, i2cAddress << 1, response, responseLength, halTimeout);
+    HAL_I2C_Master_Receive(&hi2c2, static_cast<uint16_t>(i2cAddress << 1), response, static_cast<uint16_t>(responseLength), halTimeout);
 #else
     (void)memcpy(response, mockSHT40Registers, responseLength);
 #endif

@@ -1,28 +1,14 @@
 #include "main.h"
-#include <gpio.hpp>
-#include <logging.hpp>
-#include <power.hpp>
-#include <display.hpp>
-#include <graphics.hpp>
-#include <ux.hpp>
-#include <stdio.h>
-#include <maincontroller.hpp>
 #include <circularbuffer.hpp>
 #include <applicationevent.hpp>
-#include <sensordevicecollection.hpp>
-#include <buildinfo.hpp>
-#include <lorawan.hpp>
-#include <realtimeclock.hpp>
-#include <uniqueid.hpp>
-#include <settingscollection.hpp>
-#include <measurementcollection.hpp>
-#include <spi.hpp>
-#include <i2c.hpp>
-#include <bme680.hpp>
-#include <tsl2591.hpp>
-#include <battery.hpp>
-#include <lptim.hpp>
-#include <qrcode.hpp>
+#include <gpio.hpp>
+#include <debugport.hpp>
+#include <uart1.hpp>
+#include <uart2.hpp>
+#include <maincontroller.hpp>
+#include <power.hpp>
+
+// TODO : these handles have to move to the respective wrapper classes
 
 ADC_HandleTypeDef hadc;
 CRYP_HandleTypeDef hcryp;
@@ -38,8 +24,11 @@ UART_HandleTypeDef huart2;
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
+// TODO : these initializers have to move to the respective wrapper classes
+
 void SystemClock_Config(void);
 static void MX_RTC_Init(void);
+void MX_USART1_UART_Init(void);
 void MX_USART2_UART_Init(void);
 void MX_SPI2_Init(void);
 void MX_ADC_Init(void);
@@ -47,52 +36,50 @@ void MX_I2C2_Init(void);
 void MX_AES_Init(void);
 void MX_RNG_Init(void);
 static void MX_LPTIM1_Init(void);
-void MX_USART1_UART_Init(void);
 void executeRomBootloader();
 
 int main(void) {
     HAL_Init();
     SystemClock_Config();
-    // HAL_Delay(10000);
+#ifdef debugBuild
+    HAL_Delay(7000);        // long delay needed to connect the debugger
+#endif
     __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
     gpio::initialize();
-    if (gpio::isDebugProbePresent()) {
+
+    if (debugPort::isDebugProbePresent()) {
         LL_DBGMCU_DisableDBGStopMode();
-        HAL_Delay(6000);
     } else {
         gpio::disableGpio(gpio::group::debugPort);
     }
 
-    if (power::hasUsbPower()) {
-        HAL_RCC_DeInit();
-        HAL_DeInit();
-        executeRomBootloader();
-    }
+   if (power::hasUsbPower()) {
+       HAL_RCC_DeInit();
+       HAL_DeInit();
+       executeRomBootloader();
+   }
 
     MX_RTC_Init();
     MX_ADC_Init();
     MX_AES_Init();
     MX_RNG_Init();
     MX_LPTIM1_Init();
-    MX_USART1_UART_Init();
+
+    gpio::enableGpio(gpio::group::usbPresent);
+    uart1::initialize();
+    uart2::initialize();
 
     mainController ::initialize();
     while (true) {
         mainController::runUsbPowerDetection();
         mainController::runStateMachine();
-        // mainController::runCli();
         mainController::handleEvents();
+        mainController::runCli();
         mainController::runDisplayUpdate();
-        mainController::prepareSleep();
-        mainController::goSleep();
-        mainController::wakeUp();
+        mainController::runSleep();
     }
 }
 
-/**
- * @brief System Clock Configuration
- * @retval None
- */
 void SystemClock_Config(void) {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -132,20 +119,7 @@ void SystemClock_Config(void) {
     }
 }
 
-/**
- * @brief ADC Initialization Function
- * @param None
- * @retval None
- */
 void MX_ADC_Init(void) {
-    /* USER CODE BEGIN ADC_Init 0 */
-
-    /* USER CODE END ADC_Init 0 */
-
-    /* USER CODE BEGIN ADC_Init 1 */
-
-    /* USER CODE END ADC_Init 1 */
-
     /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
      */
     hadc.Instance                   = ADC;
@@ -170,25 +144,11 @@ void MX_ADC_Init(void) {
     if (HAL_ADC_Init(&hadc) != HAL_OK) {
         Error_Handler();
     }
-    /* USER CODE BEGIN ADC_Init 2 */
-    HAL_ADCEx_Calibration_Start(&hadc);
 
-    /* USER CODE END ADC_Init 2 */
+    HAL_ADCEx_Calibration_Start(&hadc);
 }
 
-/**
- * @brief AES Initialization Function
- * @param None
- * @retval None
- */
 void MX_AES_Init(void) {
-    /* USER CODE BEGIN AES_Init 0 */
-
-    /* USER CODE END AES_Init 0 */
-
-    /* USER CODE BEGIN AES_Init 1 */
-
-    /* USER CODE END AES_Init 1 */
     hcryp.Instance             = AES;
     hcryp.Init.DataType        = CRYP_DATATYPE_8B;
     hcryp.Init.KeySize         = CRYP_KEYSIZE_128B;
@@ -200,24 +160,9 @@ void MX_AES_Init(void) {
     if (HAL_CRYP_Init(&hcryp) != HAL_OK) {
         Error_Handler();
     }
-    /* USER CODE BEGIN AES_Init 2 */
-
-    /* USER CODE END AES_Init 2 */
 }
 
-/**
- * @brief I2C2 Initialization Function
- * @param None
- * @retval None
- */
 void MX_I2C2_Init(void) {
-    /* USER CODE BEGIN I2C2_Init 0 */
-
-    /* USER CODE END I2C2_Init 0 */
-
-    /* USER CODE BEGIN I2C2_Init 1 */
-
-    /* USER CODE END I2C2_Init 1 */
     hi2c2.Instance              = I2C2;
     hi2c2.Init.Timing           = 0x0010061A;
     hi2c2.Init.OwnAddress1      = 0;
@@ -231,35 +176,16 @@ void MX_I2C2_Init(void) {
         Error_Handler();
     }
 
-    /** Configure Analogue filter
-     */
     if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
         Error_Handler();
     }
 
-    /** Configure Digital filter
-     */
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK) {
         Error_Handler();
     }
-    /* USER CODE BEGIN I2C2_Init 2 */
-
-    /* USER CODE END I2C2_Init 2 */
 }
 
-/**
- * @brief LPTIM1 Initialization Function
- * @param None
- * @retval None
- */
 static void MX_LPTIM1_Init(void) {
-    /* USER CODE BEGIN LPTIM1_Init 0 */
-
-    /* USER CODE END LPTIM1_Init 0 */
-
-    /* USER CODE BEGIN LPTIM1_Init 1 */
-
-    /* USER CODE END LPTIM1_Init 1 */
     hlptim1.Instance             = LPTIM1;
     hlptim1.Init.Clock.Source    = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
     hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV8;
@@ -272,50 +198,17 @@ static void MX_LPTIM1_Init(void) {
     if (HAL_LPTIM_Init(&hlptim1) != HAL_OK) {
         Error_Handler();
     }
-    /* USER CODE BEGIN LPTIM1_Init 2 */
-
-    /* USER CODE END LPTIM1_Init 2 */
 }
 
-/**
- * @brief RNG Initialization Function
- * @param None
- * @retval None
- */
 void MX_RNG_Init(void) {
-    /* USER CODE BEGIN RNG_Init 0 */
-
-    /* USER CODE END RNG_Init 0 */
-
-    /* USER CODE BEGIN RNG_Init 1 */
-
-    /* USER CODE END RNG_Init 1 */
     hrng.Instance                 = RNG;
     hrng.Init.ClockErrorDetection = RNG_CED_DISABLE;
     if (HAL_RNG_Init(&hrng) != HAL_OK) {
         Error_Handler();
     }
-    /* USER CODE BEGIN RNG_Init 2 */
-
-    /* USER CODE END RNG_Init 2 */
 }
 
-/**
- * @brief RTC Initialization Function
- * @param None
- * @retval None
- */
 static void MX_RTC_Init(void) {
-    /* USER CODE BEGIN RTC_Init 0 */
-
-    /* USER CODE END RTC_Init 0 */
-
-    /* USER CODE BEGIN RTC_Init 1 */
-
-    /* USER CODE END RTC_Init 1 */
-
-    /** Initialize RTC Only
-     */
     hrtc.Instance            = RTC;
     hrtc.Init.HourFormat     = RTC_HOURFORMAT_24;
     hrtc.Init.AsynchPrediv   = 127;
@@ -330,30 +223,12 @@ static void MX_RTC_Init(void) {
         Error_Handler();
     }
 
-    /** Enable the WakeUp
-     */
     if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
         Error_Handler();
     }
-    /* USER CODE BEGIN RTC_Init 2 */
-
-    /* USER CODE END RTC_Init 2 */
 }
 
-/**
- * @brief SPI2 Initialization Function
- * @param None
- * @retval None
- */
 void MX_SPI2_Init(void) {
-    /* USER CODE BEGIN SPI2_Init 0 */
-
-    /* USER CODE END SPI2_Init 0 */
-
-    /* USER CODE BEGIN SPI2_Init 1 */
-
-    /* USER CODE END SPI2_Init 1 */
-    /* SPI2 parameter configuration*/
     hspi2.Instance               = SPI2;
     hspi2.Init.Mode              = SPI_MODE_MASTER;
     hspi2.Init.Direction         = SPI_DIRECTION_2LINES;
@@ -371,46 +246,9 @@ void MX_SPI2_Init(void) {
     if (HAL_SPI_Init(&hspi2) != HAL_OK) {
         Error_Handler();
     }
-    /* USER CODE BEGIN SPI2_Init 2 */
-
-    /* USER CODE END SPI2_Init 2 */
 }
 
-// /**
-//  * @brief SUBGHZ Initialization Function
-//  * @param None
-//  * @retval None
-//  */
-// static void MX_SUBGHZ_Init(void) {
-//     /* USER CODE BEGIN SUBGHZ_Init 0 */
-
-//     /* USER CODE END SUBGHZ_Init 0 */
-
-//     /* USER CODE BEGIN SUBGHZ_Init 1 */
-
-//     /* USER CODE END SUBGHZ_Init 1 */
-//     hsubghz.Init.BaudratePrescaler = SUBGHZSPI_BAUDRATEPRESCALER_2;
-//     if (HAL_SUBGHZ_Init(&hsubghz) != HAL_OK) {
-//         Error_Handler();
-//     }
-//     /* USER CODE BEGIN SUBGHZ_Init 2 */
-
-//     /* USER CODE END SUBGHZ_Init 2 */
-// }
-
-/**
- * @brief USART1 Initialization Function
- * @param None
- * @retval None
- */
 void MX_USART1_UART_Init(void) {
-    /* USER CODE BEGIN USART1_Init 0 */
-
-    /* USER CODE END USART1_Init 0 */
-
-    /* USER CODE BEGIN USART1_Init 1 */
-
-    /* USER CODE END USART1_Init 1 */
     huart1.Instance                    = USART1;
     huart1.Init.BaudRate               = 115200;
     huart1.Init.WordLength             = UART_WORDLENGTH_8B;
@@ -434,24 +272,9 @@ void MX_USART1_UART_Init(void) {
     if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK) {
         Error_Handler();
     }
-    /* USER CODE BEGIN USART1_Init 2 */
-
-    /* USER CODE END USART1_Init 2 */
 }
 
-/**
- * @brief USART2 Initialization Function
- * @param None
- * @retval None
- */
 void MX_USART2_UART_Init(void) {
-    /* USER CODE BEGIN USART2_Init 0 */
-
-    /* USER CODE END USART2_Init 0 */
-
-    /* USER CODE BEGIN USART2_Init 1 */
-
-    /* USER CODE END USART2_Init 1 */
     huart2.Instance                    = USART2;
     huart2.Init.BaudRate               = 115200;
     huart2.Init.WordLength             = UART_WORDLENGTH_8B;
@@ -475,30 +298,8 @@ void MX_USART2_UART_Init(void) {
     if (HAL_UARTEx_DisableFifoMode(&huart2) != HAL_OK) {
         Error_Handler();
     }
-    /* USER CODE BEGIN USART2_Init 2 */
-
-    /* USER CODE END USART2_Init 2 */
 }
 
-// /**
-//  * @brief GPIO Initialization Function
-//  * @param None
-//  * @retval None
-//  */
-// static void MX_GPIO_Init(void) {
-//     /* USER CODE BEGIN MX_GPIO_Init_1 */
-//     /* USER CODE END MX_GPIO_Init_1 */
-
-//     /* GPIO Ports Clock Enable */
-//     __HAL_RCC_GPIOA_CLK_ENABLE();
-//     __HAL_RCC_GPIOB_CLK_ENABLE();
-//     __HAL_RCC_GPIOC_CLK_ENABLE();
-
-//     /* USER CODE BEGIN MX_GPIO_Init_2 */
-//     /* USER CODE END MX_GPIO_Init_2 */
-// }
-
-/* USER CODE BEGIN 4 */
 void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
     applicationEventBuffer.push(applicationEvent::sx126xTxComplete);
 }
@@ -524,42 +325,19 @@ void executeRomBootloader() {
     }
     __enable_irq();
 
-    SysMemBootJump = (void (*)(void))(*((uint32_t *)((BootAddr + 4))));
+    SysMemBootJump = (void (*)(void))(*((uint32_t *)(BootAddr + 4)));
 
     __set_MSP(*(uint32_t *)BootAddr);        // Set the main stack pointer to the boot loader stack
 
     SysMemBootJump();
-    while (1) {
+    while (true) {
+        // If the bootloader returns, we loop here forever
     }
 }
 
-/* USER CODE END 4 */
-
-/**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
 void Error_Handler(void) {
-    /* USER CODE BEGIN Error_Handler_Debug */
-    /* User can add his own implementation to report the HAL error return state */
     __disable_irq();
-    while (1) {
+    while (true) {
+        // Stops here, engage the debugger
     }
-    /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef USE_FULL_ASSERT
-/**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
-void assert_failed(uint8_t *file, uint32_t line) {
-    /* USER CODE BEGIN 6 */
-    /* User can add his own implementation to report the file name and line number,
-       ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-    /* USER CODE END 6 */
-}
-#endif /* USE_FULL_ASSERT */

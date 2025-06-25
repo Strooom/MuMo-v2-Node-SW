@@ -21,15 +21,15 @@ extern LPTIM_HandleTypeDef hlptim1;
 
 #pragma region Instantiate and Initialize the Static members
 
+bool LoRaWAN::enableRadio{true};
 deviceAddress LoRaWAN::DevAddr;
 aesKey LoRaWAN::applicationKey;
 aesKey LoRaWAN::networkKey;
 aesBlock LoRaWAN::K1;
 aesBlock LoRaWAN::K2;
-frameCount LoRaWAN::uplinkFrameCount(1);
-frameCount LoRaWAN::downlinkFrameCount(0);
+frameCount LoRaWAN::uplinkFrameCount;
+frameCount LoRaWAN::downlinkFrameCount;
 
-dataRates LoRaWAN::theDataRates;
 uint32_t LoRaWAN::currentDataRateIndex{5};
 uint32_t LoRaWAN::rx1DelayInSeconds{1};
 uint32_t LoRaWAN::rx1DataRateOffset{0};
@@ -76,32 +76,10 @@ void LoRaWAN::initialize() {
     restoreChannels();
 }
 
-void LoRaWAN::saveConfig() {
-    settingsCollection::save(DevAddr.asUint32, settingsCollection::settingIndex::DevAddr);
-    settingsCollection::saveByteArray(applicationKey.asBytes(), settingsCollection::settingIndex::applicationSessionKey);
-    settingsCollection::saveByteArray(networkKey.asBytes(), settingsCollection::settingIndex::networkSessionKey);
-}
-
-void LoRaWAN::saveState() {
-    settingsCollection::save(uplinkFrameCount.toUint32(), settingsCollection::settingIndex::uplinkFrameCounter);
-    settingsCollection::save(downlinkFrameCount.toUint32(), settingsCollection::settingIndex::downlinkFrameCounter);
-    settingsCollection::save(static_cast<uint8_t>(rx1DelayInSeconds), settingsCollection::settingIndex::rx1Delay);
-    settingsCollection::save(static_cast<uint8_t>(currentDataRateIndex), settingsCollection::settingIndex::dataRate);
-    settingsCollection::save(static_cast<uint8_t>(rx1DataRateOffset), settingsCollection::settingIndex::rx1DataRateOffset);
-    settingsCollection::save(static_cast<uint8_t>(rx2DataRateIndex), settingsCollection::settingIndex::rx2DataRateIndex);
-}
-
-void LoRaWAN::saveChannels() {
-    uint8_t tmpChannelData[loRaTxChannelCollection::maxNmbrChannels * loRaChannel::sizeInBytes];
-    for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
-        loRaTxChannelCollection::channel[channelIndex].toBytes(tmpChannelData + (channelIndex * loRaChannel::sizeInBytes));
-    }
-    settingsCollection::saveByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
-    settingsCollection::save(rx2FrequencyInHz, settingsCollection::settingIndex::rxChannel);
-}
-
 void LoRaWAN::restoreConfig() {
-    DevAddr = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::DevAddr);
+    uint8_t tmpDeviceAddressArray[deviceAddress::lengthInBytes];
+    settingsCollection::readByteArray(tmpDeviceAddressArray, settingsCollection::settingIndex::DevAddr);
+    DevAddr.setFromByteArray(tmpDeviceAddressArray);
     uint8_t tmpKeyArray[aesKey::lengthInBytes];
     settingsCollection::readByteArray(tmpKeyArray, settingsCollection::settingIndex::applicationSessionKey);
     applicationKey.setFromByteArray(tmpKeyArray);
@@ -109,40 +87,59 @@ void LoRaWAN::restoreConfig() {
     networkKey.setFromByteArray(tmpKeyArray);
 }
 
+bool LoRaWAN::isValidConfig() {
+    bool validDeviceAddress{false};
+    bool validNetworkKey{false};
+    bool validApplicationKey{false};
+    for (uint32_t index = 0; index < deviceAddress::lengthInBytes; index++) {
+        if (DevAddr.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
+            validDeviceAddress = true;
+        }
+    }
+    for (uint32_t index = 0; index < aesKey::lengthInBytes; index++) {
+        if (applicationKey.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
+            validApplicationKey = true;
+        }
+        if (networkKey.getAsByte(index) != nonVolatileStorage::blankEepromValue) {
+            validNetworkKey = true;
+        }
+    }
+    return validDeviceAddress && validNetworkKey && validApplicationKey;
+}
+
+void LoRaWAN::initializeConfig() {
+    LoRaWAN::DevAddr.setFromWord(toBeDevAddr);
+    LoRaWAN::networkKey.setFromHexString(toBeNetworkKey);
+    LoRaWAN::applicationKey.setFromHexString(toBeApplicationKey);
+    LoRaWAN::saveConfig();
+    LoRaWAN::restoreConfig();
+}
+
+void LoRaWAN::saveConfig() {
+    uint8_t tmpDeviceAddressBytes[deviceAddress::lengthInBytes];
+    for (uint32_t index = 0; index < deviceAddress::lengthInBytes; index++) {
+        tmpDeviceAddressBytes[index] = DevAddr.getAsByte(index);
+    }
+    settingsCollection::saveByteArray(tmpDeviceAddressBytes, settingsCollection::settingIndex::DevAddr);
+
+    uint8_t tmpKeyBytes[aesKey::lengthInBytes];
+    for (uint32_t index = 0; index < aesKey::lengthInBytes; index++) {
+        tmpKeyBytes[index] = applicationKey.getAsByte(index);
+    }
+    settingsCollection::saveByteArray(tmpKeyBytes, settingsCollection::settingIndex::applicationSessionKey);
+    for (uint32_t index = 0; index < aesKey::lengthInBytes; index++) {
+        tmpKeyBytes[index] = networkKey.getAsByte(index);
+    }
+    settingsCollection::saveByteArray(tmpKeyBytes, settingsCollection::settingIndex::networkSessionKey);
+}
+
 void LoRaWAN::restoreState() {
-    rx1DelayInSeconds    = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1Delay);
-    uplinkFrameCount     = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::uplinkFrameCounter);
-    downlinkFrameCount   = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::downlinkFrameCounter);
+    rx1DelayInSeconds = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1Delay);
+    uplinkFrameCount.setFromWord(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::uplinkFrameCounter));
+    downlinkFrameCount.setFromWord(settingsCollection::read<uint32_t>(settingsCollection::settingIndex::downlinkFrameCounter));
     currentDataRateIndex = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::dataRate);
     rx1DataRateOffset    = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx1DataRateOffset);
     rx2DataRateIndex     = settingsCollection::read<uint8_t>(settingsCollection::settingIndex::rx2DataRateIndex);
-}
-
-void LoRaWAN::restoreChannels() {
-    uint8_t tmpChannelData[loRaTxChannelCollection::maxNmbrChannels * loRaChannel::sizeInBytes];
-    settingsCollection::readByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
-
-    for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
-        loRaTxChannelCollection::channel[channelIndex].fromBytes(tmpChannelData + (channelIndex * loRaChannel::sizeInBytes));
-    }
-    rx2FrequencyInHz = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::rxChannel);
-}
-
-bool LoRaWAN::isValidConfig() {
-    if (DevAddr.asUint32 == 0xFFFFFFFF) {
-        return false;
-    }
-    if ((DevAddr.asUint8[0] == 0x26) && (DevAddr.asUint8[1] == 0x0B)) { // This detects an old incorrectly stored DevAddr
-        return false;
-    }
-    uint8_t tmpKeyArray[aesKey::lengthInBytes]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    if (memcmp(applicationKey.asBytes(), tmpKeyArray, aesKey::lengthInBytes) == 0) {
-        return false;
-    }
-    if (memcmp(networkKey.asBytes(), tmpKeyArray, aesKey::lengthInBytes) == 0) {
-        return false;
-    }
-    return true;
 }
 
 bool LoRaWAN::isValidState() {
@@ -161,24 +158,56 @@ bool LoRaWAN::isValidState() {
     return true;
 }
 
-void LoRaWAN::resetMacLayer() {
-    resetState();
-    resetChannels();
+void LoRaWAN::resetState() {
+    uplinkFrameCount.setFromWord(toBeUplinkFrameCount);
+    downlinkFrameCount.setFromWord(toBeDownlinkFrameCount);
+    rx1DelayInSeconds    = toBeRx1DelayInSeconds;
+    currentDataRateIndex = toBeCurrentDataRateIndex;
+    rx1DataRateOffset    = toBeRx1DataRateOffset;
+    rx2DataRateIndex     = toBeRx2DataRateIndex;
 }
 
-void LoRaWAN::resetState() {
-    uplinkFrameCount   = 0;
-    downlinkFrameCount = 0;
-    rx1DelayInSeconds  = 1;
-    currentDataRateIndex = 5;
-    rx1DataRateOffset    = 0;
-    rx2DataRateIndex     = 3;
-    // Note : state is reset, but not yet saved in the non-volatile memory
+void LoRaWAN::initializeState() {
+    resetState();
+    saveState();
+    restoreState();
+
+    resetChannels();
+    saveChannels();
+    restoreChannels();
+}
+
+void LoRaWAN::saveState() {
+    settingsCollection::save(uplinkFrameCount.getAsWord(), settingsCollection::settingIndex::uplinkFrameCounter);
+    settingsCollection::save(downlinkFrameCount.getAsWord(), settingsCollection::settingIndex::downlinkFrameCounter);
+    settingsCollection::save(static_cast<uint8_t>(rx1DelayInSeconds), settingsCollection::settingIndex::rx1Delay);
+    settingsCollection::save(static_cast<uint8_t>(currentDataRateIndex), settingsCollection::settingIndex::dataRate);
+    settingsCollection::save(static_cast<uint8_t>(rx1DataRateOffset), settingsCollection::settingIndex::rx1DataRateOffset);
+    settingsCollection::save(static_cast<uint8_t>(rx2DataRateIndex), settingsCollection::settingIndex::rx2DataRateIndex);
+}
+
+void LoRaWAN::restoreChannels() {
+    uint8_t tmpChannelData[loRaTxChannelCollection::maxNmbrChannels * loRaChannel::sizeInBytes];
+    settingsCollection::readByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
+
+    for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
+        loRaTxChannelCollection::channel[channelIndex].fromBytes(tmpChannelData + (channelIndex * loRaChannel::sizeInBytes));
+    }
+    rx2FrequencyInHz = settingsCollection::read<uint32_t>(settingsCollection::settingIndex::rxChannel);
 }
 
 void LoRaWAN::resetChannels() {
     loRaTxChannelCollection::reset();
     // Note : channels are reset, but not yet saved in the non-volatile memory
+}
+
+void LoRaWAN::saveChannels() {
+    uint8_t tmpChannelData[loRaTxChannelCollection::maxNmbrChannels * loRaChannel::sizeInBytes];
+    for (uint32_t channelIndex = 0; channelIndex < loRaTxChannelCollection::maxNmbrChannels; channelIndex++) {
+        loRaTxChannelCollection::channel[channelIndex].toBytes(tmpChannelData + (channelIndex * loRaChannel::sizeInBytes));
+    }
+    settingsCollection::saveByteArray(tmpChannelData, settingsCollection::settingIndex::txChannels);
+    settingsCollection::save(rx2FrequencyInHz, settingsCollection::settingIndex::rxChannel);
 }
 
 #pragma endregion
@@ -230,10 +259,10 @@ void LoRaWAN::insertPayload(const uint8_t data[], const uint32_t length) {
 
 void LoRaWAN::insertHeaders(const uint8_t* theFrameOptions, const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort) {
     rawMessage[macHeaderOffset]         = macHeader(frameType::unconfirmedDataUp).asUint8();
-    rawMessage[deviceAddressOffset]     = DevAddr.asUint8[0];
-    rawMessage[deviceAddressOffset + 1] = DevAddr.asUint8[1];
-    rawMessage[deviceAddressOffset + 2] = DevAddr.asUint8[2];
-    rawMessage[deviceAddressOffset + 3] = DevAddr.asUint8[3];
+    rawMessage[deviceAddressOffset]     = DevAddr.getAsByte(0);
+    rawMessage[deviceAddressOffset + 1] = DevAddr.getAsByte(1);
+    rawMessage[deviceAddressOffset + 2] = DevAddr.getAsByte(2);
+    rawMessage[deviceAddressOffset + 3] = DevAddr.getAsByte(3);
 
     if (theFrameOptionslength > 15) {
         logging::snprintf(logging::source::error, "Error : frameOptionsLength > 15\n");
@@ -247,8 +276,8 @@ void LoRaWAN::insertHeaders(const uint8_t* theFrameOptions, const uint32_t theFr
         }
     }
 
-    rawMessage[frameCountOffset]     = uplinkFrameCount[0];
-    rawMessage[frameCountOffset + 1] = uplinkFrameCount[1];
+    rawMessage[frameCountOffset]     = uplinkFrameCount.getAsByte(0);
+    rawMessage[frameCountOffset + 1] = uplinkFrameCount.getAsByte(1);
 
     if ((frameOptionsLength > 0) && (framePayloadLength > 0) && theFramePort == 0) {
         logging::snprintf(logging::source::error, "Error : illegal combination of frameOptions and framePort == 0\n");
@@ -266,14 +295,14 @@ void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCount)
     rawMessage[3]  = 0;
     rawMessage[4]  = 0;
     rawMessage[5]  = static_cast<uint8_t>(theDirection);
-    rawMessage[6]  = DevAddr.asUint8[0];
-    rawMessage[7]  = DevAddr.asUint8[1];
-    rawMessage[8]  = DevAddr.asUint8[2];
-    rawMessage[9]  = DevAddr.asUint8[3];
-    rawMessage[10] = aFrameCount[0];
-    rawMessage[11] = aFrameCount[1];
-    rawMessage[12] = aFrameCount[2];
-    rawMessage[13] = aFrameCount[3];
+    rawMessage[6]  = DevAddr.getAsByte(0);
+    rawMessage[7]  = DevAddr.getAsByte(1);
+    rawMessage[8]  = DevAddr.getAsByte(2);
+    rawMessage[9]  = DevAddr.getAsByte(3);
+    rawMessage[10] = aFrameCount.getAsByte(0);
+    rawMessage[11] = aFrameCount.getAsByte(1);
+    rawMessage[12] = aFrameCount.getAsByte(2);
+    rawMessage[13] = aFrameCount.getAsByte(3);
     rawMessage[14] = 0;
     rawMessage[15] = static_cast<uint8_t>(macHeaderLength + frameHeaderLength + framePortLength + framePayloadLength);
 }
@@ -287,7 +316,7 @@ void LoRaWAN::padForMicCalculation(const uint32_t messageLength) {
 }
 
 uint16_t LoRaWAN::receivedFramecount() {
-    return (static_cast<uint16_t>(rawMessage[frameCountOffset]) + (static_cast<uint16_t>(rawMessage[frameCountOffset + 1]) << 8U));
+    return static_cast<uint16_t>(static_cast<uint16_t>(rawMessage[frameCountOffset]) + (static_cast<uint16_t>(rawMessage[frameCountOffset + 1]) << 8U));
 }
 
 uint32_t LoRaWAN::receivedDeviceAddress() {
@@ -308,22 +337,22 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
     theBlock[3] = 0x00;
     theBlock[4] = 0x00;
     theBlock[5] = static_cast<uint8_t>(theDirection);
-    theBlock[6] = DevAddr.asUint8[0];                   // LSByte
-    theBlock[7] = DevAddr.asUint8[1];                   //
-    theBlock[8] = DevAddr.asUint8[2];                   //
-    theBlock[9] = DevAddr.asUint8[3];                   // MSByte
-    if (theDirection == linkDirection::uplink) {        //
-        theBlock[10] = uplinkFrameCount[0];             // LSByte
-        theBlock[11] = uplinkFrameCount[1];             //
-        theBlock[12] = uplinkFrameCount[2];             //
-        theBlock[13] = uplinkFrameCount[3];             // MSByte
-    } else {                                            //
-        theBlock[10] = downlinkFrameCount[0];           // LSByte
-        theBlock[11] = downlinkFrameCount[1];           //
-        theBlock[12] = downlinkFrameCount[2];           //
-        theBlock[13] = downlinkFrameCount[3];           // MSByte
-    }        //
-    theBlock[14] = 0x00;                                    //
+    theBlock[6] = DevAddr.getAsByte(0);
+    theBlock[7] = DevAddr.getAsByte(1);
+    theBlock[8] = DevAddr.getAsByte(2);
+    theBlock[9] = DevAddr.getAsByte(3);
+    if (theDirection == linkDirection::uplink) {
+        theBlock[10] = uplinkFrameCount.getAsByte(0);
+        theBlock[11] = uplinkFrameCount.getAsByte(1);
+        theBlock[12] = uplinkFrameCount.getAsByte(2);
+        theBlock[13] = uplinkFrameCount.getAsByte(3);
+    } else {
+        theBlock[10] = downlinkFrameCount.getAsByte(0);
+        theBlock[11] = downlinkFrameCount.getAsByte(1);
+        theBlock[12] = downlinkFrameCount.getAsByte(2);
+        theBlock[13] = downlinkFrameCount.getAsByte(3);
+    }
+    theBlock[14] = 0x00;
     theBlock[15] = static_cast<uint8_t>(blockIndex);        // Blocks Ai are indexed from 1..k, where k is the number of blocks
 }
 
@@ -569,8 +598,8 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                     lptim::stop();
                     lptim::start(lptim::ticksFromSeconds(1U));
                     uint32_t rxFrequency = loRaTxChannelCollection::channel[loRaTxChannelCollection::getCurrentChannelIndex()].frequencyInHz;
-                    uint32_t rxTimeout   = getReceiveTimeout(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor);
-                    sx126x::configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
+                    uint32_t rxTimeout   = getReceiveTimeout(dataRates::theDataRates[currentDataRateIndex].theSpreadingFactor);
+                    sx126x::configForReceive(dataRates::theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
                     sx126x::startReceive(rxTimeout);
                     goTo(txRxCycleState::waitForRx1CompleteOrTimeout);
                     return;
@@ -600,8 +629,8 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                             goTo(txRxCycleState::idle);
                             return;
                             break;
+                        case messageType::invalid:        // intentional fallthrough
                         default:
-                        case messageType::invalid:
                             goTo(txRxCycleState::waitForRx2Start);
                             return;
                             break;
@@ -620,8 +649,8 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
             switch (theEvent) {
                 case applicationEvent::lowPowerTimerExpired: {
                     lptim::stop();
-                    sx126x::configForReceive(theDataRates.theDataRates[rx2DataRateIndex].theSpreadingFactor, rx2FrequencyInHz);
-                    uint32_t rxTimeout = getReceiveTimeout(theDataRates.theDataRates[rx2DataRateIndex].theSpreadingFactor);
+                    sx126x::configForReceive(dataRates::theDataRates[rx2DataRateIndex].theSpreadingFactor, rx2FrequencyInHz);
+                    uint32_t rxTimeout = getReceiveTimeout(dataRates::theDataRates[rx2DataRateIndex].theSpreadingFactor);
                     sx126x::startReceive(rxTimeout);
                     goTo(txRxCycleState::waitForRx2CompleteOrTimeout);
                     return;
@@ -1002,7 +1031,14 @@ void LoRaWAN::processDeviceTimeAnswer() {
 #pragma endregion
 
 uint32_t LoRaWAN::getMaxApplicationPayloadLength() {
-    return (theDataRates.theDataRates[currentDataRateIndex].maximumPayloadLength - macOut.getLevel());
+    return (dataRates::theDataRates[currentDataRateIndex].maximumPayloadLength - macOut.getLevel());
+}
+
+void LoRaWAN::sendUplink(measurementGroup& aMeasurementGroup) {
+    uint32_t lengthInBytes = measurementGroup::lengthInBytes(aMeasurementGroup.getNumberOfMeasurements());
+    uint8_t buffer[lengthInBytes];
+    aMeasurementGroup.toBytes(buffer, lengthInBytes);
+    sendUplink(17, buffer, lengthInBytes - 1);        // we send the lengthInBytes - 1, as the last byte is the checksum not needed for LoRaWAN as there is enough integrity protection in the protocol
 }
 
 void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], uint32_t applicationDataLength) {
@@ -1033,7 +1069,7 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
     // 2. Configure the radio, and start stateMachine for transmitting the payload
     loRaTxChannelCollection::selectRandomChannelIndex();        // randomize the channel index
     uint32_t txFrequency = loRaTxChannelCollection::channel[loRaTxChannelCollection::getCurrentChannelIndex()].frequencyInHz;
-    spreadingFactor csf  = theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor;
+    spreadingFactor csf  = dataRates::theDataRates[currentDataRateIndex].theSpreadingFactor;
     sx126x::configForTransmit(csf, txFrequency, rawMessage + macHeaderOffset, loRaPayloadLength);
 
     if (logging::isActive(logging::source::lorawanMac)) {
@@ -1044,9 +1080,10 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
     goTo(txRxCycleState::waitForRandomTimeBeforeTransmit);
 
     // 3. txRxCycle is started..
-    uplinkFrameCount++;
-    settingsCollection::save(uplinkFrameCount.toUint32(), settingsCollection::settingIndex::uplinkFrameCounter);
-    settingsCollection::save(downlinkFrameCount.toUint32(), settingsCollection::settingIndex::downlinkFrameCounter);
+    // uplinkFrameCount++; // old
+    uplinkFrameCount.increment();        // new
+    settingsCollection::save(uplinkFrameCount.getAsWord(), settingsCollection::settingIndex::uplinkFrameCounter);
+    settingsCollection::save(downlinkFrameCount.getAsWord(), settingsCollection::settingIndex::downlinkFrameCounter);
     removeNonStickyMacStuff();
 }
 
@@ -1069,7 +1106,7 @@ messageType LoRaWAN::decodeMessage() {
     frameCount guessedDownlinkFramecount;
     guessedDownlinkFramecount = downlinkFrameCount;
     guessedDownlinkFramecount.guessFromUint16(receivedDownlinkFramecount);
-    logging::snprintf(logging::source::lorawanMac, "receivedFramecount = %u, lastFramecount = %u, guessedFramecount = %u\n", receivedDownlinkFramecount, downlinkFrameCount.toUint32(), guessedDownlinkFramecount.toUint32());
+    logging::snprintf(logging::source::lorawanMac, "receivedFramecount = %u, lastFramecount = %u, guessedFramecount = %u\n", receivedDownlinkFramecount, downlinkFrameCount.getAsWord(), guessedDownlinkFramecount.getAsWord());
 
     // 3. Check the MIC
     uint32_t _receivedMic = receivedMic();
@@ -1087,21 +1124,22 @@ messageType LoRaWAN::decodeMessage() {
     }
 
     // 4. Extract the deviceAddress, to check if packet is addressed to this node
-    deviceAddress _receivedDeviceAddress(receivedDeviceAddress());
-    if (_receivedDeviceAddress != DevAddr) {
-        logging::snprintf(logging::source::lorawanMac, "Msg for other device : %08X\n", _receivedDeviceAddress.asUint32);        // TODO : also log received deviceAddress
+    uint32_t receivedAddress = receivedDeviceAddress();
+    logging::snprintf(logging::source::lorawanMac, "Msg for deviceAddress : 0x%08X, we are 0x%08X\n", receivedAddress, DevAddr.getAsWord());
+    if (receivedAddress != DevAddr.getAsWord()) {
+        logging::snprintf(logging::source::lorawanMac, "Msg for other device : %08X\n", receivedAddress);
         return messageType::invalid;
     }
 
     // 5. check if the frameCount is valid
     if (!isValidDownlinkFrameCount(guessedDownlinkFramecount)) {
-        logging::snprintf(logging::source::error, "Error : invalid downlinkFrameCount : received %u, current %u\n", guessedDownlinkFramecount.toUint32(), downlinkFrameCount.toUint32());
+        logging::snprintf(logging::source::error, "Error : invalid downlinkFrameCount : received %u, current %u\n", guessedDownlinkFramecount.getAsWord(), downlinkFrameCount.getAsWord());
         return messageType::invalid;
     }
 
     // 6. Seems a valid message, so update the downlinkFrameCount to what we've received (not just incrementing it, as there could be gaps in the sequence due to lost packets)
     downlinkFrameCount = guessedDownlinkFramecount;
-    settingsCollection::save(downlinkFrameCount.toUint32(), settingsCollection::settingIndex::downlinkFrameCounter);
+    settingsCollection::save(downlinkFrameCount.getAsWord(), settingsCollection::settingIndex::downlinkFrameCounter);
 
     // 6.5 If we had sticky macOut stuff, we can clear that now, as we did receive a valid downlink
     macOut.initialize();
@@ -1149,10 +1187,10 @@ uint32_t LoRaWAN::getReceiveTimeout(spreadingFactor aSpreadingFactor) {
 }
 
 bool LoRaWAN::isValidDownlinkFrameCount(frameCount testFrameCount) {
-    if (downlinkFrameCount.toUint32() == 0) {
+    if (downlinkFrameCount.getAsWord() == 0) {
         return true;        // no downlink received yet, so any frameCount is valid
     } else {
-        return (testFrameCount > downlinkFrameCount);
+        return (testFrameCount.getAsWord() > downlinkFrameCount.getAsWord());
     }
 }
 
@@ -1200,12 +1238,9 @@ void LoRaWAN::dumpConfig() {
         return;
     }
     logging::snprintf("LoRaWAN Config :\n");
-    logging::snprintf("  devAddr        = 0x%04X\n", DevAddr.asUint32);        // TODO : I think this should be 0x%08X
-    char tmpKeyAsHexAscii[33];
-    hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, applicationKey.asBytes(), 16);
-    logging::snprintf("  applicationKey = %s\n", tmpKeyAsHexAscii);
-    hexAscii::byteArrayToHexString(tmpKeyAsHexAscii, networkKey.asBytes(), 16);
-    logging::snprintf("  networkKey     = %s\n", tmpKeyAsHexAscii);
+    logging::snprintf("  devAddr        = %s\n", DevAddr.getAsHexString());
+    logging::snprintf("  applicationKey = %s\n", applicationKey.getAsHexString());
+    logging::snprintf("  networkKey     = %s\n", networkKey.getAsHexString());
 }
 
 void LoRaWAN::dumpState() {
@@ -1213,8 +1248,8 @@ void LoRaWAN::dumpState() {
         return;
     }
     logging::snprintf("LoRaWAN State :\n");
-    logging::snprintf("  uplinkFrameCount   = %u\n", uplinkFrameCount.toUint32());
-    logging::snprintf("  downlinkFrameCount = %u\n", downlinkFrameCount.toUint32());
+    logging::snprintf("  uplinkFrameCount   = %u\n", uplinkFrameCount.getAsWord());
+    logging::snprintf("  downlinkFrameCount = %u\n", downlinkFrameCount.getAsWord());
     logging::snprintf("  dataRateIndex      = %u\n", currentDataRateIndex);
     logging::snprintf("  rx1Delay           = %u [s]\n", rx1DelayInSeconds);
 }
@@ -1279,7 +1314,7 @@ void LoRaWAN::dumpTransmitSettings() {
     }
 
     uint32_t txFrequency = loRaTxChannelCollection::channel[loRaTxChannelCollection::getCurrentChannelIndex()].frequencyInHz;
-    spreadingFactor csf  = theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor;
+    spreadingFactor csf  = dataRates::theDataRates[currentDataRateIndex].theSpreadingFactor;
     logging::snprintf("Uplink :\n");
     logging::snprintf("  dataRate = %u\n", currentDataRateIndex);
     logging::snprintf("  spreadingFactor = %s\n", toString(csf));
@@ -1287,30 +1322,13 @@ void LoRaWAN::dumpTransmitSettings() {
     logging::snprintf("  frequency = %u\n\n", txFrequency);
 }
 
-void LoRaWAN::dumpLinkCheckAnswer() {}
-void LoRaWAN::dumpLinkAdaptiveDataRateRequest() {}
-void LoRaWAN::dumpDutyCycleRequest() {}
-void LoRaWAN::dumpDeviceStatusRequest() {}
-void LoRaWAN::dumpNewChannelRequest() {}
-void LoRaWAN::dumpNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate) {}
-void LoRaWAN::dumpReceiveParameterSetupRequest() {}
-void LoRaWAN::dumpReceiveTimingSetupRequest() {}
-void LoRaWAN::dumpReceiveTimingSetupRequest(uint32_t rx1Delay) {}
-void LoRaWAN::dumpTransmitParameterSetupRequest() {}
-void LoRaWAN::dumpDownlinkChannelRequest() {}
-void LoRaWAN::dumpDeviceTimeAnswer() {}
-
 void LoRaWAN::appendMacCommand(macCommand theMacCommand) {
     LoRaWAN::macOut.append(static_cast<uint8_t>(theMacCommand));
 }
 
-// This function can be removed once all devices with wrong DevAddr are updated
-
-void LoRaWAN::correctDevAddrEndianness() {
-    if ((DevAddr.asUint8[0] == 0x26) && (DevAddr.asUint8[1] == 0x0B)) {
-        uint32_t oldAddress = DevAddr.asUint32;
-        uint32_t newAddress = swapLittleBigEndian(oldAddress);
-        DevAddr.asUint32    = newAddress;
-        saveConfig();
-    }
+void LoRaWAN::resetMacLayer() {
+    resetState();
+    saveState();
+    resetChannels();
+    saveChannels();
 }

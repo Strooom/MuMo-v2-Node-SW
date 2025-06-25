@@ -21,8 +21,6 @@ void setUp(void) {
 void tearDown(void) {        // after each test
 }
 
-
-
 void test_constants() {
     TEST_ASSERT_EQUAL(16, LoRaWAN::b0BlockLength);
     TEST_ASSERT_EQUAL(1, LoRaWAN::macHeaderLength);
@@ -147,9 +145,9 @@ void test_setOffsetsAndLengthsRx() {
 }
 
 void test_insertBlockB0_uplink() {
-    LoRaWAN::DevAddr            = 0x12345678;
-    LoRaWAN::uplinkFrameCount   = 0xFFEEDDCC;
-    LoRaWAN::downlinkFrameCount = 0x00112233;
+    LoRaWAN::DevAddr.setFromWord(0x12345678);
+    LoRaWAN::uplinkFrameCount.setFromWord(0xFFEEDDCC);
+    LoRaWAN::downlinkFrameCount.setFromWord(0x00112233);
     uint32_t testFramePayloadLength{16};
     LoRaWAN::clearRawMessage();
     LoRaWAN::setOffsetsAndLengthsTx(testFramePayloadLength, 0);
@@ -168,8 +166,8 @@ void test_insertBlockB0_downlink() {
 }
 
 void test_insertHeaders() {
-    LoRaWAN::DevAddr          = 0x12345678;
-    LoRaWAN::uplinkFrameCount = 0xFFEEDDCC;
+    LoRaWAN::DevAddr.setFromWord(0x12345678);
+    LoRaWAN::uplinkFrameCount.setFromWord(0xFFEEDDCC);
     uint32_t testPayloadLength{0};
     uint32_t testFrameOptionsLength{0};
     uint32_t testFramePort{8};
@@ -315,7 +313,7 @@ void test_receivedDeviceAddress() {
 }
 
 void test_dump() {
-    logging::enable(logging::destination::uart2usb);
+    logging::enable(logging::destination::uart2);
     logging::enable(logging::source::lorawanData);
     logging::enable(logging::source::lorawanEvents);
     logging::enable(logging::source::lorawanMac);

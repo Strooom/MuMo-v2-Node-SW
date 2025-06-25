@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     HAL_Delay(3000);
     SystemClock_Config();
     i2c::wakeUp();
-    logging::enable(logging::destination::debugProbe);
+    logging::enable(logging::destination::swo);
     uint64_t uid = uniqueId::get();
     char output[17];
     hexAscii::uint64ToHexString(output, uid);

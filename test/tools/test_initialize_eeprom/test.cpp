@@ -14,7 +14,7 @@
 #include <eepromtype.hpp>
 #include <measurementcollection.hpp>
 #include <sx126x.hpp>
-#include <mcutype.hpp>
+#include <radiotype.hpp>
 #include <maincontroller.hpp>
 #include <uniqueid.hpp>
 #include <i2c.hpp>
@@ -24,7 +24,7 @@
 // #######################################################
 
 const bool resetBatteryType{false};
-const bool resetMcuType{false};
+const bool resetRadioType{false};
 const bool setName{false};
 const bool fixDevAddr{false};
 const bool overwriteExistingLoRaWANConfig{false};
@@ -39,7 +39,7 @@ const bool eraseMeasurementsInEeprom{false};
 eepromType selectedEepromType{eepromType::M24M01E};
 uint8_t selectedDisplayType{0};
 batteryType selectedBatteryType{batteryType::fdk_cr14250se};
-mcuType selectedPowerVersion{mcuType::lowPower};
+radioType selectedPowerVersion{radioType::lowPower};
 
 const char toBeName[9] = "mini001";
 
@@ -62,8 +62,8 @@ void showUid() {
 }
 
 void initializeNvsVersion() {
-    settingsCollection::save(static_cast<uint8_t>(1U), settingsCollection::settingIndex::nvsMapVersion);
-    TEST_ASSERT_EQUAL_UINT8(1, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::nvsMapVersion));
+    settingsCollection::save(static_cast<uint8_t>(1U), settingsCollection::settingIndex::mapVersion);
+    TEST_ASSERT_EQUAL_UINT8(1, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mapVersion));
 }
 
 void initializeDisplayType() {
@@ -83,10 +83,10 @@ void initializeEepromType() {
     TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedEepromType), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::eepromType));
 }
 
-void initializeMcuType() {
-    if (resetMcuType) {
-        settingsCollection::save(static_cast<uint8_t>(selectedPowerVersion), settingsCollection::settingIndex::mcuType);
-        TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedPowerVersion), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mcuType));
+void initializeRadioType() {
+    if (resetRadioType) {
+        settingsCollection::save(static_cast<uint8_t>(selectedPowerVersion), settingsCollection::settingIndex::radioType);
+        TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(selectedPowerVersion), settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
     }
 }
 
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
     RUN_TEST(initializeBatteryType);
     RUN_TEST(initializeEepromType);
     RUN_TEST(initializeActiveLoggingSources);
-    RUN_TEST(initializeMcuType);
+    RUN_TEST(initializeRadioType);
     RUN_TEST(initializeName);
     RUN_TEST(initializeLorawanConfig);
     RUN_TEST(initializeLorawanState);

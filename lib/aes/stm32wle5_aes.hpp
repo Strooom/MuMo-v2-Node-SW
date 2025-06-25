@@ -23,7 +23,7 @@ class stm32wle5_aes {
     static void setInitializationVector( aesBlock& theBlock);
     static void write(aesBlock& theBlock);
     static void read(aesBlock& theBlock);
-    static void write(uint32_t *wordsIn);
+    static void write(const uint32_t *wordsIn);
     static void read(uint32_t *wordsOut);
     static bool isComputationComplete();
     static void clearComputationComplete();

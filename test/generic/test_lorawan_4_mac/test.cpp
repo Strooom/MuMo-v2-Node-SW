@@ -220,7 +220,7 @@ void test_process_unknown_MAC_command() {
 
 void test_dump() {
     TEST_MESSAGE("For Coverage only");
-    logging::enable(logging::destination::uart2usb);
+    logging::enable(logging::destination::uart2);
     logging::enable(logging::source::lorawanData);
     logging::enable(logging::source::lorawanEvents);
     logging::enable(logging::source::lorawanMac);
@@ -243,7 +243,7 @@ void test_parse_1() {
     uint32_t testRawMessageLengthInBytes = testRawMessageLength / 2;
     hexAscii::hexStringToByteArray(mockSX126xDataBuffer, testRawMessage, testRawMessageLength);
     mockSX126xCommandData[static_cast<uint8_t>(sx126x::command::getRxBufferStatus)][0] = testRawMessageLengthInBytes;
-    LoRaWAN::DevAddr                                                                   = 0x260B9911;
+    LoRaWAN::DevAddr.setFromWord(0x260B9911);
     LoRaWAN::applicationKey.setFromHexString("E54E4411F4FE8955904197C8D824BC2C");
     LoRaWAN::networkKey.setFromHexString("8DD6FEB76D7754A78538BA5089A834AA");
     LoRaWAN::generateKeysK1K2();
@@ -273,11 +273,11 @@ void test_construct_1() {
     uint8_t testClearTextPayload[testClearTextPayloadLength];
     hexAscii::hexStringToByteArray(testClearTextPayload, "02017EC5536412835C40107EC553648D77A241117EC5536450424042127EC553645C897E44", 74U);
 
-    LoRaWAN::DevAddr = 0x260B9911;
+    LoRaWAN::DevAddr.setFromWord(0x260B9911);
     LoRaWAN::applicationKey.setFromHexString("E54E4411F4FE8955904197C8D824BC2C");
     LoRaWAN::networkKey.setFromHexString("8DD6FEB76D7754A78538BA5089A834AA");
     LoRaWAN::generateKeysK1K2();
-    LoRaWAN::uplinkFrameCount = 13451;
+    LoRaWAN::uplinkFrameCount.setFromWord(13451);
 
     // LoRaWAN::sendUplink(testFramePort, testClearTextPayload, testClearTextPayloadLengthInBytes);
 
@@ -314,11 +314,11 @@ void test_construct_2() {
     uint8_t testClearTextPayload[testClearTextPayloadLength];
     hexAscii::hexStringToByteArray(testClearTextPayload, "00000000000000000000000000000000",32U);
 
-    LoRaWAN::DevAddr = 0x260BC71B;
+    LoRaWAN::DevAddr.setFromWord(0x260BC71B);
     LoRaWAN::applicationKey.setFromHexString("ECF61A5B18BFBF81EF4FA7DBA764CE8B");
     LoRaWAN::networkKey.setFromHexString("34CE07A8DDE81F4C29A0AED7B4F1D7BB");
     LoRaWAN::generateKeysK1K2();
-    LoRaWAN::uplinkFrameCount = 0;
+    LoRaWAN::uplinkFrameCount.setFromWord(0);
 
     // LoRaWAN::sendUplink(testFramePort, testClearTextPayload, testClearTextPayloadLengthInBytes);
 

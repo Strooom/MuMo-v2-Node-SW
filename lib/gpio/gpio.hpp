@@ -23,16 +23,9 @@ class gpio {
         usbPresent,                      // input
         enableDisplayPower,              // output
         enableSensorsEepromPower,        // output
-        other
+        test0                            // output (test pin) to eg. scope or logic analyzer
     };
 
     static void enableGpio(group aGroup);
     static void disableGpio(group aGroup);
-    static void disableAllGpio();
-
-#ifndef unitTesting
-
-  private:
-#endif
-    static void enableDisableGpio(group theGroup, bool enable);
 };

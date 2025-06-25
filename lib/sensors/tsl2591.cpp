@@ -8,7 +8,6 @@
 #include <settingscollection.hpp>
 #include <logging.hpp>
 #include <float.hpp>
-#include <measurementcollection.hpp>
 #include <i2c.hpp>
 
 #ifndef generic
@@ -45,7 +44,6 @@ void tsl2591::initialize() {
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels;
          channelIndex++) {
         channels[channelIndex].set(0, 0);
-        channels[channelIndex].hasNewValue = false;
     }
     goSleep();
 }
@@ -86,7 +84,7 @@ float tsl2591::calculateLux() {
 
 bool tsl2591::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
-    return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, addressToTest << 1, halTrials, halTimeout));
+    return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, static_cast<uint16_t>(addressToTest << 1), halTrials, halTimeout));
 #else
     return mockTSL2591Present;
 #endif
@@ -124,9 +122,6 @@ void tsl2591::run() {
             readSample();
             if (channels[visibleLight].needsSampling()) {
                 channels[visibleLight].addSample(calculateLux());
-                if (channels[visibleLight].hasOutput()) {
-                    channels[visibleLight].hasNewValue = true;
-                }
             }
             goSleep();
         }

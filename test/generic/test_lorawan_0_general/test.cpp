@@ -14,8 +14,6 @@ extern uint8_t mockSX126xDataBuffer[256];
 extern uint8_t mockSX126xRegisters[0x1000];
 extern uint8_t mockSX126xCommandData[256][8];
 
-
-
 void setUp(void) {        // before each test
 }
 void tearDown(void) {        // after each test
@@ -28,18 +26,15 @@ void test_initialize() {
 }
 
 void test_initialize_config() {
-    TEST_ASSERT_EQUAL(0, LoRaWAN::DevAddr.asUint32);
+    TEST_ASSERT_EQUAL(0, LoRaWAN::DevAddr.getAsWord());
     TEST_ASSERT_EQUAL(1, LoRaWAN::rx1DelayInSeconds);
-    char tmpKeyAsHexString[33];
-    hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::applicationKey.asBytes(), 16);
-    TEST_ASSERT_EQUAL_STRING("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", tmpKeyAsHexString);
-    hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::networkKey.asBytes(), 16);
-    TEST_ASSERT_EQUAL_STRING("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", tmpKeyAsHexString);
+    TEST_ASSERT_EQUAL_STRING("", LoRaWAN::applicationKey.getAsHexString());
+    TEST_ASSERT_EQUAL_STRING("", LoRaWAN::networkKey.getAsHexString());
 }
 
 void test_initialize_state() {
-    TEST_ASSERT_EQUAL(1, LoRaWAN::uplinkFrameCount.asUint32);
-    TEST_ASSERT_EQUAL(0, LoRaWAN::downlinkFrameCount.asUint32);
+    TEST_ASSERT_EQUAL(0, LoRaWAN::uplinkFrameCount.getAsWord());
+    TEST_ASSERT_EQUAL(0, LoRaWAN::downlinkFrameCount.getAsWord());
     TEST_ASSERT_EQUAL(5, LoRaWAN::currentDataRateIndex);
     TEST_ASSERT_EQUAL(3, LoRaWAN::rx2DataRateIndex);
     TEST_ASSERT_EQUAL(0, LoRaWAN::rx1DataRateOffset);
@@ -59,40 +54,37 @@ void test_initialize_channels() {
 }
 
 void test_save_restore_config() {
-    LoRaWAN::DevAddr = 0x1234;
+    LoRaWAN::DevAddr.setFromWord(0x1234);
     LoRaWAN::applicationKey.setFromHexString("000102030405060708090A0B0C0D0E0F");
     LoRaWAN::networkKey.setFromHexString("101112131415161718191A1B1C1D1E1F");
     LoRaWAN::saveConfig();
-    LoRaWAN::DevAddr = 0x0;
+    LoRaWAN::DevAddr.setFromWord(0);
     LoRaWAN::applicationKey.setFromHexString("00000000000000000000000000000000");
     LoRaWAN::networkKey.setFromHexString("00000000000000000000000000000000");
     LoRaWAN::restoreConfig();
-    TEST_ASSERT_EQUAL(0x1234, LoRaWAN::DevAddr.asUint32);
-    char tmpKeyAsHexString[33];
-    hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::applicationKey.asBytes(), 16);
-    TEST_ASSERT_EQUAL_STRING("000102030405060708090A0B0C0D0E0F", tmpKeyAsHexString);
-    hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::networkKey.asBytes(), 16);
-    TEST_ASSERT_EQUAL_STRING("101112131415161718191A1B1C1D1E1F", tmpKeyAsHexString);
+    TEST_ASSERT_EQUAL(0x1234, LoRaWAN::DevAddr.getAsWord());
+    TEST_ASSERT_EQUAL_STRING("000102030405060708090A0B0C0D0E0F", LoRaWAN::applicationKey.getAsHexString());
+    TEST_ASSERT_EQUAL_STRING("101112131415161718191A1B1C1D1E1F", LoRaWAN::networkKey.getAsHexString());
 }
 
 void test_save_restore_state() {
     LoRaWAN::rx1DelayInSeconds    = 0x05;
-    LoRaWAN::uplinkFrameCount     = 0x1234;
-    LoRaWAN::downlinkFrameCount   = 0x5678;
+    LoRaWAN::uplinkFrameCount.setFromWord(0x1234);
+    LoRaWAN::downlinkFrameCount.setFromWord(0x5678);
     LoRaWAN::currentDataRateIndex = 0x02;
     LoRaWAN::rx2DataRateIndex     = 0x03;
     LoRaWAN::rx1DataRateOffset    = 0x04;
     LoRaWAN::saveState();
     LoRaWAN::rx1DelayInSeconds    = 0x0;
-    LoRaWAN::uplinkFrameCount     = 0;
-    LoRaWAN::downlinkFrameCount   = 0;
+    LoRaWAN::uplinkFrameCount.setFromWord(0);
+    LoRaWAN::downlinkFrameCount.setFromWord(0);
     LoRaWAN::currentDataRateIndex = 0;
     LoRaWAN::rx2DataRateIndex     = 0;
     LoRaWAN::rx1DataRateOffset    = 0;
     LoRaWAN::restoreState();
     TEST_ASSERT_EQUAL(0x05, LoRaWAN::rx1DelayInSeconds);
-    TEST_ASSERT_EQUAL(0x1234, LoRaWAN::uplinkFrameCount.asUint32);
-    TEST_ASSERT_EQUAL(0x5678, LoRaWAN::downlinkFrameCount.asUint32);
+    TEST_ASSERT_EQUAL(0x1234, LoRaWAN::uplinkFrameCount.getAsWord());
+    TEST_ASSERT_EQUAL(0x5678, LoRaWAN::downlinkFrameCount.getAsWord());
     TEST_ASSERT_EQUAL(0x02, LoRaWAN::currentDataRateIndex);
     TEST_ASSERT_EQUAL(0x03, LoRaWAN::rx2DataRateIndex);
     TEST_ASSERT_EQUAL(0x04, LoRaWAN::rx1DataRateOffset);
@@ -117,14 +109,15 @@ void test_save_restore_channels() {
 }
 
 void test_isValidDownlinkFrameCount() {
-    LoRaWAN::downlinkFrameCount = 0;
-    frameCount testFrameCount(10);
+    LoRaWAN::downlinkFrameCount.setFromWord(0);
+    frameCount testFrameCount;
+    testFrameCount.setFromWord(10);
     TEST_ASSERT_TRUE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
-    LoRaWAN::downlinkFrameCount = 9;
+    LoRaWAN::downlinkFrameCount.setFromWord(9);
     TEST_ASSERT_TRUE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
-    LoRaWAN::downlinkFrameCount = 10;
+    LoRaWAN::downlinkFrameCount.setFromWord(10);
     TEST_ASSERT_FALSE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
-    LoRaWAN::downlinkFrameCount = 11;
+    LoRaWAN::downlinkFrameCount.setFromWord(11);
     TEST_ASSERT_FALSE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
 }
 
@@ -132,7 +125,7 @@ void test_dump() {
     LoRaWAN::dumpConfig();
     LoRaWAN::dumpState();
     LoRaWAN::dumpChannels();
-    logging::enable(logging::destination::uart2usb);
+    logging::enable(logging::destination::uart2);
     logging::enable(logging::source::lorawanData);
     logging::enable(logging::source::lorawanEvents);
     logging::enable(logging::source::lorawanMac);

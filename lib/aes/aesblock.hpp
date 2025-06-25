@@ -49,7 +49,7 @@ class aesBlock {
     void mixColumns();
 
     union {
-        uint8_t asByte[lengthInBytes]{};        // interprete the data as 16 bytes
-        uint32_t asUint32[lengthInWords];         // interprete the data as 4 32bit words
-    } state;                                    // fancy name for data in the block
+        uint8_t asByte[lengthInBytes]{};         // interprete the data as 16 bytes
+        uint32_t asUint32[lengthInWords];        // interprete the data as 4 32bit words
+    } state;                                     // fancy name for data in the block
 };

@@ -2,7 +2,7 @@
 #include <stdio.h>           // snprintf
 #include <inttypes.h>        // for PRIu32
 
-sensorChannel::sensorChannel(uint32_t decimals, const char* name, const char* unit) : oversampling{0}, prescaling{0}, decimals{decimals}, name{name}, unit{unit} {
+sensorChannel::sensorChannel(uint32_t decimals, const char* name, const char* unit) : decimals{decimals}, name{name}, unit{unit} {
     limitOversamplingAndPrescaler();
 }
 
@@ -14,14 +14,13 @@ void sensorChannel::set(uint32_t newOversampling, uint32_t newPrescaler) {
     prescaleCounter     = 0;
 }
 
-bool sensorChannel::needsSampling()  const{
-    action anAction = getNextAction();
-    return ((anAction == action::sample) || (anAction == action::sampleAndOutput));
-};
+bool sensorChannel::needsSampling() const {
+    return (isActive() && prescaleCounter == 0);
+}
 
 bool sensorChannel::hasOutput() const {
-    return (getNextAction() == action::sampleAndOutput);
-};
+    return (isActive() && (prescaleCounter == 0) && (oversamplingCounter == 0));
+}
 
 void sensorChannel::limitOversamplingAndPrescaler() {
     if (oversampling > maxOversampling) {

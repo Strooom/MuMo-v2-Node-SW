@@ -36,7 +36,7 @@ void test_set() {
 
 void test_time_tToBytes() {
     time_t testInput = 0x12345678;
-    uint8_t* result = realTimeClock::bytesFromTime_t(testInput);
+    const uint8_t* result = realTimeClock::bytesFromTime_t(testInput);
     TEST_ASSERT_EQUAL(0x78, result[0]);
     TEST_ASSERT_EQUAL(0x56, result[1]);
     TEST_ASSERT_EQUAL(0x34, result[2]);

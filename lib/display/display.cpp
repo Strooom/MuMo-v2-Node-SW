@@ -77,7 +77,6 @@ void display::wakeUp() {
 
     // SET_RAM_X_ADDRESS_COUNTER : uses PowerOnReset defaults
 
-    // TODO : strange that we seem to count down, where data entry mode says increment Y
     commandData[0] = 0xC7;        // this seems to be (height - 1) % 256
     commandData[1] = 0x00;        // this seems to be (height - 1) / 256
     writeCommand(SSD1681Commands::SET_RAM_Y_ADDRESS_COUNTER, commandData, 2);

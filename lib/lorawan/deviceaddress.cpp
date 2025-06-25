@@ -1,22 +1,21 @@
 #include <deviceaddress.hpp>
 
-deviceAddress::deviceAddress() : asUint32(0) {}
-
-deviceAddress::deviceAddress(uint32_t theDeviceAddress) : asUint32(theDeviceAddress) {}
-
-deviceAddress& deviceAddress::operator=(const uint32_t theDeviceAddress) {
-    asUint32 = theDeviceAddress;
-    return *this;
+void deviceAddress::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
+    (void)memcpy(devAddrAsBytes, bytes, lengthInBytes);
+    syncWordFromBytes();
+    syncHexStringFromBytes();
 }
 
-deviceAddress& deviceAddress::operator=(const deviceAddress &theDeviceAddress) {
-    asUint32 = theDeviceAddress.asUint32;
-    return *this;
-}
-bool deviceAddress::operator==(const deviceAddress &theDeviceAddress) {
-    return (asUint32 == theDeviceAddress.asUint32);
+void deviceAddress::setFromWord(const uint32_t wordIn) {
+    devAddrAsWord = wordIn;
+    syncBytesFromWord();
+    syncHexStringFromBytes();
 }
 
-bool deviceAddress::operator!=(const deviceAddress &theDeviceAddress) {
-    return (asUint32 != theDeviceAddress.asUint32);
+void deviceAddress::setFromHexString(const char* string) {
+    hexAscii::hexStringToByteArrayReversed(devAddrAsBytes, string, lengthAsHexAscii);
+    syncHexStringFromBytes();
+    syncWordFromBytes();
 }
+
+

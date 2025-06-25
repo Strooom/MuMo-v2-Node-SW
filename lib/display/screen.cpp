@@ -8,7 +8,7 @@
 #include <lucidaconsole12.hpp>
 #include <logo.hpp>
 #include <reedsolomon.hpp>
-#include <qrcode2.hpp>
+#include <qrcode.hpp>
 #include <roboto36b.hpp>
 #include <screen.hpp>
 #include <sensordevicecollection.hpp>        //
@@ -165,15 +165,12 @@ void screen::showConsole() {
 
 void screen::showUid() {
     display::clearAllPixels();
-    QRCode qrcode;
-    uint8_t qrcodeData[qrcode_getBufferSize(2)];
-    char tmpKeyAsHexAscii[17];
-    hexAscii::uint64ToHexString(tmpKeyAsHexAscii, uniqueId::get());
-    qrcode_initText(&qrcode, qrcodeData, 2, static_cast<int8_t>(errorCorrectionLevel::medium), tmpKeyAsHexAscii);
-    graphics::drawQrcode(ux::qrCodeXOffset, ux::qrCodeYOffset, qrcode);
-    uint32_t width      = graphics::getTextwidth(lucidaConsole12, tmpKeyAsHexAscii);
+
+    qrCode::generate(uniqueId::asHexString(), 1, errorCorrectionLevel::quartile);
+    graphics::drawQrCode(ux::qrCodeXOffset, ux::qrCodeYOffset);
+    uint32_t width      = graphics::getTextwidth(lucidaConsole12, uniqueId::asHexString());
     uint32_t leftOffset = (display::widthInPixels - width) / 2;
-    graphics::drawText(leftOffset, 2, lucidaConsole12, tmpKeyAsHexAscii);
+    graphics::drawText(leftOffset, 2, lucidaConsole12, uniqueId::asHexString());
 }
 
 void screen::showMeasurements() {

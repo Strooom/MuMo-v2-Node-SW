@@ -10,12 +10,13 @@
 
 #ifndef generic
 #include <main.h>
-#define UID ((UID_typeDef *)UID64_BASE)
+#define UID ((UID_typeDef*)UID64_BASE)
 #else
-uint64_t uniqueId::mockUniqueId{0x1234};
+uint64_t uniqueId::mockUniqueId{0x1122334455667788};
 #endif
+char uniqueId::uidAsHexAscii[17]{};
 
-uint64_t uniqueId::get() {
+uint64_t uniqueId::asUint64() {
 #ifndef generic
     return ((static_cast<uint64_t>(UID->W1) << 32) | static_cast<uint64_t>(UID->W0));
 #else
@@ -23,3 +24,7 @@ uint64_t uniqueId::get() {
 #endif
 }
 
+const char* uniqueId::asHexString() {
+    hexAscii::uint64ToHexString(uidAsHexAscii, uniqueId::asUint64());
+    return uidAsHexAscii;
+}
