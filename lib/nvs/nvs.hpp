@@ -11,7 +11,7 @@ class nonVolatileStorage {
     nonVolatileStorage() = delete;
     static uint32_t detectNmbr64KBanks();
     static uint32_t totalSize() { return nmbr64KBanks * 64U * 1024U; };
-    static uint32_t getMeasurementsAreaSize() { return totalSize() - settingsSize; };
+    static uint32_t getMeasurementsAreaSize();
 
     static constexpr uint32_t maxNmbr64KBanks{8};
     static constexpr uint32_t pageSize{128};

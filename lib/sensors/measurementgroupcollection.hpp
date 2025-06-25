@@ -18,7 +18,7 @@ class measurementGroupCollection {
 
     static uint32_t getOldestMeasurementOffset() { return oldestMeasurementOffset; };
     static uint32_t getNewMeasurementsOffset() { return newMeasurementsOffset; };
-    static uint32_t getFreeSpace() { return nonVolatileStorage::getMeasurementsAreaSize() + oldestMeasurementOffset - newMeasurementsOffset; };
+    static uint32_t getFreeSpace();
 
 #ifndef unitTesting
 

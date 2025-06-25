@@ -87,3 +87,11 @@ void measurementGroupCollection::get(measurementGroup& aMeasurementGroup, uint32
 
     // TODO : put NVS back to sleep if it was sleeping
 }
+
+uint32_t measurementGroupCollection::getFreeSpace() {
+    if (oldestMeasurementOffset == 0 && newMeasurementsOffset == 0) {
+        return nonVolatileStorage::getMeasurementsAreaSize();
+    } else {
+        return ((nonVolatileStorage::getMeasurementsAreaSize() + oldestMeasurementOffset) - newMeasurementsOffset) % nonVolatileStorage::getMeasurementsAreaSize();
+    }
+}
