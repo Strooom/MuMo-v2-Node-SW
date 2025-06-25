@@ -189,6 +189,8 @@ void mainController::initialize() {
     }
 
     applicationEventBuffer.initialize();
+    requestCounter = 0;
+    answerCounter = 0;
     goTo(mainState::networkCheck);
 }
 
@@ -743,9 +745,9 @@ void mainController::setRadioType(const cliCommand& theCommand) {
     if (theCommand.nmbrOfArguments == 1) {
         uint32_t tmpRadioTypeIndex = theCommand.argumentAsUint32(0);
         settingsCollection::save(static_cast<uint8_t>(tmpRadioTypeIndex), settingsCollection::settingIndex::radioType);
+        radioType theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
+        sx126x::initialize(theRadioType);
         cli::sendResponse("RadioType set : %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
-        // TODO : also set the radio type in sx126x, so no restart is needed..
-        // sx126x::setType(static_cast<radioType>(tmpRadioTypeIndex));
     } else {
         cli::sendResponse("invalid arguments\n");
     }
