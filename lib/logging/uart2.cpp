@@ -166,6 +166,6 @@ void uart2::receive(char* data) {
     commandCounter = 0;
 }
 
-bool uart2::txBufferLessThanHalfFull() {
-    return txBuffer.getLevel() < (responseBufferLength / 2);
+uint32_t uart2::amountFreeInTxBuffer() {
+    return (txBuffer.length - txBuffer.getLevel());
 }

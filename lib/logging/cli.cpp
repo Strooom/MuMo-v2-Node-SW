@@ -23,9 +23,13 @@ uint32_t cli::sendResponse(const char* format, ...) {
     va_start(argList, format);
     length = vsnprintf(buffer, bufferLength, format, argList);
     va_end(argList);
+
+    while (uart2::amountFreeInTxBuffer() < bufferLength) {
+        HAL_Delay(25);        // Here the transmit blocks in case we want to send really large amounts, such as when dumping all measurements
+    }
+
     uart2::transmit(buffer, length);
     return length;
-
 }
 
 uint32_t cli::countArguments(const char* commandLine) {

@@ -65,6 +65,7 @@ class mainController {
     static void showHelp();
     static void showDeviceStatus();
     static void showMeasurementsStatus();
+    static void showMeasurements();
     static void showNetworkStatus();
     static void setDeviceAddress(const cliCommand& aCommand);
     static void setNetworkKey(const cliCommand& aCommand);

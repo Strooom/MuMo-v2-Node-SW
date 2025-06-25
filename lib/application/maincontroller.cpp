@@ -190,7 +190,7 @@ void mainController::initialize() {
 
     applicationEventBuffer.initialize();
     requestCounter = 0;
-    answerCounter = 0;
+    answerCounter  = 0;
     goTo(mainState::networkCheck);
 }
 
@@ -509,6 +509,10 @@ void mainController::runCli() {
                             showMeasurementsStatus();
                             break;
 
+                        case cliCommand::gm:
+                            showMeasurements();
+                            break;
+
                         case cliCommand::gls:
                             showNetworkStatus();
                             break;
@@ -797,4 +801,50 @@ void mainController::showMeasurementsStatus() {
     cli::sendResponse("oldest : %s", ctime(&oldestMeasurementTime));
     cli::sendResponse("newest : %s", ctime(&newestMeasurementTime));
     cli::sendResponse("%d bytes available\n", measurementGroupCollection::getFreeSpace());
+}
+
+void mainController::showMeasurements() {
+    measurementGroup tmpGroup;
+    uint32_t startOffset = measurementGroupCollection::getOldestMeasurementOffset();
+    uint32_t endOffset   = measurementGroupCollection::getNewMeasurementsOffset();
+    if (endOffset < startOffset) {
+        endOffset += nonVolatileStorage::measurementsSize;
+    }
+    uint32_t offset{startOffset};
+    uint32_t nmbrOfGroups{0};
+    uint32_t nmbrOfMeasurements{0};
+    time_t oldestMeasurementTime;
+
+    measurementGroupCollection::get(tmpGroup, offset);
+    oldestMeasurementTime = tmpGroup.getTimeStamp();
+
+    while (offset < endOffset) {
+        measurementGroupCollection::get(tmpGroup, offset);
+        cli::sendResponse("%d %s", nmbrOfGroups, ctime(&oldestMeasurementTime));        // 1 line per measurementGroup
+        nmbrOfMeasurements = tmpGroup.getNumberOfMeasurements();
+        for (uint32_t measurementIndex = 0; measurementIndex < nmbrOfMeasurements; measurementIndex++) {        // then per measurement part of this group
+            uint32_t tmpDeviceIndex  = tmpGroup.getDeviceIndex(measurementIndex);
+            uint32_t tmpChannelIndex = tmpGroup.getChannelIndex(measurementIndex);
+            float tmpValue           = tmpGroup.getValue(measurementIndex);
+
+            uint32_t decimals = sensorDeviceCollection::decimals(tmpDeviceIndex, tmpChannelIndex);
+            uint32_t intPart  = integerPart(tmpValue, decimals);
+
+            cli::sendResponse(" %s", sensorDeviceCollection::name(tmpDeviceIndex));
+            cli::sendResponse(" %s", sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex));
+
+            if (decimals > 0) {
+                uint32_t fracPart;
+                fracPart = fractionalPart(tmpValue, decimals);
+                cli::sendResponse(" %d.%d\n", intPart, fracPart);
+            } else {
+                cli::sendResponse(" %d\n", intPart);
+            }
+
+            cli::sendResponse(" %s\n", sensorDeviceCollection::units(tmpDeviceIndex, tmpChannelIndex));
+        }
+
+        nmbrOfGroups++;
+        offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
+    }
 }
