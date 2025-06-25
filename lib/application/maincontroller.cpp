@@ -618,7 +618,12 @@ void mainController::showDeviceStatus() {
         if (sensorDeviceCollection::isPresent(sensorDeviceIndex)) {
             cli::sendResponse("[%d] %s\n", sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
             for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(sensorDeviceIndex); channelIndex++) {
-                cli::sendResponse("  [%d] %s [%s] oversampling = %d, prescaler = %d\n", channelIndex, sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::units(sensorDeviceIndex, channelIndex), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getOversampling(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler());
+                cli::sendResponse("  [%d] %s [%s]", channelIndex, sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::units(sensorDeviceIndex, channelIndex));
+                if (sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler() > 0) {
+                    cli::sendResponse(" oversampling = %d, prescaler = %d\n", sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getOversampling(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler());
+                } else {
+                    cli::sendResponse(" disabled\n");
+                }
             }
         } else {
             cli::sendResponse("[%d] %s not found\n", sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
