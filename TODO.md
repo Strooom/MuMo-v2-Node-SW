@@ -3,7 +3,6 @@
 
 ### Priority High
 
-
 * measurementsGroupCollection
   * make it work for variable amount of EEPROM memory
   * target unit test for wait time after page write into eeprom
@@ -26,22 +25,8 @@ when connecting / disconnection USB, this should be logged as an measurement-eve
 
 * getbatteryChargeFromVoltage table right by doing a discharge test over 24h
 
-* report number of measurements on bootscreen
+
 * merge hw aes tests into 1, in order to not have too many target unit tests
 * make generic unit tests also run on target
 
-### Done
-
-* CLI : this allow to configure the MuMo-V3 / MuMo-V3-mini Hardware after manufacturing
-  * provision DevAddr and LoRaWAN keys
-  * set batteryType and radioType
-  * set sensor parameters
-  * set display parameters
-  * reading stored measurements from device to computer
-
-* Put some of the aesKey stuff, only needed for SW-AES in conditional compilation, eg key expansion
-* clean up / finalize QR-code class
-* read LoRaWAN properties in a safe way to display them in mainController.. I need some getters() io making them public
-
-
-
+* when a certain device/channel is not active, it should not be allowed on the display...

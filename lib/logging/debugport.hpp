@@ -3,6 +3,12 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
+// ####################################################################################################################################
+// Important note :
+// After flashing a device via the debugPort (SWD), a powr-cycle is needed to deactivate the debugPort and achieve the lowest power.
+// A simple reset (via reset button) is not sufficient.
+// ###################################################################################################################################
+
 #pragma once
 #include <stdint.h>
 #include <stdarg.h>
