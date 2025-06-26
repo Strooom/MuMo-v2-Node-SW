@@ -53,11 +53,12 @@ int main(void) {
         gpio::disableGpio(gpio::group::debugPort);
     }
 
-   if (power::hasUsbPower()) {
-       HAL_RCC_DeInit();
-       HAL_DeInit();
-       executeRomBootloader();
-   }
+    gpio::enableGpio(gpio::group::usbPresent);
+    if (power::hasUsbPower()) {
+        HAL_RCC_DeInit();
+        HAL_DeInit();
+        executeRomBootloader();
+    }
 
     MX_RTC_Init();
     MX_ADC_Init();
@@ -65,7 +66,6 @@ int main(void) {
     MX_RNG_Init();
     MX_LPTIM1_Init();
 
-    gpio::enableGpio(gpio::group::usbPresent);
     uart1::initialize();
     uart2::initialize();
 

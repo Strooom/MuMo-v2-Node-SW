@@ -601,7 +601,7 @@ void mainController::showHelp() {
     cli::sendResponse("er : enable radio\n");
     cli::sendResponse("dr : disable radio\n");
     cli::sendResponse("rml : reset mac layer\n");
-    cli::sendResponse("res : restart device - soft reset\n");
+    cli::sendResponse("swr : restart device - soft reset\n");
     cli::sendResponse("sda <address> : set device address\n");
     cli::sendResponse("snk <key> : set network key\n");
     cli::sendResponse("sak <key> : set application key\n");
