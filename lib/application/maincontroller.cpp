@@ -481,80 +481,80 @@ void mainController::runCli() {
                             showHelp();
                             break;
 
-                        case cliCommand::el:
+                        case cliCommand::enableLogging:
                             cli::sendResponse("logging enabled\n");
                             logging::enable(logging::destination::uart2);
                             break;
 
-                        case cliCommand::dl:
+                        case cliCommand::disableLogging:
                             cli::sendResponse("logging disabled\n");
                             logging::disable(logging::destination::uart2);
                             break;
 
-                        case cliCommand::er:
+                        case cliCommand::enableRadio:
                             LoRaWAN::setEnableRadio(true);
                             cli::sendResponse("radio enabled\n");
                             break;
 
-                        case cliCommand::dr:
+                        case cliCommand::disableRadio:
                             LoRaWAN::setEnableRadio(false);
                             cli::sendResponse("radio disabled\n");
                             break;
 
-                        case cliCommand::gds:
+                        case cliCommand::getDeviceStatus:
                             showDeviceStatus();
                             break;
 
-                        case cliCommand::gms:
+                        case cliCommand::getMeasurementsStatus:
                             showMeasurementsStatus();
                             break;
 
-                        case cliCommand::gm:
+                        case cliCommand::getMeasurements:
                             showMeasurements();
                             break;
 
-                        case cliCommand::gls:
+                        case cliCommand::getLoRaWANStatus:
                             showNetworkStatus();
                             break;
 
-                        case cliCommand::rml:
+                        case cliCommand::resetMacLayer:
                             LoRaWAN::resetMacLayer();
                             cli::sendResponse("mac layer reset\n");
                             break;
 
-                        case cliCommand::sda:
+                        case cliCommand::setDeviceAddress:
                             setDeviceAddress(theCommand);
                             break;
 
-                        case cliCommand::snk:
+                        case cliCommand::setNetworkKey:
                             setNetworkKey(theCommand);
                             break;
 
-                        case cliCommand::sak:
+                        case cliCommand::setApplicationKey:
                             setApplicationKey(theCommand);
                             break;
 
-                        case cliCommand::sn:
+                        case cliCommand::setName:
                             setName(theCommand);
                             break;
 
-                        case cliCommand::sb:
+                        case cliCommand::setBattery:
                             setBatteryType(theCommand);
                             break;
 
-                        case cliCommand::sr:
+                        case cliCommand::setRadio:
                             setRadioType(theCommand);
                             break;
 
-                        case cliCommand::ss:
+                        case cliCommand::setSensor:
                             setSensor(theCommand);
                             break;
 
-                        case cliCommand::sd:
+                        case cliCommand::setDisplay:
                             cli::sendResponse("not yet implemented\n");
                             break;
 
-                        case cliCommand::swr:
+                        case cliCommand::softwareReset:
                             initialize();
                             break;
 
