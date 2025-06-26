@@ -203,3 +203,12 @@ void nonVolatileStorage::enableWriteProtect() {
     }
 #endif
 }
+
+uint32_t nonVolatileStorage::getMeasurementsAreaSize() {
+    if (totalSize() > 0) {
+        return totalSize() - settingsSize;
+    } else {
+        return 0;
+    }
+}
+

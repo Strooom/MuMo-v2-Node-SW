@@ -44,19 +44,23 @@ void test_reset(void) {
 }
 
 void test_getFreeSpace(void) {
+    nonVolatileStorage::mockEepromNmbr64KPages = 2;
+    nonVolatileStorage::detectNmbr64KBanks();
+
     // No measurements stored -> free space should equal the size of the measurements area
     measurementGroupCollection::oldestMeasurementOffset = 0;
     measurementGroupCollection::newMeasurementsOffset   = 0;
-    TEST_ASSERT_EQUAL_UINT32(nonVolatileStorage::measurementsSize, measurementGroupCollection::getFreeSpace());
+    TEST_ASSERT_EQUAL_UINT32(nonVolatileStorage::getMeasurementsAreaSize(), measurementGroupCollection::getFreeSpace());
 
-    // Simulate some measurements stored
-    measurementGroupCollection::newMeasurementsOffset = nonVolatileStorage::measurementsSize / 2;
-    TEST_ASSERT_EQUAL_UINT32(nonVolatileStorage::measurementsSize / 2, measurementGroupCollection::getFreeSpace());
+    // Simulate some measurements stored, at the first half of the memory
+    measurementGroupCollection::oldestMeasurementOffset = 0;
+    measurementGroupCollection::newMeasurementsOffset   = nonVolatileStorage::getMeasurementsAreaSize() / 2;
+    TEST_ASSERT_EQUAL_UINT32(nonVolatileStorage::getMeasurementsAreaSize() / 2, measurementGroupCollection::getFreeSpace());
 
-    // Now assume the free area is wrapping around the end of the memory
-    measurementGroupCollection::oldestMeasurementOffset = nonVolatileStorage::measurementsSize / 4;
-    measurementGroupCollection::newMeasurementsOffset   = (nonVolatileStorage::measurementsSize * 3) / 4;
-    TEST_ASSERT_EQUAL_UINT32(nonVolatileStorage::measurementsSize / 2, measurementGroupCollection::getFreeSpace());
+    // Now assume the free area is wrapping around the end of the memory, measurements stored at the last quarter and the first quarter of the memory
+    measurementGroupCollection::oldestMeasurementOffset = nonVolatileStorage::getMeasurementsAreaSize() * 3 / 4;
+    measurementGroupCollection::newMeasurementsOffset   = (nonVolatileStorage::getMeasurementsAreaSize()) / 4;
+    TEST_ASSERT_EQUAL_UINT32(nonVolatileStorage::getMeasurementsAreaSize() / 2, measurementGroupCollection::getFreeSpace());
 }
 
 void test_getAddressFromOffset() {
@@ -88,7 +92,7 @@ void test_add(void) {
 void test_add_wrap(void) {        // addresses in NVS need to wrap around end of measurements area, not overwriting settings in settings area.
     static constexpr uint32_t expectLengthInBytes{16};
     measurementGroupCollection::reset();
-    measurementGroupCollection::newMeasurementsOffset = nonVolatileStorage::measurementsSize - (expectLengthInBytes / 2);        // 8 from the end, writing 16 bytes, should wrap
+    measurementGroupCollection::newMeasurementsOffset = nonVolatileStorage::getMeasurementsAreaSize() - (expectLengthInBytes / 2);        // 8 from the end, writing 16 bytes, should wrap
 
     measurementGroup testMeasurementGroup;
     testMeasurementGroup.addMeasurement(0, 0, 0.0f);
@@ -104,7 +108,7 @@ void test_add_wrap(void) {        // addresses in NVS need to wrap around end of
     testMeasurementGroup.toBytes(expectedBytes, expectLengthInBytes);
 
     uint8_t actualBytes[expectLengthInBytes];
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, nonVolatileStorage::mockEepromMemory + nonVolatileStorage::measurementsStartAddress + nonVolatileStorage::measurementsSize - (expectLengthInBytes / 2), expectLengthInBytes / 2);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, nonVolatileStorage::mockEepromMemory + nonVolatileStorage::measurementsStartAddress + nonVolatileStorage::getMeasurementsAreaSize() - (expectLengthInBytes / 2), expectLengthInBytes / 2);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes + (expectLengthInBytes / 2), nonVolatileStorage::mockEepromMemory + nonVolatileStorage::measurementsStartAddress, expectLengthInBytes / 2);
 }
 

@@ -11,6 +11,7 @@ class nonVolatileStorage {
     nonVolatileStorage() = delete;
     static uint32_t detectNmbr64KBanks();
     static uint32_t totalSize() { return nmbr64KBanks * 64U * 1024U; };
+    static uint32_t getMeasurementsAreaSize();
 
     static constexpr uint32_t maxNmbr64KBanks{8};
     static constexpr uint32_t pageSize{128};
@@ -27,7 +28,6 @@ class nonVolatileStorage {
     static constexpr uint32_t settingStartAddress{0};
     static constexpr uint32_t settingsSize{4 * 1024};
     static constexpr uint32_t measurementsStartAddress{settingStartAddress + settingsSize};
-    static constexpr uint32_t measurementsSize{60 * 1024};
 
 #ifndef unitTesting
 

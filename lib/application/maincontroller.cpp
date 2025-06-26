@@ -601,7 +601,7 @@ void mainController::showHelp() {
     cli::sendResponse("er : enable radio\n");
     cli::sendResponse("dr : disable radio\n");
     cli::sendResponse("rml : reset mac layer\n");
-    cli::sendResponse("res : restart device - soft reset\n");
+    cli::sendResponse("swr : restart device - soft reset\n");
     cli::sendResponse("sda <address> : set device address\n");
     cli::sendResponse("snk <key> : set network key\n");
     cli::sendResponse("sak <key> : set application key\n");
@@ -779,7 +779,7 @@ void mainController::showMeasurementsStatus() {
     uint32_t startOffset = measurementGroupCollection::getOldestMeasurementOffset();
     uint32_t endOffset   = measurementGroupCollection::getNewMeasurementsOffset();
     if (endOffset < startOffset) {
-        endOffset += nonVolatileStorage::measurementsSize;
+        endOffset += nonVolatileStorage::getMeasurementsAreaSize();
     }
     uint32_t offset{startOffset};
     uint32_t nmbrOfGroups{0};
@@ -797,10 +797,10 @@ void mainController::showMeasurementsStatus() {
         newestMeasurementTime = tmpGroup.getTimeStamp();
         offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
     }
-    cli::sendResponse("%d measurements in %d groups\n", nmbrOfMeasurements, nmbrOfGroups);
-    cli::sendResponse("oldest : %s", ctime(&oldestMeasurementTime));
-    cli::sendResponse("newest : %s", ctime(&newestMeasurementTime));
-    cli::sendResponse("%d bytes available\n", measurementGroupCollection::getFreeSpace());
+    cli::sendResponse("%u measurements in %u groups\n", nmbrOfMeasurements, nmbrOfGroups);
+    cli::sendResponse("oldoffset %u %s", measurementGroupCollection::getOldestMeasurementOffset(), ctime(&oldestMeasurementTime));
+    cli::sendResponse("newoffset %u %s", measurementGroupCollection::getNewMeasurementsOffset(), ctime(&newestMeasurementTime));
+    cli::sendResponse("%u bytes available\n", measurementGroupCollection::getFreeSpace());
 }
 
 void mainController::showMeasurements() {
@@ -808,7 +808,7 @@ void mainController::showMeasurements() {
     uint32_t startOffset = measurementGroupCollection::getOldestMeasurementOffset();
     uint32_t endOffset   = measurementGroupCollection::getNewMeasurementsOffset();
     if (endOffset < startOffset) {
-        endOffset += nonVolatileStorage::measurementsSize;
+        endOffset += nonVolatileStorage::getMeasurementsAreaSize();
     }
     uint32_t offset{startOffset};
     uint32_t nmbrOfGroups{0};

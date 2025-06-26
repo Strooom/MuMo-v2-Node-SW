@@ -10,8 +10,8 @@
 #include <circularbuffer.hpp>
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-static constexpr uint32_t nmbrOfEepromChipsOnHw{4};
-static constexpr uint32_t nmbrOf64KBanksPerChip{2};
+static constexpr uint32_t nmbrOfEepromChipsOnHw{2};
+static constexpr uint32_t nmbrOf64KBanksPerChip{1};
 
 void setUp(void) {}
 void tearDown(void) {}

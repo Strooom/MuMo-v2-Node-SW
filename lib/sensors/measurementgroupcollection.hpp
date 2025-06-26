@@ -18,7 +18,7 @@ class measurementGroupCollection {
 
     static uint32_t getOldestMeasurementOffset() { return oldestMeasurementOffset; };
     static uint32_t getNewMeasurementsOffset() { return newMeasurementsOffset; };
-    static uint32_t getFreeSpace() { return nonVolatileStorage::measurementsSize + oldestMeasurementOffset - newMeasurementsOffset; };
+    static uint32_t getFreeSpace();
 
 #ifndef unitTesting
 
@@ -27,5 +27,5 @@ class measurementGroupCollection {
     static uint32_t oldestMeasurementOffset;
     static uint32_t newMeasurementsOffset;
     static bool isValid() { return ((oldestMeasurementOffset != 0xFFFFFFFF) && (newMeasurementsOffset != 0xFFFFFFFF)); };
-    static uint32_t getAddressFromOffset(uint32_t offset) { return nonVolatileStorage::measurementsStartAddress + (offset % nonVolatileStorage::measurementsSize); };
+    static uint32_t getAddressFromOffset(uint32_t offset) { return nonVolatileStorage::measurementsStartAddress + (offset % nonVolatileStorage::getMeasurementsAreaSize()); };
 };
