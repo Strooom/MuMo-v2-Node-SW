@@ -174,7 +174,7 @@ class LoRaWAN {
 
     static void setOffsetsAndLengthsTx(uint32_t framePayloadLength, uint32_t frameOptionsLength = 0);
     static void insertPayload(const uint8_t data[], const uint32_t length);
-    static void encryptDecryptPayload(const aesKey &theKey, linkDirection theDirection);
+    static void encryptDecryptPayload(aesKey &theKey, linkDirection theDirection);
     static void insertHeaders(const uint8_t *theFrameOptions, const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, uint8_t theFramePort);
     static void padForMicCalculation(const uint32_t messageLength);
     static void insertMic();
