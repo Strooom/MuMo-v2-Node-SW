@@ -137,7 +137,7 @@ jobs:
           echo "  Major         : ${{ steps.selectversion.outputs.nextmajordigit }}"
           echo "  Minor         : ${{ steps.selectversion.outputs.nextminordigit }}"
           echo "  Patch         : ${{ steps.selectversion.outputs.nextpatchdigit }}"
-          echo "Build Filename  : ${{ steps.selectversion.outputs.buildversionfilename }}.bin"
+          echo "Build Filename  : ${{ steps.selectversion.outputs.buildversionfilename }}.elf"
           echo "Build Timestamp : ${{ steps.versioninfo.outputs.buildtimestamp }}"
           echo "Build Epoch     : ${{ steps.versioninfo.outputs.buildEpoch }}"
 
@@ -240,8 +240,8 @@ jobs:
         id: attachbinarytoworkflowrun
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.selectversion.outputs.buildversionfilename }}.bin
-          path: .pio/build/production/firmware.bin
+          name: ${{ steps.selectversion.outputs.buildversionfilename }}.elf
+          path: .pio/build/production/firmware.elf
           if-no-files-found: error
 
       - name: Release when on main branch
@@ -264,6 +264,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.createrelease.outputs.upload_url }}
-          asset_path: .pio/build/production/firmware.bin
-          asset_name: ${{ steps.selectversion.outputs.buildversionfilename }}.bin
+          asset_path: .pio/build/production/firmware.elf
+          asset_name: ${{ steps.selectversion.outputs.buildversionfilename }}.elf
           asset_content_type: application/octet-stream
