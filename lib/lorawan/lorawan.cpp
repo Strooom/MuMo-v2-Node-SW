@@ -356,7 +356,7 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
     theBlock[15] = static_cast<uint8_t>(blockIndex);        // Blocks Ai are indexed from 1..k, where k is the number of blocks
 }
 
-void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirection) {
+void LoRaWAN::encryptDecryptPayload(const aesKey& theKey, linkDirection theLinkDirection) {
     uint32_t nmbrOfBlocks = aesBlock::nmbrOfBlocksFromBytes(framePayloadLength);
 #ifdef HARDWARE_AES
     stm32wle5_aes::initialize(aesMode::CTR);
@@ -1034,7 +1034,7 @@ uint32_t LoRaWAN::getMaxApplicationPayloadLength() {
     return (dataRates::theDataRates[currentDataRateIndex].maximumPayloadLength - macOut.getLevel());
 }
 
-void LoRaWAN::sendUplink(measurementGroup& aMeasurementGroup) {
+void LoRaWAN::sendUplink(const measurementGroup& aMeasurementGroup) {
     uint32_t lengthInBytes = measurementGroup::lengthInBytes(aMeasurementGroup.getNumberOfMeasurements());
     uint8_t buffer[lengthInBytes];
     aMeasurementGroup.toBytes(buffer, lengthInBytes);

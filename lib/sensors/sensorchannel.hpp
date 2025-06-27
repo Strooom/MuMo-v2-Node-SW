@@ -32,6 +32,9 @@ class sensorChannel {
         return prescaling;
     }
 
+    static uint32_t calculateOversampling(uint32_t numberOfSamplesToAverage);
+    static uint32_t calculatePrescaler(uint32_t minutesBetweenOutput, uint32_t numberOfSamplesToAverage);
+
 #ifndef unitTesting
 
   private:
