@@ -61,7 +61,7 @@ class LoRaWAN {
     static void handleEvents(applicationEvent theEvent);
     static uint32_t getMaxApplicationPayloadLength();
     static void sendUplink(uint8_t framePort, const uint8_t payload[], uint32_t payloadLength);
-    static void sendUplink(measurementGroup &aMeasurementGroup);
+    static void sendUplink(const measurementGroup &aMeasurementGroup);
 
     static void appendMacCommand(macCommand theMacCommand);
     static void getReceivedDownlinkMessage();
@@ -101,8 +101,6 @@ class LoRaWAN {
 
     static txRxCycleState state;
     static void goTo(txRxCycleState newState);
-
-    static dataRates theDataRates;        // TODO : get rid of the object, as class is static
     static constexpr uint32_t maxRandomDelayBeforeTx{4096U};
 
     // #################################################

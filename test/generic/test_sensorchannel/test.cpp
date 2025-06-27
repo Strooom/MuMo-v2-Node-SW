@@ -6,7 +6,7 @@ void setUp(void) {        // before each test
 void tearDown(void) {        // after each test
 }
 
-void test_initalize() {
+void test_initialize() {
     sensorChannel testChannel = {0, "", ""};
     TEST_ASSERT_EQUAL_UINT32(0, testChannel.oversampling);
     TEST_ASSERT_EQUAL_UINT32(0, testChannel.prescaling);
@@ -36,7 +36,6 @@ void test_setAndRestrict() {
     TEST_ASSERT_EQUAL_UINT32(0, testChannel.oversamplingCounter);
     TEST_ASSERT_EQUAL_UINT32(0, testChannel.prescaleCounter);
 }
-
 
 void test_getNextAction() {
     sensorChannel testChannel = {0, "", ""};
@@ -70,7 +69,6 @@ void test_getNextAction() {
 }
 
 void test_updateCounters() {
-
     sensorChannel testChannel = {0, "", ""};
     testChannel.set(1, 4);        // = oversampling = 1 -> average 2 samples into a measurement, prescaling = 4 -> take a sample every 4th RTC tick
 
@@ -156,17 +154,82 @@ void test_getOutput() {
     TEST_ASSERT_EQUAL_FLOAT(25.0F, testChannel.value());
 }
 
+void test_calculateOversampling() {
+    TEST_ASSERT_EQUAL_UINT32(0, sensorChannel::calculateOversampling(0));        // numberOfSamplesToAverage cannot be zero
 
+    TEST_ASSERT_EQUAL_UINT32(0, sensorChannel::calculateOversampling(1));
+    TEST_ASSERT_EQUAL_UINT32(1, sensorChannel::calculateOversampling(2));
+    TEST_ASSERT_EQUAL_UINT32(2, sensorChannel::calculateOversampling(3));
+    TEST_ASSERT_EQUAL_UINT32(3, sensorChannel::calculateOversampling(4));
+    TEST_ASSERT_EQUAL_UINT32(4, sensorChannel::calculateOversampling(5));
+    TEST_ASSERT_EQUAL_UINT32(5, sensorChannel::calculateOversampling(6));
+    TEST_ASSERT_EQUAL_UINT32(6, sensorChannel::calculateOversampling(7));
+    TEST_ASSERT_EQUAL_UINT32(7, sensorChannel::calculateOversampling(8));
 
+    TEST_ASSERT_EQUAL_UINT32(7, sensorChannel::calculateOversampling(9));        // numberOfSamplesToAverage cannot be larger than maxOversampling + 1
+}
+
+void test_calculatePrescaler() {
+    TEST_ASSERT_EQUAL_UINT32(2, sensorChannel::calculatePrescaler(1, 1));          // no oversampling, 1 output every 1 minute = 2 RTC ticks
+    TEST_ASSERT_EQUAL_UINT32(20, sensorChannel::calculatePrescaler(10, 1));        // no oversampling, 1 output every 10 minutes = 20 RTC ticks
+    TEST_ASSERT_EQUAL_UINT32(30, sensorChannel::calculatePrescaler(60, 4));        // 4 samples to average, 1 output every 60 minutes = 30 RTC ticks
+    TEST_ASSERT_EQUAL_UINT32(4, sensorChannel::calculatePrescaler(16, 8));         // correct usage for edge case further below
+
+    // edge cases / error cases
+    TEST_ASSERT_EQUAL_UINT32(2, sensorChannel::calculatePrescaler(0, 1));          // minutes between cannot be zero
+    TEST_ASSERT_EQUAL_UINT32(4, sensorChannel::calculatePrescaler(16, 16));        // numberOfSamplesToAverage cannot be larger than maxOversampling + 1, will be limited and then used for calculation
+}
+
+void test_isActive() {
+    sensorChannel testChannel = {0, "", ""};
+    testChannel.set(1, 1);
+    TEST_ASSERT_TRUE(testChannel.isActive());
+    testChannel.set(0, 0);
+    TEST_ASSERT_FALSE(testChannel.isActive());
+}
+
+void test_getNumberOfSamplesToAverage() {
+    sensorChannel testChannel                 = {0, "", ""};
+    uint32_t expectedNumberOfSamplesToAverage = 1;
+    testChannel.set(sensorChannel::calculateOversampling(expectedNumberOfSamplesToAverage), sensorChannel::calculatePrescaler(10, expectedNumberOfSamplesToAverage));
+    TEST_ASSERT_EQUAL_UINT32(expectedNumberOfSamplesToAverage, testChannel.getNumberOfSamplesToAverage());
+    expectedNumberOfSamplesToAverage = 4;
+    testChannel.set(sensorChannel::calculateOversampling(expectedNumberOfSamplesToAverage), sensorChannel::calculatePrescaler(10, expectedNumberOfSamplesToAverage));
+    TEST_ASSERT_EQUAL_UINT32(expectedNumberOfSamplesToAverage, testChannel.getNumberOfSamplesToAverage());
+}
+
+void test_getMinutesBetweenOutput() {
+    sensorChannel testChannel             = {0, "", ""};
+    uint32_t expectedMinutesBetweenOutput = 1;
+    testChannel.set(sensorChannel::calculateOversampling(1), sensorChannel::calculatePrescaler(expectedMinutesBetweenOutput, 1));
+    TEST_ASSERT_EQUAL_UINT32(expectedMinutesBetweenOutput, testChannel.getMinutesBetweenOutput());
+
+    expectedMinutesBetweenOutput = 4;
+    testChannel.set(sensorChannel::calculateOversampling(1), sensorChannel::calculatePrescaler(expectedMinutesBetweenOutput, 1));
+    TEST_ASSERT_EQUAL_UINT32(expectedMinutesBetweenOutput, testChannel.getMinutesBetweenOutput());
+
+    expectedMinutesBetweenOutput = 2;
+    testChannel.set(sensorChannel::calculateOversampling(2), sensorChannel::calculatePrescaler(expectedMinutesBetweenOutput, 2));
+    TEST_ASSERT_EQUAL_UINT32(expectedMinutesBetweenOutput, testChannel.getMinutesBetweenOutput());
+
+    expectedMinutesBetweenOutput = 60;
+    testChannel.set(sensorChannel::calculateOversampling(8), sensorChannel::calculatePrescaler(expectedMinutesBetweenOutput, 8));
+    TEST_ASSERT_EQUAL_UINT32(expectedMinutesBetweenOutput, testChannel.getMinutesBetweenOutput());
+}
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
-    RUN_TEST(test_initalize);
+    RUN_TEST(test_initialize);
     RUN_TEST(test_set);
     RUN_TEST(test_setAndRestrict);
     RUN_TEST(test_getNextAction);
     RUN_TEST(test_updateCounters);
     RUN_TEST(test_addSample);
     RUN_TEST(test_getOutput);
+    RUN_TEST(test_isActive);
+    RUN_TEST(test_calculateOversampling);
+    RUN_TEST(test_calculatePrescaler);
+    RUN_TEST(test_getNumberOfSamplesToAverage);
+    RUN_TEST(test_getMinutesBetweenOutput);
     UNITY_END();
 }

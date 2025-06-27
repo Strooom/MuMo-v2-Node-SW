@@ -1,4 +1,5 @@
 #include <sensirion.hpp>
+#include <cstring>
 
 const uint8_t sensirion::substitute[256] = {
     0x00, 0x31, 0x62, 0x53, 0xc4, 0xf5, 0xa6, 0x97, 0xb9, 0x88, 0xdb, 0xea, 0x7d,
@@ -64,16 +65,16 @@ void sensirion::insertCrc(uint8_t* data, uint32_t count) {
 }
 
 float sensirion::asFloat(const uint8_t* bytes) {
-    union {
-        uint8_t asBytes[4];
-        float asFloat;
-    } tmp;
-    tmp.asBytes[0] = bytes[4];
-    tmp.asBytes[1] = bytes[3];
+    uint8_t asBytes[4];
+    float asFloat;
+
+    asBytes[0] = bytes[4];
+    asBytes[1] = bytes[3];
     // skip 1 byte for a CRC byte
-    tmp.asBytes[2] = bytes[1];
-    tmp.asBytes[3] = bytes[0];
-    return tmp.asFloat;
+    asBytes[2] = bytes[1];
+    asBytes[3] = bytes[0];
+    memcpy(&asFloat, asBytes, 4);
+    return asFloat;
 }
 
 uint32_t sensirion::asUint32(const uint8_t* bytes) {

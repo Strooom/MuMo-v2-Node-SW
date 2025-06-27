@@ -85,6 +85,30 @@ float sensorChannel::value() const {
     return (sum / static_cast<float>(nmbrOfSamples));
 }
 
-bool sensorChannel::isActive() const {
-    return (prescaling > 0);
+
+uint32_t sensorChannel::calculateOversampling(uint32_t numberOfSamplesToAverage) {
+    if (numberOfSamplesToAverage <= 1) {
+        return 0;
+    }
+    if (numberOfSamplesToAverage >= (maxOversampling + 1)) {
+        return maxOversampling;
+    }
+    return (numberOfSamplesToAverage - 1);
+}
+
+uint32_t sensorChannel::calculatePrescaler(uint32_t minutesBetweenOutput, uint32_t numberOfSamplesToAverage) {
+    if (minutesBetweenOutput <= 1) {
+        minutesBetweenOutput = 1;
+    }
+    if (numberOfSamplesToAverage == 0) {
+        numberOfSamplesToAverage = 1;
+    }
+    if (numberOfSamplesToAverage >= (maxOversampling + 1)) {
+        numberOfSamplesToAverage = maxOversampling + 1;
+    }
+    uint32_t ticksPerOutput = (minutesBetweenOutput * 2);
+    if (ticksPerOutput <= numberOfSamplesToAverage) {
+        return 1;
+    }
+    return (ticksPerOutput / numberOfSamplesToAverage);
 }

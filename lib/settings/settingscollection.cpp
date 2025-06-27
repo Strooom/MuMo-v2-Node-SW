@@ -34,6 +34,8 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     {384, 16 * 6},        // 16 Tx channels : 6 bytes / channel [frequency, minDR, maxDR]
     {480, 6},             // Rx channel : [frequency, rx1DataRateOffset, rx2DataRateIndex]
     {486, 26},            // unusedLoRaWAN : extra settings can be inserted hereafter
+
+    {512, 256 * 2},        // sensorSettings : 256 combinations of sensorDeviceIndex and sensorChannelIndex, 2 byte per channel : 13 bits for prescaling, 3 bits for oversampling
 };
 
 bool settingsCollection::isValid() {

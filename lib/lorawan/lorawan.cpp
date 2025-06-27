@@ -1034,7 +1034,7 @@ uint32_t LoRaWAN::getMaxApplicationPayloadLength() {
     return (dataRates::theDataRates[currentDataRateIndex].maximumPayloadLength - macOut.getLevel());
 }
 
-void LoRaWAN::sendUplink(measurementGroup& aMeasurementGroup) {
+void LoRaWAN::sendUplink(const measurementGroup& aMeasurementGroup) {
     uint32_t lengthInBytes = measurementGroup::lengthInBytes(aMeasurementGroup.getNumberOfMeasurements());
     uint8_t buffer[lengthInBytes];
     aMeasurementGroup.toBytes(buffer, lengthInBytes);

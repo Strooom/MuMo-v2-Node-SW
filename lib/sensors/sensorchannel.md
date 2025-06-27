@@ -10,6 +10,10 @@ The oversampling can be set from 0..15, resulting in averaging 1..16 samples to 
 The oversamplingCounter runs from (oversampling) to 0
 
 
+Note : (minutesBetweenOutput * 2) must be a multiple of numberOfSamplesToAverage
+Note : ((minutesBetweenOutput * 2) % numberOfSamplesToAverage) == 0
+
+
 # TODO
 
 * calibratie coefficienten in array steken
