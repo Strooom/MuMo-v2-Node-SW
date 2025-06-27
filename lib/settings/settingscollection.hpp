@@ -37,6 +37,8 @@ class settingsCollection {
         rxChannel,
         unusedLoRaWAN2,
 
+        sensorSettings,
+
         numberOfSettings
     };
     static bool isValid();
