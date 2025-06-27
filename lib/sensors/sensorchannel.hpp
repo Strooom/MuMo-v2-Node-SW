@@ -8,7 +8,7 @@
 
 class sensorChannel {
   public:
-    sensorChannel(uint32_t decimals, const char *name, const char *unit);
+    sensorChannel(uint32_t decimals, const char* name, const char* unit);
     void set(uint32_t oversampling, uint32_t prescaler);
     enum class action : uint32_t {
         none,
@@ -31,6 +31,17 @@ class sensorChannel {
     uint32_t getPrescaler() const {
         return prescaling;
     }
+    uint32_t getNumberOfSamplesToAverage() const {
+        return oversampling + 1;
+    }
+    uint32_t getMinutesBetweenOutput() const {
+        if (prescaling == 0) {
+            return 0;
+        }
+        return ((oversampling + 1) * (prescaling)) / 2;
+    }
+
+    bool isActive() const { return (prescaling > 0); };
 
     static uint32_t calculateOversampling(uint32_t numberOfSamplesToAverage);
     static uint32_t calculatePrescaler(uint32_t minutesBetweenOutput, uint32_t numberOfSamplesToAverage);
@@ -46,17 +57,15 @@ class sensorChannel {
     uint32_t oversamplingCounter{0};
     uint32_t prescaleCounter{0};
 
-    static constexpr uint32_t maxPrescaler{4095};         // take a sample every x times of the 30 second RTC tick. 0 means : don't sample this sensor
-    static constexpr uint32_t maxOversampling{7};         // average x+1 samples before storing it in the sample collection
+    static constexpr uint32_t maxPrescaler{4095};        // take a sample every x times of the 30 second RTC tick. 0 means : don't sample this sensor
+    static constexpr uint32_t maxOversampling{7};        // average x+1 samples before storing it in the sample collection
     float samples[maxOversampling + 1]{};
 
     void limitOversamplingAndPrescaler();
-    bool isActive() const;
 
     const uint32_t decimals;
     const char* name;
     const char* unit;
-
 
     friend class battery;
     friend class bme680;

@@ -180,6 +180,43 @@ void test_calculatePrescaler() {
     TEST_ASSERT_EQUAL_UINT32(4, sensorChannel::calculatePrescaler(16, 16));        // numberOfSamplesToAverage cannot be larger than maxOversampling + 1, will be limited and then used for calculation
 }
 
+void test_isActive() {
+    sensorChannel testChannel = {0, "", ""};
+    testChannel.set(1, 1);
+    TEST_ASSERT_TRUE(testChannel.isActive());
+    testChannel.set(0, 0);
+    TEST_ASSERT_FALSE(testChannel.isActive());
+}
+
+void test_getNumberOfSamplesToAverage() {
+    sensorChannel testChannel                 = {0, "", ""};
+    uint32_t expectedNumberOfSamplesToAverage = 1;
+    testChannel.set(sensorChannel::calculateOversampling(expectedNumberOfSamplesToAverage), sensorChannel::calculatePrescaler(10, expectedNumberOfSamplesToAverage));
+    TEST_ASSERT_EQUAL_UINT32(expectedNumberOfSamplesToAverage, testChannel.getNumberOfSamplesToAverage());
+    expectedNumberOfSamplesToAverage = 4;
+    testChannel.set(sensorChannel::calculateOversampling(expectedNumberOfSamplesToAverage), sensorChannel::calculatePrescaler(10, expectedNumberOfSamplesToAverage));
+    TEST_ASSERT_EQUAL_UINT32(expectedNumberOfSamplesToAverage, testChannel.getNumberOfSamplesToAverage());
+}
+
+void test_getMinutesBetweenOutput() {
+    sensorChannel testChannel             = {0, "", ""};
+    uint32_t expectedMinutesBetweenOutput = 1;
+    testChannel.set(sensorChannel::calculateOversampling(1), sensorChannel::calculatePrescaler(expectedMinutesBetweenOutput, 1));
+    TEST_ASSERT_EQUAL_UINT32(expectedMinutesBetweenOutput, testChannel.getMinutesBetweenOutput());
+
+    expectedMinutesBetweenOutput = 4;
+    testChannel.set(sensorChannel::calculateOversampling(1), sensorChannel::calculatePrescaler(expectedMinutesBetweenOutput, 1));
+    TEST_ASSERT_EQUAL_UINT32(expectedMinutesBetweenOutput, testChannel.getMinutesBetweenOutput());
+
+    expectedMinutesBetweenOutput = 2;
+    testChannel.set(sensorChannel::calculateOversampling(2), sensorChannel::calculatePrescaler(expectedMinutesBetweenOutput, 2));
+    TEST_ASSERT_EQUAL_UINT32(expectedMinutesBetweenOutput, testChannel.getMinutesBetweenOutput());
+
+    expectedMinutesBetweenOutput = 60;
+    testChannel.set(sensorChannel::calculateOversampling(8), sensorChannel::calculatePrescaler(expectedMinutesBetweenOutput, 8));
+    TEST_ASSERT_EQUAL_UINT32(expectedMinutesBetweenOutput, testChannel.getMinutesBetweenOutput());
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
@@ -189,7 +226,10 @@ int main(int argc, char **argv) {
     RUN_TEST(test_updateCounters);
     RUN_TEST(test_addSample);
     RUN_TEST(test_getOutput);
+    RUN_TEST(test_isActive);
     RUN_TEST(test_calculateOversampling);
     RUN_TEST(test_calculatePrescaler);
+    RUN_TEST(test_getNumberOfSamplesToAverage);
+    RUN_TEST(test_getMinutesBetweenOutput);
     UNITY_END();
 }

@@ -85,9 +85,6 @@ float sensorChannel::value() const {
     return (sum / static_cast<float>(nmbrOfSamples));
 }
 
-bool sensorChannel::isActive() const {
-    return (prescaling > 0);
-}
 
 uint32_t sensorChannel::calculateOversampling(uint32_t numberOfSamplesToAverage) {
     if (numberOfSamplesToAverage <= 1) {
