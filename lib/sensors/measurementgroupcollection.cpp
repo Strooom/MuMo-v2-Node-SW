@@ -27,7 +27,7 @@ void measurementGroupCollection::reset() {
     settingsCollection::save(newMeasurementsOffset, settingsCollection::settingIndex::newMeasurementsOffset);
 }
 
-void measurementGroupCollection::addNew(measurementGroup& aMeasurementGroup) {
+void measurementGroupCollection::addNew(const measurementGroup& aMeasurementGroup) {
     uint32_t lengthInBytes   = measurementGroup::lengthInBytes(aMeasurementGroup.getNumberOfMeasurements());
     uint32_t nmbrOfFreeBytes = getFreeSpace();
     while (nmbrOfFreeBytes < lengthInBytes) {

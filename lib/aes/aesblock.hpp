@@ -36,7 +36,7 @@ class aesBlock {
     static void bytesToWords(uint32_t wordsOut[4], const uint8_t bytesIn[16]);
     static void wordsToBytes(uint8_t bytesOut[16], const uint32_t wordsIn[4]);
 
-    static uint32_t swapLittleBigEndian(uint32_t wordIn);
+    static uint32_t swapLittleBigEndian(const uint32_t wordIn);
     void XOR(const uint8_t *withData);
     void shiftLeft();
 

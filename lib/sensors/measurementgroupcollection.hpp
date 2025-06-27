@@ -13,7 +13,7 @@ class measurementGroupCollection {
     static void initialize();
     static void reset();
     static void eraseOldest();
-    static void addNew(measurementGroup &aMeasurementGroup);
+    static void addNew(const measurementGroup &aMeasurementGroup);
     static void get(measurementGroup &aMeasurementGroup, uint32_t offset);
 
     static uint32_t getOldestMeasurementOffset() { return oldestMeasurementOffset; };

@@ -68,7 +68,7 @@ uint32_t aesBlock::calculateNmbrOfBytesToPad(uint32_t messageLength) {
     return 0;
 }
 
-uint32_t aesBlock::swapLittleBigEndian(uint32_t wordIn) {
+uint32_t aesBlock::swapLittleBigEndian(const uint32_t wordIn) {
     // ARM Cortex-M4 stores uin32_t in little endian format, but STM32WLE5 AES peripheral expects big endian format. This function swaps the bytes in a word.
     uint32_t wordOut;
     wordOut = (wordIn & 0xFF000000) >> 24 | (wordIn & 0x00FF0000) >> 8 | (wordIn & 0x0000FF00) << 8 | (wordIn & 0x000000FF) << 24;

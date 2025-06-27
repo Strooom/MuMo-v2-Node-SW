@@ -288,7 +288,7 @@ void LoRaWAN::insertHeaders(const uint8_t* theFrameOptions, const uint32_t theFr
     }
 }
 
-void LoRaWAN::insertBlockB0(linkDirection theDirection, frameCount& aFrameCount) {
+void LoRaWAN::insertBlockB0(linkDirection theDirection, const frameCount& aFrameCount) {
     rawMessage[0]  = 0x49;        // see LoRaWAN® L2 1.0.4 Specification - line 808
     rawMessage[1]  = 0;
     rawMessage[2]  = 0;
