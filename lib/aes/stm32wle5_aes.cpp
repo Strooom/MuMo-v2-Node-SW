@@ -29,7 +29,7 @@ void stm32wle5_aes::disable() {
 #endif
 }
 
-void stm32wle5_aes::setKey(aesKey& theKey) {
+void stm32wle5_aes::setKey(const aesKey& theKey) {
 #ifndef generic
     AES->KEYR0 = aesKey::swapLittleBigEndian(theKey.getAsWord(3));
     AES->KEYR1 = aesKey::swapLittleBigEndian(theKey.getAsWord(2));
@@ -38,7 +38,7 @@ void stm32wle5_aes::setKey(aesKey& theKey) {
 #endif
 }
 
-void stm32wle5_aes::setInitializationVector( aesBlock& theBlock) {
+void stm32wle5_aes::setInitializationVector(aesBlock& theBlock) { // TODO after refactoring aesBlock, this argument should be const
 #ifndef generic
     AES->IVR0 = aesBlock::swapLittleBigEndian(theBlock.asWords()[3]);
     AES->IVR1 = aesBlock::swapLittleBigEndian(theBlock.asWords()[2]);
@@ -47,7 +47,7 @@ void stm32wle5_aes::setInitializationVector( aesBlock& theBlock) {
 #endif
 }
 
-void stm32wle5_aes::write(aesBlock& theBlock) {
+void stm32wle5_aes::write(aesBlock& theBlock) { // TODO after refactoring aesBlock, this argument should be const
 #ifndef generic
     AES->DINR = theBlock.asWords()[0];
     AES->DINR = theBlock.asWords()[1];

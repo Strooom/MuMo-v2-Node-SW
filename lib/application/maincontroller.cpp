@@ -58,8 +58,8 @@ void MX_USART2_UART_Init(void);
 mainState mainController::state{mainState::boot};
 uint32_t mainController::requestCounter{0};
 uint32_t mainController::answerCounter{0};
-const uint32_t mainController::deviceIndex[screen::nmbrOfMeasurementTextLines]{2, 2, 3};
-const uint32_t mainController::channelIndex[screen::nmbrOfMeasurementTextLines]{0, 1, 0};
+const uint32_t mainController::displayDeviceIndex[screen::nmbrOfMeasurementTextLines]{2, 2, 3};
+const uint32_t mainController::displayChannelIndex[screen::nmbrOfMeasurementTextLines]{0, 1, 0};
 char mainController::name[maxNameLength + 1]{};
 
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
@@ -412,15 +412,15 @@ void mainController::showLoRaWanStatus() {
 
 void mainController::showMain() {
     for (uint32_t lineIndex = 0; lineIndex < screen::nmbrOfMeasurementTextLines; lineIndex++) {
-        float value       = sensorDeviceCollection::value(deviceIndex[lineIndex], channelIndex[lineIndex]);
-        uint32_t decimals = sensorDeviceCollection::decimals(deviceIndex[lineIndex], channelIndex[lineIndex]);
+        float value       = sensorDeviceCollection::value(displayDeviceIndex[lineIndex], displayChannelIndex[lineIndex]);
+        uint32_t decimals = sensorDeviceCollection::decimals(displayDeviceIndex[lineIndex], displayChannelIndex[lineIndex]);
         char textBig[8];
         char textSmall[8];
         snprintf(textBig, 8, "%d", static_cast<int>(integerPart(value, decimals)));
         if (decimals > 0) {
-            snprintf(textSmall, 8, "%0*d  %s", static_cast<int>(decimals), static_cast<int>(fractionalPart(value, decimals)), sensorDeviceCollection::units(deviceIndex[lineIndex], channelIndex[lineIndex]));
+            snprintf(textSmall, 8, "%0*d  %s", static_cast<int>(decimals), static_cast<int>(fractionalPart(value, decimals)), sensorDeviceCollection::units(displayDeviceIndex[lineIndex], displayChannelIndex[lineIndex]));
         } else {
-            snprintf(textSmall, 8, "%s", sensorDeviceCollection::units(deviceIndex[lineIndex], channelIndex[lineIndex]));
+            snprintf(textSmall, 8, "%s", sensorDeviceCollection::units(displayDeviceIndex[lineIndex], displayChannelIndex[lineIndex]));
         }
         screen::setText(lineIndex, textBig, textSmall);
     }
@@ -640,19 +640,15 @@ void mainController::showDeviceStatus() {
 void mainController::showNetworkStatus() {
     cli::sendResponse("radio %s\n", LoRaWAN::isRadioEnabled() ? "enabled" : "disabled");
     cli::sendResponse("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
-    static constexpr uint32_t nmbrOfCharsToMask{2};
     char tmpKey[aesKey::lengthAsHexAscii + 1];
-    strncpy(tmpKey, LoRaWAN::networkKey.getAsHexString(), aesKey::lengthAsHexAscii + 1);
-    for (uint32_t index = nmbrOfCharsToMask; index < aesKey::lengthAsHexAscii - nmbrOfCharsToMask; index++) {
-        tmpKey[index] = '*';        // mask the key, except first and last two characters
-    }
+    memcpy(tmpKey, LoRaWAN::networkKey.getAsHexString(), aesKey::lengthAsHexAscii);
+    memset(tmpKey + 2, '*', (aesKey::lengthAsHexAscii - 4));
+    tmpKey[aesKey::lengthAsHexAscii] = 0;
     cli::sendResponse("NetSKey  : %s\n", tmpKey);
-    strncpy(tmpKey, LoRaWAN::applicationKey.getAsHexString(), aesKey::lengthAsHexAscii + 1);
-    for (uint32_t index = nmbrOfCharsToMask; index < aesKey::lengthAsHexAscii - nmbrOfCharsToMask; index++) {
-        tmpKey[index] = '*';
-    }
+    memcpy(tmpKey, LoRaWAN::applicationKey.getAsHexString(), aesKey::lengthAsHexAscii);
+    memset(tmpKey + 2, '*', (aesKey::lengthAsHexAscii - 4));
+    tmpKey[aesKey::lengthAsHexAscii] = 0;
     cli::sendResponse("AppSKey  : %s\n", tmpKey);
-
     cli::sendResponse("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.getAsWord());
     cli::sendResponse("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.getAsWord());
     cli::sendResponse("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
@@ -682,13 +678,10 @@ void mainController::setDeviceAddress(const cliCommand& theCommand) {
     }
 }
 void mainController::setNetworkKey(const cliCommand& theCommand) {
-    if (theCommand.nmbrOfArguments == 1) {
+    if ((theCommand.nmbrOfArguments == 1) && (strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii) == aesKey::lengthAsHexAscii)) {
         char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
-        size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
-        if (copyLen > aesKey::lengthAsHexAscii) {
-            copyLen = aesKey::lengthAsHexAscii;
-        }
-        memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);
+        memcpy(newKeyAsHex, theCommand.arguments[0], aesKey::lengthAsHexAscii);
+        newKeyAsHex[aesKey::lengthAsHexAscii] = 0;
         LoRaWAN::networkKey.setFromHexString(newKeyAsHex);
         LoRaWAN::saveConfig();
         cli::sendResponse("network key set : %s\n", LoRaWAN::networkKey.getAsHexString());
@@ -697,13 +690,10 @@ void mainController::setNetworkKey(const cliCommand& theCommand) {
     }
 }
 void mainController::setApplicationKey(const cliCommand& theCommand) {
-    if (theCommand.nmbrOfArguments == 1) {
+    if ((theCommand.nmbrOfArguments == 1) && (strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii) == aesKey::lengthAsHexAscii)) {
         char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
-        size_t copyLen = strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii);
-        if (copyLen > aesKey::lengthAsHexAscii) {
-            copyLen = aesKey::lengthAsHexAscii;
-        }
-        memcpy(newKeyAsHex, theCommand.arguments[0], copyLen);        // TODO should use strlcpy which ensures terminating zero
+        memcpy(newKeyAsHex, theCommand.arguments[0], aesKey::lengthAsHexAscii);
+        newKeyAsHex[aesKey::lengthAsHexAscii] = 0;
         LoRaWAN::applicationKey.setFromHexString(newKeyAsHex);
         LoRaWAN::saveConfig();
         cli::sendResponse("application key set : %s\n", LoRaWAN::applicationKey.getAsHexString());
@@ -725,7 +715,7 @@ void mainController::setName(const cliCommand& theCommand) {
         for (uint32_t index = 0; index < maxNameLength; ++index) {
             name[index] = newName[index];
         }
-        name[maxNameLength] = '\0';        // ensure null termination
+        name[maxNameLength] = '\0';
         screen::setName(name);
         cli::sendResponse("name set : %s\n", name);
     } else {

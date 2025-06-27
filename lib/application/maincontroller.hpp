@@ -33,8 +33,8 @@ class mainController {
 
     static constexpr uint32_t minNmbrAnswers{2};
     static constexpr uint32_t maxNmbrRequests{12};
-    static const uint32_t deviceIndex[screen::nmbrOfMeasurementTextLines];
-    static const uint32_t channelIndex[screen::nmbrOfMeasurementTextLines];
+    static const uint32_t displayDeviceIndex[screen::nmbrOfMeasurementTextLines];
+    static const uint32_t displayChannelIndex[screen::nmbrOfMeasurementTextLines];
 
 #ifndef unitTesting
 

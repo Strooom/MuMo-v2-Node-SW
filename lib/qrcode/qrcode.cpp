@@ -683,7 +683,7 @@ void qrCode::drawVersionInfo(uint32_t someVersion) {
 
     for (uint8_t i = 0; i < 18; i++) {
         bool bit  = ((data >> i) & 1) != 0;
-        uint8_t a = size(someVersion) - 11 + i % 3;
+        uint8_t a = static_cast<uint8_t>(size(someVersion) - 11 + i % 3);
         uint8_t b = i / 3;
         modules.setOrClearBit(a, b, bit);
         modules.setOrClearBit(b, a, bit);
