@@ -11,40 +11,40 @@
 #endif
 
 void aesBlock::setFromByteArray(const uint8_t bytesIn[lengthInBytes]) {
-    (void)memcpy(state.asByte, bytesIn, lengthInBytes);
+    (void)memcpy(state.blockAsByteArray, bytesIn, lengthInBytes);
 }
 
 void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
     for (uint32_t wordIndex = 0; wordIndex < 4; wordIndex++) {
-        state.asUint32[wordIndex] = wordsIn[wordIndex];
+        state.blockAsWordArray[wordIndex] = wordsIn[wordIndex];
     }
 }
 
 void aesBlock::setFromHexString(const char *string) {
     uint8_t tmpBytes[lengthInBytes];
     hexAscii::hexStringToByteArray(tmpBytes, string, 32U);
-    (void)memcpy(state.asByte, tmpBytes, lengthInBytes);
+    (void)memcpy(state.blockAsByteArray, tmpBytes, lengthInBytes);
 }
 
 uint8_t &aesBlock::operator[](std::size_t index) {
-    return state.asByte[index];
+    return state.blockAsByteArray[index];
 }
 
 bool aesBlock::operator==(const aesBlock &block) const {
-    return (memcmp(state.asByte, block.state.asByte, lengthInBytes) == 0);
+    return (memcmp(state.blockAsByteArray, block.state.blockAsByteArray, lengthInBytes) == 0);
 }
 
 aesBlock &aesBlock::operator=(const aesBlock &block) {
-    (void)memcpy(state.asByte, block.state.asByte, lengthInBytes);
+    (void)memcpy(state.blockAsByteArray, block.state.blockAsByteArray, lengthInBytes);
     return *this;
 }
 
 uint8_t *aesBlock::asBytes() {
-    return state.asByte;
+    return state.blockAsByteArray;
 }
 
 uint32_t *aesBlock::asWords() {
-    return state.asUint32;
+    return state.blockAsWordArray;
 }
 
 uint32_t aesBlock::nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes) {
@@ -135,43 +135,43 @@ void aesBlock::encrypt(aesKey &key) {
 
 void aesBlock::substituteBytes() {
     for (uint32_t index = 0; index < lengthInBytes; index++) {
-        state.asByte[index] = sbox::data[state.asByte[index]];
+        state.blockAsByteArray[index] = sbox::data[state.blockAsByteArray[index]];
     }
 }
 
 void aesBlock::XOR(const uint8_t *data) {
     for (uint32_t index = 0; index < lengthInBytes; index++) {
-        state.asByte[index] ^= data[index];
+        state.blockAsByteArray[index] ^= data[index];
     }
 }
 
 void aesBlock::shiftRows() {
     uint8_t temp;
 
-    temp             = state.asByte[1];
-    state.asByte[1]  = state.asByte[5];
-    state.asByte[5]  = state.asByte[9];
-    state.asByte[9]  = state.asByte[13];
-    state.asByte[13] = temp;
+    temp             = state.blockAsByteArray[1];
+    state.blockAsByteArray[1]  = state.blockAsByteArray[5];
+    state.blockAsByteArray[5]  = state.blockAsByteArray[9];
+    state.blockAsByteArray[9]  = state.blockAsByteArray[13];
+    state.blockAsByteArray[13] = temp;
 
-    temp             = state.asByte[2];
-    state.asByte[2]  = state.asByte[10];
-    state.asByte[10] = temp;
+    temp             = state.blockAsByteArray[2];
+    state.blockAsByteArray[2]  = state.blockAsByteArray[10];
+    state.blockAsByteArray[10] = temp;
 
-    temp             = state.asByte[6];
-    state.asByte[6]  = state.asByte[14];
-    state.asByte[14] = temp;
+    temp             = state.blockAsByteArray[6];
+    state.blockAsByteArray[6]  = state.blockAsByteArray[14];
+    state.blockAsByteArray[14] = temp;
 
-    temp             = state.asByte[15];
-    state.asByte[15] = state.asByte[11];
-    state.asByte[11] = state.asByte[7];
-    state.asByte[7]  = state.asByte[3];
-    state.asByte[3]  = temp;
+    temp             = state.blockAsByteArray[15];
+    state.blockAsByteArray[15] = state.blockAsByteArray[11];
+    state.blockAsByteArray[11] = state.blockAsByteArray[7];
+    state.blockAsByteArray[7]  = state.blockAsByteArray[3];
+    state.blockAsByteArray[3]  = temp;
 }
 
 void aesBlock::mixColumns() {
     uint8_t tempState[4][4];
-    vectorToMatrix(tempState, state.asByte);
+    vectorToMatrix(tempState, state.blockAsByteArray);
     uint8_t a[4];
     uint8_t b[4];
     for (uint8_t column = 0; column < 4; column++) {
@@ -188,20 +188,28 @@ void aesBlock::mixColumns() {
         tempState[2][column] = a[0] ^ a[1] ^ b[2] ^ a[3] ^ b[3];
         tempState[3][column] = a[0] ^ b[0] ^ a[1] ^ a[2] ^ b[3];
     }
-    matrixToVector(state.asByte, tempState);
+    matrixToVector(state.blockAsByteArray, tempState);
 }
 
 void aesBlock::shiftLeft() {
     for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
         if (byteIndex < 15) {
-            if ((state.asByte[byteIndex + 1] & 0x80) == 0x80) {
-                state.asByte[byteIndex] = static_cast<uint8_t>((state.asByte[byteIndex] << 1U) + 1U);
+            if ((state.blockAsByteArray[byteIndex + 1] & 0x80) == 0x80) {
+                state.blockAsByteArray[byteIndex] = static_cast<uint8_t>((state.blockAsByteArray[byteIndex] << 1U) + 1U);
 
             } else {
-                state.asByte[byteIndex] = static_cast<uint8_t>(state.asByte[byteIndex] << 1U);
+                state.blockAsByteArray[byteIndex] = static_cast<uint8_t>(state.blockAsByteArray[byteIndex] << 1U);
             }
         } else {
-            state.asByte[byteIndex] = static_cast<uint8_t>(state.asByte[byteIndex] << 1U);
+            state.blockAsByteArray[byteIndex] = static_cast<uint8_t>(state.blockAsByteArray[byteIndex] << 1U);
         }
     }
+}
+
+
+void aesBlock::syncWordsFromBytes() {
+    (void)memcpy(state.blockAsWordArray, state.blockAsByteArray, lengthInBytes);
+}
+void aesBlock::syncBytesFromWords() {
+    (void)memcpy(state.blockAsByteArray, state.blockAsWordArray, lengthInBytes);
 }

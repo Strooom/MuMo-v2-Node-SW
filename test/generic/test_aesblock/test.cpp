@@ -7,60 +7,84 @@ void tearDown(void) {        // after each test
 }
 
 void test_initialize() {
-    aesBlock aBlock;
+    aesBlock testBlock;
     uint8_t expectedBytes[aesKey::lengthInBytes]{};
     uint32_t expectedWords[aesKey::lengthInWords]{};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), aesBlock::lengthInBytes);
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aBlock.asWords(), aesBlock::lengthInWords);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, testBlock.asBytes(), aesBlock::lengthInBytes);
+    for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
+        TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
+    }
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, testBlock.asWords(), aesBlock::lengthInWords);
+    for (uint32_t index = 0; index < aesBlock::lengthInWords; ++index) {
+        TEST_ASSERT_EQUAL_UINT32(expectedWords[index], testBlock.getAsWord(index));
+    }
 }
 
 void test_setFromByteArray() {
-    aesBlock aBlock;
+    aesBlock testBlock;
     uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     uint32_t expectedWords[aesKey::lengthInWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
-    aBlock.setFromByteArray(expectedBytes);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), aesBlock::lengthInBytes);
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aBlock.asWords(), aesBlock::lengthInWords);
+    testBlock.setFromByteArray(expectedBytes);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, testBlock.asBytes(), aesBlock::lengthInBytes);
+    for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
+        TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
+    }
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, testBlock.asWords(), aesBlock::lengthInWords);
+    for (uint32_t index = 0; index < aesBlock::lengthInWords; ++index) {
+        TEST_ASSERT_EQUAL_UINT32(expectedWords[index], testBlock.getAsWord(index));
+    }
 }
 
 void test_setFromWordArray() {
-    aesBlock aBlock;
+    aesBlock testBlock;
     uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     uint32_t expectedWords[aesKey::lengthInWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
-    aBlock.setFromWordArray(expectedWords);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), aesBlock::lengthInBytes);
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aBlock.asWords(), aesBlock::lengthInWords);
+    testBlock.setFromWordArray(expectedWords);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, testBlock.asBytes(), aesBlock::lengthInBytes);
+    for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
+        TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
+    }
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, testBlock.asWords(), aesBlock::lengthInWords);
+    for (uint32_t index = 0; index < aesBlock::lengthInWords; ++index) {
+        TEST_ASSERT_EQUAL_UINT32(expectedWords[index], testBlock.getAsWord(index));
+    }
 }
 
 void test_setFromHexString() {
-    aesBlock aBlock;
+    aesBlock testBlock;
+    testBlock.setFromHexString("000102030405060708090A0B0C0D0E0F");
     uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     uint32_t expectedWords[aesKey::lengthInWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
-    aBlock.setFromHexString("000102030405060708090A0B0C0D0E0F");
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), aesBlock::lengthInBytes);
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, aBlock.asWords(), aesBlock::lengthInWords);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, testBlock.asBytes(), aesBlock::lengthInBytes);
+    for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
+        TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
+    }
+    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, testBlock.asWords(), aesBlock::lengthInWords);
+    for (uint32_t index = 0; index < aesBlock::lengthInWords; ++index) {
+        TEST_ASSERT_EQUAL_UINT32(expectedWords[index], testBlock.getAsWord(index));
+    }
 }
 
 void test_arrayOperator() {
-    aesBlock aBlock;
-    aBlock.setFromHexString("00112233445566778899AABBCCDDEEFF");
+    aesBlock testBlock;
+    testBlock.setFromHexString("00112233445566778899AABBCCDDEEFF");
 
-    TEST_ASSERT_EQUAL_UINT8(aBlock[0], 0x00);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[1], 0x11);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[2], 0x22);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[3], 0x33);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[4], 0x44);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[5], 0x55);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[6], 0x66);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[7], 0x77);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[8], 0x88);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[9], 0x99);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[10], 0xAA);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[11], 0xBB);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[12], 0xCC);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[13], 0xDD);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[14], 0xEE);
-    TEST_ASSERT_EQUAL_UINT8(aBlock[15], 0xFF);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[0], 0x00);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[1], 0x11);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[2], 0x22);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[3], 0x33);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[4], 0x44);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[5], 0x55);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[6], 0x66);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[7], 0x77);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[8], 0x88);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[9], 0x99);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[10], 0xAA);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[11], 0xBB);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[12], 0xCC);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[13], 0xDD);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[14], 0xEE);
+    TEST_ASSERT_EQUAL_UINT8(testBlock[15], 0xFF);
 }
 
 void test_isEqualOperator() {

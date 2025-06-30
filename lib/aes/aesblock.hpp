@@ -18,8 +18,11 @@ class aesBlock {
     void setFromHexString(const char *string);
     aesBlock &operator=(const aesBlock &block);
 
-    uint8_t &operator[](std::size_t index);        // accessing the individual bytes through the [] operator
+    uint8_t &operator[](std::size_t index);
     bool operator==(const aesBlock &block) const;
+
+    uint8_t getAsByte(uint32_t index) const { return state.blockAsByteArray[index]; }
+    uint32_t getAsWord(uint32_t index) const { return state.blockAsWordArray[index]; }
 
     static uint32_t nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes);
     static uint32_t incompleteLastBlockSizeFromBytes(uint32_t nmbrOfBytes);
@@ -48,8 +51,12 @@ class aesBlock {
     void shiftRows();
     void mixColumns();
 
+    void syncWordsFromBytes();
+    void syncBytesFromWords();
+
+
     union {
-        uint8_t asByte[lengthInBytes]{};         // interprete the data as 16 bytes
-        uint32_t asUint32[lengthInWords];        // interprete the data as 4 32bit words
-    } state;                                     // fancy name for data in the block
+        uint8_t blockAsByteArray[lengthInBytes]{};
+        uint32_t blockAsWordArray[lengthInWords];
+    } state;
 };
