@@ -152,22 +152,25 @@ void aesBlock::encrypt(aesKey &key) {
         }
         XOR(key.expandedKey + (round * 16));
     }
+    syncNewBytesFromOldBytes();
+    syncWordsFromBytes();
+
 #endif
 }
 
 void aesBlock::substituteBytes() {
     for (uint32_t index = 0; index < lengthInBytes; index++) {
         state.asByte[index] = sbox::data[state.asByte[index]];
+        blockAsBytes[index] = sbox::data[blockAsBytes[index]];
     }
-    syncNewBytesFromOldBytes();
     syncWordsFromBytes();
 }
 
 void aesBlock::XOR(const uint8_t *data) {
     for (uint32_t index = 0; index < lengthInBytes; index++) {
         state.asByte[index] ^= data[index];
+        blockAsBytes[index] ^= data[index];
     }
-    syncNewBytesFromOldBytes();
     syncWordsFromBytes();
 }
 
@@ -199,8 +202,12 @@ void aesBlock::shiftRows() {
 }
 
 void aesBlock::mixColumns() {
+    uint8_t tempBytes[16];
+    for (uint32_t i = 0; i < lengthInBytes; ++i) {
+        tempBytes[i] = blockAsBytes[i];
+    }
     uint8_t tempState[4][4];
-    vectorToMatrix(tempState, state.asByte);
+    vectorToMatrix(tempState, tempBytes);
     uint8_t a[4];
     uint8_t b[4];
     for (uint8_t column = 0; column < 4; column++) {
@@ -217,10 +224,12 @@ void aesBlock::mixColumns() {
         tempState[2][column] = a[0] ^ a[1] ^ b[2] ^ a[3] ^ b[3];
         tempState[3][column] = a[0] ^ b[0] ^ a[1] ^ a[2] ^ b[3];
     }
-    matrixToVector(state.asByte, tempState);
-
-    syncNewBytesFromOldBytes();
+    matrixToVector(tempBytes, tempState);
+    for (uint32_t i = 0; i < lengthInBytes; ++i) {
+        blockAsBytes[i] = tempBytes[i];
+    }
     syncWordsFromBytes();
+    syncOldBytesFromNewBytes();
 }
 
 void aesBlock::shiftLeft() {
@@ -236,6 +245,7 @@ void aesBlock::shiftLeft() {
             state.asByte[byteIndex] = static_cast<uint8_t>(state.asByte[byteIndex] << 1U);
         }
     }
+    syncNewBytesFromOldBytes();
     syncWordsFromBytes();
 }
 
