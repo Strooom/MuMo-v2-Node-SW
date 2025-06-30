@@ -417,10 +417,6 @@ void LoRaWAN::generateKeysK1K2() {
     if (msbSet) {
         K2[15] = K2[15] ^ 0x87;
     }
-    K1.syncNewBytesFromOldBytes();
-    K1.syncWordsFromBytes();
-    K2.syncNewBytesFromOldBytes();
-    K2.syncWordsFromBytes();
 }
 
 uint32_t LoRaWAN::calculateMic() {

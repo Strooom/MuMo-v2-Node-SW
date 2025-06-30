@@ -37,7 +37,7 @@ void test_prepareBlockAiTx() {
     uint32_t testBlockIndex{7};
     LoRaWAN::prepareBlockAi(testBlock, linkDirection::uplink, testBlockIndex);
     aesBlock expectedBlock{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x07};
-    TEST_ASSERT_TRUE(aesBlock::isEqual(expectedBlock, testBlock));
+    TEST_ASSERT_TRUE(expectedBlock == testBlock);
 }
 
 void test_prepareBlockAiRx() {
@@ -47,7 +47,7 @@ void test_prepareBlockAiRx() {
     uint32_t testBlockIndex{3};
     LoRaWAN::prepareBlockAi(testBlock, linkDirection::downlink, testBlockIndex);
     aesBlock expectedBlock{0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x78, 0x56, 0x34, 0x12, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x03};
-    TEST_ASSERT_TRUE(aesBlock::isEqual(expectedBlock, testBlock));
+    TEST_ASSERT_TRUE(expectedBlock == testBlock);
 }
 
 void test_encryptPayload() {
@@ -166,12 +166,12 @@ void test_keyGeneration() {
     LoRaWAN::generateKeysK1K2();
 
     aesBlock toBeK1;
-    toBeK1.setFromHexString("fbeed618357133667c85e08f7236a8de");
+    hexAscii::hexStringToByteArray(toBeK1.asBytes(), "fbeed618357133667c85e08f7236a8de", 32U);
     aesBlock toBeK2;
-    toBeK2.setFromHexString("f7ddac306ae266ccf90bc11ee46d513b");
+    hexAscii::hexStringToByteArray(toBeK2.asBytes(), "f7ddac306ae266ccf90bc11ee46d513b", 32U);
 
-    TEST_ASSERT_TRUE(aesBlock::isEqual(toBeK1, LoRaWAN::K1));
-    TEST_ASSERT_TRUE(aesBlock::isEqual(toBeK2, LoRaWAN::K2));
+    TEST_ASSERT_TRUE(toBeK1 == LoRaWAN::K1);
+    TEST_ASSERT_TRUE(toBeK2 == LoRaWAN::K2);
 }
 
 void test_calculateMic() {

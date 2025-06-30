@@ -12,54 +12,32 @@
 
 void aesBlock::setFromByteArray(const uint8_t bytesIn[lengthInBytes]) {
     (void)memcpy(state.asByte, bytesIn, lengthInBytes);
-
-    syncNewBytesFromOldBytes();
-    syncWordsFromBytes();
 }
 
 void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
     for (uint32_t wordIndex = 0; wordIndex < 4; wordIndex++) {
         state.asUint32[wordIndex] = wordsIn[wordIndex];
     }
-
-    syncNewBytesFromOldBytes();
-    syncWordsFromBytes();
 }
 
 void aesBlock::setFromHexString(const char *string) {
-    hexAscii::hexStringToByteArray(blockAsBytes, string, 32U);
-    syncWordsFromBytes();
-
-    syncOldBytesFromNewBytes();        // old
-}
-
-void aesBlock::setByte(const uint32_t byteIndex, uint8_t newValue) {
-    blockAsBytes[byteIndex] = newValue;
-    syncWordsFromBytes();
-
-    syncOldBytesFromNewBytes();        // old
-}
-
-void aesBlock::setFromBlock(const aesBlock &block) {
-    (void)memcpy(blockAsBytes, block.blockAsBytes, lengthInBytes);
-    syncWordsFromBytes();
-    syncOldBytesFromNewBytes();        // old
+    uint8_t tmpBytes[lengthInBytes];
+    hexAscii::hexStringToByteArray(tmpBytes, string, 32U);
+    (void)memcpy(state.asByte, tmpBytes, lengthInBytes);
 }
 
 uint8_t &aesBlock::operator[](std::size_t index) {
     return state.asByte[index];
 }
 
-// bool aesBlock::operator==(const aesBlock &block) const {
-//     return (memcmp(state.asByte, block.state.asByte, lengthInBytes) == 0);
-// }
+bool aesBlock::operator==(const aesBlock &block) const {
+    return (memcmp(state.asByte, block.state.asByte, lengthInBytes) == 0);
+}
 
-// aesBlock &aesBlock::operator=(const aesBlock &block) {
-//     (void)memcpy(state.asByte, block.state.asByte, lengthInBytes);
-//     syncNewBytesFromOldBytes();
-//     syncWordsFromBytes();
-//     return *this;
-// }
+aesBlock &aesBlock::operator=(const aesBlock &block) {
+    (void)memcpy(state.asByte, block.state.asByte, lengthInBytes);
+    return *this;
+}
 
 uint8_t *aesBlock::asBytes() {
     return state.asByte;
@@ -152,26 +130,19 @@ void aesBlock::encrypt(aesKey &key) {
         }
         XOR(key.expandedKey + (round * 16));
     }
-    syncNewBytesFromOldBytes();
-    syncWordsFromBytes();
-
 #endif
 }
 
 void aesBlock::substituteBytes() {
     for (uint32_t index = 0; index < lengthInBytes; index++) {
         state.asByte[index] = sbox::data[state.asByte[index]];
-        blockAsBytes[index] = sbox::data[blockAsBytes[index]];
     }
-    syncWordsFromBytes();
 }
 
 void aesBlock::XOR(const uint8_t *data) {
     for (uint32_t index = 0; index < lengthInBytes; index++) {
         state.asByte[index] ^= data[index];
-        blockAsBytes[index] ^= data[index];
     }
-    syncWordsFromBytes();
 }
 
 void aesBlock::shiftRows() {
@@ -196,18 +167,11 @@ void aesBlock::shiftRows() {
     state.asByte[11] = state.asByte[7];
     state.asByte[7]  = state.asByte[3];
     state.asByte[3]  = temp;
-
-    syncNewBytesFromOldBytes();
-    syncWordsFromBytes();
 }
 
 void aesBlock::mixColumns() {
-    uint8_t tempBytes[16];
-    for (uint32_t i = 0; i < lengthInBytes; ++i) {
-        tempBytes[i] = blockAsBytes[i];
-    }
     uint8_t tempState[4][4];
-    vectorToMatrix(tempState, tempBytes);
+    vectorToMatrix(tempState, state.asByte);
     uint8_t a[4];
     uint8_t b[4];
     for (uint8_t column = 0; column < 4; column++) {
@@ -224,16 +188,11 @@ void aesBlock::mixColumns() {
         tempState[2][column] = a[0] ^ a[1] ^ b[2] ^ a[3] ^ b[3];
         tempState[3][column] = a[0] ^ b[0] ^ a[1] ^ a[2] ^ b[3];
     }
-    matrixToVector(tempBytes, tempState);
-    for (uint32_t i = 0; i < lengthInBytes; ++i) {
-        blockAsBytes[i] = tempBytes[i];
-    }
-    syncWordsFromBytes();
-    syncOldBytesFromNewBytes();
+    matrixToVector(state.asByte, tempState);
 }
 
 void aesBlock::shiftLeft() {
-    for (uint32_t byteIndex = 0; byteIndex < aesBlock::lengthInBytes; byteIndex++) {
+    for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
         if (byteIndex < 15) {
             if ((state.asByte[byteIndex + 1] & 0x80) == 0x80) {
                 state.asByte[byteIndex] = static_cast<uint8_t>((state.asByte[byteIndex] << 1U) + 1U);
@@ -245,26 +204,4 @@ void aesBlock::shiftLeft() {
             state.asByte[byteIndex] = static_cast<uint8_t>(state.asByte[byteIndex] << 1U);
         }
     }
-    syncNewBytesFromOldBytes();
-    syncWordsFromBytes();
-}
-
-void aesBlock::syncWordsFromBytes() {
-    (void)memcpy(blockAsWords, blockAsBytes, lengthInBytes);
-}
-
-void aesBlock::syncBytesFromWords() {
-    (void)memcpy(blockAsBytes, blockAsWords, lengthInBytes);
-}
-
-void aesBlock::syncOldBytesFromNewBytes() {
-    (void)memcpy(state.asByte, blockAsBytes, lengthInBytes);
-}
-
-void aesBlock::syncNewBytesFromOldBytes() {
-    (void)memcpy(blockAsBytes, state.asByte, lengthInBytes);
-}
-
-bool aesBlock::isEqual(const aesBlock &block1, const aesBlock &block2) {
-    return (memcmp(block1.blockAsBytes, block2.blockAsBytes, lengthInBytes) == 0);
 }

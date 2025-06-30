@@ -16,17 +16,10 @@ class aesBlock {
     void setFromByteArray(const uint8_t bytesIn[lengthInBytes]);
     void setFromWordArray(const uint32_t wordsIn[lengthInWords]);
     void setFromHexString(const char *string);
-    void setByte(const uint32_t byteIndex, uint8_t newValue);
-    void setFromBlock(const aesBlock &block);
-
-//    aesBlock &operator=(const aesBlock &block);        // old - get rid of this
-
-    uint8_t getAsByte(uint32_t index) const { return blockAsBytes[index]; }
-    uint32_t getAsWord(uint32_t index) const { return blockAsWords[index]; }
+    aesBlock &operator=(const aesBlock &block);
 
     uint8_t &operator[](std::size_t index);        // accessing the individual bytes through the [] operator
-    // bool operator==(const aesBlock &block) const;
-    static bool isEqual(const aesBlock &block1, const aesBlock &block2);
+    bool operator==(const aesBlock &block) const;
 
     static uint32_t nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes);
     static uint32_t incompleteLastBlockSizeFromBytes(uint32_t nmbrOfBytes);
@@ -47,11 +40,6 @@ class aesBlock {
     void XOR(const uint8_t *withData);
     void shiftLeft();
 
-    void syncWordsFromBytes();
-    void syncBytesFromWords();
-    void syncOldBytesFromNewBytes();
-    void syncNewBytesFromOldBytes();
-
 #ifndef unitTesting
 
   private:
@@ -60,12 +48,8 @@ class aesBlock {
     void shiftRows();
     void mixColumns();
 
-    // old, get rid of this
     union {
-        uint8_t asByte[lengthInBytes]{};
-        uint32_t asUint32[lengthInWords];
-    } state;
-
-    uint8_t blockAsBytes[lengthInBytes]{};
-    uint32_t blockAsWords[lengthInWords]{};
+        uint8_t asByte[lengthInBytes]{};         // interprete the data as 16 bytes
+        uint32_t asUint32[lengthInWords];        // interprete the data as 4 32bit words
+    } state;                                     // fancy name for data in the block
 };
