@@ -307,7 +307,7 @@ void test_nmbrOfBytesToPad() {
 void test_shiftLeft() {
     uint8_t testblockDataBytes[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     uint32_t testblockDataWords[4] = {0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
-    
+
     aesBlock testBlock;
     testBlock.setFromByteArray(testblockDataBytes);
 
@@ -319,13 +319,16 @@ void test_shiftLeft() {
     }
 
     testBlock.shiftLeft();
-    
-    uint8_t expectedbytes[16] = {0x0, 0x02, 0x04, 0x06, 0x08, 0x0A, 0xC, 0x0E, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedbytes, testBlock.asBytes(), 16);
-    for (size_t i = 0; i < 16; ++i) {
+
+    uint8_t expectedbytes[aesBlock::lengthInBytes] = {0x0, 0x02, 0x04, 0x06, 0x08, 0x0A, 0xC, 0x0E, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E};
+    uint32_t expectedWords[aesBlock::lengthInWords]{0x06040200, 0x0E0C0A08, 0x16141210, 0x1E1C1A18};
+
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedbytes, testBlock.asBytes(), aesBlock::lengthInBytes);
+
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
         TEST_ASSERT_EQUAL_UINT8(expectedbytes[i], testBlock.getAsByte(i));
     }
-    uint32_t expectedWords[aesBlock::lengthInWords]{0x06040200, 0x0E0C0A08, 0x16141210, 0x1E1C1A18};
+
     for (size_t wordIndex = 0; wordIndex < aesBlock::lengthInWords; ++wordIndex) {
         TEST_ASSERT_EQUAL_UINT32(expectedWords[wordIndex], testBlock.getAsWord(wordIndex));
     }

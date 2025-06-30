@@ -233,7 +233,7 @@ void aesBlock::mixColumns() {
 }
 
 void aesBlock::shiftLeft() {
-    for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+    for (uint32_t byteIndex = 0; byteIndex < aesBlock::lengthInBytes; byteIndex++) {
         if (byteIndex < 15) {
             if ((state.asByte[byteIndex + 1] & 0x80) == 0x80) {
                 state.asByte[byteIndex] = static_cast<uint8_t>((state.asByte[byteIndex] << 1U) + 1U);
