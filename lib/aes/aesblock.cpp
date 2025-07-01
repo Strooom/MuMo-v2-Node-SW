@@ -29,11 +29,6 @@ void aesBlock::setFromHexString(const char *string) {
     syncWordsFromBytes();
 }
 
-void aesBlock::setFromOtherBlock(const aesBlock &block) {
-    (void)memcpy(blockAsByteArray, block.blockAsByteArray, lengthInBytes);
-    syncWordsFromBytes();
-}
-
 void aesBlock::setByte(const uint32_t byteIndex, uint8_t newValue) {
     blockAsByteArray[byteIndex] = newValue;
     syncWordsFromBytes();

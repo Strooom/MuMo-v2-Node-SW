@@ -5,7 +5,7 @@
 
 #pragma once
 #include <stdint.h>
-//#include <cstddef>        // std::size_t
+// #include <cstddef>        // std::size_t
 #include <aeskey.hpp>
 
 class aesBlock {
@@ -16,7 +16,6 @@ class aesBlock {
     void setFromByteArray(const uint8_t bytesIn[lengthInBytes]);
     void setFromWordArray(const uint32_t wordsIn[lengthInWords]);
     void setFromHexString(const char *string);
-    void setFromOtherBlock(const aesBlock &block);
     void setByte(const uint32_t byteIndex, uint8_t newValue);
     void setWord(const uint32_t wordIndex, uint32_t newValue);
 
