@@ -1,6 +1,5 @@
 #include <aesblock.hpp>
-#include <cstring>        // needed for memcpy()
-#include <cstddef>        // std::size_t
+#include <cstring>
 #include <sbox.hpp>
 #include <hexascii.hpp>
 #include <stm32wle5_aes.hpp>
@@ -11,59 +10,46 @@
 #endif
 
 void aesBlock::setFromByteArray(const uint8_t bytesIn[lengthInBytes]) {
-    (void)memcpy(state.asByte, bytesIn, lengthInBytes);
-}
-
-void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
-    for (uint32_t wordIndex = 0; wordIndex < 4; wordIndex++) {
-        state.asUint32[wordIndex] = wordsIn[wordIndex];
-    }
+    (void)memcpy(blockData, bytesIn, lengthInBytes);
 }
 
 void aesBlock::setFromHexString(const char *string) {
     uint8_t tmpBytes[lengthInBytes];
-    hexAscii::hexStringToByteArray(tmpBytes, string, 32U);
-    (void)memcpy(state.asByte, tmpBytes, lengthInBytes);
+    hexAscii::hexStringToByteArray(tmpBytes, string, lengthAsHexAscii);
+    (void)memcpy(blockData, tmpBytes, lengthInBytes);
 }
 
-uint8_t &aesBlock::operator[](std::size_t index) {
-    return state.asByte[index];
+void aesBlock::setByte(const uint32_t byteIndex, uint8_t newValue) {
+    blockData[byteIndex] = newValue;
 }
 
-bool aesBlock::operator==(const aesBlock &block) const {
-    return (memcmp(state.asByte, block.state.asByte, lengthInBytes) == 0);
+uint32_t aesBlock::getAsWord(uint32_t index) const {
+    uint32_t result;
+    (void)memcpy(&result, &blockData[index * 4], 4);
+    return result;
 }
 
-aesBlock &aesBlock::operator=(const aesBlock &block) {
-    (void)memcpy(state.asByte, block.state.asByte, lengthInBytes);
-    return *this;
-}
-
-uint8_t *aesBlock::asBytes() {
-    return state.asByte;
-}
-
-uint32_t *aesBlock::asWords() {
-    return state.asUint32;
+void aesBlock::setWord(const uint32_t wordIndex, uint32_t newValue) {
+    (void)memcpy(&blockData[wordIndex * 4], &newValue, 4);
 }
 
 uint32_t aesBlock::nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes) {
-    return (nmbrOfBytes + 15U) / 16U;
+    return (nmbrOfBytes + 15U) / lengthInBytes;
 }
 uint32_t aesBlock::incompleteLastBlockSizeFromBytes(uint32_t nmbrOfBytes) {
-    return nmbrOfBytes % 16U;
+    return nmbrOfBytes % lengthInBytes;
 }
 
 bool aesBlock::hasIncompleteLastBlockFromBytes(uint32_t nmbrOfBytes) {
-    return ((nmbrOfBytes % 16U) != 0U);
+    return ((nmbrOfBytes % lengthInBytes) != 0U);
 }
 
 uint32_t aesBlock::calculateNmbrOfBytesToPad(uint32_t messageLength) {
     if (messageLength == 0) {
-        return 16;        // exception case : for zero length message, we need to pad 16 bytes
+        return lengthInBytes;        // exception case : for zero length message, we need to pad 16 bytes
     }
     if (hasIncompleteLastBlockFromBytes(messageLength)) {
-        return (16 - incompleteLastBlockSizeFromBytes(messageLength));
+        return (lengthInBytes - incompleteLastBlockSizeFromBytes(messageLength));
     }
     return 0;
 }
@@ -108,7 +94,7 @@ void aesBlock::wordsToBytes(uint8_t bytesOut[16], const uint32_t wordsIn[4]) {
     }
 }
 
-void aesBlock::encrypt(aesKey &key) {
+void aesBlock::encrypt(const aesKey &key) {
 #ifdef HARDWARE_AES
     stm32wle5_aes::initialize(aesMode::EBC);
     stm32wle5_aes::setKey(key);
@@ -135,43 +121,43 @@ void aesBlock::encrypt(aesKey &key) {
 
 void aesBlock::substituteBytes() {
     for (uint32_t index = 0; index < lengthInBytes; index++) {
-        state.asByte[index] = sbox::data[state.asByte[index]];
+        blockData[index] = sbox::data[blockData[index]];
     }
 }
 
 void aesBlock::XOR(const uint8_t *data) {
     for (uint32_t index = 0; index < lengthInBytes; index++) {
-        state.asByte[index] ^= data[index];
+        blockData[index] ^= data[index];
     }
 }
 
 void aesBlock::shiftRows() {
     uint8_t temp;
 
-    temp             = state.asByte[1];
-    state.asByte[1]  = state.asByte[5];
-    state.asByte[5]  = state.asByte[9];
-    state.asByte[9]  = state.asByte[13];
-    state.asByte[13] = temp;
+    temp                 = blockData[1];
+    blockData[1]  = blockData[5];
+    blockData[5]  = blockData[9];
+    blockData[9]  = blockData[13];
+    blockData[13] = temp;
 
-    temp             = state.asByte[2];
-    state.asByte[2]  = state.asByte[10];
-    state.asByte[10] = temp;
+    temp                 = blockData[2];
+    blockData[2]  = blockData[10];
+    blockData[10] = temp;
 
-    temp             = state.asByte[6];
-    state.asByte[6]  = state.asByte[14];
-    state.asByte[14] = temp;
+    temp                 = blockData[6];
+    blockData[6]  = blockData[14];
+    blockData[14] = temp;
 
-    temp             = state.asByte[15];
-    state.asByte[15] = state.asByte[11];
-    state.asByte[11] = state.asByte[7];
-    state.asByte[7]  = state.asByte[3];
-    state.asByte[3]  = temp;
+    temp                 = blockData[15];
+    blockData[15] = blockData[11];
+    blockData[11] = blockData[7];
+    blockData[7]  = blockData[3];
+    blockData[3]  = temp;
 }
 
 void aesBlock::mixColumns() {
     uint8_t tempState[4][4];
-    vectorToMatrix(tempState, state.asByte);
+    vectorToMatrix(tempState, blockData);
     uint8_t a[4];
     uint8_t b[4];
     for (uint8_t column = 0; column < 4; column++) {
@@ -188,20 +174,21 @@ void aesBlock::mixColumns() {
         tempState[2][column] = a[0] ^ a[1] ^ b[2] ^ a[3] ^ b[3];
         tempState[3][column] = a[0] ^ b[0] ^ a[1] ^ a[2] ^ b[3];
     }
-    matrixToVector(state.asByte, tempState);
+    matrixToVector(blockData, tempState);
 }
 
 void aesBlock::shiftLeft() {
-    for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+    for (uint32_t byteIndex = 0; byteIndex < lengthInBytes; byteIndex++) {
         if (byteIndex < 15) {
-            if ((state.asByte[byteIndex + 1] & 0x80) == 0x80) {
-                state.asByte[byteIndex] = static_cast<uint8_t>((state.asByte[byteIndex] << 1U) + 1U);
+            if ((blockData[byteIndex + 1] & 0x80) == 0x80) {
+                blockData[byteIndex] = static_cast<uint8_t>((blockData[byteIndex] << 1U) + 1U);
 
             } else {
-                state.asByte[byteIndex] = static_cast<uint8_t>(state.asByte[byteIndex] << 1U);
+                blockData[byteIndex] = static_cast<uint8_t>(blockData[byteIndex] << 1U);
             }
         } else {
-            state.asByte[byteIndex] = static_cast<uint8_t>(state.asByte[byteIndex] << 1U);
+            blockData[byteIndex] = static_cast<uint8_t>(blockData[byteIndex] << 1U);
         }
     }
+
 }

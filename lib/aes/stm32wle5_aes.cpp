@@ -38,30 +38,30 @@ void stm32wle5_aes::setKey(const aesKey& theKey) {
 #endif
 }
 
-void stm32wle5_aes::setInitializationVector(aesBlock& theBlock) { // TODO after refactoring aesBlock, this argument should be const
+void stm32wle5_aes::setInitializationVector(const aesBlock& theBlock) {
 #ifndef generic
-    AES->IVR0 = aesBlock::swapLittleBigEndian(theBlock.asWords()[3]);
-    AES->IVR1 = aesBlock::swapLittleBigEndian(theBlock.asWords()[2]);
-    AES->IVR2 = aesBlock::swapLittleBigEndian(theBlock.asWords()[1]);
-    AES->IVR3 = aesBlock::swapLittleBigEndian(theBlock.asWords()[0]);
+    AES->IVR0 = aesBlock::swapLittleBigEndian(theBlock.getAsWord(3));
+    AES->IVR1 = aesBlock::swapLittleBigEndian(theBlock.getAsWord(2));
+    AES->IVR2 = aesBlock::swapLittleBigEndian(theBlock.getAsWord(1));
+    AES->IVR3 = aesBlock::swapLittleBigEndian(theBlock.getAsWord(0));
 #endif
 }
 
-void stm32wle5_aes::write(aesBlock& theBlock) { // TODO after refactoring aesBlock, this argument should be const
+void stm32wle5_aes::write(const aesBlock& theBlock) {
 #ifndef generic
-    AES->DINR = theBlock.asWords()[0];
-    AES->DINR = theBlock.asWords()[1];
-    AES->DINR = theBlock.asWords()[2];
-    AES->DINR = theBlock.asWords()[3];
+    AES->DINR = theBlock.getAsWord(0);
+    AES->DINR = theBlock.getAsWord(1);
+    AES->DINR = theBlock.getAsWord(2);
+    AES->DINR = theBlock.getAsWord(3);
 #endif
 }
 
 void stm32wle5_aes::read(aesBlock& theBlock) {
 #ifndef generic
-    theBlock.asWords()[0] = AES->DOUTR;
-    theBlock.asWords()[1] = AES->DOUTR;
-    theBlock.asWords()[2] = AES->DOUTR;
-    theBlock.asWords()[3] = AES->DOUTR;
+    theBlock.setWord(0, AES->DOUTR);
+    theBlock.setWord(1, AES->DOUTR);
+    theBlock.setWord(2, AES->DOUTR);
+    theBlock.setWord(3, AES->DOUTR);
 #endif
 }
 

@@ -35,9 +35,13 @@ void test_prepareBlockAiTx() {
     LoRaWAN::DevAddr.setFromWord(0x12345678);
     LoRaWAN::uplinkFrameCount.setFromWord(0xFFEEDDCC);
     uint32_t testBlockIndex{7};
+
     LoRaWAN::prepareBlockAi(testBlock, linkDirection::uplink, testBlockIndex);
-    aesBlock expectedBlock{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x07};
-    TEST_ASSERT_TRUE(expectedBlock == testBlock);
+
+    uint8_t expectedOutput[aesBlock::lengthInBytes]{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x07};
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(expectedOutput[i], testBlock.getAsByte(i));
+    }
 }
 
 void test_prepareBlockAiRx() {
@@ -45,9 +49,13 @@ void test_prepareBlockAiRx() {
     LoRaWAN::DevAddr.setFromWord(0x12345678);
     LoRaWAN::downlinkFrameCount.setFromWord(0xFFEEDDCC);
     uint32_t testBlockIndex{3};
+
     LoRaWAN::prepareBlockAi(testBlock, linkDirection::downlink, testBlockIndex);
-    aesBlock expectedBlock{0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x78, 0x56, 0x34, 0x12, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x03};
-    TEST_ASSERT_TRUE(expectedBlock == testBlock);
+
+    uint8_t expectedOuput[aesBlock::lengthInBytes]{0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x78, 0x56, 0x34, 0x12, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x03};
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(expectedOuput[i], testBlock.getAsByte(i));
+    }
 }
 
 void test_encryptPayload() {
@@ -165,13 +173,16 @@ void test_keyGeneration() {
     LoRaWAN::networkKey.setFromHexString("2b7e151628aed2a6abf7158809cf4f3c");
     LoRaWAN::generateKeysK1K2();
 
-    aesBlock toBeK1;
-    hexAscii::hexStringToByteArray(toBeK1.asBytes(), "fbeed618357133667c85e08f7236a8de", 32U);
-    aesBlock toBeK2;
-    hexAscii::hexStringToByteArray(toBeK2.asBytes(), "f7ddac306ae266ccf90bc11ee46d513b", 32U);
+    uint8_t expectedOutputK1[16];
+    hexAscii::hexStringToByteArray(expectedOutputK1, "fbeed618357133667c85e08f7236a8de", 32U);
 
-    TEST_ASSERT_TRUE(toBeK1 == LoRaWAN::K1);
-    TEST_ASSERT_TRUE(toBeK2 == LoRaWAN::K2);
+    uint8_t expectedOutputK2[16];
+    hexAscii::hexStringToByteArray(expectedOutputK2, "f7ddac306ae266ccf90bc11ee46d513b", 32U);
+
+    for (size_t i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(expectedOutputK1[i], LoRaWAN::K1.getAsByte(i));
+        TEST_ASSERT_EQUAL_UINT8(expectedOutputK2[i], LoRaWAN::K2.getAsByte(i));
+    }
 }
 
 void test_calculateMic() {
@@ -336,7 +347,6 @@ void test_calculateMicRx() {
     // XORed with K2 = B02DA14523213D1DC516CCB65D5816AA
     // encrypted = d9a8f69a5a8a264c3abf7e07fbaac967
     // MIC = d9a8f69a
-
 }
 
 int main(int argc, char **argv) {
