@@ -15,12 +15,12 @@ void aesBlock::setFromByteArray(const uint8_t bytesIn[lengthInBytes]) {
     syncWordsFromBytes();
 }
 
-void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
-    for (uint32_t wordIndex = 0; wordIndex < 4; wordIndex++) {
-        blockAsWordArray[wordIndex] = wordsIn[wordIndex];
-    }
-    syncBytesFromWords();
-}
+// void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
+//     for (uint32_t wordIndex = 0; wordIndex < 4; wordIndex++) {
+//         blockAsWordArray[wordIndex] = wordsIn[wordIndex];
+//     }
+//     syncBytesFromWords();
+// }
 
 void aesBlock::setFromHexString(const char *string) {
     uint8_t tmpBytes[lengthInBytes];

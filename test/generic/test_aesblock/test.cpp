@@ -31,18 +31,18 @@ void test_setFromByteArray() {
     }
 }
 
-void test_setFromWordArray() {
-    aesBlock testBlock;
-    uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
-    uint32_t expectedWords[aesKey::lengthInWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
-    testBlock.setFromWordArray(expectedWords);
-    for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
-        TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
-    }
-    for (uint32_t index = 0; index < aesBlock::lengthInWords; ++index) {
-        TEST_ASSERT_EQUAL_UINT32(expectedWords[index], testBlock.getAsWord(index));
-    }
-}
+// void test_setFromWordArray() {
+//     aesBlock testBlock;
+//     uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
+//     uint32_t expectedWords[aesKey::lengthInWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
+//     testBlock.setFromWordArray(expectedWords);
+//     for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
+//         TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
+//     }
+//     for (uint32_t index = 0; index < aesBlock::lengthInWords; ++index) {
+//         TEST_ASSERT_EQUAL_UINT32(expectedWords[index], testBlock.getAsWord(index));
+//     }
+// }
 
 void test_setFromHexString() {
     aesBlock testBlock;
@@ -288,7 +288,7 @@ int main(int argc, char** argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
     RUN_TEST(test_setFromByteArray);
-    RUN_TEST(test_setFromWordArray);
+    // RUN_TEST(test_setFromWordArray);
     RUN_TEST(test_setFromHexString);
     RUN_TEST(test_getByte);
 

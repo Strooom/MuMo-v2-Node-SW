@@ -14,7 +14,7 @@ class aesBlock {
     static constexpr uint32_t lengthInWords{4};
 
     void setFromByteArray(const uint8_t bytesIn[lengthInBytes]);
-    void setFromWordArray(const uint32_t wordsIn[lengthInWords]);
+    // void setFromWordArray(const uint32_t wordsIn[lengthInWords]);
     void setFromHexString(const char *string);
     void setByte(const uint32_t byteIndex, uint8_t newValue);
     void setWord(const uint32_t wordIndex, uint32_t newValue);
