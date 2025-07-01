@@ -18,7 +18,7 @@ class deviceAddress {
     void setFromHexString(const char* string);
 
     uint8_t getAsByte(uint32_t index) const { return devAddrAsBytes[index]; }
-    uint32_t getAsWord() const { return devAddrAsWord; }
+    uint32_t getAsWord() const;
     const char* getAsHexString() const { return devAddrAsHexString; }
 
   private:
@@ -36,15 +36,15 @@ class deviceAddress {
     // When the address is stored in a uint32_t variable, on the ARM cortex M4, it will have a value of 0x260B1F80.
 
     uint8_t devAddrAsBytes[lengthInBytes]{};
-    uint32_t devAddrAsWord{};
+    // uint32_t devAddrAsWord{};
     char devAddrAsHexString[lengthAsHexAscii + 1]{};
 
-    void syncWordFromBytes() {
-        (void)memcpy(&devAddrAsWord, devAddrAsBytes, lengthInBytes);
-    }
-    void syncBytesFromWord() {
-        (void)memcpy(devAddrAsBytes, &devAddrAsWord, lengthInBytes);
-    }
+    // void syncWordFromBytes() {
+    //     (void)memcpy(&devAddrAsWord, devAddrAsBytes, lengthInBytes);
+    // }
+    // void syncBytesFromWord() {
+    //     (void)memcpy(devAddrAsBytes, &devAddrAsWord, lengthInBytes);
+    // }
     void syncHexStringFromBytes() {
         hexAscii::byteArrayToHexStringReversed(devAddrAsHexString, devAddrAsBytes, lengthInBytes);
     }
