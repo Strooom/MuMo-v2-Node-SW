@@ -10,7 +10,6 @@ void test_initialize() {
     aesBlock testBlock;
     uint8_t expectedBytes[aesKey::lengthInBytes]{};
     uint32_t expectedWords[aesKey::lengthInWords]{};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, testBlock.asBytes(), aesBlock::lengthInBytes);
     for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
         TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
     }
@@ -24,7 +23,6 @@ void test_setFromByteArray() {
     uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     uint32_t expectedWords[aesKey::lengthInWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
     testBlock.setFromByteArray(expectedBytes);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, testBlock.asBytes(), aesBlock::lengthInBytes);
     for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
         TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
     }
@@ -38,7 +36,6 @@ void test_setFromWordArray() {
     uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     uint32_t expectedWords[aesKey::lengthInWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
     testBlock.setFromWordArray(expectedWords);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, testBlock.asBytes(), aesBlock::lengthInBytes);
     for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
         TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
     }
@@ -52,7 +49,6 @@ void test_setFromHexString() {
     testBlock.setFromHexString("000102030405060708090A0B0C0D0E0F");
     uint8_t expectedBytes[aesKey::lengthInBytes]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     uint32_t expectedWords[aesKey::lengthInWords]{0x03020100, 0x07060504, 0x0B0A0908, 0x0F0E0D0C};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, testBlock.asBytes(), aesBlock::lengthInBytes);
     for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
         TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
     }
@@ -109,7 +105,9 @@ void test_encrypt() {
     aBlock.setFromHexString("6bc1bee22e409f96e93d7e117393172a");        // common NIST test vector plaintext 6bc1bee22e409f96e93d7e117393172a
     aBlock.encrypt(aKey);
     uint8_t expectedCypherText[16]{0x3A, 0xD7, 0x7B, 0xB4, 0x0D, 0x7A, 0x36, 0x60, 0xA8, 0x9E, 0xCA, 0xF3, 0x24, 0x66, 0xEF, 0x97};        // common NIST test vector ciphertext 3ad77bb40d7a3660a89ecaf32466ef97
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedCypherText, aBlock.asBytes(), 16);
+    for (size_t i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(expectedCypherText[i], aBlock.getAsByte(i));
+    }
 }
 
 void test_encrypt_step_by_step() {
@@ -127,27 +125,37 @@ void test_encrypt_step_by_step() {
     }
     aBlock.XOR(tmpKey);
     uint8_t expectedOutput0[16]{0x40, 0xbf, 0xab, 0xf4, 0x06, 0xee, 0x4d, 0x30, 0x42, 0xca, 0x6b, 0x99, 0x7a, 0x5c, 0x58, 0x16};        // follow along on https://www.cryptool.org/en/cto/aes-step-by-step
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedOutput0, aBlock.asBytes(), 16);
+    for (size_t i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(expectedOutput0[i], aBlock.getAsByte(i));
+    }
 
     // Step 2 substitute bytes
     aBlock.substituteBytes();
     uint8_t expectedOutput1[16]{0x09, 0x08, 0x62, 0xbf, 0x6f, 0x28, 0xe3, 0x04, 0x2c, 0x74, 0x7f, 0xee, 0xda, 0x4a, 0x6a, 0x47};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedOutput1, aBlock.asBytes(), 16);
+    for (size_t i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(expectedOutput1[i], aBlock.getAsByte(i));
+    }
 
     // Step 3 shift rows / permutation
     aBlock.shiftRows();
     uint8_t expectedOutput2[16]{0x09, 0x28, 0x7f, 0x47, 0x6f, 0x74, 0x6a, 0xbf, 0x2c, 0x4a, 0x62, 0x04, 0xda, 0x08, 0xe3, 0xee};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedOutput2, aBlock.asBytes(), 16);
+    for (size_t i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(expectedOutput2[i], aBlock.getAsByte(i));
+    }
 
     // Step 4 mix columns
     aBlock.mixColumns();
     uint8_t expectedOutput3[16]{0x52, 0x9f, 0x16, 0xc2, 0x97, 0x86, 0x15, 0xca, 0xe0, 0x1a, 0xae, 0x54, 0xba, 0x1a, 0x26, 0x59};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedOutput3, aBlock.asBytes(), 16);
+    for (size_t i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(expectedOutput3[i], aBlock.getAsByte(i));
+    }
 
     // Step 5 XOR with key
     aBlock.XOR(aKey.expandedKey + 16);
     uint8_t expectedOutput4[16]{0xf2, 0x65, 0xe8, 0xd5, 0x1f, 0xd2, 0x39, 0x7b, 0xc3, 0xb9, 0x97, 0x6d, 0x90, 0x76, 0x50, 0x5c};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedOutput4, aBlock.asBytes(), 16);
+    for (size_t i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(expectedOutput4[i], aBlock.getAsByte(i));
+    }
 }
 
 // Tests the correct mapping of a 16 byte vector to a 4x4 matrix in the way AES State expects it, in both directions
@@ -214,7 +222,9 @@ void test_XOR() {
     aBlock.XOR(tmpKey);
 
     uint8_t expectedBytes[16]{0x40, 0xbf, 0xab, 0xf4, 0x06, 0xee, 0x4d, 0x30, 0x42, 0xca, 0x6b, 0x99, 0x7a, 0x5c, 0x58, 0x16};        // verified from https://www.cryptool.org/en/cto/aes-step-by-step
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedBytes, aBlock.asBytes(), 16);
+    for (size_t i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(expectedBytes[i], aBlock.getAsByte(i));
+    }
 }
 
 void test_substituteBytes() {
@@ -226,7 +236,9 @@ void test_substituteBytes() {
     aBlock.substituteBytes();
     uint8_t bytesOut[16]{0x09, 0x08, 0x62, 0xbf, 0x6f, 0x28, 0xe3, 0x04, 0x2c, 0x74, 0x7f, 0xee, 0xda, 0x4a, 0x6a, 0x47};
 
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(bytesOut, aBlock.asBytes(), 16);
+    for (size_t i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(bytesOut[i], aBlock.getAsByte(i));
+    }
 }
 
 void test_shiftRows() {
@@ -238,7 +250,9 @@ void test_shiftRows() {
     aBlock.shiftRows();
     uint8_t bytesOut[16]{0x09, 0x28, 0x7f, 0x47, 0x6f, 0x74, 0x6a, 0xbf, 0x2c, 0x4a, 0x62, 0x04, 0xda, 0x08, 0xe3, 0xee};
 
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(bytesOut, aBlock.asBytes(), 16);
+    for (size_t i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(bytesOut[i], aBlock.getAsByte(i));
+    }
 }
 
 void test_mixColumns() {
@@ -247,7 +261,9 @@ void test_mixColumns() {
     aBlock.setFromByteArray(inputBytes);
     aBlock.mixColumns();
     uint8_t expectedOutput[16]{0x52, 0x9f, 0x16, 0xc2, 0x97, 0x86, 0x15, 0xca, 0xe0, 0x1a, 0xae, 0x54, 0xba, 0x1a, 0x26, 0x59};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expectedOutput, aBlock.asBytes(), 16);
+    for (size_t i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(expectedOutput[i], aBlock.getAsByte(i));
+    }
 }
 
 void test_nmbrOfBlocksFromBytes() {
@@ -282,7 +298,9 @@ void test_shiftLeft() {
     testBlock.setFromByteArray(input);
     testBlock.shiftLeft();
     unsigned char output[16] = {0x0, 0x02, 0x04, 0x06, 0x08, 0x0A, 0xC, 0x0E, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E};
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(output, testBlock.asBytes(), 16);
+    for (size_t i = 0; i < 16; ++i) {
+        TEST_ASSERT_EQUAL_UINT8(output[i], testBlock.getAsByte(i));
+    }
 }
 
 int main(int argc, char** argv) {

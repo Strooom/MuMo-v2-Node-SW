@@ -166,9 +166,9 @@ void test_keyGeneration() {
     LoRaWAN::generateKeysK1K2();
 
     aesBlock toBeK1;
-    hexAscii::hexStringToByteArray(toBeK1.asBytes(), "fbeed618357133667c85e08f7236a8de", 32U);
+    toBeK1.setFromHexString("fbeed618357133667c85e08f7236a8de");
     aesBlock toBeK2;
-    hexAscii::hexStringToByteArray(toBeK2.asBytes(), "f7ddac306ae266ccf90bc11ee46d513b", 32U);
+    toBeK2.setFromHexString("f7ddac306ae266ccf90bc11ee46d513b");
 
     TEST_ASSERT_TRUE(aesBlock::isEqual(toBeK1, LoRaWAN::K1));
     TEST_ASSERT_TRUE(aesBlock::isEqual(toBeK2, LoRaWAN::K2));
