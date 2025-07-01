@@ -11,6 +11,7 @@ class aesBlock {
   public:
     static constexpr uint32_t lengthInBytes{16};
     static constexpr uint32_t lengthInWords{4};
+    static constexpr uint32_t lengthAsHexAscii{32};
 
     void setFromByteArray(const uint8_t bytesIn[lengthInBytes]);
     void setFromHexString(const char *string);
@@ -45,5 +46,4 @@ class aesBlock {
     void mixColumns();
 
     uint8_t blockData[lengthInBytes]{};
-
 };

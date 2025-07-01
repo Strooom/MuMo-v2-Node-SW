@@ -15,7 +15,7 @@ void aesBlock::setFromByteArray(const uint8_t bytesIn[lengthInBytes]) {
 
 void aesBlock::setFromHexString(const char *string) {
     uint8_t tmpBytes[lengthInBytes];
-    hexAscii::hexStringToByteArray(tmpBytes, string, 32U);
+    hexAscii::hexStringToByteArray(tmpBytes, string, lengthAsHexAscii);
     (void)memcpy(blockData, tmpBytes, lengthInBytes);
 }
 
