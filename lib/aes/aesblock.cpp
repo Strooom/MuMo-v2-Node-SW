@@ -1,6 +1,6 @@
 #include <aesblock.hpp>
 #include <cstring>        // needed for memcpy()
-#include <cstddef>        // std::size_t
+// #include <cstddef>        // std::size_t
 #include <sbox.hpp>
 #include <hexascii.hpp>
 #include <stm32wle5_aes.hpp>
@@ -12,50 +12,48 @@
 
 void aesBlock::setFromByteArray(const uint8_t bytesIn[lengthInBytes]) {
     (void)memcpy(blockAsByteArray, bytesIn, lengthInBytes);
-    syncWordsFromBytes();
+    // syncWordsFromBytes();
 }
-
-// void aesBlock::setFromWordArray(const uint32_t wordsIn[lengthInWords]) {
-//     for (uint32_t wordIndex = 0; wordIndex < 4; wordIndex++) {
-//         blockAsWordArray[wordIndex] = wordsIn[wordIndex];
-//     }
-//     syncBytesFromWords();
-// }
 
 void aesBlock::setFromHexString(const char *string) {
     uint8_t tmpBytes[lengthInBytes];
     hexAscii::hexStringToByteArray(tmpBytes, string, 32U);
     (void)memcpy(blockAsByteArray, tmpBytes, lengthInBytes);
-    syncWordsFromBytes();
+    // syncWordsFromBytes();
 }
 
 void aesBlock::setByte(const uint32_t byteIndex, uint8_t newValue) {
     blockAsByteArray[byteIndex] = newValue;
-    syncWordsFromBytes();
+    // syncWordsFromBytes();
+}
+
+uint32_t aesBlock::getAsWord(uint32_t index) const {
+    uint32_t result;
+    memcpy(&result, &blockAsByteArray[index * 4], 4);
+    return result;
 }
 
 void aesBlock::setWord(const uint32_t wordIndex, uint32_t newValue) {
-    blockAsWordArray[wordIndex] = newValue;
-    syncBytesFromWords();
+    memcpy(&blockAsByteArray[wordIndex * 4], &newValue, 4);
 }
 
 uint32_t aesBlock::nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes) {
-    return (nmbrOfBytes + 15U) / 16U;
+    return (nmbrOfBytes + 15U) / lengthInBytes;
 }
 uint32_t aesBlock::incompleteLastBlockSizeFromBytes(uint32_t nmbrOfBytes) {
-    return nmbrOfBytes % 16U;
+    return nmbrOfBytes % lengthInBytes;
 }
 
 bool aesBlock::hasIncompleteLastBlockFromBytes(uint32_t nmbrOfBytes) {
-    return ((nmbrOfBytes % 16U) != 0U);
+    return ((nmbrOfBytes % lengthInBytes) != 0U);
 }
 
 uint32_t aesBlock::calculateNmbrOfBytesToPad(uint32_t messageLength) {
     if (messageLength == 0) {
-        return 16;        // exception case : for zero length message, we need to pad 16 bytes
+        return lengthInBytes;        // exception case : for zero length message, we need to pad 16 bytes
     }
     if (hasIncompleteLastBlockFromBytes(messageLength)) {
-        return (16 - incompleteLastBlockSizeFromBytes(messageLength));
+        return (lengthInBytes - incompleteLastBlockSizeFromBytes(messageLength));
     }
     return 0;
 }
@@ -129,40 +127,40 @@ void aesBlock::substituteBytes() {
     for (uint32_t index = 0; index < lengthInBytes; index++) {
         blockAsByteArray[index] = sbox::data[blockAsByteArray[index]];
     }
-    syncWordsFromBytes();
+    //syncWordsFromBytes();
 }
 
 void aesBlock::XOR(const uint8_t *data) {
     for (uint32_t index = 0; index < lengthInBytes; index++) {
         blockAsByteArray[index] ^= data[index];
     }
-    syncWordsFromBytes();
+    // syncWordsFromBytes();
 }
 
 void aesBlock::shiftRows() {
     uint8_t temp;
 
-    temp                       = blockAsByteArray[1];
+    temp                 = blockAsByteArray[1];
     blockAsByteArray[1]  = blockAsByteArray[5];
     blockAsByteArray[5]  = blockAsByteArray[9];
     blockAsByteArray[9]  = blockAsByteArray[13];
     blockAsByteArray[13] = temp;
 
-    temp                       = blockAsByteArray[2];
+    temp                 = blockAsByteArray[2];
     blockAsByteArray[2]  = blockAsByteArray[10];
     blockAsByteArray[10] = temp;
 
-    temp                       = blockAsByteArray[6];
+    temp                 = blockAsByteArray[6];
     blockAsByteArray[6]  = blockAsByteArray[14];
     blockAsByteArray[14] = temp;
 
-    temp                       = blockAsByteArray[15];
+    temp                 = blockAsByteArray[15];
     blockAsByteArray[15] = blockAsByteArray[11];
     blockAsByteArray[11] = blockAsByteArray[7];
     blockAsByteArray[7]  = blockAsByteArray[3];
     blockAsByteArray[3]  = temp;
 
-    syncWordsFromBytes();
+    // syncWordsFromBytes();
 }
 
 void aesBlock::mixColumns() {
@@ -185,11 +183,11 @@ void aesBlock::mixColumns() {
         tempState[3][column] = a[0] ^ b[0] ^ a[1] ^ a[2] ^ b[3];
     }
     matrixToVector(blockAsByteArray, tempState);
-    syncWordsFromBytes();
+    // syncWordsFromBytes();
 }
 
 void aesBlock::shiftLeft() {
-    for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+    for (uint32_t byteIndex = 0; byteIndex < lengthInBytes; byteIndex++) {
         if (byteIndex < 15) {
             if ((blockAsByteArray[byteIndex + 1] & 0x80) == 0x80) {
                 blockAsByteArray[byteIndex] = static_cast<uint8_t>((blockAsByteArray[byteIndex] << 1U) + 1U);
@@ -201,13 +199,12 @@ void aesBlock::shiftLeft() {
             blockAsByteArray[byteIndex] = static_cast<uint8_t>(blockAsByteArray[byteIndex] << 1U);
         }
     }
-    syncWordsFromBytes();
+    // syncWordsFromBytes();
 }
 
-void aesBlock::syncWordsFromBytes() {
-    (void)memcpy(blockAsWordArray, blockAsByteArray, lengthInBytes);
-}
-void aesBlock::syncBytesFromWords() {
-    (void)memcpy(blockAsByteArray, blockAsWordArray, lengthInBytes);
-}
-
+// void aesBlock::syncWordsFromBytes() {
+//     //(void)memcpy(blockAsWordArray, blockAsByteArray, lengthInBytes);
+// }
+// void aesBlock::syncBytesFromWords() {
+//     //(void)memcpy(blockAsByteArray, blockAsWordArray, lengthInBytes);
+// }

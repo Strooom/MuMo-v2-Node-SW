@@ -404,10 +404,12 @@ void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirecti
 }
 
 void LoRaWAN::generateKeysK1K2() {
-    bool msbSet;
-    K1.setFromHexString("00000000000000000000000000000000");
-    K2.setFromHexString("00000000000000000000000000000000");
+    for (uint32_t byteIndex=0; byteIndex < aesKey::lengthInBytes; byteIndex++) {
+        K1.setByte(byteIndex, 0);
+        K2.setByte(byteIndex, 0);
+    }
     K1.encrypt(networkKey);
+    bool msbSet;
     msbSet = ((K1.getAsByte(0) & 0x80) == 0x80);
     K1.shiftLeft();
     if (msbSet) {

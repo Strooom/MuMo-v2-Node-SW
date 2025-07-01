@@ -5,7 +5,6 @@
 
 #pragma once
 #include <stdint.h>
-// #include <cstddef>        // std::size_t
 #include <aeskey.hpp>
 
 class aesBlock {
@@ -14,13 +13,12 @@ class aesBlock {
     static constexpr uint32_t lengthInWords{4};
 
     void setFromByteArray(const uint8_t bytesIn[lengthInBytes]);
-    // void setFromWordArray(const uint32_t wordsIn[lengthInWords]);
     void setFromHexString(const char *string);
+
     void setByte(const uint32_t byteIndex, uint8_t newValue);
     void setWord(const uint32_t wordIndex, uint32_t newValue);
-
     uint8_t getAsByte(uint32_t index) const { return blockAsByteArray[index]; }
-    uint32_t getAsWord(uint32_t index) const { return blockAsWordArray[index]; }
+    uint32_t getAsWord(uint32_t index) const;
 
     static uint32_t nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes);
     static uint32_t incompleteLastBlockSizeFromBytes(uint32_t nmbrOfBytes);
@@ -33,8 +31,8 @@ class aesBlock {
     static void vectorToMatrix(uint8_t matrixOut[4][4], const uint8_t vectorIn[16]);
     static void bytesToWords(uint32_t wordsOut[4], const uint8_t bytesIn[16]);
     static void wordsToBytes(uint8_t bytesOut[16], const uint32_t wordsIn[4]);
-
     static uint32_t swapLittleBigEndian(const uint32_t wordIn);
+
     void XOR(const uint8_t *withData);
     void shiftLeft();
 
@@ -46,9 +44,9 @@ class aesBlock {
     void shiftRows();
     void mixColumns();
 
-    void syncWordsFromBytes();
-    void syncBytesFromWords();
+    //void syncWordsFromBytes();
+    //void syncBytesFromWords();
 
     uint8_t blockAsByteArray[lengthInBytes]{};
-    uint32_t blockAsWordArray[lengthInWords]{};
+    // uint32_t blockAsWordArray[lengthInWords]{};
 };

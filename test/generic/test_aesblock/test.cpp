@@ -1,5 +1,6 @@
 #include <unity.h>
 #include <aesblock.hpp>
+#include <aeskey.hpp>
 
 void setUp(void) {        // before each test
 }
