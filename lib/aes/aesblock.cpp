@@ -1,6 +1,5 @@
 #include <aesblock.hpp>
-#include <cstring>        // needed for memcpy()
-// #include <cstddef>        // std::size_t
+#include <cstring>
 #include <sbox.hpp>
 #include <hexascii.hpp>
 #include <stm32wle5_aes.hpp>
@@ -11,30 +10,27 @@
 #endif
 
 void aesBlock::setFromByteArray(const uint8_t bytesIn[lengthInBytes]) {
-    (void)memcpy(blockAsByteArray, bytesIn, lengthInBytes);
-    // syncWordsFromBytes();
+    (void)memcpy(blockData, bytesIn, lengthInBytes);
 }
 
 void aesBlock::setFromHexString(const char *string) {
     uint8_t tmpBytes[lengthInBytes];
     hexAscii::hexStringToByteArray(tmpBytes, string, 32U);
-    (void)memcpy(blockAsByteArray, tmpBytes, lengthInBytes);
-    // syncWordsFromBytes();
+    (void)memcpy(blockData, tmpBytes, lengthInBytes);
 }
 
 void aesBlock::setByte(const uint32_t byteIndex, uint8_t newValue) {
-    blockAsByteArray[byteIndex] = newValue;
-    // syncWordsFromBytes();
+    blockData[byteIndex] = newValue;
 }
 
 uint32_t aesBlock::getAsWord(uint32_t index) const {
     uint32_t result;
-    memcpy(&result, &blockAsByteArray[index * 4], 4);
+    (void)memcpy(&result, &blockData[index * 4], 4);
     return result;
 }
 
 void aesBlock::setWord(const uint32_t wordIndex, uint32_t newValue) {
-    memcpy(&blockAsByteArray[wordIndex * 4], &newValue, 4);
+    (void)memcpy(&blockData[wordIndex * 4], &newValue, 4);
 }
 
 uint32_t aesBlock::nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes) {
@@ -98,7 +94,7 @@ void aesBlock::wordsToBytes(uint8_t bytesOut[16], const uint32_t wordsIn[4]) {
     }
 }
 
-void aesBlock::encrypt(aesKey &key) {
+void aesBlock::encrypt(const aesKey &key) {
 #ifdef HARDWARE_AES
     stm32wle5_aes::initialize(aesMode::EBC);
     stm32wle5_aes::setKey(key);
@@ -125,47 +121,43 @@ void aesBlock::encrypt(aesKey &key) {
 
 void aesBlock::substituteBytes() {
     for (uint32_t index = 0; index < lengthInBytes; index++) {
-        blockAsByteArray[index] = sbox::data[blockAsByteArray[index]];
+        blockData[index] = sbox::data[blockData[index]];
     }
-    //syncWordsFromBytes();
 }
 
 void aesBlock::XOR(const uint8_t *data) {
     for (uint32_t index = 0; index < lengthInBytes; index++) {
-        blockAsByteArray[index] ^= data[index];
+        blockData[index] ^= data[index];
     }
-    // syncWordsFromBytes();
 }
 
 void aesBlock::shiftRows() {
     uint8_t temp;
 
-    temp                 = blockAsByteArray[1];
-    blockAsByteArray[1]  = blockAsByteArray[5];
-    blockAsByteArray[5]  = blockAsByteArray[9];
-    blockAsByteArray[9]  = blockAsByteArray[13];
-    blockAsByteArray[13] = temp;
+    temp                 = blockData[1];
+    blockData[1]  = blockData[5];
+    blockData[5]  = blockData[9];
+    blockData[9]  = blockData[13];
+    blockData[13] = temp;
 
-    temp                 = blockAsByteArray[2];
-    blockAsByteArray[2]  = blockAsByteArray[10];
-    blockAsByteArray[10] = temp;
+    temp                 = blockData[2];
+    blockData[2]  = blockData[10];
+    blockData[10] = temp;
 
-    temp                 = blockAsByteArray[6];
-    blockAsByteArray[6]  = blockAsByteArray[14];
-    blockAsByteArray[14] = temp;
+    temp                 = blockData[6];
+    blockData[6]  = blockData[14];
+    blockData[14] = temp;
 
-    temp                 = blockAsByteArray[15];
-    blockAsByteArray[15] = blockAsByteArray[11];
-    blockAsByteArray[11] = blockAsByteArray[7];
-    blockAsByteArray[7]  = blockAsByteArray[3];
-    blockAsByteArray[3]  = temp;
-
-    // syncWordsFromBytes();
+    temp                 = blockData[15];
+    blockData[15] = blockData[11];
+    blockData[11] = blockData[7];
+    blockData[7]  = blockData[3];
+    blockData[3]  = temp;
 }
 
 void aesBlock::mixColumns() {
     uint8_t tempState[4][4];
-    vectorToMatrix(tempState, blockAsByteArray);
+    vectorToMatrix(tempState, blockData);
     uint8_t a[4];
     uint8_t b[4];
     for (uint8_t column = 0; column < 4; column++) {
@@ -182,29 +174,21 @@ void aesBlock::mixColumns() {
         tempState[2][column] = a[0] ^ a[1] ^ b[2] ^ a[3] ^ b[3];
         tempState[3][column] = a[0] ^ b[0] ^ a[1] ^ a[2] ^ b[3];
     }
-    matrixToVector(blockAsByteArray, tempState);
-    // syncWordsFromBytes();
+    matrixToVector(blockData, tempState);
 }
 
 void aesBlock::shiftLeft() {
     for (uint32_t byteIndex = 0; byteIndex < lengthInBytes; byteIndex++) {
         if (byteIndex < 15) {
-            if ((blockAsByteArray[byteIndex + 1] & 0x80) == 0x80) {
-                blockAsByteArray[byteIndex] = static_cast<uint8_t>((blockAsByteArray[byteIndex] << 1U) + 1U);
+            if ((blockData[byteIndex + 1] & 0x80) == 0x80) {
+                blockData[byteIndex] = static_cast<uint8_t>((blockData[byteIndex] << 1U) + 1U);
 
             } else {
-                blockAsByteArray[byteIndex] = static_cast<uint8_t>(blockAsByteArray[byteIndex] << 1U);
+                blockData[byteIndex] = static_cast<uint8_t>(blockData[byteIndex] << 1U);
             }
         } else {
-            blockAsByteArray[byteIndex] = static_cast<uint8_t>(blockAsByteArray[byteIndex] << 1U);
+            blockData[byteIndex] = static_cast<uint8_t>(blockData[byteIndex] << 1U);
         }
     }
-    // syncWordsFromBytes();
-}
 
-// void aesBlock::syncWordsFromBytes() {
-//     //(void)memcpy(blockAsWordArray, blockAsByteArray, lengthInBytes);
-// }
-// void aesBlock::syncBytesFromWords() {
-//     //(void)memcpy(blockAsByteArray, blockAsWordArray, lengthInBytes);
-// }
+}

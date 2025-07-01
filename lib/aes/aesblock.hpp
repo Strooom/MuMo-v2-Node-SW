@@ -17,7 +17,7 @@ class aesBlock {
 
     void setByte(const uint32_t byteIndex, uint8_t newValue);
     void setWord(const uint32_t wordIndex, uint32_t newValue);
-    uint8_t getAsByte(uint32_t index) const { return blockAsByteArray[index]; }
+    uint8_t getAsByte(uint32_t index) const { return blockData[index]; }
     uint32_t getAsWord(uint32_t index) const;
 
     static uint32_t nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes);
@@ -25,7 +25,7 @@ class aesBlock {
     static bool hasIncompleteLastBlockFromBytes(uint32_t nmbrOfBytes);
     static uint32_t calculateNmbrOfBytesToPad(uint32_t nmbrOfBytes);
 
-    void encrypt(aesKey &withKey);
+    void encrypt(const aesKey &withKey);
 
     static void matrixToVector(uint8_t vectorOut[16], const uint8_t matrixIn[4][4]);
     static void vectorToMatrix(uint8_t matrixOut[4][4], const uint8_t vectorIn[16]);
@@ -44,9 +44,6 @@ class aesBlock {
     void shiftRows();
     void mixColumns();
 
-    //void syncWordsFromBytes();
-    //void syncBytesFromWords();
+    uint8_t blockData[lengthInBytes]{};
 
-    uint8_t blockAsByteArray[lengthInBytes]{};
-    // uint32_t blockAsWordArray[lengthInWords]{};
 };
