@@ -16,10 +16,11 @@ class aesBlock {
     void setFromByteArray(const uint8_t bytesIn[lengthInBytes]);
     void setFromWordArray(const uint32_t wordsIn[lengthInWords]);
     void setFromHexString(const char *string);
-    aesBlock &operator=(const aesBlock &block);
+    void setFromOtherBlock(const aesBlock &block);
+    void setByte(const uint32_t byteIndex, uint8_t newValue);
+    void setWord(const uint32_t wordIndex, uint32_t newValue);
 
-    uint8_t &operator[](std::size_t index);
-    bool operator==(const aesBlock &block) const;
+    static bool isEqual(const aesBlock &block1, const aesBlock &block2);
 
     uint8_t getAsByte(uint32_t index) const { return state.blockAsByteArray[index]; }
     uint32_t getAsWord(uint32_t index) const { return state.blockAsWordArray[index]; }
@@ -32,7 +33,7 @@ class aesBlock {
     void encrypt(aesKey &withKey);
 
     uint8_t *asBytes();
-    uint32_t *asWords();
+    // uint32_t *asWords();
 
     static void matrixToVector(uint8_t vectorOut[16], const uint8_t matrixIn[4][4]);
     static void vectorToMatrix(uint8_t matrixOut[4][4], const uint8_t vectorIn[16]);
@@ -53,7 +54,6 @@ class aesBlock {
 
     void syncWordsFromBytes();
     void syncBytesFromWords();
-
 
     union {
         uint8_t blockAsByteArray[lengthInBytes]{};

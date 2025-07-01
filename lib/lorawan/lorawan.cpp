@@ -331,29 +331,29 @@ uint32_t LoRaWAN::receivedMic() {
 #pragma region 2 : Encrypting / Decrypting application payload - Calculating MIC
 
 void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uint32_t blockIndex) {
-    theBlock[0] = 0x01;
-    theBlock[1] = 0x00;
-    theBlock[2] = 0x00;
-    theBlock[3] = 0x00;
-    theBlock[4] = 0x00;
-    theBlock[5] = static_cast<uint8_t>(theDirection);
-    theBlock[6] = DevAddr.getAsByte(0);
-    theBlock[7] = DevAddr.getAsByte(1);
-    theBlock[8] = DevAddr.getAsByte(2);
-    theBlock[9] = DevAddr.getAsByte(3);
+    theBlock.setByte(0, 0x01);
+    theBlock.setByte(1, 0x00);
+    theBlock.setByte(2, 0x00);
+    theBlock.setByte(3, 0x00);
+    theBlock.setByte(4, 0x00);
+    theBlock.setByte(5, static_cast<uint8_t>(theDirection));
+    theBlock.setByte(6, DevAddr.getAsByte(0));
+    theBlock.setByte(7, DevAddr.getAsByte(1));
+    theBlock.setByte(8, DevAddr.getAsByte(2));
+    theBlock.setByte(9, DevAddr.getAsByte(3));
     if (theDirection == linkDirection::uplink) {
-        theBlock[10] = uplinkFrameCount.getAsByte(0);
-        theBlock[11] = uplinkFrameCount.getAsByte(1);
-        theBlock[12] = uplinkFrameCount.getAsByte(2);
-        theBlock[13] = uplinkFrameCount.getAsByte(3);
+        theBlock.setByte(10, uplinkFrameCount.getAsByte(0));
+        theBlock.setByte(11, uplinkFrameCount.getAsByte(1));
+        theBlock.setByte(12, uplinkFrameCount.getAsByte(2));
+        theBlock.setByte(13, uplinkFrameCount.getAsByte(3));
     } else {
-        theBlock[10] = downlinkFrameCount.getAsByte(0);
-        theBlock[11] = downlinkFrameCount.getAsByte(1);
-        theBlock[12] = downlinkFrameCount.getAsByte(2);
-        theBlock[13] = downlinkFrameCount.getAsByte(3);
+        theBlock.setByte(10, downlinkFrameCount.getAsByte(0));
+        theBlock.setByte(11, downlinkFrameCount.getAsByte(1));
+        theBlock.setByte(12, downlinkFrameCount.getAsByte(2));
+        theBlock.setByte(13, downlinkFrameCount.getAsByte(3));
     }
-    theBlock[14] = 0x00;
-    theBlock[15] = static_cast<uint8_t>(blockIndex);        // Blocks Ai are indexed from 1..k, where k is the number of blocks
+    theBlock.setByte(14, 0x00);
+    theBlock.setByte(15, static_cast<uint8_t>(blockIndex));        // Blocks Ai are indexed from 1..k, where k is the number of blocks
 }
 
 void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirection) {
@@ -390,11 +390,11 @@ void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirecti
 
         if (hasIncompleteLastBlock && (blockIndex == (nmbrOfBlocks - 1))) {
             for (uint32_t byteIndex = 0; byteIndex < incompleteLastBlockSize; byteIndex++) {
-                rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
+                rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock.getAsByte(byteIndex);
             }
         } else {
             for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
-                rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock[byteIndex];
+                rawMessage[(blockIndex * 16) + byteIndex + framePayloadOffset] ^= theBlock.getAsByte(byteIndex);
             }
         }
     }
@@ -406,16 +406,16 @@ void LoRaWAN::generateKeysK1K2() {
     K1.setFromHexString("00000000000000000000000000000000");
     K2.setFromHexString("00000000000000000000000000000000");
     K1.encrypt(networkKey);
-    msbSet = ((K1[0] & 0x80) == 0x80);
+    msbSet = ((K1.getAsByte(0) & 0x80) == 0x80);
     K1.shiftLeft();
     if (msbSet) {
-        K1[15] = K1[15] ^ 0x87;
+        K1.setByte(15, K1.getAsByte(15) ^ 0x87);
     }
     K2     = K1;
-    msbSet = ((K2[0] & 0x80) == 0x80);
+    msbSet = ((K2.getAsByte(0) & 0x80) == 0x80);
     K2.shiftLeft();
     if (msbSet) {
-        K2[15] = K2[15] ^ 0x87;
+        K2.setByte(15, K2.getAsByte(15) ^ 0x87);
     }
 }
 
@@ -460,7 +460,7 @@ uint32_t LoRaWAN::calculateMic() {
         stm32wle5_aes::clearComputationComplete();
     }
     stm32wle5_aes::disable();
-    uint32_t mic = tmpBlock.asWords()[0];
+    uint32_t mic = tmpBlock.getAsWord(0);
 
 #else
     uint32_t payloadLength      = micOffset;

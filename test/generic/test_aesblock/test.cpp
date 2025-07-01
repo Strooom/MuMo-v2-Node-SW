@@ -14,7 +14,6 @@ void test_initialize() {
     for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
         TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
     }
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, testBlock.asWords(), aesBlock::lengthInWords);
     for (uint32_t index = 0; index < aesBlock::lengthInWords; ++index) {
         TEST_ASSERT_EQUAL_UINT32(expectedWords[index], testBlock.getAsWord(index));
     }
@@ -29,7 +28,6 @@ void test_setFromByteArray() {
     for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
         TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
     }
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, testBlock.asWords(), aesBlock::lengthInWords);
     for (uint32_t index = 0; index < aesBlock::lengthInWords; ++index) {
         TEST_ASSERT_EQUAL_UINT32(expectedWords[index], testBlock.getAsWord(index));
     }
@@ -44,7 +42,6 @@ void test_setFromWordArray() {
     for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
         TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
     }
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, testBlock.asWords(), aesBlock::lengthInWords);
     for (uint32_t index = 0; index < aesBlock::lengthInWords; ++index) {
         TEST_ASSERT_EQUAL_UINT32(expectedWords[index], testBlock.getAsWord(index));
     }
@@ -59,7 +56,6 @@ void test_setFromHexString() {
     for (uint32_t index = 0; index < aesBlock::lengthInBytes; ++index) {
         TEST_ASSERT_EQUAL_UINT8(expectedBytes[index], testBlock.getAsByte(index));
     }
-    TEST_ASSERT_EQUAL_UINT32_ARRAY(expectedWords, testBlock.asWords(), aesBlock::lengthInWords);
     for (uint32_t index = 0; index < aesBlock::lengthInWords; ++index) {
         TEST_ASSERT_EQUAL_UINT32(expectedWords[index], testBlock.getAsWord(index));
     }
@@ -69,22 +65,22 @@ void test_arrayOperator() {
     aesBlock testBlock;
     testBlock.setFromHexString("00112233445566778899AABBCCDDEEFF");
 
-    TEST_ASSERT_EQUAL_UINT8(testBlock[0], 0x00);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[1], 0x11);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[2], 0x22);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[3], 0x33);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[4], 0x44);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[5], 0x55);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[6], 0x66);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[7], 0x77);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[8], 0x88);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[9], 0x99);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[10], 0xAA);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[11], 0xBB);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[12], 0xCC);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[13], 0xDD);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[14], 0xEE);
-    TEST_ASSERT_EQUAL_UINT8(testBlock[15], 0xFF);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(0), 0x00);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(1), 0x11);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(2), 0x22);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(3), 0x33);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(4), 0x44);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(5), 0x55);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(6), 0x66);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(7), 0x77);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(8), 0x88);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(9), 0x99);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(10), 0xAA);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(11), 0xBB);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(12), 0xCC);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(13), 0xDD);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(14), 0xEE);
+    TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(15), 0xFF);
 }
 
 void test_isEqualOperator() {
@@ -92,10 +88,10 @@ void test_isEqualOperator() {
     blockOne.setFromHexString("00112233445566778899AABBCCDDEEFF");
     aesBlock blockTwo;
     blockTwo.setFromHexString("00112233445566778899AABBCCDDEEFF");
-    TEST_ASSERT_TRUE(blockOne == blockTwo);
+    TEST_ASSERT_TRUE(aesBlock::isEqual(blockOne, blockTwo));
 
     blockTwo.setFromHexString("000102030405060708090A0B0C0D0E0F");
-    TEST_ASSERT_FALSE(blockOne == blockTwo);
+    TEST_ASSERT_FALSE(aesBlock::isEqual(blockOne, blockTwo));
 }
 
 void test_assignOperator() {
@@ -103,7 +99,7 @@ void test_assignOperator() {
     blockOne.setFromHexString("00112233445566778899AABBCCDDEEFF");
     aesBlock blockTwo;
     blockTwo = blockOne;
-    TEST_ASSERT_TRUE(blockOne == blockTwo);
+    TEST_ASSERT_TRUE(aesBlock::isEqual(blockOne, blockTwo));
 }
 
 void test_encrypt() {

@@ -57,22 +57,31 @@ void test_hwEncryptSingleBlock() {
     inputOutput.encrypt(key);
     aesBlock expectedCypherText;
     expectedCypherText.setFromHexString("3ad77bb40d7a3660a89ecaf32466ef97");
-    TEST_ASSERT_TRUE(inputOutput == expectedCypherText);
+
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
+        TEST_ASSERT_EQUAL(expectedCypherText.getAsByte(i), inputOutput.getAsByte(i));
+    }
 
     inputOutput.setFromHexString("ae2d8a571e03ac9c9eb76fac45af8e51");        // test-vector 2
     inputOutput.encrypt(key);
     expectedCypherText.setFromHexString("f5d3d58503b9699de785895a96fdbaaf");
-    TEST_ASSERT_TRUE(inputOutput == expectedCypherText);
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
+        TEST_ASSERT_EQUAL(expectedCypherText.getAsByte(i), inputOutput.getAsByte(i));
+    }
 
     inputOutput.setFromHexString("30c81c46a35ce411e5fbc1191a0a52ef");        // test-vector 3
     inputOutput.encrypt(key);
     expectedCypherText.setFromHexString("43b1cd7f598ece23881b00e3ed030688");
-    TEST_ASSERT_TRUE(inputOutput == expectedCypherText);
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
+        TEST_ASSERT_EQUAL(expectedCypherText.getAsByte(i), inputOutput.getAsByte(i));
+    }
 
     inputOutput.setFromHexString("f69f2445df4f9b17ad2b417be66c3710");        // test-vector 4
     inputOutput.encrypt(key);
     expectedCypherText.setFromHexString("7b0c785e27e8ad3f8223207104725dd4");
-    TEST_ASSERT_TRUE(inputOutput == expectedCypherText);
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
+        TEST_ASSERT_EQUAL(expectedCypherText.getAsByte(i), inputOutput.getAsByte(i));
+    }
 }
 
 void test_hwEncryptLoRaWANPayload() {
@@ -98,7 +107,9 @@ void test_hwEncryptLoRaWANPayload() {
     stm32wle5_aes::clearComputationComplete();
     stm32wle5_aes::read(output);
     toBe.setFromHexString("4d9655c553debea0dfa6290bbad3ebc9");
-    TEST_ASSERT_TRUE(output == toBe);
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
+        TEST_ASSERT_EQUAL(output.getAsByte(i), toBe.getAsByte(i));
+    }
 
     // second block
 
@@ -108,7 +119,9 @@ void test_hwEncryptLoRaWANPayload() {
     stm32wle5_aes::clearComputationComplete();
     stm32wle5_aes::read(output);
     toBe.setFromHexString("9376ed97203ab35f8bf1abd8b63e972e");
-    TEST_ASSERT_TRUE(output == toBe);
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
+        TEST_ASSERT_EQUAL(output.getAsByte(i), toBe.getAsByte(i));
+    }
 
     // third block
 
@@ -118,7 +131,9 @@ void test_hwEncryptLoRaWANPayload() {
     stm32wle5_aes::clearComputationComplete();
     stm32wle5_aes::read(output);
     toBe.setFromHexString("6b0c10e37d694115c32d4f7a807db808");
-    TEST_ASSERT_TRUE(output == toBe);
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
+        TEST_ASSERT_EQUAL(output.getAsByte(i), toBe.getAsByte(i));
+    }
 }
 
 void test_hwCalculateMic() {
@@ -142,7 +157,9 @@ void test_hwCalculateMic() {
     stm32wle5_aes::clearComputationComplete();
     stm32wle5_aes::read(output);
     toBe.setFromHexString("7df76b0c1ab899b33e42f047b91b546f");
-    TEST_ASSERT_TRUE(output == toBe);
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
+        TEST_ASSERT_EQUAL(output.getAsByte(i), toBe.getAsByte(i));
+    }
 
     // second block
 
@@ -152,7 +169,9 @@ void test_hwCalculateMic() {
     stm32wle5_aes::clearComputationComplete();
     stm32wle5_aes::read(output);
     toBe.setFromHexString("a9dcf5aa138056e259e7be57958e72d8");
-    TEST_ASSERT_TRUE(output == toBe);
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
+        TEST_ASSERT_EQUAL(output.getAsByte(i), toBe.getAsByte(i));
+    }
 
     // third block
 
@@ -162,7 +181,9 @@ void test_hwCalculateMic() {
     stm32wle5_aes::clearComputationComplete();
     stm32wle5_aes::read(output);
     toBe.setFromHexString("626caecce6b25a25524cb32b7ec1374e");
-    TEST_ASSERT_TRUE(output == toBe);
+    for (size_t i = 0; i < aesBlock::lengthInBytes; ++i) {
+        TEST_ASSERT_EQUAL(output.getAsByte(i), toBe.getAsByte(i));
+    }
 }
 
 int main(int argc, char **argv) {
