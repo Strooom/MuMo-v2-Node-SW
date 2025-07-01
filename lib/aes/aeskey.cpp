@@ -1,12 +1,12 @@
 #include <aeskey.hpp>
-#include <cstring>        // needed for memcpy()
+#include <cstring>
 #include <sbox.hpp>
 #include <rcon.hpp>
 #include <hexascii.hpp>
 
 void aesKey::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
     (void)memcpy(keyAsBytes, bytes, lengthInBytes);
-    // syncWordsFromBytes();
+
     syncHexStringFromBytes();
 #ifndef HARDWARE_AES
     expandKey();
@@ -15,7 +15,6 @@ void aesKey::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
 
 void aesKey::setFromHexString(const char* string) {
     hexAscii::hexStringToByteArray(keyAsBytes, string, 32U);
-    // syncWordsFromBytes();
     syncHexStringFromBytes();
 #ifndef HARDWARE_AES
     expandKey();
@@ -65,10 +64,6 @@ void aesKey::calculateRoundKey(uint8_t round) {
     }
 }
 #endif
-
-// void aesKey::syncWordsFromBytes() {
-//     (void)memcpy(keyAsWords, keyAsBytes, lengthInBytes);
-// }
 
 void aesKey::syncHexStringFromBytes() {
     hexAscii::byteArrayToHexString(keyAsHexString, keyAsBytes, lengthInBytes);

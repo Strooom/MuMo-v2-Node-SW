@@ -34,10 +34,7 @@ class aesKey {
     // representation as bytes : first to hexAscii characters map to first byte of the array
 
     uint8_t keyAsBytes[lengthInBytes]{};
-    // uint32_t keyAsWords[lengthInWords]{};
     char keyAsHexString[lengthAsHexAscii + 1]{};
-
-    // void syncWordsFromBytes();
     void syncHexStringFromBytes();
 
 #ifndef HARDWARE_AES

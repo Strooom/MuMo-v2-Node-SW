@@ -2,7 +2,6 @@
 
 void deviceAddress::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
     (void)memcpy(devAddrAsBytes, bytes, lengthInBytes);
-    // syncWordFromBytes();
     syncHexStringFromBytes();
 }
 
@@ -14,7 +13,6 @@ void deviceAddress::setFromWord(const uint32_t wordIn) {
 void deviceAddress::setFromHexString(const char* string) {
     hexAscii::hexStringToByteArrayReversed(devAddrAsBytes, string, lengthAsHexAscii);
     syncHexStringFromBytes();
-    // syncWordFromBytes();
 }
 
 uint32_t deviceAddress::getAsWord() const {
