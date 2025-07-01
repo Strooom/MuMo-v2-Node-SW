@@ -22,8 +22,8 @@ class aesBlock {
 
     static bool isEqual(const aesBlock &block1, const aesBlock &block2);
 
-    uint8_t getAsByte(uint32_t index) const { return state.blockAsByteArray[index]; }
-    uint32_t getAsWord(uint32_t index) const { return state.blockAsWordArray[index]; }
+    uint8_t getAsByte(uint32_t index) const { return blockAsByteArray[index]; }
+    uint32_t getAsWord(uint32_t index) const { return blockAsWordArray[index]; }
 
     static uint32_t nmbrOfBlocksFromBytes(uint32_t nmbrOfBytes);
     static uint32_t incompleteLastBlockSizeFromBytes(uint32_t nmbrOfBytes);
@@ -55,8 +55,6 @@ class aesBlock {
     void syncWordsFromBytes();
     void syncBytesFromWords();
 
-    union {
-        uint8_t blockAsByteArray[lengthInBytes]{};
-        uint32_t blockAsWordArray[lengthInWords];
-    } state;
+    uint8_t blockAsByteArray[lengthInBytes]{};
+    uint32_t blockAsWordArray[lengthInWords]{};
 };
