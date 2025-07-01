@@ -6,7 +6,7 @@
 
 void aesKey::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
     (void)memcpy(keyAsBytes, bytes, lengthInBytes);
-    syncWordsFromBytes();
+    // syncWordsFromBytes();
     syncHexStringFromBytes();
 #ifndef HARDWARE_AES
     expandKey();
@@ -15,11 +15,17 @@ void aesKey::setFromByteArray(const uint8_t bytes[lengthInBytes]) {
 
 void aesKey::setFromHexString(const char* string) {
     hexAscii::hexStringToByteArray(keyAsBytes, string, 32U);
-    syncWordsFromBytes();
+    // syncWordsFromBytes();
     syncHexStringFromBytes();
 #ifndef HARDWARE_AES
     expandKey();
 #endif
+}
+
+uint32_t aesKey::getAsWord(uint32_t index) const {
+    uint32_t result;
+    (void)memcpy(&result, &keyAsBytes[index * 4], 4);
+    return result;
 }
 
 uint32_t aesKey::swapLittleBigEndian(uint32_t wordIn) {
@@ -60,9 +66,10 @@ void aesKey::calculateRoundKey(uint8_t round) {
 }
 #endif
 
-void aesKey::syncWordsFromBytes() {
-    (void)memcpy(keyAsWords, keyAsBytes, lengthInBytes);
-}
+// void aesKey::syncWordsFromBytes() {
+//     (void)memcpy(keyAsWords, keyAsBytes, lengthInBytes);
+// }
+
 void aesKey::syncHexStringFromBytes() {
     hexAscii::byteArrayToHexString(keyAsHexString, keyAsBytes, lengthInBytes);
 }

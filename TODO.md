@@ -8,7 +8,7 @@
   * target unit test for wait time after page write into eeprom
 
 ### Priority Medium
-* deviceStatusReq doen werken met echte waarden
+*  doen werken met echte waarden
   - ontvangstwaarden van laatste downlink opslaan
   - batterijspanning omzetten in uint8 : omrekening toevoegen aan battery
 

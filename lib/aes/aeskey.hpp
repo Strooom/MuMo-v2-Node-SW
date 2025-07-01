@@ -16,8 +16,8 @@ class aesKey {
     void setFromHexString(const char* string);
 
     uint8_t getAsByte(uint32_t index) const { return keyAsBytes[index]; }
-    uint32_t getAsWord(uint32_t index) const { return keyAsWords[index]; }
-    const char* getAsHexString() const { return keyAsHexString; }
+    uint32_t getAsWord(uint32_t index) const;
+    const char* getAsHexString() const { return keyAsHexString; };
 
     static uint32_t swapLittleBigEndian(uint32_t wordIn);
 
@@ -29,15 +29,15 @@ class aesKey {
 
   private:
 #endif
-    // These are 3 representations of the same key data, in different formats for easy retrieval. They are synced when setting the key.
+    // These are 2 representations of the same key data, in different formats for easy retrieval. They are synced when setting the key.
     // representation as hexAscii aligns with how The Things Network shows the AES keys, so copy paste from there is possible.
     // representation as bytes : first to hexAscii characters map to first byte of the array
 
     uint8_t keyAsBytes[lengthInBytes]{};
-    uint32_t keyAsWords[lengthInWords]{};
+    // uint32_t keyAsWords[lengthInWords]{};
     char keyAsHexString[lengthAsHexAscii + 1]{};
 
-    void syncWordsFromBytes();
+    // void syncWordsFromBytes();
     void syncHexStringFromBytes();
 
 #ifndef HARDWARE_AES
