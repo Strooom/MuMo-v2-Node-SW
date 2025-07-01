@@ -216,6 +216,3 @@ void aesBlock::syncBytesFromWords() {
     (void)memcpy(blockAsByteArray, blockAsWordArray, lengthInBytes);
 }
 
-bool aesBlock::isEqual(const aesBlock &block1, const aesBlock &block2) {
-    return (memcmp(block1.blockAsByteArray, block2.blockAsByteArray, lengthInBytes) == 0);
-}

@@ -57,7 +57,7 @@ void test_setFromHexString() {
     }
 }
 
-void test_arrayOperator() {
+void test_getByte() {
     aesBlock testBlock;
     testBlock.setFromHexString("00112233445566778899AABBCCDDEEFF");
 
@@ -77,25 +77,6 @@ void test_arrayOperator() {
     TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(13), 0xDD);
     TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(14), 0xEE);
     TEST_ASSERT_EQUAL_UINT8(testBlock.getAsByte(15), 0xFF);
-}
-
-void test_isEqualOperator() {
-    aesBlock blockOne;
-    blockOne.setFromHexString("00112233445566778899AABBCCDDEEFF");
-    aesBlock blockTwo;
-    blockTwo.setFromHexString("00112233445566778899AABBCCDDEEFF");
-    TEST_ASSERT_TRUE(aesBlock::isEqual(blockOne, blockTwo));
-
-    blockTwo.setFromHexString("000102030405060708090A0B0C0D0E0F");
-    TEST_ASSERT_FALSE(aesBlock::isEqual(blockOne, blockTwo));
-}
-
-void test_assignOperator() {
-    aesBlock blockOne;
-    blockOne.setFromHexString("00112233445566778899AABBCCDDEEFF");
-    aesBlock blockTwo;
-    blockTwo = blockOne;
-    TEST_ASSERT_TRUE(aesBlock::isEqual(blockOne, blockTwo));
 }
 
 void test_encrypt() {
@@ -309,9 +290,7 @@ int main(int argc, char** argv) {
     RUN_TEST(test_setFromByteArray);
     RUN_TEST(test_setFromWordArray);
     RUN_TEST(test_setFromHexString);
-    RUN_TEST(test_arrayOperator);
-    RUN_TEST(test_isEqualOperator);
-    RUN_TEST(test_assignOperator);
+    RUN_TEST(test_getByte);
 
     RUN_TEST(test_nmbrOfBlocksFromBytes);
     RUN_TEST(test_incompleteLastBlockSizeFromBytes);

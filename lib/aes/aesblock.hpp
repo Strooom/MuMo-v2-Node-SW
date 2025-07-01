@@ -5,7 +5,7 @@
 
 #pragma once
 #include <stdint.h>
-#include <cstddef>        // std::size_t
+//#include <cstddef>        // std::size_t
 #include <aeskey.hpp>
 
 class aesBlock {
@@ -20,8 +20,6 @@ class aesBlock {
     void setByte(const uint32_t byteIndex, uint8_t newValue);
     void setWord(const uint32_t wordIndex, uint32_t newValue);
 
-    static bool isEqual(const aesBlock &block1, const aesBlock &block2);
-
     uint8_t getAsByte(uint32_t index) const { return blockAsByteArray[index]; }
     uint32_t getAsWord(uint32_t index) const { return blockAsWordArray[index]; }
 
@@ -31,9 +29,6 @@ class aesBlock {
     static uint32_t calculateNmbrOfBytesToPad(uint32_t nmbrOfBytes);
 
     void encrypt(aesKey &withKey);
-
-    // uint8_t *asBytes();
-    // uint32_t *asWords();
 
     static void matrixToVector(uint8_t vectorOut[16], const uint8_t matrixIn[4][4]);
     static void vectorToMatrix(uint8_t matrixOut[4][4], const uint8_t vectorIn[16]);
