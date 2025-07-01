@@ -377,7 +377,9 @@ void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirecti
         stm32wle5_aes::read(tmpBlock);
         stm32wle5_aes::clearComputationComplete();
 
-        memcpy(tmpOffset, tmpBlock.asBytes(), aesBlock::lengthInBytes);
+        for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {        // was         memcpy(tmpOffset, tmpBlock.asBytes(), aesBlock::lengthInBytes);
+            tmpOffset[byteIndex] = tmpBlock.getAsByte(byteIndex);
+        }
     }
     stm32wle5_aes::disable();
 #else
@@ -446,10 +448,17 @@ uint32_t LoRaWAN::calculateMic() {
         tmpOffset = rawMessage + (blockIndex * 16);
         tmpBlock.setFromByteArray(tmpOffset);
         if (blockIndex == (nmbrOfBlocks - 1)) {
+            uint8_t tmpKeyAsBytes[16];
             if (hasIncompleteLastBlock) {
-                tmpBlock.XOR(K2.asBytes());
+                for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                    tmpKeyAsBytes[byteIndex] = K2.getAsByte(byteIndex);
+                }
+                tmpBlock.XOR(tmpKeyAsBytes);
             } else {
-                tmpBlock.XOR(K1.asBytes());
+                for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                    tmpKeyAsBytes[byteIndex] = K1.getAsByte(byteIndex);
+                }
+                tmpBlock.XOR(tmpKeyAsBytes);
             }
         }
         stm32wle5_aes::write(tmpBlock);
@@ -479,7 +488,10 @@ uint32_t LoRaWAN::calculateMic() {
             outputBlock.setFromByteArray(rawMessage + (blockIndex * 16));        //  Copy data into block
             outputBlock.XOR(Old_Data);
             outputBlock.encrypt(networkKey);
-            (void)memcpy(outputAsBytes, outputBlock.asBytes(), 16);
+
+            for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {        // was (void)memcpy(outputAsBytes, outputBlock.asBytes(), 16);
+                outputAsBytes[byteIndex] = outputBlock.getAsByte(byteIndex);
+            }
 
             for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
                 Old_Data[byteIndex] = outputAsBytes[byteIndex];
@@ -490,7 +502,11 @@ uint32_t LoRaWAN::calculateMic() {
         if (incompleteLastBlockSize == 0) {
             outputBlock.setFromByteArray(rawMessage + ((nmbrOfBlocks - 1) * 16));        //  Copy data into block
             outputBlock.XOR(Old_Data);
-            outputBlock.XOR(K1.asBytes());
+            uint8_t K1AsBytes[16];
+            for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                K1AsBytes[byteIndex] = K1.getAsByte(byteIndex);
+            }
+            outputBlock.XOR(K1AsBytes);
             outputBlock.encrypt(networkKey);
 
         } else {
@@ -507,7 +523,11 @@ uint32_t LoRaWAN::calculateMic() {
             }
             outputBlock.setFromByteArray(outputAsBytes);
             outputBlock.XOR(Old_Data);
-            outputBlock.XOR(K2.asBytes());
+            uint8_t K2AsBytes[16];
+            for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+                K2AsBytes[byteIndex] = K2.getAsByte(byteIndex);
+            }
+            outputBlock.XOR(K2AsBytes);
             outputBlock.encrypt(networkKey);
         }
 
@@ -518,11 +538,16 @@ uint32_t LoRaWAN::calculateMic() {
         }
 
         outputBlock.setFromByteArray(outputAsBytes);
-        outputBlock.XOR(K2.asBytes());
+
+        uint8_t K2AsBytes[16];
+        for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
+            K2AsBytes[byteIndex] = K2.getAsByte(byteIndex);
+        }
+        outputBlock.XOR(K2AsBytes);
         outputBlock.XOR(Old_Data);        // I think this step is useless, as Old_Data is all zeroes
         outputBlock.encrypt(networkKey);
     }
-    uint32_t mic = ((outputBlock.asBytes()[3] << 24) + (outputBlock.asBytes()[2] << 16) + (outputBlock.asBytes()[1] << 8) + (outputBlock.asBytes()[0]));
+    uint32_t mic = ((outputBlock.getAsByte(3) << 24) + (outputBlock.getAsByte(2) << 16) + (outputBlock.getAsByte(1) << 8) + (outputBlock.getAsByte(0)));
 #endif
     return mic;
 }

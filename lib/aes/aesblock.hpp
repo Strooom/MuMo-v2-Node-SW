@@ -32,7 +32,7 @@ class aesBlock {
 
     void encrypt(aesKey &withKey);
 
-    uint8_t *asBytes();
+    // uint8_t *asBytes();
     // uint32_t *asWords();
 
     static void matrixToVector(uint8_t vectorOut[16], const uint8_t matrixIn[4][4]);

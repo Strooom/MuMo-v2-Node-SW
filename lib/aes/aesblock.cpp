@@ -38,9 +38,9 @@ void aesBlock::setWord(const uint32_t wordIndex, uint32_t newValue) {
     state.blockAsWordArray[wordIndex] = newValue;
 }
 
-uint8_t *aesBlock::asBytes() {
-    return state.blockAsByteArray;
-}
+// uint8_t *aesBlock::asBytes() {
+//     return state.blockAsByteArray;
+// }
 
 // uint32_t *aesBlock::asWords() {
 //     return state.blockAsWordArray;
