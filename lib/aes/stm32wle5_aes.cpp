@@ -38,7 +38,7 @@ void stm32wle5_aes::setKey(const aesKey& theKey) {
 #endif
 }
 
-void stm32wle5_aes::setInitializationVector(aesBlock& theBlock) { // TODO after refactoring aesBlock, this argument should be const
+void stm32wle5_aes::setInitializationVector(const aesBlock& theBlock) {
 #ifndef generic
     AES->IVR0 = aesBlock::swapLittleBigEndian(theBlock.getAsWord(3));
     AES->IVR1 = aesBlock::swapLittleBigEndian(theBlock.getAsWord(2));
@@ -47,7 +47,7 @@ void stm32wle5_aes::setInitializationVector(aesBlock& theBlock) { // TODO after 
 #endif
 }
 
-void stm32wle5_aes::write(aesBlock& theBlock) { // TODO after refactoring aesBlock, this argument should be const
+void stm32wle5_aes::write(const aesBlock& theBlock) {
 #ifndef generic
     AES->DINR = theBlock.getAsWord(0);
     AES->DINR = theBlock.getAsWord(1);

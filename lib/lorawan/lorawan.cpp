@@ -356,7 +356,7 @@ void LoRaWAN::prepareBlockAi(aesBlock& theBlock, linkDirection theDirection, uin
     theBlock.setByte(15, static_cast<uint8_t>(blockIndex));        // Blocks Ai are indexed from 1..k, where k is the number of blocks
 }
 
-void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirection) {
+void LoRaWAN::encryptDecryptPayload(const aesKey& theKey, linkDirection theLinkDirection) {
     uint32_t nmbrOfBlocks = aesBlock::nmbrOfBlocksFromBytes(framePayloadLength);
 #ifdef HARDWARE_AES
     stm32wle5_aes::initialize(aesMode::CTR);
@@ -377,7 +377,7 @@ void LoRaWAN::encryptDecryptPayload(aesKey& theKey, linkDirection theLinkDirecti
         stm32wle5_aes::read(tmpBlock);
         stm32wle5_aes::clearComputationComplete();
 
-        for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {        // was         memcpy(tmpOffset, tmpBlock.asBytes(), aesBlock::lengthInBytes);
+        for (uint32_t byteIndex = 0; byteIndex < 16; byteIndex++) {
             tmpOffset[byteIndex] = tmpBlock.getAsByte(byteIndex);
         }
     }
