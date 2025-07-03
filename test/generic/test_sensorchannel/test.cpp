@@ -154,31 +154,7 @@ void test_getOutput() {
     TEST_ASSERT_EQUAL_FLOAT(25.0F, testChannel.value());
 }
 
-void test_calculateOversampling() {
-    TEST_ASSERT_EQUAL_UINT32(0, sensorChannel::calculateOversampling(0));        // numberOfSamplesToAverage cannot be zero
 
-    TEST_ASSERT_EQUAL_UINT32(0, sensorChannel::calculateOversampling(1));
-    TEST_ASSERT_EQUAL_UINT32(1, sensorChannel::calculateOversampling(2));
-    TEST_ASSERT_EQUAL_UINT32(2, sensorChannel::calculateOversampling(3));
-    TEST_ASSERT_EQUAL_UINT32(3, sensorChannel::calculateOversampling(4));
-    TEST_ASSERT_EQUAL_UINT32(4, sensorChannel::calculateOversampling(5));
-    TEST_ASSERT_EQUAL_UINT32(5, sensorChannel::calculateOversampling(6));
-    TEST_ASSERT_EQUAL_UINT32(6, sensorChannel::calculateOversampling(7));
-    TEST_ASSERT_EQUAL_UINT32(7, sensorChannel::calculateOversampling(8));
-
-    TEST_ASSERT_EQUAL_UINT32(7, sensorChannel::calculateOversampling(9));        // numberOfSamplesToAverage cannot be larger than maxOversampling + 1
-}
-
-void test_calculatePrescaler() {
-    TEST_ASSERT_EQUAL_UINT32(2, sensorChannel::calculatePrescaler(1, 1));          // no oversampling, 1 output every 1 minute = 2 RTC ticks
-    TEST_ASSERT_EQUAL_UINT32(20, sensorChannel::calculatePrescaler(10, 1));        // no oversampling, 1 output every 10 minutes = 20 RTC ticks
-    TEST_ASSERT_EQUAL_UINT32(30, sensorChannel::calculatePrescaler(60, 4));        // 4 samples to average, 1 output every 60 minutes = 30 RTC ticks
-    TEST_ASSERT_EQUAL_UINT32(4, sensorChannel::calculatePrescaler(16, 8));         // correct usage for edge case further below
-
-    // edge cases / error cases
-    TEST_ASSERT_EQUAL_UINT32(2, sensorChannel::calculatePrescaler(0, 1));          // minutes between cannot be zero
-    TEST_ASSERT_EQUAL_UINT32(4, sensorChannel::calculatePrescaler(16, 16));        // numberOfSamplesToAverage cannot be larger than maxOversampling + 1, will be limited and then used for calculation
-}
 
 void test_isActive() {
     sensorChannel testChannel = {0, "", ""};
@@ -218,18 +194,48 @@ void test_getMinutesBetweenOutput() {
 }
 
 void test_compress_and_extract() {
-    TEST_ASSERT_EQUAL_UINT16(0, sensorChannel::compressOversamplingAndPrescaler(0, 0));                // minimal values
-    TEST_ASSERT_EQUAL_UINT16(0xFFFF, sensorChannel::compressOversamplingAndPrescaler(7, 8191));        // maximal values
-    TEST_ASSERT_EQUAL_UINT16(8191, sensorChannel::compressOversamplingAndPrescaler(0, 8191));
-    TEST_ASSERT_EQUAL_UINT16(7 * 32 * 256, sensorChannel::compressOversamplingAndPrescaler(7, 0));
+    TEST_ASSERT_EQUAL_UINT8(0, sensorChannel::compressOversamplingAndPrescalerIndex(0, 0));                                                                                                                                                     // minimal values
+    TEST_ASSERT_EQUAL_UINT8((sensorChannel::maxOversamplingIndex << 4) + sensorChannel::maxPrescalerIndex, sensorChannel::compressOversamplingAndPrescalerIndex(sensorChannel::maxOversamplingIndex, sensorChannel::maxPrescalerIndex));        // maximal values
+    TEST_ASSERT_EQUAL_UINT8(sensorChannel::maxPrescalerIndex, sensorChannel::compressOversamplingAndPrescalerIndex(0, sensorChannel::maxPrescalerIndex));
+    TEST_ASSERT_EQUAL_UINT8(sensorChannel::maxOversamplingIndex << 4, sensorChannel::compressOversamplingAndPrescalerIndex(sensorChannel::maxOversamplingIndex, 0));
 
-    TEST_ASSERT_EQUAL_UINT32(0, sensorChannel::extractOversampling(sensorChannel::compressOversamplingAndPrescaler(0, 0)));
-    TEST_ASSERT_EQUAL_UINT32(0, sensorChannel::extractPrescaler(sensorChannel::compressOversamplingAndPrescaler(0, 0)));
-    TEST_ASSERT_EQUAL_UINT32(7, sensorChannel::extractOversampling(sensorChannel::compressOversamplingAndPrescaler(7, 8191)));
-    TEST_ASSERT_EQUAL_UINT32(8191, sensorChannel::extractPrescaler(sensorChannel::compressOversamplingAndPrescaler(7, 8191)));
+    TEST_ASSERT_EQUAL_UINT32(0, sensorChannel::extractOversamplingIndex(sensorChannel::compressOversamplingAndPrescalerIndex(0, 0)));
+    TEST_ASSERT_EQUAL_UINT32(0, sensorChannel::extractPrescalerIndex(sensorChannel::compressOversamplingAndPrescalerIndex(0, 0)));
+    TEST_ASSERT_EQUAL_UINT32(sensorChannel::maxOversamplingIndex, sensorChannel::extractOversamplingIndex(sensorChannel::compressOversamplingAndPrescalerIndex(sensorChannel::maxOversamplingIndex, sensorChannel::maxPrescalerIndex)));
+    TEST_ASSERT_EQUAL_UINT32(sensorChannel::maxPrescalerIndex, sensorChannel::extractPrescalerIndex(sensorChannel::compressOversamplingAndPrescalerIndex(sensorChannel::maxOversamplingIndex, sensorChannel::maxPrescalerIndex)));
 
     // Edge cases
-    TEST_ASSERT_EQUAL_UINT16(0xFFFF, sensorChannel::compressOversamplingAndPrescaler(1000, 10000));
+    TEST_ASSERT_EQUAL_UINT8((sensorChannel::maxOversamplingIndex << 4) + sensorChannel::maxPrescalerIndex, sensorChannel::compressOversamplingAndPrescalerIndex(1000, 10000));
+    TEST_ASSERT_EQUAL_UINT8(sensorChannel::maxOversamplingIndex, sensorChannel::extractOversamplingIndex(0xFF));
+    TEST_ASSERT_EQUAL_UINT8(sensorChannel::maxPrescalerIndex, sensorChannel::extractPrescalerIndex(0xFF));
+}
+
+void test_setIndex() {
+    sensorChannel testChannel = {0, "", ""};
+    testChannel.setIndex(0, 0);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.oversamplingIndex);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.prescalingIndex);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.oversampling);
+    TEST_ASSERT_EQUAL_UINT32(0, testChannel.prescaling);
+
+    testChannel.setIndex(2, 7);        // Oversampling index 2 corresponds to 4 samples average, prescaler index 7 corresponds to 120 which means 60 minutes
+    TEST_ASSERT_EQUAL_UINT32(2, testChannel.oversamplingIndex);
+    TEST_ASSERT_EQUAL_UINT32(7, testChannel.prescalingIndex);
+    TEST_ASSERT_EQUAL_UINT32(4 - 1, testChannel.oversampling);
+    TEST_ASSERT_EQUAL_UINT32(120/4, testChannel.prescaling);
+
+    testChannel.setIndex(sensorChannel::maxOversamplingIndex, sensorChannel::maxPrescalerIndex);
+    TEST_ASSERT_EQUAL_UINT32(sensorChannel::maxOversamplingIndex, testChannel.oversamplingIndex);
+    TEST_ASSERT_EQUAL_UINT32(sensorChannel::maxPrescalerIndex, testChannel.prescalingIndex);
+    TEST_ASSERT_EQUAL_UINT32(sensorChannel::oversamplingLookup[sensorChannel::maxOversamplingIndex] - 1, testChannel.oversampling);
+    TEST_ASSERT_EQUAL_UINT32(sensorChannel::prescalerLookup[sensorChannel::maxPrescalerIndex] / sensorChannel::oversamplingLookup[sensorChannel::maxOversamplingIndex], testChannel.prescaling);
+
+    // // Edge cases
+    testChannel.setIndex(sensorChannel::maxOversamplingIndex + 1, sensorChannel::maxPrescalerIndex + 1);
+    TEST_ASSERT_EQUAL_UINT32(sensorChannel::maxOversamplingIndex, testChannel.oversamplingIndex);
+    TEST_ASSERT_EQUAL_UINT32(sensorChannel::maxPrescalerIndex, testChannel.prescalingIndex);
+    TEST_ASSERT_EQUAL_UINT32(sensorChannel::oversamplingLookup[sensorChannel::maxOversamplingIndex] - 1, testChannel.oversampling);
+    TEST_ASSERT_EQUAL_UINT32(sensorChannel::prescalerLookup[sensorChannel::maxPrescalerIndex] / sensorChannel::oversamplingLookup[sensorChannel::maxOversamplingIndex], testChannel.prescaling);
 }
 
 int main(int argc, char **argv) {
@@ -242,10 +248,9 @@ int main(int argc, char **argv) {
     RUN_TEST(test_addSample);
     RUN_TEST(test_getOutput);
     RUN_TEST(test_isActive);
-    RUN_TEST(test_calculateOversampling);
-    RUN_TEST(test_calculatePrescaler);
     RUN_TEST(test_getNumberOfSamplesToAverage);
     RUN_TEST(test_getMinutesBetweenOutput);
     RUN_TEST(test_compress_and_extract);
+    RUN_TEST(test_setIndex);
     UNITY_END();
 }

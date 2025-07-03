@@ -13,7 +13,7 @@ class sensorDeviceCollection {
     sensorDeviceCollection() = delete;
     static void reset();
     static void discover();
-    static void set(uint32_t deviceIndex, uint32_t channelIndex, uint32_t oversampling, uint32_t prescaler);
+    static void set(uint32_t deviceIndex, uint32_t channelIndex, uint32_t oversamplingIndex, uint32_t prescalerIndex);
     static void run();
     static void log();
     static void log(uint32_t deviceIndex);

@@ -10,6 +10,7 @@ class sensorChannel {
   public:
     sensorChannel(uint32_t decimals, const char* name, const char* unit);
     void set(uint32_t oversampling, uint32_t prescaler);
+    void setIndex(uint32_t newOversamplingIndex, uint32_t newPrescalerIndex);
     enum class action : uint32_t {
         none,
         prescale,
@@ -46,23 +47,36 @@ class sensorChannel {
     static uint32_t calculateOversampling(uint32_t numberOfSamplesToAverage);
     static uint32_t calculatePrescaler(uint32_t minutesBetweenOutput, uint32_t numberOfSamplesToAverage);
 
-    static uint16_t compressOversamplingAndPrescaler(uint32_t oversampling, uint32_t prescaler) {
-        if (oversampling > maxOversampling) {
-            oversampling = maxOversampling;
+    static uint8_t compressOversamplingAndPrescalerIndex(uint32_t oversamplingIndex, uint32_t prescalerIndex) {
+        if (oversamplingIndex > maxOversamplingIndex) {
+            oversamplingIndex = maxOversamplingIndex;
         }
-        if (prescaler > maxPrescaler) {
-            prescaler = maxPrescaler;
+        if (prescalerIndex > maxPrescalerIndex) {
+            prescalerIndex = maxPrescalerIndex;
         }
-        return static_cast<uint16_t>((oversampling << 13) + prescaler);
+        return static_cast<uint8_t>((oversamplingIndex << 4) + prescalerIndex);
     };
 
-    static uint32_t extractOversampling(uint16_t oversamplingAndPrescaler) {
-        return (oversamplingAndPrescaler & 0b1110'0000'0000'0000) >> 13;
+    static uint32_t extractOversamplingIndex(uint8_t oversamplingAndPrescalerIndex) {
+        uint32_t tmpOversamplingIndex = (oversamplingAndPrescalerIndex & 0b0011'0000) >> 4;
+        if (tmpOversamplingIndex > maxOversamplingIndex) {
+            tmpOversamplingIndex = maxOversamplingIndex;
+        }
+        return tmpOversamplingIndex;
     };
 
-    static uint32_t extractPrescaler(uint16_t oversamplingAndPrescaler) {
-        return (oversamplingAndPrescaler & 0b0001'1111'1111'1111);
+    static uint32_t extractPrescalerIndex(uint8_t oversamplingAndPrescalerIndex) {
+        uint32_t tmpPrescalerIndex = (oversamplingAndPrescalerIndex & 0b000'1111);
+        if (tmpPrescalerIndex > maxPrescalerIndex) {
+            tmpPrescalerIndex = maxPrescalerIndex;
+        }
+        return tmpPrescalerIndex;
     };
+
+    static constexpr uint32_t maxPrescalerIndex{13};
+    static constexpr uint32_t maxOversamplingIndex{3};
+    static constexpr uint32_t prescalerLookup[maxPrescalerIndex + 1]{0, 2, 4, 10, 20, 30, 60, 120, 240, 480, 720, 1440, 2880, 5760};
+    static constexpr uint32_t oversamplingLookup[maxOversamplingIndex + 1]{1, 2, 4, 10};
 
 #ifndef unitTesting
 
@@ -70,13 +84,15 @@ class sensorChannel {
 #endif
     bool initialized{false};
 
-    uint32_t oversampling{0};
-    uint32_t prescaling{0};
+    uint32_t oversampling{0}; // old 
+    uint32_t prescaling{0}; // old
+    uint32_t oversamplingIndex{0}; // new, using an index in a lookup table to reduce possible values
+    uint32_t prescalingIndex{0}; // new, using an index in a lookup table to reduce possible values
     uint32_t oversamplingCounter{0};
     uint32_t prescaleCounter{0};
 
-    static constexpr uint32_t maxPrescaler{8191};        // take a sample every x times of the 30 second RTC tick. 0 means : don't sample this sensor
-    static constexpr uint32_t maxOversampling{7};        // average x+1 samples before storing it in the sample collection
+    static constexpr uint32_t maxPrescaler{5760};        // take a sample every x times of the 30 second RTC tick. 0 means : don't sample this sensor. 5760 = 2 days
+    static constexpr uint32_t maxOversampling{9};        // average x+1 samples before storing it in the sample collection
     float samples[maxOversampling + 1]{};
 
     void limitOversamplingAndPrescaler();

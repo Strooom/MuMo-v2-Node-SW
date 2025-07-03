@@ -44,9 +44,9 @@ void sensorDeviceCollection::discover() {
     // Add more types of sensors here
 }
 
-void sensorDeviceCollection::set(uint32_t deviceIndex, uint32_t channelIndex, uint32_t oversampling, uint32_t prescaler) {
+void sensorDeviceCollection::set(uint32_t deviceIndex, uint32_t channelIndex, uint32_t oversamplingIndex, uint32_t prescalerIndex) {
     if (isValid(deviceIndex, channelIndex)) {
-        channel(deviceIndex, channelIndex).set(oversampling, prescaler);
+        channel(deviceIndex, channelIndex).setIndex(oversamplingIndex, prescalerIndex);
     }
 }
 

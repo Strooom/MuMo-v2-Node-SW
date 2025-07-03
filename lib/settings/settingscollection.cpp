@@ -36,7 +36,7 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     {480, 6},             // Rx channel : [frequency, rx1DataRateOffset, rx2DataRateIndex]
     {486, 26},            // unusedLoRaWAN : extra settings can be inserted hereafter
 
-    {512, 256 * 2},        // sensorSettings : 256 combinations of sensorDeviceIndex and sensorChannelIndex, 2 byte per channel : 3 bits for oversampling, 13 bits for prescaling
+    {512, 256},        // sensorSettings : 256 combinations of sensorDeviceIndex and sensorChannelIndex, 1 byte  (6 bits) per channel : 2 bits for oversamplingIndex, 4 bits for prescalingIndex
 };
 
 bool settingsCollection::isValid() {
@@ -63,20 +63,13 @@ void settingsCollection::readByteArray(uint8_t* dataOut, settingIndex theIndex) 
     }
 }
 
-void settingsCollection::saveSensorSettings(const uint16_t compressedOversamplingAndPrescaler, uint8_t deviceAndChannelIndex) {
-    static constexpr uint32_t length{2};
-    uint32_t startAddress = settings[static_cast<uint32_t>(settingIndex::sensorSettings)].startAddress + (deviceAndChannelIndex * length);
-    uint8_t tmpData[length];
-    memcpy(tmpData, &compressedOversamplingAndPrescaler, length);
-    nonVolatileStorage::write(startAddress, tmpData, length);
+void settingsCollection::saveSensorSettings(const uint8_t compressedOversamplingAndPrescalerIndex, uint8_t deviceAndChannelIndex) {
+    uint32_t address = settings[static_cast<uint32_t>(settingIndex::sensorSettings)].startAddress + deviceAndChannelIndex;
+    nonVolatileStorage::write(address, compressedOversamplingAndPrescalerIndex);
 }
 
-uint16_t settingsCollection::readSensorSettings(uint8_t deviceAndChannelIndex) {
-    static constexpr uint32_t length{2};
-    uint32_t startAddress = settings[static_cast<uint32_t>(settingIndex::sensorSettings)].startAddress + (deviceAndChannelIndex * length);
-    uint8_t tmpData[length];
-    nonVolatileStorage::read(startAddress, tmpData, length);
-    uint16_t result;
-    memcpy(&result, tmpData, length);
+uint8_t settingsCollection::readSensorSettings(uint8_t deviceAndChannelIndex) {
+    uint32_t address = settings[static_cast<uint32_t>(settingIndex::sensorSettings)].startAddress + deviceAndChannelIndex;
+    uint8_t result   = nonVolatileStorage::read(address);
     return result;
 }

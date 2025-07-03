@@ -1,6 +1,6 @@
 #include "sensorchannel.hpp"
-#include <stdio.h>           // snprintf
-#include <inttypes.h>        // for PRIu32
+// #include <stdio.h>           // snprintf
+// #include <inttypes.h>        // for PRIu32
 
 sensorChannel::sensorChannel(uint32_t decimals, const char* name, const char* unit) : decimals{decimals}, name{name}, unit{unit} {
     limitOversamplingAndPrescaler();
@@ -11,6 +11,25 @@ void sensorChannel::set(uint32_t newOversampling, uint32_t newPrescaler) {
     prescaling   = newPrescaler;
     limitOversamplingAndPrescaler();
     oversamplingCounter = 0;
+    prescaleCounter     = 0;
+}
+
+void sensorChannel::setIndex(uint32_t newOversamplingIndex, uint32_t newPrescalerIndex) {
+    if (newOversamplingIndex <= maxOversamplingIndex) {
+        oversamplingIndex = newOversamplingIndex;
+    } else {
+        oversamplingIndex = maxOversamplingIndex;
+    }
+    oversampling = oversamplingLookup[oversamplingIndex] - 1;
+
+    if (newPrescalerIndex <= maxPrescalerIndex) {
+        prescalingIndex = newPrescalerIndex;
+    } else {
+        prescalingIndex = maxPrescalerIndex;
+    }
+    prescaling = prescalerLookup[prescalingIndex] / (oversampling + 1);
+
+    oversamplingCounter = 0;        // resetting the counters here ensures that when choosing a smaller oversampling or prescaler, the counters will always be lower than the maximum values
     prescaleCounter     = 0;
 }
 
@@ -84,7 +103,6 @@ float sensorChannel::value() const {
     }
     return (sum / static_cast<float>(nmbrOfSamples));
 }
-
 
 uint32_t sensorChannel::calculateOversampling(uint32_t numberOfSamplesToAverage) {
     if (numberOfSamplesToAverage <= 1) {

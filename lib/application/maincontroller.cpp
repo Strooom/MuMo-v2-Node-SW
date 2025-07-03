@@ -131,23 +131,24 @@ void mainController::initialize() {
     logging::snprintf(logging::source::settings, "radioType : %s (%d)\n", toString(theRadioType), static_cast<uint8_t>(theRadioType));
 
     sensorDeviceCollection::discover();
-    static constexpr uint32_t defaultPrescaler{20U};
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 0, defaultPrescaler);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, 0, defaultPrescaler);
+    static constexpr uint32_t defaultPrescalerIndex{4U};          // equals 20 equal 10 minutes
+    static constexpr uint32_t defaultOversamplingIndex{0};        // 0 means no oversampling
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, defaultOversamplingIndex, defaultPrescalerIndex);
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, defaultOversamplingIndex, defaultPrescalerIndex);
     if (bme680::isPresent()) {
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, 0, defaultPrescaler);
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, 0, defaultPrescaler);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, defaultOversamplingIndex, defaultPrescalerIndex);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, defaultOversamplingIndex, defaultPrescalerIndex);
     }
     logging::snprintf("BME680   : %s\n", bme680::isPresent() ? "present" : "not present");
 
     if (tsl2591::isPresent()) {
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, 0, defaultPrescaler);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, defaultOversamplingIndex, defaultPrescalerIndex);
     }
     logging::snprintf("TSL2591  : %s\n", tsl2591::isPresent() ? "present" : "not present");
 
     if (sht40::isPresent()) {
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, 0, defaultPrescaler);
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, 0, defaultPrescaler);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, defaultOversamplingIndex, defaultPrescalerIndex);
+        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, defaultOversamplingIndex, defaultPrescalerIndex);
     }
     logging::snprintf("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
 
@@ -629,11 +630,17 @@ void mainController::showDeviceStatus() {
         if (sensorDeviceCollection::isPresent(sensorDeviceIndex)) {
             cli::sendResponse("[%d] %s\n", sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
             for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(sensorDeviceIndex); channelIndex++) {
-                cli::sendResponse("  [%d] %s [%s]", channelIndex, sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::units(sensorDeviceIndex, channelIndex));
-                if (sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler() > 0) {
-                    cli::sendResponse(" : filtering = %d, time between outputs = %d min\n", sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getNumberOfSamplesToAverage(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getMinutesBetweenOutput());
+                cli::sendResponse("  [%d] %s [%s] : ", channelIndex, sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::units(sensorDeviceIndex, channelIndex));
+                if (sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler() == 0) {
+                    cli::sendResponse("disabled\n");
                 } else {
-                    cli::sendResponse(" disabled\n");
+                    cli::sendResponse("averaging %u samples, output every ", sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getNumberOfSamplesToAverage());
+                    uint32_t tmpTime = sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getMinutesBetweenOutput();
+                    if (tmpTime >= 60) {
+                        cli::sendResponse("%u hours\n", tmpTime / 60);
+                    } else {
+                        cli::sendResponse("%u minutes\n", tmpTime);
+                    }
                 }
             }
         } else {
@@ -757,36 +764,34 @@ void mainController::setDisplay(const cliCommand& theCommand) {
 }
 
 void mainController::setSensor(const cliCommand& theCommand) {
-    if (theCommand.nmbrOfArguments < 3) {
-        cli::sendResponse("invalid arguments\n");
+    if (theCommand.nmbrOfArguments < 4) {
+        cli::sendResponse("invalid number of arguments\n");
         return;
     }
     uint32_t tmpDeviceIndex  = theCommand.argumentAsUint32(0);
     uint32_t tmpChannelIndex = theCommand.argumentAsUint32(1);
     if (!sensorDeviceCollection::isValid(tmpDeviceIndex, tmpChannelIndex)) {
-        cli::sendResponse("invalid device / channel\n");
+        cli::sendResponse("invalid device and/or channel index\n");
         return;
     }
-    uint32_t tmpOversampling;
-    uint32_t tmpPrescaler;
-    if (theCommand.nmbrOfArguments == 3) {
-        if (strncmp("off", theCommand.arguments[2], 3) == 0) {
-            sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).set(0, 0);
-            cli::sendResponse("%s - %s : off\n", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex));
-        } else {
-            cli::sendResponse("invalid arguments\n");
-        }
+    uint32_t tmpOversamplingIndex = theCommand.argumentAsUint32(2);
+    uint32_t tmpPrescalerIndex    = theCommand.argumentAsUint32(3);
+    if (tmpOversamplingIndex > tmpPrescalerIndex) {
+        tmpOversamplingIndex = tmpPrescalerIndex;
+    }
+    sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).setIndex(tmpOversamplingIndex, tmpPrescalerIndex);
+    // TODO : store in nvs
+    cli::sendResponse("%s - %s : ", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex));
+    if (sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getPrescaler() == 0) {
+        cli::sendResponse("disabled\n");
     } else {
-        uint32_t numberOfSamplesToAverage = theCommand.argumentAsUint32(2);
-        uint32_t minutesBetweenOutput     = theCommand.argumentAsUint32(3);
-        if (((minutesBetweenOutput * 2) % numberOfSamplesToAverage) != 0) {
-            cli::sendResponse("invalid values\n");
-            return;
+        cli::sendResponse("averaging %u samples, output every ", sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getNumberOfSamplesToAverage());
+        uint32_t tmpTime = sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getMinutesBetweenOutput();
+        if (tmpTime >= 60) {
+            cli::sendResponse("%u hours\n", tmpTime / 60);
+        } else {
+            cli::sendResponse("%u minutes", tmpTime);
         }
-        tmpOversampling = sensorChannel::calculateOversampling(numberOfSamplesToAverage);
-        tmpPrescaler    = sensorChannel::calculatePrescaler(minutesBetweenOutput, numberOfSamplesToAverage);
-        sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).set(tmpOversampling, tmpPrescaler);
-        cli::sendResponse("%s - %s : filtering = %d, time between outputs = %d min\n", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getNumberOfSamplesToAverage(), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getMinutesBetweenOutput());
     }
 }
 
