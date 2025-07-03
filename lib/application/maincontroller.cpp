@@ -630,7 +630,7 @@ void mainController::showDeviceStatus() {
             for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(sensorDeviceIndex); channelIndex++) {
                 cli::sendResponse("  [%d] %s [%s]", channelIndex, sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::units(sensorDeviceIndex, channelIndex));
                 if (sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler() > 0) {
-                    cli::sendResponse("%s - %s : filtering = %d, time between outputs = %d min\n", sensorDeviceCollection::name(sensorDeviceIndex), sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getNumberOfSamplesToAverage(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getMinutesBetweenOutput());
+                    cli::sendResponse(" : filtering = %d, time between outputs = %d min\n", sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getNumberOfSamplesToAverage(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getMinutesBetweenOutput());
                 } else {
                     cli::sendResponse(" disabled\n");
                 }
@@ -756,7 +756,7 @@ void mainController::setDisplay(const cliCommand& theCommand) {
 }
 
 void mainController::setSensor(const cliCommand& theCommand) {
-    if (theCommand.nmbrOfArguments != 4) {
+    if (theCommand.nmbrOfArguments < 3) {
         cli::sendResponse("invalid arguments\n");
         return;
     }
@@ -766,17 +766,27 @@ void mainController::setSensor(const cliCommand& theCommand) {
         cli::sendResponse("invalid device / channel\n");
         return;
     }
-    uint32_t numberOfSamplesToAverage = theCommand.argumentAsUint32(2);
-    uint32_t minutesBetweenOutput     = theCommand.argumentAsUint32(3);
-    if (((minutesBetweenOutput * 2) % numberOfSamplesToAverage) != 0) {
-        cli::sendResponse("invalid values\n");
-        return;
+    uint32_t tmpOversampling;
+    uint32_t tmpPrescaler;
+    if (theCommand.nmbrOfArguments == 3) {
+        if (strncmp("off", theCommand.arguments[2], 3) == 0) {
+            sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).set(0, 0);
+            cli::sendResponse("%s - %s : off\n", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex));
+        } else {
+            cli::sendResponse("invalid arguments\n");
+        }
+    } else {
+        uint32_t numberOfSamplesToAverage = theCommand.argumentAsUint32(2);
+        uint32_t minutesBetweenOutput     = theCommand.argumentAsUint32(3);
+        if (((minutesBetweenOutput * 2) % numberOfSamplesToAverage) != 0) {
+            cli::sendResponse("invalid values\n");
+            return;
+        }
+        tmpOversampling = sensorChannel::calculateOversampling(numberOfSamplesToAverage);
+        tmpPrescaler    = sensorChannel::calculatePrescaler(minutesBetweenOutput, numberOfSamplesToAverage);
+        sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).set(tmpOversampling, tmpPrescaler);
+        cli::sendResponse("%s - %s : filtering = %d, time between outputs = %d min\n", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getNumberOfSamplesToAverage(), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getMinutesBetweenOutput());
     }
-    uint32_t tmpOversampling = sensorChannel::calculateOversampling(numberOfSamplesToAverage);
-    uint32_t tmpPrescaler    = sensorChannel::calculatePrescaler(minutesBetweenOutput, numberOfSamplesToAverage);
-    sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).set(tmpOversampling, tmpPrescaler);
-
-    cli::sendResponse("%s - %s filtering = %d, time between outputs = %d min\n", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getNumberOfSamplesToAverage(), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getMinutesBetweenOutput());
 }
 
 void mainController::showMeasurementsStatus() {
