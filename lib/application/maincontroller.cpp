@@ -100,7 +100,7 @@ void mainController::initialize() {
     spi::goSleep();
 
     i2c::wakeUp();
-    uint32_t nmbr64KBlocks = nonVolatileStorage::detectNmbr64KBanks();
+    uint32_t nmbr64KBlocks = nonVolatileStorage::getNmbr64KBanks();
     if (nmbr64KBlocks > 0) {
         logging::snprintf(logging::source::settings, "EEPROM   : %d * 64K present\n", nmbr64KBlocks);
     } else {
@@ -613,14 +613,15 @@ void mainController::showHelp() {
     cli::sendResponse("sb <batteryType> : set battery type\n");
     cli::sendResponse("sr <radioType> : set radio type\n");
     cli::sendResponse("sd <line#> <deviceIndex> <channelIndex> : configure display\n");
-    cli::sendResponse("ss <deviceIndex> <channelIndex> <oversampling> <prescaler> : configure sensor\n");
+    cli::sendResponse("ss <deviceIndex> <channelIndex> <filtering> <timeBetweenOutputsInMinutes> : configure sensor filtering and output frequency\n");
+    cli::sendResponse("ss <deviceIndex> <channelIndex> off : disable sensor\n");
 }
 
 void mainController::showDeviceStatus() {
     cli::sendResponse("UID      : %s\n", uniqueId::asHexString());
     cli::sendResponse("name     : %s\n", name);
     cli::sendResponse("display  : %s\n", display::isPresent() ? "present" : "not present");
-    cli::sendResponse("EEPROM   : %d * 64K present\n", nonVolatileStorage::detectNmbr64KBanks());
+    cli::sendResponse("EEPROM   : %d * 64K present\n", nonVolatileStorage::getNmbr64KBanks());
     cli::sendResponse("battery  : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
     cli::sendResponse("radioType: %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
 

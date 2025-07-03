@@ -9,7 +9,7 @@
 class nonVolatileStorage {
   public:
     nonVolatileStorage() = delete;
-    static uint32_t detectNmbr64KBanks();
+    static uint32_t getNmbr64KBanks();
     static uint32_t totalSize() { return nmbr64KBanks * 64U * 1024U; };
     static uint32_t getMeasurementsAreaSize();
 
@@ -34,6 +34,7 @@ class nonVolatileStorage {
   private:
 #endif
     static uint32_t nmbr64KBanks;
+    static void detectNmbr64KBanks();
     // single byte read/write
     static uint8_t read(const uint32_t address);
     static void write(const uint32_t address, const uint8_t data);

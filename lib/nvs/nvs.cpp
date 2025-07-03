@@ -45,20 +45,33 @@ void nonVolatileStorage::fill(uint8_t value) {
     }
 }
 
-uint32_t nonVolatileStorage::detectNmbr64KBanks() {
+uint32_t nonVolatileStorage::getNmbr64KBanks() {
+    if (nmbr64KBanks == 0) {
+        detectNmbr64KBanks();
+    }
+    return nmbr64KBanks;
+}
+
+void nonVolatileStorage::detectNmbr64KBanks() {
 #ifndef generic
+    bool i2cState = i2c::isActive();
+    if (i2cState != i2c::isAwake) {
+        i2c::wakeUp();
+    }
     nmbr64KBanks = 0;
     for (uint8_t blockIndex = 0; blockIndex < maxNmbr64KBanks; blockIndex++) {
         if (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, static_cast<uint16_t>((baseI2cAddress + blockIndex) << 1), halNmbrOfTrials, halTimeoutInMs)) {
             nmbr64KBanks++;
         } else {
-            return nmbr64KBanks;
+            break;        // by breaking here we enforce that all banks are contiguous in address space
         }
+    }
+    if (i2cState == i2c::wasSleeping) {
+        i2c::goSleep();
     }
 #else
     nmbr64KBanks = mockEepromNmbr64KPages;
 #endif
-    return nmbr64KBanks;
 }
 
 // Reading and Writing a single byte. Simple but not efficient when you need to read or write a range of bytes
@@ -211,4 +224,3 @@ uint32_t nonVolatileStorage::getMeasurementsAreaSize() {
         return 0;
     }
 }
-
