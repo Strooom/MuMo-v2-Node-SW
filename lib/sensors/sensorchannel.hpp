@@ -46,6 +46,26 @@ class sensorChannel {
     static uint32_t calculateOversampling(uint32_t numberOfSamplesToAverage);
     static uint32_t calculatePrescaler(uint32_t minutesBetweenOutput, uint32_t numberOfSamplesToAverage);
 
+    static uint16_t compressOversamplingAndPrescaler(uint32_t oversampling, uint32_t prescaler) {
+        if (oversampling > maxOversampling) {
+            oversampling = maxOversampling;
+        }
+        if (prescaler > maxPrescaler) {
+            prescaler = maxPrescaler;
+        }
+        return static_cast<uint16_t>((oversampling << 13) + (prescaler));
+    };
+
+    static uint32_t extractOversampling(uint16_t oversamplingAndPrescaler) {
+        return (oversamplingAndPrescaler & 0b11100000'00000000) >> 13;
+    };
+
+    static uint32_t extractPrescaler(uint16_t oversamplingAndPrescaler) {
+        return (oversamplingAndPrescaler & 0b00011111'11111111);
+    };
+
+
+
 #ifndef unitTesting
 
   private:
@@ -57,7 +77,7 @@ class sensorChannel {
     uint32_t oversamplingCounter{0};
     uint32_t prescaleCounter{0};
 
-    static constexpr uint32_t maxPrescaler{4095};        // take a sample every x times of the 30 second RTC tick. 0 means : don't sample this sensor
+    static constexpr uint32_t maxPrescaler{8191};        // take a sample every x times of the 30 second RTC tick. 0 means : don't sample this sensor
     static constexpr uint32_t maxOversampling{7};        // average x+1 samples before storing it in the sample collection
     float samples[maxOversampling + 1]{};
 

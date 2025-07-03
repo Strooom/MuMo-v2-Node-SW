@@ -217,6 +217,21 @@ void test_getMinutesBetweenOutput() {
     TEST_ASSERT_EQUAL_UINT32(expectedMinutesBetweenOutput, testChannel.getMinutesBetweenOutput());
 }
 
+void test_compress_and_extract() {
+    TEST_ASSERT_EQUAL_UINT16(0, sensorChannel::compressOversamplingAndPrescaler(0, 0));                // minimal values
+    TEST_ASSERT_EQUAL_UINT16(0xFFFF, sensorChannel::compressOversamplingAndPrescaler(7, 8191));        // maximal values
+    TEST_ASSERT_EQUAL_UINT16(8191, sensorChannel::compressOversamplingAndPrescaler(0, 8191));
+    TEST_ASSERT_EQUAL_UINT16(7 * 32 * 256, sensorChannel::compressOversamplingAndPrescaler(7, 0));
+
+    TEST_ASSERT_EQUAL_UINT32(0, sensorChannel::extractOversampling(sensorChannel::compressOversamplingAndPrescaler(0, 0)));
+    TEST_ASSERT_EQUAL_UINT32(0, sensorChannel::extractPrescaler(sensorChannel::compressOversamplingAndPrescaler(0, 0)));
+    TEST_ASSERT_EQUAL_UINT32(7, sensorChannel::extractOversampling(sensorChannel::compressOversamplingAndPrescaler(7, 8191)));
+    TEST_ASSERT_EQUAL_UINT32(8191, sensorChannel::extractPrescaler(sensorChannel::compressOversamplingAndPrescaler(7, 8191)));
+
+    // Edge cases
+    TEST_ASSERT_EQUAL_UINT16(0xFFFF, sensorChannel::compressOversamplingAndPrescaler(1000, 10000));
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
@@ -231,5 +246,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_calculatePrescaler);
     RUN_TEST(test_getNumberOfSamplesToAverage);
     RUN_TEST(test_getMinutesBetweenOutput);
+    RUN_TEST(test_compress_and_extract);
     UNITY_END();
 }

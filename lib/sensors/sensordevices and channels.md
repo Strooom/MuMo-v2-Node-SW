@@ -2,7 +2,7 @@ SensorDeviceIndex
   ChannelIndex
 
 0:mcu
-    TBD
+    0:SNR
 
 1:battery
     0:voltage

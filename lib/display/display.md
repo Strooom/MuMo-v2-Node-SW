@@ -144,5 +144,8 @@ To map the OpenGL coordinate system onto the display hardware, the following set
 
 # Partial Update
 SSD1681 has 2 update modes :
-* Mode 1 : full update. The display will cycle through all white, all black, new image, etc. to activate all pigments particles and results in a clean, high contrast image, gets rig of any ghosting. This update mode takes longer, depending on temperature, about 2500 ms
+* Mode 1 : full update. The display will cycle through all white, all black, new image, etc. to activate all pigments particles and results in a clean, high contrast image, gets rid of any ghosting. This update mode takes longer, depending on temperature, about 2500 ms
 * Mode 2 : partial update. The display needs the old (current) image in RAM2 and the new image in RAM1. It will apply an update depending on the needed pixel statechange. This typically takes less time, about 1000ms, but it requires you to write old and new displayBuffer to the display. Also this mode creates less contrast, may leave a bit of ghosting image. Mode two can also be applied to a selected area instead of the whole display. You need to set xStart, xEnd, yStart, yEnd to mark the window with changes. There is a small gain in update time when updating a region io. the whole display, typically like 800 ms for an update.
+
+# Faster update
+* The display update time depends on the temperature : when colder, the pixel pigments move slower. So a trick to make the display update faster, is to NOT use the internal temperature sensor, but rather write the temperature, and make the display believe temp is 100 degrees. The update is the really quick, with very limited ghosting. To get rid of any ghosting, you could do a 'normal' update, every x fast updates.
