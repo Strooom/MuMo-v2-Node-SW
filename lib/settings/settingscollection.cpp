@@ -1,5 +1,6 @@
 #include <settingscollection.hpp>
 #include <nvs.hpp>
+#include <cstring>
 
 const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::numberOfSettings)] = {
     // Important note : make sure that none of the settings are mapped into two pages of 128 Bytes, as the page-write of the EEPROM is limited to 128 Byte pages and the address will wrap around to the beginning of the page if addressing more than 128 Bytes. A unit test will check this
@@ -35,7 +36,7 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     {480, 6},             // Rx channel : [frequency, rx1DataRateOffset, rx2DataRateIndex]
     {486, 26},            // unusedLoRaWAN : extra settings can be inserted hereafter
 
-    {512, 256 * 2},        // sensorSettings : 256 combinations of sensorDeviceIndex and sensorChannelIndex, 2 byte per channel : 13 bits for prescaling, 3 bits for oversampling
+    {512, 256 * 2},        // sensorSettings : 256 combinations of sensorDeviceIndex and sensorChannelIndex, 2 byte per channel : 3 bits for oversampling, 13 bits for prescaling
 };
 
 bool settingsCollection::isValid() {
@@ -60,4 +61,22 @@ void settingsCollection::readByteArray(uint8_t* dataOut, settingIndex theIndex) 
         uint32_t length       = settings[static_cast<uint32_t>(theIndex)].length;
         nonVolatileStorage::read(startAddress, dataOut, length);
     }
+}
+
+void settingsCollection::saveSensorSettings(const uint16_t compressedOversamplingAndPrescaler, uint8_t deviceAndChannelIndex) {
+    static constexpr uint32_t length{2};
+    uint32_t startAddress = settings[static_cast<uint32_t>(settingIndex::sensorSettings)].startAddress + (deviceAndChannelIndex * length);
+    uint8_t tmpData[length];
+    memcpy(tmpData, &compressedOversamplingAndPrescaler, length);
+    nonVolatileStorage::write(startAddress, tmpData, length);
+}
+
+uint16_t settingsCollection::readSensorSettings(uint8_t deviceAndChannelIndex) {
+    static constexpr uint32_t length{2};
+    uint32_t startAddress = settings[static_cast<uint32_t>(settingIndex::sensorSettings)].startAddress + (deviceAndChannelIndex * length);
+    uint8_t tmpData[length];
+    nonVolatileStorage::read(startAddress, tmpData, length);
+    uint16_t result;
+    memcpy(&result, tmpData, length);
+    return result;
 }

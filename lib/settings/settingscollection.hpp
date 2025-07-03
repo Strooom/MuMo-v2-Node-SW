@@ -52,6 +52,10 @@ class settingsCollection {
 
     static void saveByteArray(const uint8_t* dataIn, settingIndex theIndex);
     static void readByteArray(uint8_t* dataOut, settingIndex theIndex);
+
+    static void saveSensorSettings(const uint16_t settings, uint8_t deviceAndChannelIndex);
+    static uint16_t readSensorSettings(uint8_t deviceAndChannelIndex);
+
     static constexpr uint8_t maxMapVersion{1};
 
 #ifndef unitTesting
