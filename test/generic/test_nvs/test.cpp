@@ -6,9 +6,9 @@ void tearDown(void) {}
 
 void test_isPresent() {
     nonVolatileStorage::mockEepromNmbr64KPages = 0;
-    TEST_ASSERT_EQUAL(0, nonVolatileStorage::detectNmbr64KBanks());
+    TEST_ASSERT_EQUAL(0, nonVolatileStorage::getNmbr64KBanks());
     nonVolatileStorage::mockEepromNmbr64KPages = 4;
-    TEST_ASSERT_EQUAL(4, nonVolatileStorage::detectNmbr64KBanks());
+    TEST_ASSERT_EQUAL(4, nonVolatileStorage::getNmbr64KBanks());
 }
 
 void test_totalSize() {
@@ -26,7 +26,7 @@ void test_totalSize() {
 void test_bankNumber() {
     nonVolatileStorage::mockEepromNmbr64KPages = 8;
     nonVolatileStorage::detectNmbr64KBanks();
-    for (uint32_t bankIndex = 0; bankIndex < nonVolatileStorage::detectNmbr64KBanks(); bankIndex++) {
+    for (uint32_t bankIndex = 0; bankIndex < nonVolatileStorage::getNmbr64KBanks(); bankIndex++) {
         TEST_ASSERT_EQUAL_UINT32(bankIndex, nonVolatileStorage::bankNumber(bankIndex * 64U * 1024U));
         TEST_ASSERT_EQUAL_UINT32(bankIndex, nonVolatileStorage::bankNumber(((bankIndex + 1) * 64U * 1024U) - 1));
     }
@@ -35,7 +35,7 @@ void test_bankNumber() {
 void test_bankI2cAddress() {
     nonVolatileStorage::mockEepromNmbr64KPages = 8;
     nonVolatileStorage::detectNmbr64KBanks();
-    for (uint32_t bankIndex = 0; bankIndex < nonVolatileStorage::detectNmbr64KBanks(); bankIndex++) {
+    for (uint32_t bankIndex = 0; bankIndex < nonVolatileStorage::getNmbr64KBanks(); bankIndex++) {
         TEST_ASSERT_EQUAL_UINT32(nonVolatileStorage::baseI2cAddress + bankIndex, nonVolatileStorage::bankI2cAddress(bankIndex * 64U * 1024U));
         TEST_ASSERT_EQUAL_UINT32(nonVolatileStorage::baseI2cAddress + bankIndex, nonVolatileStorage::bankI2cAddress(((bankIndex + 1) * 64U * 1024U) - 1));
     }
@@ -44,7 +44,7 @@ void test_bankI2cAddress() {
 void test_bankOffset() {
     nonVolatileStorage::mockEepromNmbr64KPages = 8;
     nonVolatileStorage::detectNmbr64KBanks();
-    for (uint32_t bankIndex = 0; bankIndex < nonVolatileStorage::detectNmbr64KBanks(); bankIndex++) {
+    for (uint32_t bankIndex = 0; bankIndex < nonVolatileStorage::getNmbr64KBanks(); bankIndex++) {
         for (uint32_t offsetIndex = 0; offsetIndex < 64U * 1024U; offsetIndex++) {
             TEST_ASSERT_EQUAL_UINT16(offsetIndex, nonVolatileStorage::bankOffset((bankIndex * 64U * 1024U) + offsetIndex));
         }

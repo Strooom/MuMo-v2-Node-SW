@@ -42,12 +42,10 @@ class LoRaWAN {
 
     static void restoreConfig();
     static bool isValidConfig();
-    static void initializeConfig();
     static void saveConfig();
 
     static void restoreState();
     static bool isValidState();
-    static void initializeState();
     static void restoreChannels();
 
     static void saveState();

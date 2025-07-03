@@ -100,7 +100,7 @@ void mainController::initialize() {
     spi::goSleep();
 
     i2c::wakeUp();
-    uint32_t nmbr64KBlocks = nonVolatileStorage::detectNmbr64KBanks();
+    uint32_t nmbr64KBlocks = nonVolatileStorage::getNmbr64KBanks();
     if (nmbr64KBlocks > 0) {
         logging::snprintf(logging::source::settings, "EEPROM   : %d * 64K present\n", nmbr64KBlocks);
     } else {
@@ -159,10 +159,7 @@ void mainController::initialize() {
     logging::snprintf("\n");
     if (!LoRaWAN::isValidConfig()) {
         logging::snprintf(logging::source::criticalError, "invalid LoRaWAN config\n");
-        LoRaWAN::initializeConfig();
-    } else if (forceInitialization) {
-        LoRaWAN::initializeConfig();
-        logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN config\n");
+        LoRaWAN::setEnableRadio(false);
     }
     logging::snprintf("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
     logging::snprintf("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());
@@ -171,10 +168,7 @@ void mainController::initialize() {
     logging::snprintf("\n");
     if (!LoRaWAN::isValidState()) {
         logging::snprintf(logging::source::criticalError, "invalid LoRaWAN state\n");
-        LoRaWAN::initializeState();
-    } else if (forceInitialization) {
-        LoRaWAN::initializeState();
-        logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN state\n");
+        LoRaWAN::setEnableRadio(false);
     }
     logging::snprintf("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.getAsWord());
     logging::snprintf("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.getAsWord());
@@ -191,7 +185,11 @@ void mainController::initialize() {
     applicationEventBuffer.initialize();
     requestCounter = 0;
     answerCounter  = 0;
-    goTo(mainState::networkCheck);
+    if (LoRaWAN::isRadioEnabled()) {
+        goTo(mainState::networkCheck);
+    } else {
+        goTo(mainState::idle);
+    }
 }
 
 void mainController::handleEvents() {
@@ -300,8 +298,14 @@ void mainController::runStateMachine() {
                 if (sensorDeviceCollection::hasNewMeasurements()) {
                     sensorDeviceCollection::collectNewMeasurements();
                     measurementGroupCollection::addNew(sensorDeviceCollection::newMeasurements);
-                    LoRaWAN::sendUplink(sensorDeviceCollection::newMeasurements);
-                    goTo(mainState::networking);
+                    if (LoRaWAN::isRadioEnabled()) {
+                        LoRaWAN::sendUplink(sensorDeviceCollection::newMeasurements);
+                        goTo(mainState::networking);
+                    } else {
+                        showMain();
+                        i2c::goSleep();
+                        goTo(mainState::idle);
+                    }
                 } else {
                     i2c::goSleep();
                     goTo(mainState::idle);
@@ -609,14 +613,15 @@ void mainController::showHelp() {
     cli::sendResponse("sb <batteryType> : set battery type\n");
     cli::sendResponse("sr <radioType> : set radio type\n");
     cli::sendResponse("sd <line#> <deviceIndex> <channelIndex> : configure display\n");
-    cli::sendResponse("ss <deviceIndex> <channelIndex> <oversampling> <prescaler> : configure sensor\n");
+    cli::sendResponse("ss <deviceIndex> <channelIndex> <filtering> <timeBetweenOutputsInMinutes> : configure sensor filtering and output frequency\n");
+    cli::sendResponse("ss <deviceIndex> <channelIndex> off : disable sensor\n");
 }
 
 void mainController::showDeviceStatus() {
     cli::sendResponse("UID      : %s\n", uniqueId::asHexString());
     cli::sendResponse("name     : %s\n", name);
     cli::sendResponse("display  : %s\n", display::isPresent() ? "present" : "not present");
-    cli::sendResponse("EEPROM   : %d * 64K present\n", nonVolatileStorage::detectNmbr64KBanks());
+    cli::sendResponse("EEPROM   : %d * 64K present\n", nonVolatileStorage::getNmbr64KBanks());
     cli::sendResponse("battery  : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
     cli::sendResponse("radioType: %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
 
@@ -626,7 +631,7 @@ void mainController::showDeviceStatus() {
             for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(sensorDeviceIndex); channelIndex++) {
                 cli::sendResponse("  [%d] %s [%s]", channelIndex, sensorDeviceCollection::name(sensorDeviceIndex, channelIndex), sensorDeviceCollection::units(sensorDeviceIndex, channelIndex));
                 if (sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler() > 0) {
-                    cli::sendResponse(" oversampling = %d, prescaler = %d\n", sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getOversampling(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getPrescaler());
+                    cli::sendResponse(" : filtering = %d, time between outputs = %d min\n", sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getNumberOfSamplesToAverage(), sensorDeviceCollection::channel(sensorDeviceIndex, channelIndex).getMinutesBetweenOutput());
                 } else {
                     cli::sendResponse(" disabled\n");
                 }
@@ -752,15 +757,36 @@ void mainController::setDisplay(const cliCommand& theCommand) {
 }
 
 void mainController::setSensor(const cliCommand& theCommand) {
-    if (theCommand.nmbrOfArguments == 4) {
-        uint32_t tmpDeviceIndex  = theCommand.argumentAsUint32(0);
-        uint32_t tmpChannelIndex = theCommand.argumentAsUint32(1);
-        uint32_t tmpOversampling = theCommand.argumentAsUint32(2);
-        uint32_t tmpPrescaler    = theCommand.argumentAsUint32(3);
-        sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).set(tmpOversampling, tmpPrescaler);
-        cli::sendResponse("%s - %s set to oversampling = %d, prescaler = %d\n", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getOversampling(), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getPrescaler());
-    } else {
+    if (theCommand.nmbrOfArguments < 3) {
         cli::sendResponse("invalid arguments\n");
+        return;
+    }
+    uint32_t tmpDeviceIndex  = theCommand.argumentAsUint32(0);
+    uint32_t tmpChannelIndex = theCommand.argumentAsUint32(1);
+    if (!sensorDeviceCollection::isValid(tmpDeviceIndex, tmpChannelIndex)) {
+        cli::sendResponse("invalid device / channel\n");
+        return;
+    }
+    uint32_t tmpOversampling;
+    uint32_t tmpPrescaler;
+    if (theCommand.nmbrOfArguments == 3) {
+        if (strncmp("off", theCommand.arguments[2], 3) == 0) {
+            sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).set(0, 0);
+            cli::sendResponse("%s - %s : off\n", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex));
+        } else {
+            cli::sendResponse("invalid arguments\n");
+        }
+    } else {
+        uint32_t numberOfSamplesToAverage = theCommand.argumentAsUint32(2);
+        uint32_t minutesBetweenOutput     = theCommand.argumentAsUint32(3);
+        if (((minutesBetweenOutput * 2) % numberOfSamplesToAverage) != 0) {
+            cli::sendResponse("invalid values\n");
+            return;
+        }
+        tmpOversampling = sensorChannel::calculateOversampling(numberOfSamplesToAverage);
+        tmpPrescaler    = sensorChannel::calculatePrescaler(minutesBetweenOutput, numberOfSamplesToAverage);
+        sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).set(tmpOversampling, tmpPrescaler);
+        cli::sendResponse("%s - %s : filtering = %d, time between outputs = %d min\n", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getNumberOfSamplesToAverage(), sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getMinutesBetweenOutput());
     }
 }
 
