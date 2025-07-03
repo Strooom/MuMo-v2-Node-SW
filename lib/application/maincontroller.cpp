@@ -159,10 +159,7 @@ void mainController::initialize() {
     logging::snprintf("\n");
     if (!LoRaWAN::isValidConfig()) {
         logging::snprintf(logging::source::criticalError, "invalid LoRaWAN config\n");
-        LoRaWAN::initializeConfig();
-    } else if (forceInitialization) {
-        LoRaWAN::initializeConfig();
-        logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN config\n");
+        LoRaWAN::setEnableRadio(false);
     }
     logging::snprintf("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
     logging::snprintf("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());
@@ -171,10 +168,7 @@ void mainController::initialize() {
     logging::snprintf("\n");
     if (!LoRaWAN::isValidState()) {
         logging::snprintf(logging::source::criticalError, "invalid LoRaWAN state\n");
-        LoRaWAN::initializeState();
-    } else if (forceInitialization) {
-        LoRaWAN::initializeState();
-        logging::snprintf(logging::source::criticalError, "forced initialisation LoRaWAN state\n");
+        LoRaWAN::setEnableRadio(false);
     }
     logging::snprintf("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.getAsWord());
     logging::snprintf("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.getAsWord());
@@ -191,7 +185,11 @@ void mainController::initialize() {
     applicationEventBuffer.initialize();
     requestCounter = 0;
     answerCounter  = 0;
-    goTo(mainState::networkCheck);
+    if (LoRaWAN::isRadioEnabled()) {
+        goTo(mainState::networkCheck);
+    } else {
+        goTo(mainState::idle);
+    }
 }
 
 void mainController::handleEvents() {
@@ -300,8 +298,14 @@ void mainController::runStateMachine() {
                 if (sensorDeviceCollection::hasNewMeasurements()) {
                     sensorDeviceCollection::collectNewMeasurements();
                     measurementGroupCollection::addNew(sensorDeviceCollection::newMeasurements);
-                    LoRaWAN::sendUplink(sensorDeviceCollection::newMeasurements);
-                    goTo(mainState::networking);
+                    if (LoRaWAN::isRadioEnabled()) {
+                        LoRaWAN::sendUplink(sensorDeviceCollection::newMeasurements);
+                        goTo(mainState::networking);
+                    } else {
+                        showMain();
+                        i2c::goSleep();
+                        goTo(mainState::idle);
+                    }
                 } else {
                     i2c::goSleep();
                     goTo(mainState::idle);

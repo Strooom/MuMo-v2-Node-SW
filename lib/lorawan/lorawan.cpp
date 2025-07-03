@@ -107,14 +107,6 @@ bool LoRaWAN::isValidConfig() {
     return validDeviceAddress && validNetworkKey && validApplicationKey;
 }
 
-void LoRaWAN::initializeConfig() {
-    LoRaWAN::DevAddr.setFromWord(toBeDevAddr);
-    LoRaWAN::networkKey.setFromHexString(toBeNetworkKey);
-    LoRaWAN::applicationKey.setFromHexString(toBeApplicationKey);
-    LoRaWAN::saveConfig();
-    LoRaWAN::restoreConfig();
-}
-
 void LoRaWAN::saveConfig() {
     uint8_t tmpDeviceAddressBytes[deviceAddress::lengthInBytes];
     for (uint32_t index = 0; index < deviceAddress::lengthInBytes; index++) {
@@ -165,16 +157,6 @@ void LoRaWAN::resetState() {
     currentDataRateIndex = toBeCurrentDataRateIndex;
     rx1DataRateOffset    = toBeRx1DataRateOffset;
     rx2DataRateIndex     = toBeRx2DataRateIndex;
-}
-
-void LoRaWAN::initializeState() {
-    resetState();
-    saveState();
-    restoreState();
-
-    resetChannels();
-    saveChannels();
-    restoreChannels();
 }
 
 void LoRaWAN::saveState() {
