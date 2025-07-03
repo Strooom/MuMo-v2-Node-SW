@@ -38,7 +38,7 @@ class sensorChannel {
         if (prescaling == 0) {
             return 0;
         }
-        return ((oversampling + 1) * (prescaling)) / 2;
+        return ((oversampling + 1) * prescaling) / 2;
     }
 
     bool isActive() const { return (prescaling > 0); };
@@ -53,18 +53,16 @@ class sensorChannel {
         if (prescaler > maxPrescaler) {
             prescaler = maxPrescaler;
         }
-        return static_cast<uint16_t>((oversampling << 13) + (prescaler));
+        return static_cast<uint16_t>((oversampling << 13) + prescaler);
     };
 
     static uint32_t extractOversampling(uint16_t oversamplingAndPrescaler) {
-        return (oversamplingAndPrescaler & 0b11100000'00000000) >> 13;
+        return (oversamplingAndPrescaler & 0b1110'0000'0000'0000) >> 13;
     };
 
     static uint32_t extractPrescaler(uint16_t oversamplingAndPrescaler) {
-        return (oversamplingAndPrescaler & 0b00011111'11111111);
+        return (oversamplingAndPrescaler & 0b0001'1111'1111'1111);
     };
-
-
 
 #ifndef unitTesting
 
