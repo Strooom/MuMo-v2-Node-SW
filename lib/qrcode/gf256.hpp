@@ -812,7 +812,7 @@ class gf256 {
             z = (z << 1) ^ ((z >> 7) * 0x11D);
             z ^= ((y >> i) & 1) * x;
         }
-        return z;
+        return static_cast<uint8_t>(z);
     }
 
     static uint8_t inv(uint8_t a) {

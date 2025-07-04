@@ -905,14 +905,13 @@ void qrCode::selectMask() {
 
 #pragma endregion
 
-// ?????
-
 uint32_t qrCode::payloadLengthInBits(uint32_t dataLengthInBytes, uint32_t someVersion, encodingFormat someEncodingFormat) {
     uint32_t modeIndicatorLength{4U};
     switch (someEncodingFormat) {
         case encodingFormat::numeric:
             uint32_t remainderLength;
             switch (dataLengthInBytes % 3) {
+                default:        // intentional fallthrough
                 case 0:
                     remainderLength = 0;
                     break;

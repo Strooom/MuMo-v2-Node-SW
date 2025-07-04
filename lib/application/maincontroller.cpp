@@ -295,24 +295,25 @@ void mainController::runStateMachine() {
 
         case mainState::sampling:
             sensorDeviceCollection::run();
-            if (sensorDeviceCollection::isSamplingReady()) {
-                if (sensorDeviceCollection::hasNewMeasurements()) {
-                    sensorDeviceCollection::collectNewMeasurements();
-                    measurementGroupCollection::addNew(sensorDeviceCollection::newMeasurements);
-                    if (LoRaWAN::isRadioEnabled()) {
-                        LoRaWAN::sendUplink(sensorDeviceCollection::newMeasurements);
-                        goTo(mainState::networking);
-                    } else {
-                        showMain();
-                        i2c::goSleep();
-                        goTo(mainState::idle);
-                    }
+            if (!sensorDeviceCollection::isSamplingReady()) {
+                break;
+            }
+            if (sensorDeviceCollection::hasNewMeasurements()) {
+                sensorDeviceCollection::collectNewMeasurements();
+                measurementGroupCollection::addNew(sensorDeviceCollection::newMeasurements);
+                if (LoRaWAN::isRadioEnabled()) {
+                    LoRaWAN::sendUplink(sensorDeviceCollection::newMeasurements);
+                    goTo(mainState::networking);
                 } else {
+                    showMain();
                     i2c::goSleep();
                     goTo(mainState::idle);
                 }
-                sensorDeviceCollection::updateCounters();
+            } else {
+                i2c::goSleep();
+                goTo(mainState::idle);
             }
+            sensorDeviceCollection::updateCounters();
             break;
 
         case mainState::networking:

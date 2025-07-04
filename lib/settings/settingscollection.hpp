@@ -50,6 +50,9 @@ class settingsCollection {
     template <typename dataType>
     static dataType read(settingIndex theIndex);
 
+    static void save(const uint8_t data, settingIndex theIndex, uint32_t offset);
+    static uint8_t read(settingIndex theIndex, uint32_t offset);
+
     static void saveByteArray(const uint8_t* dataIn, settingIndex theIndex);
     static void readByteArray(uint8_t* dataOut, settingIndex theIndex);
 

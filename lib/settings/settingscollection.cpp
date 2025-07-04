@@ -73,3 +73,12 @@ uint8_t settingsCollection::readSensorSettings(uint8_t deviceAndChannelIndex) {
     uint8_t result   = nonVolatileStorage::read(address);
     return result;
 }
+
+void settingsCollection::save(const uint8_t data, settingIndex theIndex, uint32_t offset) {
+    uint32_t address = settings[static_cast<uint32_t>(theIndex)].startAddress + offset;
+    nonVolatileStorage::write(address, data);
+}
+uint8_t settingsCollection::read(settingIndex theIndex, uint32_t offset) {
+    uint32_t address = settings[static_cast<uint32_t>(theIndex)].startAddress + offset;
+    return nonVolatileStorage::read(address);
+}
