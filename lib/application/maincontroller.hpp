@@ -14,9 +14,6 @@
 #include <applicationevent.hpp>
 #include <clicommand.hpp>
 
-static constexpr bool forceInitialization{false};
-static constexpr batteryType defaultBatteryType{batteryType::alkaline_1200mAh};
-static constexpr radioType defaultRadioType{radioType::lowPower};
 static constexpr uint32_t maxNameLength{8U};        // maximum length of the node name, including the null terminator
 static constexpr char toBeName[maxNameLength + 1] = "MuMo";
 
@@ -24,6 +21,13 @@ class mainController {
   public:
     mainController() = delete;
     static void initialize();
+    static void initializeLogging();
+    static void initializeNonVolatileStorage();
+    static void initializeName();
+    static void initializeBattery();
+    static void initializeDisplay();
+    static void initializeRadio();
+    static void initializeSensors();
     static void runUsbPowerDetection();
     static void runStateMachine();
     static void handleEvents();

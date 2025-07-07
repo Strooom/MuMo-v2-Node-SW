@@ -1,7 +1,6 @@
 # MuMo SW V3
 ## ToDo's
 
-1. make sensorSettings persistent
 2. make SNR work both in devStatusReq and on display
 3. make measurementGroup a template class, so we can make large ones (for sensorDeviceCollection) and small ones (for events such as usb plugin...)
 4. make epaper display refresh faster...

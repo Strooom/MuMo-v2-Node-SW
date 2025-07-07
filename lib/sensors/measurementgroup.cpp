@@ -1,4 +1,5 @@
 #include <measurementgroup.hpp>
+#include <sensorchannel.hpp>
 #include <float.hpp>
 #include <realtimeclock.hpp>
 #include <stdio.h>
@@ -30,7 +31,7 @@ void measurementGroup::toBytes(uint8_t* buffer, uint32_t bufferSize) const {
     const uint8_t* timestampAsBytes = realTimeClock::bytesFromTime_t(timestamp);
     memcpy(buffer + 1, timestampAsBytes, 4);
     for (uint32_t measurementIndex = 0; measurementIndex < nmbrOfMeasurements; measurementIndex++) {
-        buffer[5 + (measurementIndex * 5)] = compressDeviceAndChannelIndex(measurements[measurementIndex].deviceIndex, measurements[measurementIndex].channelIndex);
+        buffer[5 + (measurementIndex * 5)] = sensorChannel::compressDeviceAndChannelIndex(measurements[measurementIndex].deviceIndex, measurements[measurementIndex].channelIndex);
         const uint8_t* valueAsBytes        = floatToBytes(measurements[measurementIndex].value);
         memcpy(buffer + 6 + (measurementIndex * 5), valueAsBytes, 4);
     }
@@ -56,8 +57,8 @@ void measurementGroup::fromBytes(const uint8_t* source) {
     const uint8_t* timestampAsBytes = source + 1;
     timestamp                       = realTimeClock::time_tFromBytes(timestampAsBytes);
     for (uint32_t measurementIndex = 0; measurementIndex < nmbrOfMeasurements; measurementIndex++) {
-        measurements[measurementIndex].deviceIndex  = extractDeviceIndex(source[5 + (measurementIndex * 5)]);
-        measurements[measurementIndex].channelIndex = extractChannelIndex(source[5 + (measurementIndex * 5)]);
+        measurements[measurementIndex].deviceIndex  = sensorChannel::extractDeviceIndex(source[5 + (measurementIndex * 5)]);
+        measurements[measurementIndex].channelIndex = sensorChannel::extractChannelIndex(source[5 + (measurementIndex * 5)]);
         measurements[measurementIndex].value        = bytesToFloat(source + 6 + (measurementIndex * 5));
     }
 }

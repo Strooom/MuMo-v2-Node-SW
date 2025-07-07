@@ -65,124 +65,20 @@ char mainController::name[maxNameLength + 1]{};
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void mainController::initialize() {
-    logging::enable(logging::destination::uart1);
-    logging::enable(logging::source::applicationEvents);
-    logging::enable(logging::source::settings);
-    logging::enable(logging::source::lorawanMac);
-    logging::enable(logging::source::lorawanData);
-    logging::enable(logging::source::error);
-    logging::enable(logging::source::criticalError);
+    logging::initialize();
     realTimeClock::initialize();
-
-    logging::snprintf("\n\n\nhttps://github.com/Strooom\n");
-    logging::snprintf("v%u.%u.%u - #%s\n", buildInfo::mainVersionDigit, buildInfo::minorVersionDigit, buildInfo::patchVersionDigit, buildInfo::lastCommitTag);
-    logging::snprintf("%s %s build - %s\n", toString(buildInfo::theBuildEnvironment), toString(buildInfo::theBuildType), buildInfo::buildTimeStamp);
-    logging::snprintf("Creative Commons 4.0 - BY-NC-SA\n\n");
-
-    logging::snprintf("UID      : %s\n", uniqueId::asHexString());
-
-    uint8_t tmpName[maxNameLength + 1]{};
-    settingsCollection::readByteArray(tmpName, settingsCollection::settingIndex::name);
-    for (uint32_t index = 0; index < maxNameLength; ++index) {
-        name[index] = tmpName[index];
-    }
-    name[maxNameLength] = '\0';        // ensure null termination
-    logging::snprintf("name     : %s\n", name);
-
-    spi::wakeUp();
-    display::detectPresence();
-    logging::snprintf(logging::source::settings, "display  : %s\n", display::isPresent() ? "present" : "not present");
-    if (display::isPresent()) {
-        screen::setType(screenType::logo);
-        screen::setName(name);
-        screen::update();
-    }
-    spi::goSleep();
-
     i2c::wakeUp();
-    uint32_t nmbr64KBlocks = nonVolatileStorage::getNmbr64KBanks();
-    if (nmbr64KBlocks > 0) {
-        logging::snprintf(logging::source::settings, "EEPROM   : %d * 64K present\n", nmbr64KBlocks);
-    } else {
-        logging::snprintf(logging::source::criticalError, "no EEPROM\n");
-        state = mainState::fatalError;
+    if (nonVolatileStorage::getNmbr64KBanks() == 0) {
+        logging::snprintf(logging::source::criticalError, "EEPROM not found\n");
+        goTo(mainState::fatalError);
         return;
     }
-
-    if (!settingsCollection::isValid()) {
-        settingsCollection::save(settingsCollection::maxMapVersion, settingsCollection::settingIndex::mapVersion);
-    }
-    logging::snprintf(logging::source::settings, "settingsMapVersion : %d\n", settingsCollection::getMapVersion());
-
-    batteryType theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
-    if (!battery::isValidType(theBatteryType)) {
-        settingsCollection::save(static_cast<uint8_t>(defaultBatteryType), settingsCollection::settingIndex::batteryType);
-        theBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
-    }
-    battery::initialize(theBatteryType);
-    logging::snprintf(logging::source::settings, "batteryType : %s (%d)\n", toString(theBatteryType), static_cast<uint8_t>(theBatteryType));
-
-    radioType theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
-    if (!sx126x::isValidType(theRadioType)) {
-        settingsCollection::save(static_cast<uint8_t>(defaultRadioType), settingsCollection::settingIndex::radioType);
-        theRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
-    }
-    sx126x::initialize(theRadioType);
-    logging::snprintf(logging::source::settings, "radioType : %s (%d)\n", toString(theRadioType), static_cast<uint8_t>(theRadioType));
-
-    sensorDeviceCollection::discover();
-    static constexpr uint32_t defaultPrescalerIndex{4U};          // equals 20 equal 10 minutes
-    static constexpr uint32_t defaultOversamplingIndex{0};        // 0 means no oversampling
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, defaultOversamplingIndex, defaultPrescalerIndex);
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::stateOfCharge, defaultOversamplingIndex, defaultPrescalerIndex);
-    if (bme680::isPresent()) {
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature, defaultOversamplingIndex, defaultPrescalerIndex);
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity, defaultOversamplingIndex, defaultPrescalerIndex);
-    }
-    logging::snprintf("BME680   : %s\n", bme680::isPresent() ? "present" : "not present");
-
-    if (tsl2591::isPresent()) {
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight, defaultOversamplingIndex, defaultPrescalerIndex);
-    }
-    logging::snprintf("TSL2591  : %s\n", tsl2591::isPresent() ? "present" : "not present");
-
-    if (sht40::isPresent()) {
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature, defaultOversamplingIndex, defaultPrescalerIndex);
-        sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity, defaultOversamplingIndex, defaultPrescalerIndex);
-    }
-    logging::snprintf("SHT40    : %s\n", sht40::isPresent() ? "present" : "not present");
-
+    initializeName();
+    initializeBattery();
+    initializeDisplay();
+    initializeSensors();
     measurementGroupCollection::initialize();
-
-    gpio::enableGpio(gpio::group::rfControl);
-
-    LoRaWAN::initialize();
-    logging::snprintf("\n");
-    if (!LoRaWAN::isValidConfig()) {
-        logging::snprintf(logging::source::criticalError, "invalid LoRaWAN config\n");
-        LoRaWAN::setEnableRadio(false);
-    }
-    logging::snprintf("DevAddr  : %s\n", LoRaWAN::DevAddr.getAsHexString());
-    logging::snprintf("AppSKey  : %s\n", LoRaWAN::applicationKey.getAsHexString());
-    logging::snprintf("NwkSKey  : %s\n", LoRaWAN::networkKey.getAsHexString());
-
-    logging::snprintf("\n");
-    if (!LoRaWAN::isValidState()) {
-        logging::snprintf(logging::source::criticalError, "invalid LoRaWAN state\n");
-        LoRaWAN::setEnableRadio(false);
-    }
-    logging::snprintf("FrmCntUp : %u\n", LoRaWAN::uplinkFrameCount.getAsWord());
-    logging::snprintf("FrmCntDn : %u\n", LoRaWAN::downlinkFrameCount.getAsWord());
-    logging::snprintf("rx1Delay : %u\n", LoRaWAN::rx1DelayInSeconds);
-    logging::snprintf("DataRate : %u\n", LoRaWAN::currentDataRateIndex);
-    logging::snprintf("rx1DROff : %u\n", LoRaWAN::rx1DataRateOffset);
-    logging::snprintf("rx2DRIdx : %u\n", LoRaWAN::rx2DataRateIndex);
-    logging::snprintf("\n");
-    logging::snprintf("ActiveCh : %u\n", loRaTxChannelCollection::nmbrActiveChannels());
-    for (uint32_t loRaTxChannelIndex = 0; loRaTxChannelIndex < loRaTxChannelCollection::maxNmbrChannels; loRaTxChannelIndex++) {
-        logging::snprintf("Chan[%02u] : %u Hz, %u, %u\n", loRaTxChannelIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].frequencyInHz, loRaTxChannelCollection::channel[loRaTxChannelIndex].minimumDataRateIndex, loRaTxChannelCollection::channel[loRaTxChannelIndex].maximumDataRateIndex);
-    }
-
+    initializeRadio();
     applicationEventBuffer.initialize();
     requestCounter = 0;
     answerCounter  = 0;
@@ -190,6 +86,79 @@ void mainController::initialize() {
         goTo(mainState::networkCheck);
     } else {
         goTo(mainState::idle);
+    }
+}
+
+void mainController::initializeName() {
+    uint8_t tmpName[maxNameLength + 1]{};
+    settingsCollection::readByteArray(tmpName, settingsCollection::settingIndex::name);
+    if (tmpName[0] == nonVolatileStorage::blankEepromValue) {
+        name[maxNameLength] = '\0';
+        return;
+    }
+    for (uint32_t index = 0; index < maxNameLength; ++index) {
+        name[index] = tmpName[index];
+    }
+    name[maxNameLength] = '\0';
+}
+
+void mainController::initializeBattery() {
+    batteryType tmpBatteryType = static_cast<batteryType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::batteryType));
+    if (!battery::isValidType(tmpBatteryType)) {
+        tmpBatteryType = battery::defaultBatteryType;
+        settingsCollection::save(static_cast<uint8_t>(tmpBatteryType), settingsCollection::settingIndex::batteryType);
+    }
+    battery::initialize(tmpBatteryType);
+}
+
+void mainController::initializeDisplay() {
+    spi::wakeUp();
+    display::detectPresence();
+    if (display::isPresent()) {
+        screen::setType(screenType::logo);
+        screen::setName(name);
+        screen::update();
+    }
+    spi::goSleep();
+}
+
+void mainController::initializeRadio() {
+    radioType tmpRadioType = static_cast<radioType>(settingsCollection::read<uint8_t>(settingsCollection::settingIndex::radioType));
+    if (!sx126x::isValidType(tmpRadioType)) {
+        tmpRadioType = sx126x::defaultRadioType;
+        settingsCollection::save(static_cast<uint8_t>(tmpRadioType), settingsCollection::settingIndex::radioType);
+    }
+    sx126x::initialize(tmpRadioType);
+    gpio::enableGpio(gpio::group::rfControl);
+    LoRaWAN::initialize();
+    if (!LoRaWAN::isValidConfig() || !LoRaWAN::isValidState()) {
+        LoRaWAN::setEnableRadio(false);
+        logging::snprintf(logging::source::error, "invalid LoRaWAN config and/or state\n");
+    }
+}
+
+void mainController::initializeSensors() {
+    sensorDeviceCollection::discover();
+
+    for (uint32_t deviceIndex = 0; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
+        if (sensorDeviceCollection::isPresent(deviceIndex)) {
+            for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(deviceIndex); channelIndex++) {
+                uint8_t tmpDeviceAndChannel = sensorChannel::compressDeviceAndChannelIndex(static_cast<uint8_t>(deviceIndex), static_cast<uint8_t>(channelIndex));
+                uint8_t tmpConfig           = settingsCollection::read(settingsCollection::settingIndex::sensorSettings, tmpDeviceAndChannel);
+                uint8_t tmpOversamplingIndex;
+                uint8_t tmpPrescalerIndex;
+                if (tmpConfig == nonVolatileStorage::blankEepromValue) {
+                    tmpOversamplingIndex = sensorDeviceCollection::defaultOversamplingIndex;
+                    tmpPrescalerIndex    = sensorDeviceCollection::defaultPrescalerIndex;
+                    uint8_t tmpCombined  = sensorChannel::compressOversamplingAndPrescalerIndex(tmpOversamplingIndex, tmpPrescalerIndex);
+                    settingsCollection::save(tmpCombined, settingsCollection::settingIndex::sensorSettings, tmpDeviceAndChannel);
+                } else {
+                    tmpOversamplingIndex = static_cast<uint8_t>(sensorChannel::extractOversamplingIndex(tmpConfig));
+                    tmpPrescalerIndex    = static_cast<uint8_t>(sensorChannel::extractPrescalerIndex(tmpConfig));
+                }
+                sensorDeviceCollection::set(deviceIndex, channelIndex, tmpOversamplingIndex, tmpPrescalerIndex);
+            }
+        }
     }
 }
 
@@ -690,6 +659,7 @@ void mainController::setDeviceAddress(const cliCommand& theCommand) {
         cli::sendResponse("invalid arguments\n");
     }
 }
+
 void mainController::setNetworkKey(const cliCommand& theCommand) {
     if ((theCommand.nmbrOfArguments == 1) && (strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii) == aesKey::lengthAsHexAscii)) {
         char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};
@@ -702,6 +672,7 @@ void mainController::setNetworkKey(const cliCommand& theCommand) {
         cli::sendResponse("invalid arguments\n");
     }
 }
+
 void mainController::setApplicationKey(const cliCommand& theCommand) {
     if ((theCommand.nmbrOfArguments == 1) && (strnlen(theCommand.arguments[0], aesKey::lengthAsHexAscii) == aesKey::lengthAsHexAscii)) {
         char newKeyAsHex[aesKey::lengthAsHexAscii + 1]{0};

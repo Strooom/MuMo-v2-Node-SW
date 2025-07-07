@@ -26,23 +26,11 @@ uint32_t logging::activeDestinations{0};
 char logging::buffer[bufferLength]{};
 
 void logging::initialize() {
-#ifndef generic
-    if ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001) {        // is a SWD debugprobe connected ?
-#ifndef platformio                                                             // SWO TRACE is not working on PlatformIO
-        logging::enable(logging::destination::swo);
-#endif
-        LL_DBGMCU_EnableDBGStopMode();
-    } else {
-        LL_DBGMCU_DisableDBGStopMode();
-    }
-#endif
-    if (power::hasUsbPower()) {
-        logging::enable(logging::destination::uart2);
-    }
-    if (!logging::isActive(logging::destination::swo)) {
-        gpio::disableGpio(gpio::group::debugPort);
-    }
+    enable(logging::destination::uart1);
+    enable(logging::source::error);
+    enable(logging::source::criticalError);
 }
+
 
 uint32_t logging::snprintf(const char *format, ...) {
     uint32_t length{0};
@@ -113,27 +101,6 @@ void logging::write(const uint32_t dataLength) {
     }
 }
 
-void logging::dump() {
-    logging::snprintf("logging : \n");
-    if (activeSources == 0) {
-        logging::snprintf("  no active sources\n");
-    } else {
-        logging::snprintf("  sources      : ");
-        for (uint32_t index = 0; index < 32; index++) {
-            if ((activeSources & (0x01 << index)) != 0) {
-                logging::snprintf("%s ", toString(static_cast<source>(index)));
-            }
-        }
-        logging::snprintf("\n");
-    }
-    logging::snprintf("  destinations : ");
-    for (uint32_t index = 0; index < 32; index++) {
-        if ((activeDestinations & (0x01 << index)) != 0) {
-            logging::snprintf("%s ", toString(static_cast<destination>(index)));
-        }
-    }
-    logging::snprintf("\n");
-}
 const char *toString(const logging::source aSource) {
     switch (aSource) {
         case logging::source::applicationEvents:

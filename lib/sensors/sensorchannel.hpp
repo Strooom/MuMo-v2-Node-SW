@@ -78,6 +78,18 @@ class sensorChannel {
     static constexpr uint32_t prescalerLookup[maxPrescalerIndex + 1]{0, 2, 4, 10, 20, 30, 60, 120, 240, 480, 720, 1440, 2880, 5760};
     static constexpr uint32_t oversamplingLookup[maxOversamplingIndex + 1]{1, 2, 4, 10};
 
+
+    static uint8_t compressDeviceAndChannelIndex(uint8_t deviceIndex, uint8_t channelIndex) {
+        return (((deviceIndex << 3) & 0b11111000) | (channelIndex & 0b00000111));
+    };
+    static uint8_t extractDeviceIndex(uint8_t deviceAndChannelIndex) {
+        return (deviceAndChannelIndex >> 3);
+    };
+    static uint8_t extractChannelIndex(uint8_t deviceAndChannelIndex) {
+        return (deviceAndChannelIndex & 0b00000111);
+    };
+
+
 #ifndef unitTesting
 
   private:

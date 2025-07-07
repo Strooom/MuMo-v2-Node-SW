@@ -36,9 +36,9 @@ void test_enable_disable() {
 
 void test_output() {
     logging::reset();
-    TEST_ASSERT_EQUAL(0, logging::snprintf("test"));          // before any destination is enabled
-    logging::enable(logging::destination::swo);        //
-    TEST_ASSERT_EQUAL(4, logging::snprintf("test"));          // after a destination is enabled
+    TEST_ASSERT_EQUAL(0, logging::snprintf("test"));        // before any destination is enabled
+    logging::enable(logging::destination::swo);             //
+    TEST_ASSERT_EQUAL(4, logging::snprintf("test"));        // after a destination is enabled
 }
 
 void test_output_source() {
@@ -75,11 +75,6 @@ void test_toString_source() {
     TEST_ASSERT_EQUAL_STRING("unknown", toString(static_cast<logging::source>(99U)));
 }
 
-void test_dump() {
-    logging::dump();
-    TEST_IGNORE_MESSAGE("For Coverage Only");
-}
-
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
@@ -88,6 +83,5 @@ int main(int argc, char **argv) {
     RUN_TEST(test_output_source);
     RUN_TEST(test_toString_destination);
     RUN_TEST(test_toString_source);
-    RUN_TEST(test_dump);
     UNITY_END();
 }
