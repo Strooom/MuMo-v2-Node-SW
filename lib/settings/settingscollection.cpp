@@ -63,17 +63,6 @@ void settingsCollection::readByteArray(uint8_t* dataOut, settingIndex theIndex) 
     }
 }
 
-void settingsCollection::saveSensorSettings(const uint8_t compressedOversamplingAndPrescalerIndex, uint8_t deviceAndChannelIndex) {
-    uint32_t address = settings[static_cast<uint32_t>(settingIndex::sensorSettings)].startAddress + deviceAndChannelIndex;
-    nonVolatileStorage::write(address, compressedOversamplingAndPrescalerIndex);
-}
-
-uint8_t settingsCollection::readSensorSettings(uint8_t deviceAndChannelIndex) {
-    uint32_t address = settings[static_cast<uint32_t>(settingIndex::sensorSettings)].startAddress + deviceAndChannelIndex;
-    uint8_t result   = nonVolatileStorage::read(address);
-    return result;
-}
-
 void settingsCollection::save(const uint8_t data, settingIndex theIndex, uint32_t offset) {
     uint32_t address = settings[static_cast<uint32_t>(theIndex)].startAddress + offset;
     nonVolatileStorage::write(address, data);
