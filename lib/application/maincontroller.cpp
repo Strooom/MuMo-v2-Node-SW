@@ -125,7 +125,6 @@ void mainController::initializeDisplay() {
                 tmpDeviceAndChannel = 0;
                 settingsCollection::save(tmpDeviceAndChannel, settingsCollection::settingIndex::sensorSettings, lineIndex);
             }
-            // TODO : check if this channel is active...
             displayDeviceIndex[lineIndex]  = sensorChannel::extractDeviceIndex(tmpDeviceAndChannel);
             displayChannelIndex[lineIndex] = sensorChannel::extractChannelIndex(tmpDeviceAndChannel);
         }
@@ -152,23 +151,24 @@ void mainController::initializeSensors() {
     sensorDeviceCollection::discover();
 
     for (uint32_t deviceIndex = 0; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
-        if (sensorDeviceCollection::isPresent(deviceIndex)) {
-            for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(deviceIndex); channelIndex++) {
-                uint8_t tmpDeviceAndChannel = sensorChannel::compressDeviceAndChannelIndex(static_cast<uint8_t>(deviceIndex), static_cast<uint8_t>(channelIndex));
-                uint8_t tmpConfig           = settingsCollection::read(settingsCollection::settingIndex::sensorSettings, tmpDeviceAndChannel);
-                uint8_t tmpOversamplingIndex;
-                uint8_t tmpPrescalerIndex;
-                if (tmpConfig == nonVolatileStorage::blankEepromValue) {
-                    tmpOversamplingIndex = sensorChannel::defaultOversamplingIndex;
-                    tmpPrescalerIndex    = sensorChannel::defaultPrescalerIndex;
-                    uint8_t tmpCombined  = sensorChannel::compressOversamplingAndPrescalerIndex(tmpOversamplingIndex, tmpPrescalerIndex);
-                    settingsCollection::save(tmpCombined, settingsCollection::settingIndex::sensorSettings, tmpDeviceAndChannel);
-                } else {
-                    tmpOversamplingIndex = static_cast<uint8_t>(sensorChannel::extractOversamplingIndex(tmpConfig));
-                    tmpPrescalerIndex    = static_cast<uint8_t>(sensorChannel::extractPrescalerIndex(tmpConfig));
-                }
-                sensorDeviceCollection::set(deviceIndex, channelIndex, tmpOversamplingIndex, tmpPrescalerIndex);
+        if (!sensorDeviceCollection::isPresent(deviceIndex)) {
+            continue;
+        }
+        for (uint32_t channelIndex = 0; channelIndex < sensorDeviceCollection::nmbrOfChannels(deviceIndex); channelIndex++) {
+            uint8_t tmpDeviceAndChannel = sensorChannel::compressDeviceAndChannelIndex(static_cast<uint8_t>(deviceIndex), static_cast<uint8_t>(channelIndex));
+            uint8_t tmpConfig           = settingsCollection::read(settingsCollection::settingIndex::sensorSettings, tmpDeviceAndChannel);
+            uint8_t tmpOversamplingIndex;
+            uint8_t tmpPrescalerIndex;
+            if (tmpConfig == nonVolatileStorage::blankEepromValue) {
+                tmpOversamplingIndex = sensorChannel::defaultOversamplingIndex;
+                tmpPrescalerIndex    = sensorChannel::defaultPrescalerIndex;
+                uint8_t tmpCombined  = sensorChannel::compressOversamplingAndPrescalerIndex(tmpOversamplingIndex, tmpPrescalerIndex);
+                settingsCollection::save(tmpCombined, settingsCollection::settingIndex::sensorSettings, tmpDeviceAndChannel);
+            } else {
+                tmpOversamplingIndex = static_cast<uint8_t>(sensorChannel::extractOversamplingIndex(tmpConfig));
+                tmpPrescalerIndex    = static_cast<uint8_t>(sensorChannel::extractPrescalerIndex(tmpConfig));
             }
+            sensorDeviceCollection::set(deviceIndex, channelIndex, tmpOversamplingIndex, tmpPrescalerIndex);
         }
     }
 }

@@ -254,7 +254,6 @@ void display::writeCommand(const SSD1681Commands theCommand, uint8_t* theData, c
 }
 
 void display::waitWhileBusy() {
-// TODO : this is potentially and endless loop -> add a timeout
 #ifndef generic
     while (isBusy()) {
         asm("NOP");
