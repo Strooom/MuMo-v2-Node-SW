@@ -8,7 +8,7 @@ void tearDown(void) {        // after each test
 }
 
 void test_toString() {
-    TEST_ASSERT_EQUAL_STRING("MCU", toString(sensorDeviceType::mcu));
+    TEST_ASSERT_EQUAL_STRING("STM32WLE5", toString(sensorDeviceType::mcu));
     TEST_ASSERT_EQUAL_STRING("Battery", toString(sensorDeviceType::battery));
     TEST_ASSERT_EQUAL_STRING("BME680", toString(sensorDeviceType::bme680));
     TEST_ASSERT_EQUAL_STRING("TSL2591", toString(sensorDeviceType::tsl2591));
