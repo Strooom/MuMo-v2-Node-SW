@@ -37,3 +37,6 @@ when connecting / disconnection USB, this should be logged as an measurement-eve
 * make generic unit tests also run on target
 
 * when a certain device/channel is not active, it should not be allowed on the display...
+
+* CLI command to erase all measurements
+* CLI command to dump the EEPROM memory
