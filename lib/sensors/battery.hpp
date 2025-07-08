@@ -12,6 +12,7 @@
 
 class battery {
   public:
+    static constexpr batteryType defaultBatteryType{batteryType::liFePO4_700mAh};
     static void setType(uint8_t index);
     static bool isValidType(batteryType newBatteryType);
     static void initialize(batteryType newBatteryType);

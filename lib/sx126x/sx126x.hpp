@@ -23,6 +23,7 @@ enum class rfSwitchState : uint8_t {
 class sx126x {
   public:
     sx126x() = delete;
+    static constexpr radioType defaultRadioType{radioType::lowPower};
     static bool isValidType(radioType someRadioType);
     static void initialize(radioType isPowerVersion);
     static radioType getType() { return theRadioType; };

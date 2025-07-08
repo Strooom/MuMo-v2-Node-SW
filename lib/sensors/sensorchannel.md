@@ -1,17 +1,65 @@
 # prescaling and oversampling
 
 1. Prescaling means that a sensorChannel does not take a sample (measurement) every RTC tick (30s), but rather once per n RTC ticks.
-The prescaler value can be set from 0 .. 4095
+The prescaler value can be set from 0 .. 8190
     prescaler = 0 : this sensorChannel does NOT take any samples = deactivation of the sensorchannel
-    prescaler = 1 .. 4095 : take a sample every 1..4095 ticks. The prescaleCounter runs from (prescaler-1) to 0
+    prescaler = 1 .. 8190 : take a sample every 1..8190 ticks. The prescaleCounter runs from (prescaler-1) to 0
 
 2. Oversampling means that a sensorChannel takes multiple samples, and then averages them into a single output
-The oversampling can be set from 0..15, resulting in averaging 1..16 samples to a single output.
+The oversampling can be set from 0..7, resulting in averaging 1..8 samples to a single output.
 The oversamplingCounter runs from (oversampling) to 0
 
+oversampling (3 bits) and prescaler (13 bits) are compressed into a single uint16 when storing into EEPROM
+As this has 0xFF as blank value, a value, the max valid value for prescaler is 8190 (io 8191), so we can recognize uninitialized eeprom.
 
 Note : (minutesBetweenOutput * 2) must be a multiple of numberOfSamplesToAverage
 Note : ((minutesBetweenOutput * 2) % numberOfSamplesToAverage) == 0
+
+
+I could store prescaler more efficiently..
+0 = off
+1 = every minute
+2 = every 2 minutes
+3 = every 5 minutes
+4 = every 10 minutes
+5 = every 15 minutes
+6 = every 30 minutes
+7 = every 60 minutes
+8 = every 2 hours
+9 = every 6 hours
+10 = every 12 hours
+11 = every 24 hours
+
+prescaler
+
+0 = off
+1 = every minute, prescaler = 2
+2 = every 2 minutes, prescaler = 4
+3 = every 5 minutes, prescaler = 10
+4 = every 10 minutes, prescaler = 20
+5 = every 15 minutes, prescaler = 30
+6 = every 30 minutes, prescaler = 60
+7 = every hour, prescaler = 120
+8 = every 2 hours, prescaler = 240
+9 = every 4 hours, prescaler = 480
+10 = every 6 hours, prescaler = 720
+11 = every 12 hours, prescaler = 1440
+12 = every 24 hours, prescaler = 2880
+13 = every 48 hours, prescaler = 5760
+
+4 bits needed
+
+oversampling
+1
+2
+4
+8
+
+2 bits needed
+
+total 6 bits needed, fits in a byte
+
+
 
 
 # TODO

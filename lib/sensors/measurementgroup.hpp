@@ -30,7 +30,8 @@ class measurementGroup {
     static constexpr uint32_t oldestPossibleTimestamp{1577836800};        // Jan 01 2020 00:00:00 GMT+0000 // 0x5E0BE100
     static constexpr uint8_t defaultChecksum{0xB4};                       // checksum for 0x5E0BE100 oldestPossibleTimestamp
 
-#ifndef unitTesting
+
+    #ifndef unitTesting
 
   private:
 #endif
@@ -43,13 +44,4 @@ class measurementGroup {
         float value;
     } measurements[maxNmbrOfMeasurements];
 
-    static uint8_t compressDeviceAndChannelIndex(uint8_t deviceIndex, uint8_t channelIndex) {
-        return (((deviceIndex << 3) & 0b11111000) | (channelIndex & 0b00000111));
-    };
-    static uint8_t extractDeviceIndex(uint8_t deviceAndChannelIndex) {
-        return (deviceAndChannelIndex >> 3);
-    };
-    static uint8_t extractChannelIndex(uint8_t deviceAndChannelIndex) {
-        return (deviceAndChannelIndex & 0b00000111);
-    };
 };

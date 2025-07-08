@@ -3,10 +3,9 @@
 #include <nvs.hpp>
 #include <stdio.h>
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
+
 
 void test_isValidBlockIndex() {
     TEST_ASSERT_TRUE(settingsCollection::isValidIndex(settingsCollection::settingIndex::mapVersion));
@@ -32,6 +31,7 @@ void test_write_read_setting() {
     uint8_t testByte{123};
     settingsCollection::save<uint8_t>(testByte, settingsCollection::settingIndex::mapVersion);
     TEST_ASSERT_EQUAL_UINT8(testByte, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mapVersion));
+    TEST_ASSERT_EQUAL_UINT8(testByte, settingsCollection::getMapVersion());
 
     settingsCollection::save(testByte, settingsCollection::settingIndex::mapVersion);
     TEST_ASSERT_EQUAL_UINT8(testByte, settingsCollection::read<uint8_t>(settingsCollection::settingIndex::mapVersion));
@@ -50,6 +50,18 @@ void test_write_read_setting() {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(testArrayIn, testArrayOut, 16);
 }
 
+void test_write_read_setting_with_offset() {
+    nonVolatileStorage::mockEepromNmbr64KPages = 2;
+    nonVolatileStorage::detectNmbr64KBanks();
+    nonVolatileStorage::erase();
+    static constexpr uint32_t testOffset{8};
+    TEST_ASSERT_EQUAL_UINT8(nonVolatileStorage::blankEepromValue, settingsCollection::read(settingsCollection::settingIndex::sensorSettings, testOffset));
+
+    static constexpr uint8_t testByte{0x55};
+    settingsCollection::save(testByte, settingsCollection::settingIndex::sensorSettings, testOffset);
+    TEST_ASSERT_EQUAL_UINT8(testByte, settingsCollection::read(settingsCollection::settingIndex::sensorSettings, testOffset));
+}
+
 void test_is_initialized() {
     nonVolatileStorage::erase();
     TEST_ASSERT_FALSE(settingsCollection::isValid());
@@ -57,13 +69,13 @@ void test_is_initialized() {
     TEST_ASSERT_TRUE(settingsCollection::isValid());
 }
 
-
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_isValidBlockIndex);
     RUN_TEST(test_blockOverlap);
     RUN_TEST(test_allBlocksWithinOnePage);
     RUN_TEST(test_write_read_setting);
+    RUN_TEST(test_write_read_setting_with_offset);
     RUN_TEST(test_is_initialized);
     UNITY_END();
 }

@@ -13,7 +13,7 @@ class sensorDeviceCollection {
     sensorDeviceCollection() = delete;
     static void reset();
     static void discover();
-    static void set(uint32_t deviceIndex, uint32_t channelIndex, uint32_t oversampling, uint32_t prescaler);
+    static void set(uint32_t deviceIndex, uint32_t channelIndex, uint32_t oversamplingIndex, uint32_t prescalerIndex);
     static void run();
     static void log();
     static void log(uint32_t deviceIndex);
@@ -56,12 +56,11 @@ class sensorDeviceCollection {
     static bool isValid(uint32_t deviceIndex);
     static bool isValid(uint32_t deviceIndex, uint32_t channelIndex);
 
-    #ifndef unitTesting
+#ifndef unitTesting
 
   private:
 #endif
 
     static bool present[static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)];
     static sensorChannel dummy;        // dummy, so we can return a valid reference to a channel in edge cases
-
 };

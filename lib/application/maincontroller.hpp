@@ -14,9 +14,6 @@
 #include <applicationevent.hpp>
 #include <clicommand.hpp>
 
-static constexpr bool forceInitialization{false};
-static constexpr batteryType defaultBatteryType{batteryType::alkaline_1200mAh};
-static constexpr radioType defaultRadioType{radioType::lowPower};
 static constexpr uint32_t maxNameLength{8U};        // maximum length of the node name, including the null terminator
 static constexpr char toBeName[maxNameLength + 1] = "MuMo";
 
@@ -24,6 +21,13 @@ class mainController {
   public:
     mainController() = delete;
     static void initialize();
+    static void initializeLogging();
+    static void initializeNonVolatileStorage();
+    static void initializeName();
+    static void initializeBattery();
+    static void initializeDisplay();
+    static void initializeRadio();
+    static void initializeSensors();
     static void runUsbPowerDetection();
     static void runStateMachine();
     static void handleEvents();
@@ -33,14 +37,14 @@ class mainController {
 
     static constexpr uint32_t minNmbrAnswers{2};
     static constexpr uint32_t maxNmbrRequests{12};
-    static const uint32_t displayDeviceIndex[screen::nmbrOfMeasurementTextLines];
-    static const uint32_t displayChannelIndex[screen::nmbrOfMeasurementTextLines];
-
-#ifndef unitTesting
-
+    
+    #ifndef unitTesting
+    
     // private:
-#endif
+    #endif
     static char name[maxNameLength + 1];
+    static uint32_t displayDeviceIndex[screen::nmbrOfMeasurementTextLines];
+    static uint32_t displayChannelIndex[screen::nmbrOfMeasurementTextLines];
 
     static void goTo(mainState newState);
     static mainState state;

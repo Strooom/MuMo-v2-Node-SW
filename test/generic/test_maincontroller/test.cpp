@@ -6,11 +6,94 @@
 #include <battery.hpp>
 #include <power.hpp>
 #include <lorawan.hpp>
+#include <uart2.hpp>
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void setUp(void) {}
 void tearDown(void) {}
+
+void test_initialize() {
+    TEST_ASSERT_EQUAL(mainState::boot, mainController::state);
+    TEST_ASSERT_EQUAL(0, mainController::requestCounter);
+    TEST_ASSERT_EQUAL(0, mainController::answerCounter);
+    // mainController::initialize();
+    TEST_IGNORE_MESSAGE("implement me!");
+}
+
+#pragma region stateMachine
+
+#pragma endregion
+#pragma region CLI
+void test_setDeviceAddress() {
+    cliCommand testCommand;
+    // set command properties
+    // LoRaWAN::DevAddr.setFromHexString("12345678");
+    mainController::setDeviceAddress(testCommand);
+    TEST_IGNORE_MESSAGE("implement me!");
+}
+
+void test_setKeys() {
+    cliCommand testCommand;
+    // set command properties
+    // mainController::setName(testCommand);
+    TEST_IGNORE_MESSAGE("implement me!");
+}
+
+void test_setName() {
+    cliCommand testCommand;
+    // set command properties
+    // mainController::setName(testCommand);
+    TEST_IGNORE_MESSAGE("implement me!");
+}
+
+void test_setRadio() {
+    cliCommand testCommand;
+    // set command properties
+    // mainController::setRadio(testCommand);
+    TEST_IGNORE_MESSAGE("implement me!");
+}
+
+void test_setBattery() {
+    cliCommand testCommand;
+    // set command properties
+    // mainController::setBattery(testCommand);
+    TEST_IGNORE_MESSAGE("implement me!");
+}
+
+void test_setSensor() {
+    cliCommand testCommand;
+    // set command properties
+    // mainController::setSensor(testCommand);
+    TEST_IGNORE_MESSAGE("implement me!");
+}
+#pragma endregion
+#pragma region other
+void test_toString() {
+    TEST_ASSERT_EQUAL_STRING("idle", toString(mainState::idle));
+    TEST_ASSERT_EQUAL_STRING("sampling", toString(mainState::sampling));
+    TEST_ASSERT_EQUAL_STRING("networking", toString(mainState::networking));
+    TEST_ASSERT_EQUAL_STRING("boot", toString(mainState::boot));
+    TEST_ASSERT_EQUAL_STRING("networkCheck", toString(mainState::networkCheck));
+    TEST_ASSERT_EQUAL_STRING("fatalError", toString(mainState::fatalError));
+    TEST_ASSERT_EQUAL_STRING("test", toString(mainState::test));
+    TEST_ASSERT_EQUAL_STRING("unknown", toString(static_cast<mainState>(999U)));
+}
+
+void test_forCoverageOnly() {
+    mainController::showHelp();
+    uart2::initialize();        // clears output buffer, could get full otherwise, stalling the tests
+    mainController::showPrompt();
+    uart2::initialize();
+    mainController::showDeviceStatus();
+    uart2::initialize();
+    mainController::showNetworkStatus();
+    uart2::initialize();
+    mainController::showMeasurementsStatus();
+    uart2::initialize();
+    TEST_IGNORE_MESSAGE("for coverage only");
+}
+#pragma endregion
 
 void test_miniAdr() {
     mainController::requestCounter = 0;
@@ -45,45 +128,6 @@ void test_transitions_networkCheck() {
     TEST_IGNORE_MESSAGE("implemented me!");
 }
 
-void test_transitions_main() {
-    // sensorDeviceCollection::channel(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage).set(1, 1);
-    // TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
-    // applicationEventBuffer.push(applicationEvent::realTimeClockTick);
-    // mainController::handleEvents();
-    // TEST_ASSERT_EQUAL(mainState::measuring, mainController::state);
-    // mainController::run();
-    // TEST_ASSERT_EQUAL(mainState::logging, mainController::state);
-    // mainController::run();
-    // TEST_ASSERT_EQUAL(mainState::networking, mainController::state);
-    // TEST_ASSERT_EQUAL(txRxCycleState::waitForRandomTimeBeforeTransmit, LoRaWAN::state);
-    // applicationEventBuffer.push(applicationEvent::lowPowerTimerExpired);
-    // mainController::handleEvents();
-    // mainController::run();
-    // TEST_ASSERT_EQUAL(txRxCycleState::waitForTxComplete, LoRaWAN::state);
-    // applicationEventBuffer.push(applicationEvent::sx126xTxComplete);
-    // mainController::handleEvents();
-    // mainController::run();
-    // TEST_ASSERT_EQUAL(txRxCycleState::waitForRx1Start, LoRaWAN::state);
-    // applicationEventBuffer.push(applicationEvent::lowPowerTimerExpired);
-    // mainController::handleEvents();
-    // mainController::run();
-    // TEST_ASSERT_EQUAL(txRxCycleState::waitForRx1CompleteOrTimeout, LoRaWAN::state);
-    // applicationEventBuffer.push(applicationEvent::sx126xTimeout);
-    // mainController::handleEvents();
-    // mainController::run();
-    // TEST_ASSERT_EQUAL(txRxCycleState::waitForRx2Start, LoRaWAN::state);
-    // applicationEventBuffer.push(applicationEvent::lowPowerTimerExpired);
-    // mainController::handleEvents();
-    // mainController::run();
-    // TEST_ASSERT_EQUAL(txRxCycleState::waitForRx2CompleteOrTimeout, LoRaWAN::state);
-    // applicationEventBuffer.push(applicationEvent::sx126xTimeout);
-    // mainController::handleEvents();
-    // mainController::run();
-    // TEST_ASSERT_EQUAL(txRxCycleState::idle, LoRaWAN::state);
-    // mainController::run();
-    // TEST_ASSERT_EQUAL(mainState::idle, mainController::state);
-}
-
 void test_usb_detection() {
     power::mockUsbPower = false;
     mainController::runUsbPowerDetection();
@@ -96,32 +140,23 @@ void test_usb_detection() {
     mainController::handleEvents();
 }
 
-void test_toString() {
-    TEST_ASSERT_EQUAL_STRING("idle", toString(mainState::idle));
-    TEST_ASSERT_EQUAL_STRING("sampling", toString(mainState::sampling));
-    TEST_ASSERT_EQUAL_STRING("networking", toString(mainState::networking));
-    TEST_ASSERT_EQUAL_STRING("boot", toString(mainState::boot));
-    TEST_ASSERT_EQUAL_STRING("networkCheck", toString(mainState::networkCheck));
-    TEST_ASSERT_EQUAL_STRING("fatalError", toString(mainState::fatalError));
-    TEST_ASSERT_EQUAL_STRING("test", toString(mainState::test));
-    TEST_ASSERT_EQUAL_STRING("unknown", toString(static_cast<mainState>(999U)));
-
-    mainController::showLoRaWanStatus();        // Coverage only -> Use Target unit test to validate
-}
-
-void test_dummy() {
-    mainController::showHelp();
-    mainController::showPrompt();
-    TEST_IGNORE_MESSAGE("for coverage only");
-}
-
 int main(int argc, char **argv) {
     UNITY_BEGIN();
+    RUN_TEST(test_initialize);
+    // stateMachine tests
     RUN_TEST(test_transitions_boot);
     RUN_TEST(test_transitions_networkCheck);
-    RUN_TEST(test_transitions_main);
     RUN_TEST(test_usb_detection);
+    // cli tests
+    RUN_TEST(test_setDeviceAddress);
+    RUN_TEST(test_setKeys);
+    RUN_TEST(test_setName);
+    RUN_TEST(test_setRadio);
+    RUN_TEST(test_setBattery);
+    RUN_TEST(test_setSensor);
+    // other tests
     RUN_TEST(test_toString);
     RUN_TEST(test_miniAdr);
+    RUN_TEST(test_forCoverageOnly);
     UNITY_END();
 }

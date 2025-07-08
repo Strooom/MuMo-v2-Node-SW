@@ -40,9 +40,10 @@ class logging {
         activeSources      = 0;
         activeDestinations = 0;
     }
-    static uint32_t snprintf(const char *format, ...);                                  // logs always, to all active destinations
-    static uint32_t snprintf(const source aSource, const char *format, ...);                  // logs to all active destinations, but only if the source is active
-    static uint32_t snprintf(const destination aDestination, const char *format, ...);        // logs to a specific destination
+    static uint32_t snprintf(const char *format, ...);
+    static uint32_t snprintf(const source aSource, const char *format, ...);
+    static uint32_t snprintf(const destination aDestination, const char *format, ...);
+
     static void enable(const source aSource) { activeSources = activeSources | (0x01 << static_cast<uint32_t>(aSource)); }
     static void disable(const source aSource) { activeSources = activeSources & ~(0x01 << static_cast<uint32_t>(aSource)); }
     static void enable(const destination aDestination) { activeDestinations = activeDestinations | (0x01 << static_cast<uint32_t>(aDestination)); }
@@ -63,7 +64,6 @@ class logging {
     static uint32_t getActiveDestinations() { return activeDestinations; }
     static void setActiveDestinations(const uint32_t aDestinations) { activeDestinations = aDestinations; }
 
-    static void dump();
 #ifndef unitTesting
 
   private:

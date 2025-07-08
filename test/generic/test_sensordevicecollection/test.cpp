@@ -39,14 +39,14 @@ void test_reset() {
 
 void test_set() {
     sensorDeviceCollection::reset();
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 5U, 7U);        // as long as not present, this has no effect
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 2U, 7U);        // as long as not present, this has no effect
     TEST_ASSERT_EQUAL(0, battery::channels[battery::voltage].getOversampling());
     TEST_ASSERT_EQUAL(0, battery::channels[battery::voltage].getPrescaler());
 
     sensorDeviceCollection::present[static_cast<uint32_t>(sensorDeviceType::battery)] = true;
-    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 5U, 7U);        // as long as not present, this has no effect
-    TEST_ASSERT_EQUAL(5U, battery::channels[battery::voltage].getOversampling());
-    TEST_ASSERT_EQUAL(7U, battery::channels[battery::voltage].getPrescaler());
+    sensorDeviceCollection::set(static_cast<uint32_t>(sensorDeviceType::battery), battery::voltage, 2U, 7U);        // as long as not present, this has no effect
+    TEST_ASSERT_EQUAL(3U, battery::channels[battery::voltage].getOversampling());
+    TEST_ASSERT_EQUAL(120U / 4U, battery::channels[battery::voltage].getPrescaler());
 }
 
 void test_discover() {

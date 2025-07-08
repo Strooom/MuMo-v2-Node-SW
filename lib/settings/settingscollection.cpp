@@ -1,5 +1,6 @@
 #include <settingscollection.hpp>
 #include <nvs.hpp>
+#include <cstring>
 
 const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::numberOfSettings)] = {
     // Important note : make sure that none of the settings are mapped into two pages of 128 Bytes, as the page-write of the EEPROM is limited to 128 Byte pages and the address will wrap around to the beginning of the page if addressing more than 128 Bytes. A unit test will check this
@@ -13,7 +14,8 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     {5, 59},         // unusedGeneral : extra hardware settings can be inserted hereafter
     {64, 4},         // activelogging::sources : 4 bytes
     {68, 8},         // nodeName
-    {76, 52},        // unusedGeneral : extra settings can be inserted hereafter
+    {76, 3},         // displaySettings : 1 byte per line for deviceIndex and channelIndex, 3 lines
+    {79, 49},        // unusedGeneral : extra settings can be inserted hereafter
 
     {128, 4},          // oldestMeasurementOffset : 4 bytes
     {132, 4},          // newMeasurementsOffset : 4 bytes
@@ -35,7 +37,7 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     {480, 6},             // Rx channel : [frequency, rx1DataRateOffset, rx2DataRateIndex]
     {486, 26},            // unusedLoRaWAN : extra settings can be inserted hereafter
 
-    {512, 256 * 2},        // sensorSettings : 256 combinations of sensorDeviceIndex and sensorChannelIndex, 2 byte per channel : 13 bits for prescaling, 3 bits for oversampling
+    {512, 256},        // sensorSettings : 256 combinations of sensorDeviceIndex and sensorChannelIndex, 1 byte  (6 bits) per channel : 2 bits for oversamplingIndex, 4 bits for prescalingIndex
 };
 
 bool settingsCollection::isValid() {
@@ -60,4 +62,13 @@ void settingsCollection::readByteArray(uint8_t* dataOut, settingIndex theIndex) 
         uint32_t length       = settings[static_cast<uint32_t>(theIndex)].length;
         nonVolatileStorage::read(startAddress, dataOut, length);
     }
+}
+
+void settingsCollection::save(const uint8_t data, settingIndex theIndex, uint32_t offset) {
+    uint32_t address = settings[static_cast<uint32_t>(theIndex)].startAddress + offset;
+    nonVolatileStorage::write(address, data);
+}
+uint8_t settingsCollection::read(settingIndex theIndex, uint32_t offset) {
+    uint32_t address = settings[static_cast<uint32_t>(theIndex)].startAddress + offset;
+    return nonVolatileStorage::read(address);
 }
