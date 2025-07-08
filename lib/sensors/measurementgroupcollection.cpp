@@ -41,8 +41,6 @@ void measurementGroupCollection::addNew(const measurementGroup& aMeasurementGrou
     uint32_t remainingLength{lengthInBytes};
     uint32_t currentOffset{newMeasurementsOffset};
 
-    // TODO : wakeUp NVS if needed
-
     while (remainingLength > 0) {
         uint32_t bytesInThisPage = nonVolatileStorage::bytesInCurrentPage(getAddressFromOffset(newMeasurementsOffset), remainingLength);
         nonVolatileStorage::writeInPage(getAddressFromOffset(currentOffset), remainingData, bytesInThisPage);
@@ -50,8 +48,6 @@ void measurementGroupCollection::addNew(const measurementGroup& aMeasurementGrou
         remainingData += bytesInThisPage;
         remainingLength -= bytesInThisPage;
     }
-
-    // TODO : put NVS back to sleep if it was sleeping
 
     newMeasurementsOffset = (newMeasurementsOffset + lengthInBytes) % nonVolatileStorage::getMeasurementsAreaSize();
     settingsCollection::save(newMeasurementsOffset, settingsCollection::settingIndex::newMeasurementsOffset);
