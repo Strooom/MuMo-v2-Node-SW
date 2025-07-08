@@ -30,11 +30,11 @@ void battery::setType(uint8_t index) {
     }
 }
 
-bool battery::isValidType(batteryType newBatteryType) {
+bool battery::isValidType(const batteryType newBatteryType) {
     return (newBatteryType < batteryType::nmbrBatteryTypes);
 }
 
-void battery::initialize(batteryType newBatteryType) {
+void battery::initialize(const batteryType newBatteryType) {
     type  = newBatteryType;
     state = sensorDeviceState::sleeping;
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
@@ -87,7 +87,7 @@ uint32_t battery::readSample() {
 #endif
 }
 
-float battery::voltageFromRaw(uint32_t rawADC) {
+float battery::voltageFromRaw(const uint32_t rawADC) {
 #ifndef generic
     return static_cast<float>(__HAL_ADC_CALC_VREFANALOG_VOLTAGE((rawADC), ADC_RESOLUTION_12B)) / 1000.0f;
 #else

@@ -10,6 +10,7 @@
 
 class tsl2591 {
   public:
+    tsl2591() = delete;
     static bool isPresent();        // detect if there is an TSL2591 on the I2C bus
     static void initialize();
     static void run();

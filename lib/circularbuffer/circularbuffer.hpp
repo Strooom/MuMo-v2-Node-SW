@@ -16,11 +16,13 @@
 template <typename itemType, uint32_t toBeLength>
 class circularBuffer {
   public:
-    static constexpr uint32_t length = toBeLength;
+    static constexpr uint32_t length{toBeLength};
 
-    circularBuffer() {
-        initialize();
-    };
+    circularBuffer() { initialize(); };
+    circularBuffer(const circularBuffer&)            = delete;
+    circularBuffer& operator=(const circularBuffer&) = delete;
+    circularBuffer(circularBuffer&&)                 = delete;
+    circularBuffer& operator=(circularBuffer&&)      = delete;
 
     void initialize() {
         head  = 0;

@@ -10,6 +10,7 @@
 
 class measurementGroupCollection {
   public:
+    measurementGroupCollection() = delete;
     static void initialize();
     static void reset();
     static void eraseOldest();

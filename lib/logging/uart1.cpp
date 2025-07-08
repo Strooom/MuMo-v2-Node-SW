@@ -35,15 +35,6 @@ void uart1::wakeUp() {
         }
 #endif
 
-        // __HAL_RCC_USART1_CLK_ENABLE();
-        // CR1 : 0xC - TE, RE CHECK !!
-        // CR2 : 0x0 = defaults ??
-        // CR3 : 0x00 = defaults ??
-        // PRESC : 0x0 = defaults ??
-        // BRR = 0x8b = 115200 baudrate
-        // CLEAR_BIT(huart->Instance->CR2, (USART_CR2_LINEN | USART_CR2_CLKEN));
-        // CLEAR_BIT(huart->Instance->CR3, (USART_CR3_SCEN | USART_CR3_HDSEL | USART_CR3_IREN));
-        // __HAL_UART_ENABLE(huart); -? sets CR1 to 0xD
 
         gpio::enableGpio(gpio::group::uart1);
         initalized = true;

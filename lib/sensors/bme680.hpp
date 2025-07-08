@@ -11,6 +11,7 @@
 
 class bme680 {
   public:
+  bme680() = delete;
     static bool isPresent();
     static void initialize();
     static void run();

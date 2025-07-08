@@ -11,6 +11,7 @@
 
 class scd40 {
   public:
+    scd40() = delete;
     static bool isPresent();
     static void initialize();
     static sensorDeviceState getState() { return state; };

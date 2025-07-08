@@ -595,8 +595,7 @@ void mainController::showHelp() {
     cli::sendResponse("sb <batteryType> : set battery type\n");
     cli::sendResponse("sr <radioType> : set radio type\n");
     cli::sendResponse("sd <line#> <deviceIndex> <channelIndex> : configure display\n");
-    cli::sendResponse("ss <deviceIndex> <channelIndex> <filtering> <timeBetweenOutputsInMinutes> : configure sensor filtering and output frequency\n");
-    cli::sendResponse("ss <deviceIndex> <channelIndex> off : disable sensor\n");
+    cli::sendResponse("ss <deviceIndex> <channelIndex> <filtering:0..3> <outputFrequency:0-13> : configure sensor filtering and output frequency\n");
 }
 
 void mainController::showDeviceStatus() {

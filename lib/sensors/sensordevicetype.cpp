@@ -8,7 +8,7 @@
 const char *toString(sensorDeviceType theDevice){
     switch (theDevice) {
         case sensorDeviceType::mcu:
-            return "MCU";
+            return "STM32WLE5";
         case sensorDeviceType::battery:
             return "Battery";
         case sensorDeviceType::bme680:
