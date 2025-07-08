@@ -58,8 +58,8 @@ void MX_USART2_UART_Init(void);
 mainState mainController::state{mainState::boot};
 uint32_t mainController::requestCounter{0};
 uint32_t mainController::answerCounter{0};
-const uint32_t mainController::displayDeviceIndex[screen::nmbrOfMeasurementTextLines]{2, 2, 3};
-const uint32_t mainController::displayChannelIndex[screen::nmbrOfMeasurementTextLines]{0, 1, 0};
+uint32_t mainController::displayDeviceIndex[screen::nmbrOfMeasurementTextLines]{2, 2, 3};
+uint32_t mainController::displayChannelIndex[screen::nmbrOfMeasurementTextLines]{0, 1, 0};
 char mainController::name[maxNameLength + 1]{};
 
 extern circularBuffer<applicationEvent, 16U> applicationEventBuffer;
@@ -118,6 +118,17 @@ void mainController::initializeDisplay() {
         screen::setType(screenType::logo);
         screen::setName(name);
         screen::update();
+
+        for (uint32_t lineIndex = 0; lineIndex < screen::nmbrOfMeasurementTextLines; ++lineIndex) {
+            uint8_t tmpDeviceAndChannel = settingsCollection::read(settingsCollection::settingIndex::displaySettings, lineIndex);
+            if (tmpDeviceAndChannel == nonVolatileStorage::blankEepromValue) {
+                tmpDeviceAndChannel = 0;
+                settingsCollection::save(tmpDeviceAndChannel, settingsCollection::settingIndex::sensorSettings, lineIndex);
+            }
+            // TODO : check if this channel is active...
+            displayDeviceIndex[lineIndex]  = sensorChannel::extractDeviceIndex(tmpDeviceAndChannel);
+            displayChannelIndex[lineIndex] = sensorChannel::extractChannelIndex(tmpDeviceAndChannel);
+        }
     }
     spi::goSleep();
 }
@@ -526,7 +537,7 @@ void mainController::runCli() {
                             break;
 
                         case cliCommand::setDisplay:
-                            cli::sendResponse("not yet implemented\n");
+                            setDisplay(theCommand);
                             break;
 
                         case cliCommand::softwareReset:
@@ -616,6 +627,9 @@ void mainController::showDeviceStatus() {
         } else {
             cli::sendResponse("[%d] %s not found\n", sensorDeviceIndex, sensorDeviceCollection::name(sensorDeviceIndex));
         }
+    }
+    for (uint32_t lineIndex = 0; lineIndex < screen::nmbrOfMeasurementTextLines; ++lineIndex) {
+        cli::sendResponse("display line %u : %s - %s\n", lineIndex, sensorDeviceCollection::name(displayDeviceIndex[lineIndex]), sensorDeviceCollection::name(displayDeviceIndex[lineIndex], displayChannelIndex[lineIndex]));
     }
 }
 
@@ -732,7 +746,27 @@ void mainController::setRadioType(const cliCommand& theCommand) {
 }
 
 void mainController::setDisplay(const cliCommand& theCommand) {
-    cli::sendResponse("command not yet implemented\n");
+    if (theCommand.nmbrOfArguments < 3) {
+        cli::sendResponse("invalid number of arguments\n");
+        return;
+    }
+    uint32_t tmpLineIndex = theCommand.argumentAsUint32(0);
+    if (tmpLineIndex >= screen::nmbrOfMeasurementTextLines) {
+        cli::sendResponse("invalid line index\n");
+        return;
+    }
+    uint32_t tmpDeviceIndex  = theCommand.argumentAsUint32(1);
+    uint32_t tmpChannelIndex = theCommand.argumentAsUint32(2);
+    if (!sensorDeviceCollection::isValid(tmpDeviceIndex, tmpChannelIndex)) {
+        cli::sendResponse("invalid device and/or channel index\n");
+        return;
+    }
+    uint8_t tmpDeviceAndChannel = sensorChannel::compressDeviceAndChannelIndex(static_cast<uint8_t>(tmpDeviceIndex), static_cast<uint8_t>(tmpChannelIndex));
+    settingsCollection::save(tmpDeviceAndChannel, settingsCollection::settingIndex::displaySettings, tmpLineIndex);
+    displayDeviceIndex[tmpLineIndex]  = tmpDeviceIndex;
+    displayChannelIndex[tmpLineIndex] = tmpChannelIndex;
+
+    cli::sendResponse("display line %u set to %s - %s\n", tmpLineIndex, sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex));
 }
 
 void mainController::setSensor(const cliCommand& theCommand) {

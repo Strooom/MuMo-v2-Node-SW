@@ -16,6 +16,7 @@ class settingsCollection {
 
         activeLoggingSources,
         name,
+        displaySettings,
         unusedGeneral,
 
         oldestMeasurementOffset,

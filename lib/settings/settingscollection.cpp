@@ -14,7 +14,8 @@ const setting settingsCollection::settings[static_cast<uint32_t>(settingIndex::n
     {5, 59},         // unusedGeneral : extra hardware settings can be inserted hereafter
     {64, 4},         // activelogging::sources : 4 bytes
     {68, 8},         // nodeName
-    {76, 52},        // unusedGeneral : extra settings can be inserted hereafter
+    {76, 3},         // displaySettings : 1 byte per line for deviceIndex and channelIndex, 3 lines
+    {79, 49},        // unusedGeneral : extra settings can be inserted hereafter
 
     {128, 4},          // oldestMeasurementOffset : 4 bytes
     {132, 4},          // newMeasurementsOffset : 4 bytes
