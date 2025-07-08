@@ -6,7 +6,7 @@
 4. make epaper display refresh faster...
 5. start adding unit test for main application. eg. all changes for cli commands
 6. implement configuring display
-
+7. put MCU in sleep when waiting for low power timer...
 
 ### Priority High
 

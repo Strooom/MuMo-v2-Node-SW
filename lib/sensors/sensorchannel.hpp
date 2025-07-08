@@ -73,11 +73,15 @@ class sensorChannel {
         return tmpPrescalerIndex;
     };
 
+    static constexpr uint32_t maxPrescaler{5760};                 // take a sample every x times of the 30 second RTC tick. 0 means : don't sample this sensor. 5760 = 2 days
+    static constexpr uint32_t maxOversampling{9};                 // average x+1 samples before storing it in the sample collection
+    static constexpr uint32_t defaultPrescalerIndex{4U};          // index 4 equals value 20 equals 10 minutes
+    static constexpr uint32_t defaultOversamplingIndex{0};        // 0 means no oversampling
+    static constexpr uint32_t disabledPrescalerIndex{0U};         // index 0 equals value 0, means channel is disabled
     static constexpr uint32_t maxPrescalerIndex{13};
     static constexpr uint32_t maxOversamplingIndex{3};
     static constexpr uint32_t prescalerLookup[maxPrescalerIndex + 1]{0, 2, 4, 10, 20, 30, 60, 120, 240, 480, 720, 1440, 2880, 5760};
     static constexpr uint32_t oversamplingLookup[maxOversamplingIndex + 1]{1, 2, 4, 10};
-
 
     static uint8_t compressDeviceAndChannelIndex(uint8_t deviceIndex, uint8_t channelIndex) {
         return (((deviceIndex << 3) & 0b11111000) | (channelIndex & 0b00000111));
@@ -89,22 +93,19 @@ class sensorChannel {
         return (deviceAndChannelIndex & 0b00000111);
     };
 
-
 #ifndef unitTesting
 
   private:
 #endif
     bool initialized{false};
 
-    uint32_t oversampling{0}; // old 
-    uint32_t prescaling{0}; // old
-    uint32_t oversamplingIndex{0}; // new, using an index in a lookup table to reduce possible values
-    uint32_t prescalingIndex{0}; // new, using an index in a lookup table to reduce possible values
+    uint32_t oversampling{0};             // old
+    uint32_t prescaling{0};               // old
+    uint32_t oversamplingIndex{0};        // new, using an index in a lookup table to reduce possible values
+    uint32_t prescalingIndex{0};          // new, using an index in a lookup table to reduce possible values
     uint32_t oversamplingCounter{0};
     uint32_t prescaleCounter{0};
 
-    static constexpr uint32_t maxPrescaler{5760};        // take a sample every x times of the 30 second RTC tick. 0 means : don't sample this sensor. 5760 = 2 days
-    static constexpr uint32_t maxOversampling{9};        // average x+1 samples before storing it in the sample collection
     float samples[maxOversampling + 1]{};
 
     void limitOversamplingAndPrescaler();

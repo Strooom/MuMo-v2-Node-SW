@@ -148,8 +148,8 @@ void mainController::initializeSensors() {
                 uint8_t tmpOversamplingIndex;
                 uint8_t tmpPrescalerIndex;
                 if (tmpConfig == nonVolatileStorage::blankEepromValue) {
-                    tmpOversamplingIndex = sensorDeviceCollection::defaultOversamplingIndex;
-                    tmpPrescalerIndex    = sensorDeviceCollection::defaultPrescalerIndex;
+                    tmpOversamplingIndex = sensorChannel::defaultOversamplingIndex;
+                    tmpPrescalerIndex    = sensorChannel::defaultPrescalerIndex;
                     uint8_t tmpCombined  = sensorChannel::compressOversamplingAndPrescalerIndex(tmpOversamplingIndex, tmpPrescalerIndex);
                     settingsCollection::save(tmpCombined, settingsCollection::settingIndex::sensorSettings, tmpDeviceAndChannel);
                 } else {
@@ -748,11 +748,19 @@ void mainController::setSensor(const cliCommand& theCommand) {
     }
     uint32_t tmpOversamplingIndex = theCommand.argumentAsUint32(2);
     uint32_t tmpPrescalerIndex    = theCommand.argumentAsUint32(3);
+    if (tmpPrescalerIndex > sensorChannel::maxPrescalerIndex) {
+        tmpPrescalerIndex = sensorChannel::maxPrescalerIndex;
+    }
+    if (tmpOversamplingIndex > sensorChannel::maxOversamplingIndex) {
+        tmpOversamplingIndex = sensorChannel::maxOversamplingIndex;
+    }
     if (tmpOversamplingIndex > tmpPrescalerIndex) {
         tmpOversamplingIndex = tmpPrescalerIndex;
     }
+    uint8_t tmpCombined         = sensorChannel::compressOversamplingAndPrescalerIndex(tmpOversamplingIndex, tmpPrescalerIndex);
+    uint8_t tmpDeviceAndChannel = sensorChannel::compressDeviceAndChannelIndex(static_cast<uint8_t>(tmpDeviceIndex), static_cast<uint8_t>(tmpChannelIndex));
+    settingsCollection::save(tmpCombined, settingsCollection::settingIndex::sensorSettings, tmpDeviceAndChannel);
     sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).setIndex(tmpOversamplingIndex, tmpPrescalerIndex);
-    // TODO : store in nvs
     cli::sendResponse("%s - %s : ", sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex));
     if (sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).getPrescaler() == 0) {
         cli::sendResponse("disabled\n");

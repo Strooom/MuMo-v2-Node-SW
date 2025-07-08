@@ -56,10 +56,6 @@ class sensorDeviceCollection {
     static bool isValid(uint32_t deviceIndex);
     static bool isValid(uint32_t deviceIndex, uint32_t channelIndex);
 
-    static constexpr uint32_t defaultPrescalerIndex{4U};          // index 4 equals value 20 equals 10 minutes
-    static constexpr uint32_t defaultOversamplingIndex{0};        // 0 means no oversampling
-    static constexpr uint32_t disabledPrescalerIndex{0U};         // index 0 equals value 0, means channel is disabled
-
 #ifndef unitTesting
 
   private:
