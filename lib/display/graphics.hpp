@@ -10,8 +10,8 @@
 
 class graphics {
   public:
-    enum class color : uint32_t { black = 0,          // when a pixel is 0 in the displayBuffer, it is black on the display
-                                  white = 1 };        // when a pixel is 1 in the displayBuffer, it is white on the display
+    enum class color : uint32_t { black = 0,          // when a pixel is 0 in the newFrameBuffer, it is black on the display
+                                  white = 1 };        // when a pixel is 1 in the newFrameBuffer, it is white on the display
 
     enum class colorMode : uint32_t { normal   = 0,          // black on white background
                                       inverted = 1 };        // white on black background

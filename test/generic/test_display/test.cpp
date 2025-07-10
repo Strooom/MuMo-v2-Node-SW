@@ -130,36 +130,36 @@ void test_setGetClearPixel() {
 
     // set the pixel in the four corners, and check the related bytes in the buffer and the pixel state
     display::setPixel(0, 0);
-    TEST_ASSERT_EQUAL(0b01111111, display::displayBuffer[0]);
+    TEST_ASSERT_EQUAL(0b01111111, display::newFrameBuffer[0]);
     TEST_ASSERT_TRUE(display::getPixel(0, 0));
 
     display::setPixel((display::widthInPixels - 1), 0);
-    TEST_ASSERT_EQUAL(0b11111110, display::displayBuffer[24]);
+    TEST_ASSERT_EQUAL(0b11111110, display::newFrameBuffer[24]);
     TEST_ASSERT_TRUE(display::getPixel((display::widthInPixels - 1), 0));
 
     display::setPixel(0, (display::heightInPixels - 1));
-    TEST_ASSERT_EQUAL(0b01111111, display::displayBuffer[5000 - 25]);
+    TEST_ASSERT_EQUAL(0b01111111, display::newFrameBuffer[5000 - 25]);
     TEST_ASSERT_TRUE(display::getPixel(0, (display::heightInPixels - 1)));
 
     display::setPixel((display::widthInPixels - 1), (display::heightInPixels - 1));
-    TEST_ASSERT_EQUAL(0b11111110, display::displayBuffer[5000 - 1]);
+    TEST_ASSERT_EQUAL(0b11111110, display::newFrameBuffer[5000 - 1]);
     TEST_ASSERT_TRUE(display::getPixel((display::widthInPixels - 1), (display::heightInPixels - 1)));
 
     // clear the pixel in the four corners, and check the related bytes in the buffer and the pixel state
     display::clearPixel(0, 0);
-    TEST_ASSERT_EQUAL(0b11111111, display::displayBuffer[0]);
+    TEST_ASSERT_EQUAL(0b11111111, display::newFrameBuffer[0]);
     TEST_ASSERT_FALSE(display::getPixel(0, 0));
 
     display::clearPixel((display::widthInPixels - 1), 0);
-    TEST_ASSERT_EQUAL(0b11111111, display::displayBuffer[24]);
+    TEST_ASSERT_EQUAL(0b11111111, display::newFrameBuffer[24]);
     TEST_ASSERT_FALSE(display::getPixel((display::widthInPixels - 1), 0));
 
     display::clearPixel(0, (display::heightInPixels - 1));
-    TEST_ASSERT_EQUAL(0b11111111, display::displayBuffer[5000 - 25]);
+    TEST_ASSERT_EQUAL(0b11111111, display::newFrameBuffer[5000 - 25]);
     TEST_ASSERT_FALSE(display::getPixel(0, (display::heightInPixels - 1)));
 
     display::clearPixel((display::widthInPixels - 1), (display::heightInPixels - 1));
-    TEST_ASSERT_EQUAL(0b11111111, display::displayBuffer[5000 - 1]);
+    TEST_ASSERT_EQUAL(0b11111111, display::newFrameBuffer[5000 - 1]);
     TEST_ASSERT_FALSE(display::getPixel((display::widthInPixels - 1), (display::heightInPixels - 1)));
 }
 
@@ -178,18 +178,18 @@ void test_changePixelOutOfBounds() {
 
 
     for (uint32_t i = 0; i < display::bufferSize; i++) {
-        TEST_ASSERT_EQUAL(0xFF, display::displayBuffer[i]);        // all of the displaybuffer should still be cleared
+        TEST_ASSERT_EQUAL(0xFF, display::newFrameBuffer[i]);        // all of the displaybuffer should still be cleared
     }
 
     for (uint32_t i = 0; i < display::bufferSize; i++) {
-        display::displayBuffer[i] = 0x00;        // set all pixels
+        display::newFrameBuffer[i] = 0x00;        // set all pixels
     }
     display::clearPixel(200, 0);        // set some pixels outside the display area
     display::clearPixel(0, 200);
     display::clearPixel(200, 200);
 
     for (uint32_t i = 0; i < display::bufferSize; i++) {
-        TEST_ASSERT_EQUAL(0x00, display::displayBuffer[i]);        // all of the displaybuffer should still be set
+        TEST_ASSERT_EQUAL(0x00, display::newFrameBuffer[i]);        // all of the displaybuffer should still be set
     }
 }
 
@@ -200,10 +200,8 @@ void test_read_busy() {
 
 void test_dummy() {
     display::isPresent();
-    display::wakeUp();
     display::update();
     display::goSleep();
-
     TEST_IGNORE_MESSAGE("For testCoverage only");
 }
 

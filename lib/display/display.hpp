@@ -5,6 +5,7 @@
 
 #pragma once
 #include <stdint.h>
+#include <cstring>
 
 enum class displayRotation : uint32_t {        // rotation is clockwise
     rotation0,
@@ -31,9 +32,9 @@ class display {
     display() = delete;
     static void detectPresence();
     static bool isPresent();
-    static void wakeUp();
     static bool isReady();
-    static void update();
+    static void update(bool full);        // manual : full = true for full refresh, false for fast refresh
+    static void update();                 // automatic = fast with full refresh every 8 updates
     static void goSleep();
 
     static void setPixel(uint32_t x, uint32_t y);
@@ -45,8 +46,6 @@ class display {
     static constexpr uint32_t heightInPixels{200};                    // [pixels]
     static constexpr uint32_t widthInBytes{widthInPixels / 8};        // [bytes]
 
-    static constexpr uint32_t refreshPeriodInTicks{2 * 60 * 24};
-
 #ifndef unitTesting
 
   private:
@@ -54,7 +53,10 @@ class display {
 
     static displayPresence displayPresent;
     static constexpr uint32_t bufferSize{widthInPixels * heightInPixels / 8};        // 1 bit per pixel
-    static uint8_t displayBuffer[bufferSize];
+    alignas(4) static uint8_t newFrameBuffer[bufferSize];
+    alignas(4) static uint8_t oldFrameBuffer[bufferSize];
+    static uint32_t refreshCounter;
+    static constexpr uint32_t fullRefreshCount{8};
 
     enum class SSD1681Commands : uint8_t {
         DRIVER_OUTPUT_CONTROL                = 0x01,
@@ -64,11 +66,12 @@ class display {
         DATA_ENTRY_MODE_SETTING              = 0x11,
         SW_RESET                             = 0x12,
         TEMPERATURE_SENSOR_SELECTION         = 0x18,
+        WriteTemperatureRegister             = 0x1A,
         MASTER_ACTIVATION                    = 0x20,
         DISPLAY_UPDATE_CONTROL_1             = 0x21,
         DISPLAY_UPDATE_CONTROL_2             = 0x22,
-        WRITE_RAM                            = 0x24,
-        WRITE_RAM_2                          = 0x26,        // undocumented, reverse engineered from example code
+        WRITE_RAM_0                          = 0x24,
+        WRITE_RAM_1                          = 0x26,        // undocumented, reverse engineered from example code
         WRITE_VCOM_REGISTER                  = 0x2C,
         WRITE_LUT_REGISTER                   = 0x32,
         SET_DUMMY_LINE_PERIOD                = 0x3A,
@@ -90,7 +93,7 @@ class display {
     static void selectChip(const bool active);
     static bool isBusy();
 
-    static void writeCommand(const SSD1681Commands theCommand,  uint8_t *data, const uint32_t length);
+    static void writeCommand(const SSD1681Commands theCommand, uint8_t *data, const uint32_t length);
     static void writeData(uint8_t *data, const uint32_t length);
     static void writeData(uint8_t data);
     static void write(uint8_t *data, const uint32_t length);
@@ -107,7 +110,12 @@ class display {
     static uint32_t getByteOffset(const uint32_t x, const uint32_t y) { return ((y * widthInBytes) + (x / 8)); };
     static uint32_t getBitOffset(const uint32_t x) { return (7 - (x % 8)); };
 
+    static void copyNewToOldFrameBuffer() {
+        memcpy(oldFrameBuffer, newFrameBuffer, bufferSize);
+    }
+
 #ifdef generic
     static bool mockDisplayPresent;
+
 #endif
 };

@@ -7,55 +7,90 @@
 #include <stm32wlxx_it.cpp>
 #include <display.hpp>
 #include <graphics.hpp>
+#include <screen.hpp>
 #include <gpio.hpp>
-#include <version.hpp>
+#include <spi.hpp>
+#include <stdio.h>
+
 
 extern const font roboto36bold;
 extern const font tahoma24bold;
 extern const font lucidaConsole12;
 extern const bitmap usbIcon;
+extern const bitmap muMoLogo;
 
 circularBuffer<applicationEvent, 16U> applicationEventBuffer;
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
+static constexpr bool full{true};
+static constexpr bool fast{false};
+static constexpr uint32_t testResultLength{256U};
+static char testResult[testResultLength]{};
+static uint32_t testStartTime;
+static uint32_t testEndTime;
+
+void setUp(void) {}
+void tearDown(void) {}
+
+void test_displayPresent() {
+    TEST_ASSERT_TRUE(display::isPresent());
+    TEST_ASSERT_EQUAL(0, display::refreshCounter);
 }
 
-void test_displayFonts() {
+void test_erase() {
     display::clearAllPixels();
-    graphics::drawText(4, 180, lucidaConsole12, version::getIsVersionAsString());
-    graphics::drawText(4, 160, lucidaConsole12, "0080E11505474CAC");
-    graphics::drawText(4, 140, lucidaConsole12, "2024-04-19  16:38");
-    graphics::drawText(4, 40, tahoma24bold, "Tahoma 24 bold");
-    graphics::drawText(4, 4, roboto36bold, "012345");
-    display::update();
+    testStartTime = HAL_GetTick();
+    display::update(true);
+    testEndTime = HAL_GetTick();
+    snprintf(testResult, testResultLength, "full update %lu ms", testEndTime - testStartTime);
+    HAL_Delay(1000U);
+    TEST_IGNORE_MESSAGE(testResult);
 }
 
-void test_displayBitmap() {
+void test_updateFull() {
+    screen::showLogo();
+    testStartTime = HAL_GetTick();
+    display::update(true);
+    testEndTime = HAL_GetTick();
+    snprintf(testResult, testResultLength, "full update %lu ms", testEndTime - testStartTime);
+    HAL_Delay(1000U);
+    TEST_IGNORE_MESSAGE(testResult);
+}
+
+void test_eraseFast() {
     display::clearAllPixels();
-    graphics::drawBitMap(0, 0, usbIcon);
-    display::update();
+    testStartTime = HAL_GetTick();
+    display::update(false);
+    testEndTime = HAL_GetTick();
+    snprintf(testResult, testResultLength, "partial update %lu ms", testEndTime - testStartTime);
+    HAL_Delay(1000U);
+    TEST_IGNORE_MESSAGE(testResult);
 }
 
-void test_displayNotPresent() {
-    TEST_IGNORE_MESSAGE("No display detected");
+void test_updateFast() {
+    screen::showLogo();
+    testStartTime = HAL_GetTick();
+    display::update(false);
+    testEndTime = HAL_GetTick();
+    snprintf(testResult, testResultLength, "partial update %lu ms", testEndTime - testStartTime);
+    HAL_Delay(1000U);
+    TEST_IGNORE_MESSAGE(testResult);
 }
 
 int main(int argc, char **argv) {
     HAL_Init();
-    HAL_Delay(2000);
     SystemClock_Config();
 
-    MX_SPI2_Init();
-    gpio::enableGpio(gpio::group::spiDisplay);
+    gpio::initialize();
+    uart1::initialize();
+    spi::wakeUp();
+
+    HAL_Delay(1000U); // It seems some delay is needed to get all test results properly sent to the PC
 
     UNITY_BEGIN();
-    if (display::isPresent()) {
-        RUN_TEST(test_displayBitmap);
-        // RUN_TEST(test_displayFonts);
-    } else {
-        RUN_TEST(test_displayNotPresent);
-    }
+    RUN_TEST(test_displayPresent);
+    RUN_TEST(test_erase);
+    RUN_TEST(test_updateFull);
+    RUN_TEST(test_eraseFast);
+    RUN_TEST(test_updateFast);
     UNITY_END();
 }
