@@ -13,9 +13,13 @@
 template <uint32_t toBeLength>
 class linearBuffer {
   public:
-    static constexpr uint32_t length = toBeLength;
+    static constexpr uint32_t length{toBeLength};
 
     linearBuffer() = default;
+    linearBuffer(const linearBuffer&) = delete;
+    linearBuffer& operator=(const linearBuffer&) = delete;
+    linearBuffer(linearBuffer&&) = delete;
+    linearBuffer& operator=(linearBuffer&&) = delete;
     void initialize() { level = 0; };
 
     // ### Get the metadata of the buffer ###

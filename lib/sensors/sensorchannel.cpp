@@ -1,6 +1,4 @@
 #include "sensorchannel.hpp"
-// #include <stdio.h>           // snprintf
-// #include <inttypes.h>        // for PRIu32
 
 sensorChannel::sensorChannel(uint32_t decimals, const char* name, const char* unit) : decimals{decimals}, name{name}, unit{unit} {
     limitOversamplingAndPrescaler();

@@ -12,10 +12,11 @@
 
 class battery {
   public:
+    battery() = delete;
     static constexpr batteryType defaultBatteryType{batteryType::liFePO4_700mAh};
     static void setType(uint8_t index);
-    static bool isValidType(batteryType newBatteryType);
-    static void initialize(batteryType newBatteryType);
+    static bool isValidType(const batteryType newBatteryType);
+    static void initialize(const batteryType newBatteryType);
     static batteryType getType() { return type; };
     static void run();
     static sensorDeviceState getState() { return state; };
@@ -26,7 +27,7 @@ class battery {
     static void startSampling();
     static bool samplingIsReady();
     static uint32_t readSample();
-    static float voltageFromRaw(uint32_t rawADC);
+    static float voltageFromRaw(const uint32_t rawADC);
 #ifndef unitTesting
 
   private:

@@ -12,6 +12,7 @@
 
 class sht40 {
   public:
+    
     static bool isPresent();
     static void initialize();
     static void run();

@@ -27,7 +27,7 @@ graphics.hpp / .cpp
 # Native orientation of the display
 When sending raw bytes to the display RAM, they are shown on the hardware depending on a setting 'Data Entry Mode' (command 0x11).
 This setting controls how data from the external 5K displayBuffer is mapped to the display internal buffer during the SPI transfer
-When set to 0b00, the first databyte is shown as :
+When set to 0b00, the first databyte is shown as (L = Least Significant Bit, M = Most Significant Bit):
 
    ###############
    #             #
@@ -76,7 +76,7 @@ Note : when setting a Data Entry Mode with 'decrement', you need to set xStart, 
 * for decrement, eg xStart=24, xEnd=0
 
 The 'AM' bit (2) in Data Entry Mode controls where the next byte is shown : 
-* 0 : next byte is shown further in the X-direction (example mode 0b011)
+* 0 : next byte is shown further in the X-direction (example mode 0b011) 
 
    ###############
    #           0 #
@@ -121,12 +121,12 @@ To map the OpenGL coordinate system onto the display hardware, the following set
 * Bitmapped fonts can be generated from TrueType fonts using the TheDotFactory.exe, a settings file is available in OutputConfigs.xml
 * As these fonts are proportional, each font needs 3 pieces of data
   - fontProperties : height, spacing, first char, last char
-  - characterProperties : an array with for each character the offset and lenght into the pixelData
+  - characterProperties : an array with for each character the offset and length into the pixelData
   - pixelData
 
 
 # Drawing text :
-* draw a single charachter
+* draw a single character
 * string is composed of characters at the right place
 * with all possible transformations of the display, it's not really possible to directly write the bytes into the displayBuffer : you need to draw pixel by pixel
 * when erasing (an area or the whole display), you only need to draw the active pixels
@@ -148,4 +148,5 @@ SSD1681 has 2 update modes :
 * Mode 2 : partial update. The display needs the old (current) image in RAM2 and the new image in RAM1. It will apply an update depending on the needed pixel statechange. This typically takes less time, about 1000ms, but it requires you to write old and new displayBuffer to the display. Also this mode creates less contrast, may leave a bit of ghosting image. Mode two can also be applied to a selected area instead of the whole display. You need to set xStart, xEnd, yStart, yEnd to mark the window with changes. There is a small gain in update time when updating a region io. the whole display, typically like 800 ms for an update.
 
 # Faster update
-* The display update time depends on the temperature : when colder, the pixel pigments move slower. So a trick to make the display update faster, is to NOT use the internal temperature sensor, but rather write the temperature, and make the display believe temp is 100 degrees. The update is the really quick, with very limited ghosting. To get rid of any ghosting, you could do a 'normal' update, every x fast updates.
+* The display update time depends on the temperature : when colder, the pixel pigments move slower. So a trick to make the display update faster, is to NOT use the internal temperature sensor, but rather write the temperature, and make the display believe temp is 100 degrees. The update is the really quick, with very limited ghosting. To get rid of any ghosting, you could do a 'normal' update, every 'fullRefreshCount' fast updates.
+Note : this trick does not seem to be so reliable.. not working good on all displays and at different temperatures...

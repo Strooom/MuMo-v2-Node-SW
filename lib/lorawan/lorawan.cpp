@@ -428,7 +428,7 @@ uint32_t LoRaWAN::calculateMic() {
     stm32wle5_aes::enable();
     aesBlock tmpBlock;
     for (uint32_t blockIndex = 0; blockIndex < nmbrOfBlocks; blockIndex++) {
-        uint8_t* tmpOffset;
+        const uint8_t* tmpOffset;
         tmpOffset = rawMessage + (blockIndex * 16);
         tmpBlock.setFromByteArray(tmpOffset);
         if (blockIndex == (nmbrOfBlocks - 1)) {
