@@ -122,7 +122,7 @@ void sht40::write(command aCommand) {
 #ifndef generic
     HAL_I2C_Master_Transmit(&hi2c2, static_cast<uint16_t>(i2cAddress << 1), &pCommand, 1, halTimeout);
 #else
-// TODO add mock for generic Unit testing
+
 #endif
 }
 
