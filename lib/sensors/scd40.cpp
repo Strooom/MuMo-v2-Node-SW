@@ -12,8 +12,8 @@
 extern I2C_HandleTypeDef hi2c2;
 #else
 uint8_t mockSCD40Registers[256];
+bool mockSCD40Present{false};
 #include <cstring>
-
 #endif
 
 sensorDeviceState scd40::state{sensorDeviceState::unknown};
@@ -36,7 +36,9 @@ void scd40::initialize() {
         channels[channelIndex].set(0, 0);
     }
     writeCommand(scd40::commands::stopPeriodicMeasurement);                 // stop any previous measurement
+#ifndef generic
     HAL_Delay(500);                                                         // stopping requires 500ms processing
+#endif
     writeCommand(scd40::commands::startLowPowerPeriodicMeasurement);        // now start the low power periodic measurement = 1 sample / 30 seconds
     state = sensorDeviceState::sleeping;
 }
@@ -68,7 +70,9 @@ void scd40::startSampling() {
 bool scd40::samplingIsReady() {
     uint16_t tmpResult;
     writeCommand(scd40::commands::getDataReadyStatus);
+#ifndef generic
     HAL_Delay(2);
+#endif
     readData(&tmpResult, 1U);
     return (!((tmpResult & 0x07FF) == 0));        // datasheet 3.8.2 : 11 least significant bits are zero -> data not ready
 }
@@ -76,7 +80,9 @@ bool scd40::samplingIsReady() {
 void scd40::readSample() {
     uint16_t tmpResult[3];
     writeCommand(scd40::commands::readMeasurement);
+#ifndef generic
     HAL_Delay(2);
+#endif
     readData(tmpResult, 3U);
     rawCo2                  = tmpResult[0];
     rawDataTemperature      = tmpResult[1];
