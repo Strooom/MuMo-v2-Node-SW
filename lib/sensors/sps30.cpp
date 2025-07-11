@@ -5,8 +5,6 @@
 
 #include <sensirion.hpp>
 #include <sps30.hpp>
-#include <settingscollection.hpp>
-#include <logging.hpp>
 #include <cstring>
 
 #ifndef generic
@@ -14,178 +12,100 @@
 extern I2C_HandleTypeDef hi2c2;
 #else
 uint8_t mockSPS30Registers[14][60];
+bool mockSPS30Present{false};
 #endif
 
 sensorDeviceState sps30::state{sensorDeviceState::unknown};
 sensorChannel sps30::channels[nmbrChannels] = {
-    {0, "pme 2.5", "uG"},
-    {0, "pme 4", "uG"},
-    {0, "pme 10", "uG"},
+    {1, "pme 1", "uG"},
+    {1, "pme 2.5", "uG"},
+    {1, "pme 4", "uG"},
+    {1, "pme 10", "uG"},
 };
 
-void sps30::wakeUp() {
-    write(command::wakeUp);
-    write(command::wakeUp);
-}
+float sps30::_pme1{0.0F};
+float sps30::_pme2dot5{0.0F};
+float sps30::_pme4{0.0F};
+float sps30::_pme10{0.0F};
 
 bool sps30::isPresent() {
-    // 1. Check if something is connected to the I2C bus at the address of the SPS30
-    if (!testI2cAddress(i2cAddress)) {
-        return false;
-    }
-    // 2. Check if it is a SPS30 by reading the string at address pointer 0xD002
-    // static constexpr uint32_t signatureLength{12};
-    // uint8_t signature[signatureLength];
-    // uint8_t expectedSignature[signatureLength] = {'0', '0', 246, '0', '8', 79, '0', '0', 246, '0', '0', 246};        // "00080000" with CRCs
-    // read(command::readProductType, signature, signatureLength);
-    // return (memcmp(expectedSignature, signature, signatureLength) == 0);
-
-    return true;
+    return (testI2cAddress(i2cAddress));
 }
 
 void sps30::initialize() {
-    // TODO : need to read the sensorChannel settins from EEPROM and restore them
-    // channels[pme2dot5].set(0, 1, 0, 1);
-    // channels[pme4].set(0, 1, 0, 1);
-    // channels[pme10].set(0, 1, 0, 1);
-    state = sensorDeviceState::sleeping;
-}
-
-
-float sps30::valueAsFloat(uint32_t index) {
-    return channels[index].value();
-}
-
-void sps30::tick() {
-    if (state != sensorDeviceState::sleeping) {
-        adjustAllCounters();
-        return;
-    }
-
-    if (anyChannelNeedsSampling()) {
-        startSampling();
-        state = sensorDeviceState::sampling;
-    } else {
-        adjustAllCounters();
-    }
-}
-
-void sps30::run() {
-    if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
-        readSample();
-
-        // if (channels[pme2dot5].needsSampling()) {
-        //     float sps30Temperature = calculateTemperature();
-        //     channels[pme2dot5].addSample(sps30Temperature);
-        //     if (channels[pme2dot5].hasOutput()) {
-        //         channels[pme2dot5].hasNewValue = true;
-        //     }
-        // }
-
-        // if (channels[pme4].needsSampling()) {
-        //     float sps30RelativeHumidity = calculateRelativeHumidity();
-        //     channels[pme4].addSample(sps30RelativeHumidity);
-        //     if (channels[pme4].hasOutput()) {
-        //         channels[pme4].hasNewValue = true;
-        //     }
-        // }
-
-        // if (channels[pme10].needsSampling()) {
-        //     float sps30BarometricPressure = calculateBarometricPressure();
-        //     channels[pme10].addSample(sps30BarometricPressure);
-        //     if (channels[pme10].hasOutput()) {
-        //         channels[pme10].hasNewValue = true;
-        //     }
-        // }
-
-        state = sensorDeviceState::sleeping;
-        adjustAllCounters();
-    }
-}
-
-bool sps30::anyChannelNeedsSampling() {
-    return (channels[pme2dot5].needsSampling() || channels[pme4].needsSampling() || channels[pme10].needsSampling());
-}
-
-void sps30::adjustAllCounters() {
-    channels[pme2dot5].updateCounters();
-    channels[pme4].updateCounters();
+    state = sensorDeviceState::standby;
 }
 
 void sps30::startSampling() {
     static constexpr uint32_t commandDataLength{3};
-    uint8_t commandData[commandDataLength]{5, 0, 246};        // datasheet section 6.3.1
+    uint8_t commandData[commandDataLength]{5, 0, 246};        // datasheet section 6.3.1, using float output format as this has the best resolution
     write(command::startMeasurement, commandData, commandDataLength);
-
+#ifndef generic
+    HAL_Delay(20); // Datasheet table 8
+#endif
     state = sensorDeviceState::sampling;
 }
-
-// void sps30::stopSampling() {
-//     write(command::stopMeasurement, nullptr, 0);
-//     state = sensorDeviceState::standby;
-// }
 
 bool sps30::samplingIsReady() {
     static constexpr uint32_t responseLength{3};
     uint8_t response[responseLength]{};
-    uint8_t expectedResponse[responseLength] = {0, 1, 246};
-    read(command::readProductType, response, responseLength);
-    return (memcmp(expectedResponse, response, responseLength) == 0);
-}
-
-void sps30::stopSampling() {
-    write(command::stopMeasurement, nullptr, 0);
-    state = sensorDeviceState::standby;
+    uint8_t expectedResponse[responseLength] = {0, 1, 176};
+    write(command::isDataReady);
+    read(response, responseLength);
+    return (memcmp(expectedResponse, response, responseLength) == 0);        // Note : could be simpler by just looking at the second byte
 }
 
 void sps30::readSample() {
     static constexpr uint32_t responseLength{60};
     uint8_t response[responseLength]{};
-    read(command::readProductType, response, responseLength);
+    write(command::readMeasurement);
+    read(response, responseLength);
     if (sensirion::checkCrc(response, responseLength)) {
         // crc ok
     } else {
-        // crc error
+        // crc error TODO
     }
 
-    // int16_t error;
-    // uint8_t data[10][4];
-
-    // error =
-    //     sensirion_i2c_write_cmd(SPS30_I2C_ADDRESS, SPS_CMD_READ_MEASUREMENT);
-    // if (error != NO_ERROR) {
-    //     return error;
-    // }
-
-    // error = sensirion_i2c_read_words_as_bytes(SPS30_I2C_ADDRESS, &data[0][0],
-    //                                           SENSIRION_NUM_WORDS(data));
-
-    // if (error != NO_ERROR) {
-    //     return error;
-    // }
-
-    // measurement->mc_1p0                = sensirion_bytes_to_float(data[0]);
-    // measurement->mc_2p5                = sensirion_bytes_to_float(data[1]);
-    // measurement->mc_4p0                = sensirion_bytes_to_float(data[2]);
-    // measurement->mc_10p0               = sensirion_bytes_to_float(data[3]);
-    // measurement->nc_0p5                = sensirion_bytes_to_float(data[4]);
-    // measurement->nc_1p0                = sensirion_bytes_to_float(data[5]);
-    // measurement->nc_2p5                = sensirion_bytes_to_float(data[6]);
-    // measurement->nc_4p0                = sensirion_bytes_to_float(data[7]);
-    // measurement->nc_10p0               = sensirion_bytes_to_float(data[8]);
-    // measurement->typical_particle_size = sensirion_bytes_to_float(data[9]);
-    // constexpr uint32_t nmbrRegisters{8};
-    // uint8_t registerData[nmbrRegisters];
-    // readData(0x1F, nmbrRegisters, registerData);        // reads 8 registers, from 0x1F up to 0x26, they contain the raw ADC results for temperature, relativeHumidity and pressure
-    // rawDataTemperature        = ((static_cast<uint32_t>(registerData[3]) << 12) | (static_cast<uint32_t>(registerData[4]) << 4) | (static_cast<uint32_t>(registerData[5]) >> 4));
-    // rawDataRelativeHumidity   = ((static_cast<uint32_t>(registerData[6]) << 8) | (static_cast<uint32_t>(registerData[7])));
-    // rawDataBarometricPressure = ((static_cast<uint32_t>(registerData[0]) << 12) | (static_cast<uint32_t>(registerData[1]) << 4) | (static_cast<uint32_t>(registerData[2]) >> 4));
+    _pme1     = sensirion::asFloat(response);
+    _pme2dot5 = sensirion::asFloat(response + 4);
+    _pme4     = sensirion::asFloat(response + 8);
+    _pme10    = sensirion::asFloat(response + 12);
 }
 
-void sps30::goSleep() {
-    write(command::goSleep, nullptr, 0);
-    state = sensorDeviceState::sleeping;
+void sps30::run() {
+    if ((state == sensorDeviceState::sampling) && samplingIsReady()) {
+        readSample();
+        if (channels[pme1].needsSampling()) {
+            channels[pme1].addSample(_pme1);
+        }
+        if (channels[pme2dot5].needsSampling()) {
+            channels[pme2dot5].addSample(_pme2dot5);
+        }
+
+        if (channels[pme4].needsSampling()) {
+            channels[pme4].addSample(_pme4);
+        }
+
+        if (channels[pme10].needsSampling()) {
+            channels[pme10].addSample(_pme10);
+        }
+        state = sensorDeviceState::standby;
+    }
 }
+
+void sps30::stopSampling() {
+    write(command::stopMeasurement);
+    #ifndef generic
+    HAL_Delay(20); // Datasheet table 8
+#endif
+
+    state = sensorDeviceState::standby;
+}
+
+// void sps30::goSleep() {
+//     write(command::goSleep, nullptr, 0);
+//     state = sensorDeviceState::sleeping;
+// }
 
 bool sps30::testI2cAddress(uint8_t addressToTest) {
 #ifndef generic
@@ -195,35 +115,50 @@ bool sps30::testI2cAddress(uint8_t addressToTest) {
 #endif
 }
 
-void sps30::read(command theCommand, uint8_t* destination, uint16_t length) {
+void sps30::write(const sps30::command aCommand) {        // Datasheet 6.1, they call it 'Set Pointer'
+    uint16_t command = static_cast<uint16_t>(aCommand);
+    uint8_t commandAsBytes[2];
+    commandAsBytes[0] = static_cast<uint8_t>(command >> 8);
+    commandAsBytes[1] = static_cast<uint8_t>(command & 0x00FF);
 #ifndef generic
-    // HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_8BIT, destination, length, halTimeout);
-#else
-    // memcpy(destination, mockSPS30Registers + theCommand, length);
+    for (uint32_t trials = 0; trials < halTrials; trials++) {
+        HAL_StatusTypeDef result;
+        result = HAL_I2C_Master_Transmit(&hi2c2, static_cast<uint16_t>(i2cAddress << 1), commandAsBytes, 2U, halTimeout);
+        if (result == HAL_OK) {
+            return;
+        }
+        HAL_Delay(halTimeout);
+    }
 #endif
 }
 
-void sps30::write(command startAddress) {
+void sps30::write(const command aCommand, const uint8_t* sourceData, const uint32_t lengthInBytes) {        // Datasheet 6.1, they call it 'Set Pointer and Write Data'
+    uint16_t command = static_cast<uint16_t>(aCommand);
+    uint8_t commandAsBytes[lengthInBytes + 2];
+    commandAsBytes[0] = static_cast<uint8_t>(command >> 8);
+    commandAsBytes[1] = static_cast<uint8_t>(command & 0x00FF);
+    memcpy(commandAsBytes + 2, sourceData, lengthInBytes);
 #ifndef generic
-    // HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
-#else
-    // mockSPS30Registers[static_cast<uint8_t>(registerAddress)] = value;
+    for (uint32_t trials = 0; trials < halTrials; trials++) {
+        HAL_StatusTypeDef result;
+        result = HAL_I2C_Master_Transmit(&hi2c2, static_cast<uint16_t>(i2cAddress << 1), commandAsBytes, static_cast<uint16_t>(lengthInBytes + 2U), halTimeout);
+        if (result == HAL_OK) {
+            return;
+        }
+        HAL_Delay(halTimeout);
+    }
 #endif
 }
 
-void sps30::write(command startAddress, uint8_t value) {
+void sps30::read(uint8_t* destinationData, const uint32_t lengthInBytes) {        // This is the reading part of 'Set Pointer and Read Data'
 #ifndef generic
-    // HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
-#else
-    // mockSPS30Registers[static_cast<uint8_t>(registerAddress)] = value;
+    for (uint32_t trials = 0; trials < halTrials; trials++) {
+        HAL_StatusTypeDef result;
+        result = HAL_I2C_Master_Receive(&hi2c2, static_cast<uint16_t>(i2cAddress << 1), destinationData, static_cast<uint16_t>(lengthInBytes), halTimeout);
+        if (result == HAL_OK) {
+            break;
+        }
+        HAL_Delay(halTimeout);
+    }
 #endif
 }
-
-void sps30::write(command startAddress, uint8_t* destination, uint16_t length) {
-#ifndef generic
-    // HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, &value, 1, halTimeout);
-#else
-    // mockSPS30Registers[static_cast<uint8_t>(registerAddress)] = value;
-#endif
-}
-

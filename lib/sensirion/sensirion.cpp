@@ -47,9 +47,9 @@ uint8_t sensirion::crc(const uint8_t byte0, const uint8_t byte1) {
     return result;
 }
 
-bool sensirion::checkCrc(const uint8_t* data, uint32_t count) {
+bool sensirion::checkCrc(const uint8_t* data, uint32_t dataLength) {
     bool result{true};
-    for (uint32_t index = 0; index < count; index += 3) {
+    for (uint32_t index = 0; index < dataLength; index += 3) {
         if (data[index + 2] != crc(data[index], data[index + 1])) {
             result = false;
             break;
@@ -58,8 +58,8 @@ bool sensirion::checkCrc(const uint8_t* data, uint32_t count) {
     return result;
 }
 
-void sensirion::insertCrc(uint8_t* data, uint32_t count) {
-    for (uint32_t index = 0; index < count; index += 3) {
+void sensirion::insertCrc(uint8_t* data, uint32_t dataLength) {
+    for (uint32_t index = 0; index < dataLength; index += 3) {
         data[index + 2] = crc(data[index], data[index + 1]);
     }
 }

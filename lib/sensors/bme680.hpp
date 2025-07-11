@@ -69,7 +69,7 @@ class bme680 {
     };
 
     // Commands
-    enum class commands : uint8_t {
+    enum class command : uint8_t {
         softReset = 0xB6,        // value to write to resetRegister to reset the BME68X
     };
 

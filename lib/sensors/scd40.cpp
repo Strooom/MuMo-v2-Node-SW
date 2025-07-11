@@ -35,12 +35,12 @@ void scd40::initialize() {
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
         channels[channelIndex].set(0, 0);
     }
-    writeCommand(scd40::commands::stopPeriodicMeasurement);                 // stop any previous measurement
+    writeCommand(scd40::command::stopPeriodicMeasurement);                 // stop any previous measurement
 #ifndef generic
     HAL_Delay(500);                                                         // stopping requires 500ms processing
 #endif
-    writeCommand(scd40::commands::startLowPowerPeriodicMeasurement);        // now start the low power periodic measurement = 1 sample / 30 seconds
-    state = sensorDeviceState::sleeping;
+    writeCommand(scd40::command::startLowPowerPeriodicMeasurement);        // now start the low power periodic measurement = 1 sample / 30 seconds
+    state = sensorDeviceState::standby;
 }
 
 void scd40::run() {
@@ -59,7 +59,7 @@ void scd40::run() {
             float scd40CO2 = calculateCO2(rawCo2);
             channels[co2].addSample(scd40CO2);
         }
-        state = sensorDeviceState::sleeping;
+        state = sensorDeviceState::standby;
     }
 }
 
@@ -69,7 +69,7 @@ void scd40::startSampling() {
 
 bool scd40::samplingIsReady() {
     uint16_t tmpResult;
-    writeCommand(scd40::commands::getDataReadyStatus);
+    writeCommand(scd40::command::getDataReadyStatus);
 #ifndef generic
     HAL_Delay(2);
 #endif
@@ -79,7 +79,7 @@ bool scd40::samplingIsReady() {
 
 void scd40::readSample() {
     uint16_t tmpResult[3];
-    writeCommand(scd40::commands::readMeasurement);
+    writeCommand(scd40::command::readMeasurement);
 #ifndef generic
     HAL_Delay(2);
 #endif
@@ -113,7 +113,7 @@ bool scd40::testI2cAddress(const uint8_t addressToTest) {
 #endif
 }
 
-void scd40::writeCommand(const scd40::commands aCommand) {
+void scd40::writeCommand(const scd40::command aCommand) {
     uint16_t command = static_cast<uint16_t>(aCommand);
     uint8_t commandAsBytes[2];
     commandAsBytes[0] = static_cast<uint8_t>(command >> 8);

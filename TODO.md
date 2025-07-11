@@ -1,7 +1,9 @@
 # MuMo SW V3
 
 ## known bugs
-when unplugging the USB, sometimes the display is not updated immediately, but only at the next RTCtick ???
+* a '-' sign is missing in the font, so negative values cannot be shown on the screen...
+* when unplugging the USB, sometimes the display is not updated immediately, but only at the next RTCtick ???
+* after issueing some commands, the CLI gets stuck and shows output from previous command 0- it looks like 2 commands are in the queue...
 
 ## ToDo's
 

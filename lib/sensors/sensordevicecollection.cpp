@@ -6,6 +6,7 @@
 #include <sht40.hpp>
 #include <tsl2591.hpp>
 #include <scd40.hpp>
+#include <sps30.hpp>
 // All known sensordevices' include files are to be added here
 // #include <measurementcollection.hpp>
 #include <float.hpp>        // only needed for logging.. can be removed later
@@ -48,6 +49,11 @@ void sensorDeviceCollection::discover() {
         scd40::initialize();
     }
 
+    present[static_cast<uint32_t>(sensorDeviceType::sps30)] = sps30::isPresent();
+    if (present[static_cast<uint32_t>(sensorDeviceType::sps30)]) {
+        sps30::initialize();
+    }
+
     // Add more types of sensors here
 }
 
@@ -77,6 +83,9 @@ void sensorDeviceCollection::startSampling() {
                     case sensorDeviceType::scd40:
                         scd40::startSampling();
                         break;
+                    case sensorDeviceType::sps30:
+                        sps30::startSampling();
+                        break;
                     // Add more types of sensors here
                     default:
                         break;
@@ -104,6 +113,9 @@ void sensorDeviceCollection::run() {
                     break;
                 case sensorDeviceType::scd40:
                     scd40::run();
+                    break;
+                case sensorDeviceType::sps30:
+                    sps30::run();
                     break;
                 // Add more types of sensors here
                 default:
@@ -138,7 +150,11 @@ bool sensorDeviceCollection::isSamplingReady() {
                     }
                     break;
                 case sensorDeviceType::scd40:
-                    if (scd40::getState() != sensorDeviceState::sleeping) {
+                    if (scd40::getState() != sensorDeviceState::standby) {
+                        return false;
+                    }
+                case sensorDeviceType::sps30:
+                    if (sps30::getState() != sensorDeviceState::standby) {
                         return false;
                     }
                 // Add more types of sensors here
@@ -149,6 +165,65 @@ bool sensorDeviceCollection::isSamplingReady() {
     }
     return true;
 }
+
+uint32_t sensorDeviceCollection::nmbrOfChannels(uint32_t deviceIndex) {
+    if (isValid(deviceIndex)) {
+        switch (static_cast<sensorDeviceType>(deviceIndex)) {
+            case sensorDeviceType::battery:
+                return battery::nmbrChannels;
+                break;
+            case sensorDeviceType::bme680:
+                return bme680::nmbrChannels;
+                break;
+            case sensorDeviceType::sht40:
+                return sht40::nmbrChannels;
+                break;
+            case sensorDeviceType::tsl2591:
+                return tsl2591::nmbrChannels;
+                break;
+            case sensorDeviceType::scd40:
+                return scd40::nmbrChannels;
+                break;
+            case sensorDeviceType::sps30:
+                return sps30::nmbrChannels;
+                break;
+            // Add more types of sensors here
+            default:
+                return 0;
+        }
+    }
+    return 0;
+}
+
+sensorChannel& sensorDeviceCollection::channel(uint32_t deviceIndex, uint32_t channelIndex) {
+    if (isValid(deviceIndex, channelIndex)) {
+        switch (static_cast<sensorDeviceType>(deviceIndex)) {
+            case sensorDeviceType::battery:
+                return battery::channels[channelIndex];
+                break;
+            case sensorDeviceType::bme680:
+                return bme680::channels[channelIndex];
+                break;
+            case sensorDeviceType::sht40:
+                return sht40::channels[channelIndex];
+                break;
+            case sensorDeviceType::tsl2591:
+                return tsl2591::channels[channelIndex];
+                break;
+            case sensorDeviceType::scd40:
+                return scd40::channels[channelIndex];
+                break;
+            case sensorDeviceType::sps30:
+                return sps30::channels[channelIndex];
+                break;
+            // Add more types of sensors here
+            default:
+                return dummy;        // in case of an invalid index, we return this dummy channel
+        }
+    }
+    return dummy;        // in case of an invalid index, we return this dummy channel
+}
+
 
 bool sensorDeviceCollection::needsSampling() {
     for (auto deviceIndex = 0U; deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); deviceIndex++) {
@@ -330,57 +405,6 @@ void sensorDeviceCollection::collectNewMeasurements(uint32_t deviceIndex) {
     }
 }
 
-uint32_t sensorDeviceCollection::nmbrOfChannels(uint32_t deviceIndex) {
-    if (isValid(deviceIndex)) {
-        switch (static_cast<sensorDeviceType>(deviceIndex)) {
-            case sensorDeviceType::battery:
-                return battery::nmbrChannels;
-                break;
-            case sensorDeviceType::bme680:
-                return bme680::nmbrChannels;
-                break;
-            case sensorDeviceType::sht40:
-                return sht40::nmbrChannels;
-                break;
-            case sensorDeviceType::tsl2591:
-                return tsl2591::nmbrChannels;
-                break;
-            case sensorDeviceType::scd40:
-                return scd40::nmbrChannels;
-                break;
-            // Add more types of sensors here
-            default:
-                return 0;
-        }
-    }
-    return 0;
-}
-
-sensorChannel& sensorDeviceCollection::channel(uint32_t deviceIndex, uint32_t channelIndex) {
-    if (isValid(deviceIndex, channelIndex)) {
-        switch (static_cast<sensorDeviceType>(deviceIndex)) {
-            case sensorDeviceType::battery:
-                return battery::channels[channelIndex];
-                break;
-            case sensorDeviceType::bme680:
-                return bme680::channels[channelIndex];
-                break;
-            case sensorDeviceType::sht40:
-                return sht40::channels[channelIndex];
-                break;
-            case sensorDeviceType::tsl2591:
-                return tsl2591::channels[channelIndex];
-                break;
-            case sensorDeviceType::scd40:
-                return scd40::channels[channelIndex];
-                break;
-            // Add more types of sensors here
-            default:
-                return dummy;        // in case of an invalid index, we return this dummy channel
-        }
-    }
-    return dummy;        // in case of an invalid index, we return this dummy channel
-}
 
 bool sensorDeviceCollection::isValid(uint32_t deviceIndex) {
     if (deviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices)) {

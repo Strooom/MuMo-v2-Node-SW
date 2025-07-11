@@ -41,7 +41,7 @@ class scd40 {
     static constexpr uint8_t halTimeout{0x20};        // ST HAL requires a 'timeout' in ms
 
     // Commands
-    enum class commands : uint16_t {
+    enum class command : uint16_t {
         startPeriodicMeasurement         = 0x21B1,
         startLowPowerPeriodicMeasurement = 0x21AC,
         getDataReadyStatus               = 0xE4B8,
@@ -50,7 +50,7 @@ class scd40 {
     };
 
     static bool testI2cAddress(const uint8_t addressToTest);
-    static void writeCommand(const scd40::commands aCommand);
+    static void writeCommand(const scd40::command aCommand);
     static void readData(uint16_t* data, const uint32_t dataLength);
 
     static uint32_t rawDataTemperature;

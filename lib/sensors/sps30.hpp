@@ -11,40 +11,32 @@
 
 class sps30 {
   public:
+    sps30() = delete;
     static bool isPresent();
     static void initialize();
-    static void wakeUp();
-    static void goSleep();
-
-    static sensorDeviceState getState() { return state; };
-    static float valueAsFloat(uint32_t channelIndex);
-
-    static void tick();
     static void run();
+    static sensorDeviceState getState() { return state; };
 
-    static constexpr uint32_t nmbrChannels{3};
-    static constexpr uint32_t pme2dot5{0};
-    static constexpr uint32_t pme4{0};
-    static constexpr uint32_t pme10{0};
+    static constexpr uint32_t nmbrChannels{4};
+    static constexpr uint32_t pme1{0};
+    static constexpr uint32_t pme2dot5{1};
+    static constexpr uint32_t pme4{2};
+    static constexpr uint32_t pme10{3};
     static sensorChannel channels[nmbrChannels];
-
 
 #ifndef unitTesting
 
   private:
 #endif
     static sensorDeviceState state;
-    static bool anyChannelNeedsSampling();
-    static void adjustAllCounters();
     static void startSampling();
     static bool samplingIsReady();
     static void stopSampling();
     static void readSample();
 
-
     static constexpr uint8_t i2cAddress{0x69};
     static constexpr uint8_t halTrials{0x03};
-    static constexpr uint8_t halTimeout{0x10};
+    static constexpr uint8_t halTimeout{0x20};
 
     // Commands
     enum class command : uint16_t {
@@ -63,12 +55,14 @@ class sps30 {
     static constexpr uint8_t chipIdValue{0x61};
 
     static bool testI2cAddress(uint8_t addressToTest);
-    static void write(command aRegister);
-    static void write(command aRegister, const uint8_t value);
-    static void write(command startAddress, uint8_t* sourceData, uint16_t length);
-    static uint8_t readData(command aRegister);
-    static void read(command startAddress, uint8_t* destination, uint16_t length);
+    static void write(const command aCommand);
+    static void write(const command aCommand, const uint8_t* sourceData, const uint32_t lengthInBytes);
+    static void read(uint8_t* destinationData, const uint32_t lengthInBytes);
 
+    static float _pme1;
+    static float _pme2dot5;
+    static float _pme4;
+    static float _pme10;
 
-    static bool awake;
+    friend class sensorDeviceCollection;
 };
