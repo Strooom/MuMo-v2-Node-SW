@@ -35,6 +35,9 @@ void scd40::initialize() {
     for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
         channels[channelIndex].set(0, 0);
     }
+    writeCommand(scd40::commands::stopPeriodicMeasurement);                 // stop any previous measurement
+    HAL_Delay(500);                                                         // stopping requires 500ms processing
+    writeCommand(scd40::commands::startLowPowerPeriodicMeasurement);        // now start the low power periodic measurement = 1 sample / 30 seconds
     state = sensorDeviceState::sleeping;
 }
 
@@ -54,25 +57,27 @@ void scd40::run() {
             float scd40CO2 = calculateCO2(rawCo2);
             channels[co2].addSample(scd40CO2);
         }
-        writeCommand(scd40::commands::stopPeriodicMeasurement);
         state = sensorDeviceState::sleeping;
     }
 }
 
 void scd40::startSampling() {
-    writeCommand(scd40::commands::startPeriodicMeasurement);
     state = sensorDeviceState::sampling;
 }
 
 bool scd40::samplingIsReady() {
     uint16_t tmpResult;
-    readCommand(scd40::commands::getDataReadyStatus, &tmpResult, 1U);
-    return ((tmpResult & 0xF800) != 0);        // datasheet 3.8.2 : 11 least significant bits are zero -> data not ready
+    writeCommand(scd40::commands::getDataReadyStatus);
+    HAL_Delay(2);
+    readData(&tmpResult, 1U);
+    return (!((tmpResult & 0x07FF) == 0));        // datasheet 3.8.2 : 11 least significant bits are zero -> data not ready
 }
 
 void scd40::readSample() {
     uint16_t tmpResult[3];
-    readCommand(scd40::commands::readMeasurement, tmpResult, 3U);
+    writeCommand(scd40::commands::readMeasurement);
+    HAL_Delay(2);
+    readData(tmpResult, 3U);
     rawCo2                  = tmpResult[0];
     rawDataTemperature      = tmpResult[1];
     rawDataRelativeHumidity = tmpResult[2];
@@ -94,30 +99,42 @@ float scd40::calculateCO2(uint32_t rawData) {
     return static_cast<float>(rawData);
 }
 
-bool scd40::testI2cAddress(uint8_t addressToTest) {
+bool scd40::testI2cAddress(const uint8_t addressToTest) {
 #ifndef generic
-    bool result = (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, static_cast<uint16_t>(addressToTest << 1), halTrials, halTimeout));
-    return result;
-
+    return (HAL_OK == HAL_I2C_IsDeviceReady(&hi2c2, static_cast<uint16_t>(addressToTest << 1), halTrials, halTimeout));
 #else
     return mockSCD40Present;
 #endif
 }
 
-void scd40::writeCommand(scd40::commands aCommand) {
+void scd40::writeCommand(const scd40::commands aCommand) {
     uint16_t command = static_cast<uint16_t>(aCommand);
     uint8_t commandAsBytes[2];
     commandAsBytes[0] = static_cast<uint8_t>(command >> 8);
     commandAsBytes[1] = static_cast<uint8_t>(command & 0x00FF);
 #ifndef generic
-    HAL_I2C_Master_Transmit(&hi2c2, static_cast<uint16_t>(i2cAddress << 1), commandAsBytes, 2U, halTimeout);
+    for (uint32_t trials = 0; trials < halTrials; trials++) {
+        HAL_StatusTypeDef result;
+        result = HAL_I2C_Master_Transmit(&hi2c2, static_cast<uint16_t>(i2cAddress << 1), commandAsBytes, 2U, halTimeout);
+        if (result == HAL_OK) {
+            return;
+        }
+        HAL_Delay(halTimeout);
+    }
 #endif
 }
 
-void scd40::readCommand(scd40::commands aCommand, uint16_t* data, uint32_t dataLength) {
-    uint8_t tmpData[dataLength * 3];
+void scd40::readData(uint16_t* data, const uint32_t dataLength) {
+    uint8_t tmpData[dataLength * 3]{};
 #ifndef generic
-    HAL_I2C_Mem_Read(&hi2c2, static_cast<uint16_t>(i2cAddress << 1), static_cast<uint16_t>(aCommand), I2C_MEMADD_SIZE_16BIT, tmpData, static_cast<uint16_t>(dataLength * 3), halTimeout);
+    for (uint32_t trials = 0; trials < halTrials; trials++) {
+        HAL_StatusTypeDef result;
+        result = HAL_I2C_Master_Receive(&hi2c2, static_cast<uint16_t>(i2cAddress << 1), tmpData, static_cast<uint16_t>(dataLength * 3), halTimeout);
+        if (result == HAL_OK) {
+            break;
+        }
+        HAL_Delay(halTimeout);
+    }
 #endif
     for (uint32_t index = 0; index < dataLength; index++) {
         data[index] = sensirion::asUint16(&tmpData[index * 3]);

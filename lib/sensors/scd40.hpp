@@ -15,7 +15,6 @@ class scd40 {
     static bool isPresent();
     static void initialize();
     static void run();
-
     static sensorDeviceState getState() { return state; };
 
     static constexpr uint32_t nmbrChannels{3};
@@ -39,20 +38,21 @@ class scd40 {
 
     static constexpr uint8_t i2cAddress{0x62};
     static constexpr uint8_t halTrials{0x03};         // ST HAL requires a 'retry' parameters
-    static constexpr uint8_t halTimeout{0x10};        // ST HAL requires a 'timeout' in ms
+    static constexpr uint8_t halTimeout{0x20};        // ST HAL requires a 'timeout' in ms
 
     // Commands
     enum class commands : uint16_t {
-        startPeriodicMeasurement = 0x21B1,
-        getDataReadyStatus       = 0xE4B8,
-        readMeasurement          = 0xEC05,
-        stopPeriodicMeasurement  = 0x3F86,
+        startPeriodicMeasurement         = 0x21B1,
+        startLowPowerPeriodicMeasurement = 0x21AC,
+        getDataReadyStatus               = 0xE4B8,
+        readMeasurement                  = 0xEC05,
+        stopPeriodicMeasurement          = 0x3F86,
     };
 
-    static bool testI2cAddress(uint8_t addressToTest);
-    static void writeCommand(scd40::commands aCommand);
-    static void readCommand(scd40::commands aCommand, uint16_t* data, uint32_t dataLength);
-    
+    static bool testI2cAddress(const uint8_t addressToTest);
+    static void writeCommand(const scd40::commands aCommand);
+    static void readData(uint16_t* data, const uint32_t dataLength);
+
     static uint32_t rawDataTemperature;
     static uint32_t rawDataRelativeHumidity;
     static uint32_t rawCo2;
