@@ -33,15 +33,22 @@ bool sps30::isPresent() {
 }
 
 void sps30::initialize() {
+    for (uint32_t channelIndex = 0; channelIndex < nmbrChannels; channelIndex++) {
+        channels[channelIndex].set(0, 0);
+    }
+    write(sps30::command::reset);
+#ifndef generic
+    HAL_Delay(100);        // Datasheet section 6.3 table 8, reset requires 100ms processing
+#endif
     state = sensorDeviceState::standby;
 }
 
 void sps30::startSampling() {
     static constexpr uint32_t commandDataLength{3};
-    uint8_t commandData[commandDataLength]{5, 0, 246};        // datasheet section 6.3.1, using float output format as this has the best resolution
+    uint8_t commandData[commandDataLength]{0x03, 0, 172};        // datasheet section 6.3.1, using float output format as this has the best resolution (3,0,172 = float)(5,0,246 = uint16)
     write(command::startMeasurement, commandData, commandDataLength);
 #ifndef generic
-    HAL_Delay(20); // Datasheet table 8
+    HAL_Delay(20);        // Datasheet table 8
 #endif
     state = sensorDeviceState::sampling;
 }
@@ -56,20 +63,21 @@ bool sps30::samplingIsReady() {
 }
 
 void sps30::readSample() {
-    static constexpr uint32_t responseLength{60};
+    static constexpr uint32_t responseLength{24};        // not reading all 60 bytes, as the first 24 bytes are the only ones that contain the data we need.
     uint8_t response[responseLength]{};
     write(command::readMeasurement);
     read(response, responseLength);
     if (sensirion::checkCrc(response, responseLength)) {
-        // crc ok
+        _pme1     = sensirion::asFloat(response);
+        _pme2dot5 = sensirion::asFloat(response + 6);
+        _pme4     = sensirion::asFloat(response + 12);
+        _pme10    = sensirion::asFloat(response + 18);
     } else {
-        // crc error TODO
+        _pme1     = 0.0F;
+        _pme2dot5 = 0.0F;
+        _pme4     = 0.0F;
+        _pme10    = 0.0F;
     }
-
-    _pme1     = sensirion::asFloat(response);
-    _pme2dot5 = sensirion::asFloat(response + 4);
-    _pme4     = sensirion::asFloat(response + 8);
-    _pme10    = sensirion::asFloat(response + 12);
 }
 
 void sps30::run() {
@@ -95,8 +103,8 @@ void sps30::run() {
 
 void sps30::stopSampling() {
     write(command::stopMeasurement);
-    #ifndef generic
-    HAL_Delay(20); // Datasheet table 8
+#ifndef generic
+    HAL_Delay(20);        // Datasheet table 8
 #endif
 
     state = sensorDeviceState::standby;

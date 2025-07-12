@@ -7,7 +7,8 @@ I2C_HandleTypeDef hi2c2;
 
 void MX_I2C2_Init(void) {
     hi2c2.Instance              = I2C2;
-    hi2c2.Init.Timing           = 0x0010061A;
+    //    hi2c2.Init.Timing           = 0x0010061A; // 400 kHz mode
+    hi2c2.Init.Timing           = 0x00503D58;        // 100 kHz mode
     hi2c2.Init.OwnAddress1      = 0;
     hi2c2.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
     hi2c2.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;

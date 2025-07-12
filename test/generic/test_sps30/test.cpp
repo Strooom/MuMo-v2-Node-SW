@@ -15,9 +15,9 @@ void test_initialize() {
 
 void test_startSamplingCommand() {
     static constexpr uint32_t commandDataLength{3};
-    uint8_t commandData[commandDataLength]{5, 0, 0};
+    uint8_t commandData[commandDataLength]{3, 0, 0};
     sensirion::insertCrc(commandData, commandDataLength);
-    TEST_ASSERT_EQUAL_UINT8(246, commandData[2]);
+    TEST_ASSERT_EQUAL_UINT8(172, commandData[2]);
 }
 
 
