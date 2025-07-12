@@ -315,7 +315,7 @@ void mainController::goTo(mainState newState) {
 }
 
 void mainController::runSleep() {
-    if (!power::hasUsbPower() && !debugPort::isDebugProbePresent()) {
+    if (power::noUsbPowerDelayed() && !debugPort::isDebugProbePresent()) {
         prepareSleep();
         goSleep();
         wakeUp();

@@ -13,11 +13,19 @@ bool power::mockUsbPower{false};
 #endif
 
 bool power::usbPower{false};
+uint32_t power::usbPowerOffCount{usbPowerOffCountMax};
 
 bool power::hasUsbPower() {
 #ifndef generic
-    bool pinState = (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOB, usbPowerPresent_Pin));
-    return pinState;
+    bool result = (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOB, usbPowerPresent_Pin));
+    if (result) {
+        usbPowerOffCount = usbPowerOffCountMax;
+    } else {
+        if (usbPowerOffCount > 0) {
+            usbPowerOffCount--;
+        }
+    }
+    return result;
 #else
     return mockUsbPower;
 #endif
@@ -42,4 +50,3 @@ bool power::isUsbRemoved() {
         return false;
     }
 }
-
