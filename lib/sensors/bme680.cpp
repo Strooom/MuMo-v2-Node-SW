@@ -133,8 +133,6 @@ void bme680::run() {
 }
 
 void bme680::startSampling() {
-    state = sensorDeviceState::sampling;
-    // run a ADC conversion cycle for Temp Hum and Presure, and when ready, read and store all raw ADC results
     writeRegister(bme680::registers::ctrl_hum, 0b00000001);
     writeRegister(bme680::registers::ctrl_meas, 0b00100101);
     state = sensorDeviceState::sampling;

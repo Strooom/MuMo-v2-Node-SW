@@ -1,44 +1,34 @@
 #include <unity.h>
-//#include <scd40.hpp>
+#include <scd40.hpp>
 #include <cstring>
 
 
 
-void setUp(void) {        // before each test
-}
-void tearDown(void) {        // after each test
-}
+void setUp(void) {}
+void tearDown(void) {}
 
-void test_isPresent() {
-//    TEST_ASSERT_TRUE(scd40::isPresent());
-}
-
-void test_signature() {
-    // TEST_ASSERT_EQUAL(sensorDeviceState::unknown, scd40::state);
-    // scd40::initialize();
-    // TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, scd40::state);
+void test_initialize() {
+    TEST_ASSERT_EQUAL(sensorDeviceState::unknown, scd40::getState());
+    scd40::initialize();
+    TEST_ASSERT_EQUAL(sensorDeviceState::sleeping, scd40::getState());
 }
 
-// void test_sample() {
-//     scd40::sample();
-//     TEST_ASSERT_EQUAL_UINT32(0, scd40::rawDataTemperature);
-//     TEST_ASSERT_EQUAL_UINT32(0, scd40::rawDataRelativeHumidity);
-//     TEST_ASSERT_EQUAL_UINT32(0, scd40::rawDataBarometricPressure);
-// }
+void test_calculateTemperature() {
+    TEST_ASSERT_FLOAT_WITHIN(0.1F, 25.0F, scd40::calculateTemperature(0x6667));
+}
 
-// void test_measurements() {
-//     scd40::sample();
-//     TEST_IGNORE_MESSAGE("TODO: test calculating measurements from raw data");
-//     TEST_ASSERT_EQUAL_FLOAT(0.0F, scd40::getTemperature());
-//     TEST_ASSERT_EQUAL_FLOAT(0.0F, scd40::getRelativeHumidity());
-//     TEST_ASSERT_EQUAL_FLOAT(0.0F, scd40::getBarometricPressure());
-// }
+void test_calculateRelativeHumidity() {
+    TEST_ASSERT_FLOAT_WITHIN(0.1F, 37.0F, scd40::calculateRelativeHumidity(0x5eb9));
+}
+void test_calculateCO2() {
+    TEST_ASSERT_FLOAT_WITHIN(0.1F, 500.0F, scd40::calculateCO2(0x01f4));
+}
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
-    RUN_TEST(test_isPresent);
-    RUN_TEST(test_signature);
-    // RUN_TEST(test_sample);
-    // RUN_TEST(test_measurements);
+    RUN_TEST(test_initialize);
+    RUN_TEST(test_calculateTemperature);
+    RUN_TEST(test_calculateRelativeHumidity);
+    RUN_TEST(test_calculateCO2);
     UNITY_END();
 }

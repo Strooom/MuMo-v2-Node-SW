@@ -5,6 +5,7 @@
 #include <bme680.hpp>
 #include <sht40.hpp>
 #include <tsl2591.hpp>
+#include <scd40.hpp>
 // All known sensordevices' include files are to be added here
 // #include <measurementcollection.hpp>
 #include <float.hpp>        // only needed for logging.. can be removed later
@@ -41,6 +42,12 @@ void sensorDeviceCollection::discover() {
     if (present[static_cast<uint32_t>(sensorDeviceType::tsl2591)]) {
         tsl2591::initialize();
     }
+
+    present[static_cast<uint32_t>(sensorDeviceType::scd40)] = scd40::isPresent();
+    if (present[static_cast<uint32_t>(sensorDeviceType::scd40)]) {
+        scd40::initialize();
+    }
+
     // Add more types of sensors here
 }
 
@@ -67,6 +74,9 @@ void sensorDeviceCollection::startSampling() {
                     case sensorDeviceType::tsl2591:
                         tsl2591::startSampling();
                         break;
+                    case sensorDeviceType::scd40:
+                        scd40::startSampling();
+                        break;
                     // Add more types of sensors here
                     default:
                         break;
@@ -91,6 +101,9 @@ void sensorDeviceCollection::run() {
                     break;
                 case sensorDeviceType::tsl2591:
                     tsl2591::run();
+                    break;
+                case sensorDeviceType::scd40:
+                    scd40::run();
                     break;
                 // Add more types of sensors here
                 default:
@@ -124,6 +137,10 @@ bool sensorDeviceCollection::isSamplingReady() {
                         return false;
                     }
                     break;
+                case sensorDeviceType::scd40:
+                    if (scd40::getState() != sensorDeviceState::sleeping) {
+                        return false;
+                    }
                 // Add more types of sensors here
                 default:
                     break;
@@ -313,7 +330,6 @@ void sensorDeviceCollection::collectNewMeasurements(uint32_t deviceIndex) {
     }
 }
 
-
 uint32_t sensorDeviceCollection::nmbrOfChannels(uint32_t deviceIndex) {
     if (isValid(deviceIndex)) {
         switch (static_cast<sensorDeviceType>(deviceIndex)) {
@@ -328,6 +344,9 @@ uint32_t sensorDeviceCollection::nmbrOfChannels(uint32_t deviceIndex) {
                 break;
             case sensorDeviceType::tsl2591:
                 return tsl2591::nmbrChannels;
+                break;
+            case sensorDeviceType::scd40:
+                return scd40::nmbrChannels;
                 break;
             // Add more types of sensors here
             default:
@@ -351,6 +370,9 @@ sensorChannel& sensorDeviceCollection::channel(uint32_t deviceIndex, uint32_t ch
                 break;
             case sensorDeviceType::tsl2591:
                 return tsl2591::channels[channelIndex];
+                break;
+            case sensorDeviceType::scd40:
+                return scd40::channels[channelIndex];
                 break;
             // Add more types of sensors here
             default:
