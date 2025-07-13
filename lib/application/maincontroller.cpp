@@ -507,11 +507,10 @@ void mainController::runCli() {
                                     cli::sendResponse("invalid argument\n");
                                     break;
                                 }
-                                cli::sendResponse("invalid number of arguments\n");
                                 return;
+                            } else {
+                                cli::sendResponse("invalid number of arguments\n");
                             }
-
-                            showMeasurementsCsv();
                             break;
 
                         case cliCommand::getLoRaWANStatus:
