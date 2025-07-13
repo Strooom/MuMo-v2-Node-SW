@@ -803,7 +803,7 @@ void mainController::setSensor(const cliCommand& theCommand) {
         if (tmpTime >= 60) {
             cli::sendResponse("%u hours\n", tmpTime / 60);
         } else {
-            cli::sendResponse("%u minutes", tmpTime);
+            cli::sendResponse("%u minutes\n", tmpTime);
         }
     }
 }
