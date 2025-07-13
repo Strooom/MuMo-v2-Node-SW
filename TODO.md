@@ -1,7 +1,7 @@
 # MuMo SW V3
 
 ## known bugs
-when unplugging the USB, sometimes the display is not updated immediately, but only at the next RTCtick ???
+
 
 ## ToDo's
 
