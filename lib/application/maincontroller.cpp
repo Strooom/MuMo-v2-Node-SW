@@ -496,7 +496,22 @@ void mainController::runCli() {
                             break;
 
                         case cliCommand::getMeasurements:
-                            showMeasurements();
+                            if (theCommand.nmbrOfArguments == 0) {
+                                showMeasurements();
+                            }
+                            if (theCommand.nmbrOfArguments == 1) {
+                                if (strncmp(theCommand.arguments[0], "csv", 3) == 0) {
+                                    showMeasurementsCsv();
+                                    break;
+                                } else {
+                                    cli::sendResponse("invalid argument\n");
+                                    break;
+                                }
+                                cli::sendResponse("invalid number of arguments\n");
+                                return;
+                            }
+
+                            showMeasurementsCsv();
                             break;
 
                         case cliCommand::getLoRaWANStatus:
@@ -581,6 +596,7 @@ void mainController::showHelp() {
     cli::sendResponse("? : show help\n");
     cli::sendResponse("gds : show device status\n");
     cli::sendResponse("gms : show recorded measurements status\n");
+    cli::sendResponse("gm (csv) : show recorded measurements, optionally as CSV\n");
     cli::sendResponse("gls : show LoRaWAN status\n");
     cli::sendResponse("el : enable logging\n");
     cli::sendResponse("dl : disable logging\n");
@@ -809,6 +825,7 @@ void mainController::setSensor(const cliCommand& theCommand) {
 }
 
 void mainController::showMeasurementsStatus() {
+    cli::sendResponse("wait...");
     measurementGroup tmpGroup;
     uint32_t startOffset = measurementGroupCollection::getOldestMeasurementOffset();
     uint32_t endOffset   = measurementGroupCollection::getNewMeasurementsOffset();
@@ -831,6 +848,7 @@ void mainController::showMeasurementsStatus() {
         newestMeasurementTime = tmpGroup.getTimeStamp();
         offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
     }
+    cli::sendResponse("\b\b\b\b\b\b\b");
     cli::sendResponse("%u measurements in %u groups\n", nmbrOfMeasurements, nmbrOfGroups);
     cli::sendResponse("oldoffset %u %s", measurementGroupCollection::getOldestMeasurementOffset(), ctime(&oldestMeasurementTime));
     cli::sendResponse("newoffset %u %s", measurementGroupCollection::getNewMeasurementsOffset(), ctime(&newestMeasurementTime));
@@ -847,14 +865,12 @@ void mainController::showMeasurements() {
     uint32_t offset{startOffset};
     uint32_t nmbrOfGroups{0};
     uint32_t nmbrOfMeasurements{0};
-    time_t oldestMeasurementTime;
-
-    measurementGroupCollection::get(tmpGroup, offset);
-    oldestMeasurementTime = tmpGroup.getTimeStamp();
+    time_t timeStamp;
 
     while (offset < endOffset) {
         measurementGroupCollection::get(tmpGroup, offset);
-        cli::sendResponse("%d %s", nmbrOfGroups, ctime(&oldestMeasurementTime));        // 1 line per measurementGroup
+        timeStamp = tmpGroup.getTimeStamp();
+        cli::sendResponse("%d %s", nmbrOfGroups, ctime(&timeStamp));
         nmbrOfMeasurements = tmpGroup.getNumberOfMeasurements();
         for (uint32_t measurementIndex = 0; measurementIndex < nmbrOfMeasurements; measurementIndex++) {        // then per measurement part of this group
             uint32_t tmpDeviceIndex  = tmpGroup.getDeviceIndex(measurementIndex);
@@ -874,8 +890,52 @@ void mainController::showMeasurements() {
             } else {
                 cli::sendResponse(" %d", intPart);
             }
-
             cli::sendResponse(" %s\n", sensorDeviceCollection::units(tmpDeviceIndex, tmpChannelIndex));
+        }
+        nmbrOfGroups++;
+        offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
+    }
+}
+
+void mainController::showMeasurementsCsv() {
+    measurementGroup tmpGroup;
+    uint32_t startOffset = measurementGroupCollection::getOldestMeasurementOffset();
+    uint32_t endOffset   = measurementGroupCollection::getNewMeasurementsOffset();
+    if (endOffset < startOffset) {
+        endOffset += nonVolatileStorage::getMeasurementsAreaSize();
+    }
+    uint32_t offset{startOffset};
+    uint32_t nmbrOfGroups{0};
+    uint32_t nmbrOfMeasurements{0};
+    time_t timeStamp;
+
+    cli::sendResponse("year,month,day,hours,minutes,seconds,device,channel,value,units\n");
+
+    while (offset < endOffset) {
+        measurementGroupCollection::get(tmpGroup, offset);
+        timeStamp                 = tmpGroup.getTimeStamp();
+        const struct tm* timeInfo = gmtime(&timeStamp);
+        nmbrOfMeasurements        = tmpGroup.getNumberOfMeasurements();
+        for (uint32_t measurementIndex = 0; measurementIndex < nmbrOfMeasurements; measurementIndex++) {        // then per measurement part of this group
+            cli::sendResponse("%d,%d,%d,%d,%d,%d,", timeInfo->tm_year + 1900, timeInfo->tm_mon + 1, timeInfo->tm_mday, timeInfo->tm_hour, timeInfo->tm_min, timeInfo->tm_sec);
+            uint32_t tmpDeviceIndex  = tmpGroup.getDeviceIndex(measurementIndex);
+            uint32_t tmpChannelIndex = tmpGroup.getChannelIndex(measurementIndex);
+            float tmpValue           = tmpGroup.getValue(measurementIndex);
+
+            uint32_t decimals = sensorDeviceCollection::decimals(tmpDeviceIndex, tmpChannelIndex);
+            uint32_t intPart  = integerPart(tmpValue, decimals);
+
+            cli::sendResponse("%s,", sensorDeviceCollection::name(tmpDeviceIndex));
+            cli::sendResponse("%s,", sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex));
+
+            if (decimals > 0) {
+                uint32_t fracPart;
+                fracPart = fractionalPart(tmpValue, decimals);
+                cli::sendResponse("%d.%d,", intPart, fracPart);
+            } else {
+                cli::sendResponse("%d,", intPart);
+            }
+            cli::sendResponse("%s\n", sensorDeviceCollection::units(tmpDeviceIndex, tmpChannelIndex));
         }
         nmbrOfGroups++;
         offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
