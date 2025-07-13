@@ -1,84 +1,46 @@
-# prescaling and oversampling
+# sensor oversampling and output frequency
 
-1. Prescaling means that a sensorChannel does not take a sample (measurement) every RTC tick (30s), but rather once per n RTC ticks.
-The prescaler value can be set from 0 .. 8190
-    prescaler = 0 : this sensorChannel does NOT take any samples = deactivation of the sensorchannel
-    prescaler = 1 .. 8190 : take a sample every 1..8190 ticks. The prescaleCounter runs from (prescaler-1) to 0
+## oversampling
 
-2. Oversampling means that a sensorChannel takes multiple samples, and then averages them into a single output
-The oversampling can be set from 0..7, resulting in averaging 1..8 samples to a single output.
-The oversamplingCounter runs from (oversampling) to 0
+You can set any sensorChannel to take multiple samples and average them to a single output. This filters noise and improves the sensors accuracy.
+Select oversampling from 4 possible values :
+0 : no oversampling, each sample is an output 
+1 : average 2 samples to an output
+2 : average 4 samples to an output
+3 : average 10 samples to an output
 
-oversampling (3 bits) and prescaler (13 bits) are compressed into a single uint16 when storing into EEPROM
-As this has 0xFF as blank value, a value, the max valid value for prescaler is 8190 (io 8191), so we can recognize uninitialized eeprom.
+# output frequency
 
-Note : (minutesBetweenOutput * 2) must be a multiple of numberOfSamplesToAverage
-Note : ((minutesBetweenOutput * 2) % numberOfSamplesToAverage) == 0
-
-
-I could store prescaler more efficiently..
-0 = off
+You can select an output frequency for any sensorChannel. Select from 14 possible values :
+0 = off : channel will not produce outputs
 1 = every minute
 2 = every 2 minutes
 3 = every 5 minutes
 4 = every 10 minutes
 5 = every 15 minutes
 6 = every 30 minutes
-7 = every 60 minutes
+7 = every hour
 8 = every 2 hours
-9 = every 6 hours
-10 = every 12 hours
-11 = every 24 hours
+9 = every 4 hours
+10 = every 6 hours
+11 = every 12 hours
+12 = every 24 hours
+13 = every 48 hours
 
-prescaler
+# combining oversampling and output frequency
 
-0 = off
-1 = every minute, prescaler = 2
-2 = every 2 minutes, prescaler = 4
-3 = every 5 minutes, prescaler = 10
-4 = every 10 minutes, prescaler = 20
-5 = every 15 minutes, prescaler = 30
-6 = every 30 minutes, prescaler = 60
-7 = every hour, prescaler = 120
-8 = every 2 hours, prescaler = 240
-9 = every 4 hours, prescaler = 480
-10 = every 6 hours, prescaler = 720
-11 = every 12 hours, prescaler = 1440
-12 = every 24 hours, prescaler = 2880
-13 = every 48 hours, prescaler = 5760
+The basic realTime clock tick is 30 seconds. This means that the sensor cannot be sampled more than once per 30 seconds.
+As a result some combinations of oversampling and output frequency are not valid, eg
+- oversampling set to 10
+- output frequency set to every minute
+This would require 10 samples per minute, and the maximum is 2 samples per minute
+When setting incompatible values, the oversampling will be reduced to be compatible with output frequency
 
-4 bits needed
+# optimizing oversampling and output frequency
 
-oversampling
-1
-2
-4
-8
+For optimal (lowest) power consumption, it is best to consider 2 things :
+* give all sensors settings so that the samples and outputs are multiples of each other (or equal). 
+  * good example : one sensor every 60 minutes, other sensor 15 minutes (60 is multiple of 15)
+  * bad example : noe sensor every 5 minutes, other sensor every 2 minutes (5 is not a multiple of 2)
+* even when these settings are optimized, it is recommended to restart the device (SWR) so all counters are synchronized 
 
-2 bits needed
-
-total 6 bits needed, fits in a byte
-
-
-
-
-# TODO
-
-* calibratie coefficienten in array steken
-* code refactoren voor meer performantie : meer proberen op voorhand te berekenen
-* store the oversampling / prescaling etc for the measurement channels in NVS so the settings remain after reset
-
-# TODO
-* the SX126x also needs two sensorChannels, for RSSI and SNR, as we will measure those and log, store, send them
-
-We need an additional setting on each sensorChannel what to do with the measurement :
-* nothing
-* log to UART
-* store into EEPROM
-* transmit over LoRaWAN
-
-Showing on the display is controlled at the display itself, where we define up to three sensorChannelTypes to be shown on the top 3 lines of the screen. Battery SOC and network is always shown at bottom line
-
-# TODO
-At startup, as not all samples in the array are written, the averaging won't work. Could solve this by doing a first sample and set all values to this value
-Warning : Lux sensor does something wrong on first sample after power up

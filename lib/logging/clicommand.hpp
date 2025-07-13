@@ -41,7 +41,6 @@ class cliCommand {
     static constexpr uint32_t setDisplay{'s' * 256 + 'd'};                                 // set display         : sd line# deviceIndex channelIndex
     static constexpr uint32_t setSensor{'s' * 256 + 's'};                                  // set sensor          : sd deviceIndex channelIndex oversampling prescaler
     static constexpr uint32_t softwareReset{'s' * 65536 + 'w' * 256 + 'r'};                // restart device - soft reset
-    static constexpr uint32_t hardwareReset{'h' * 256 + 'w' * 256 + 'r'};                  // reset device - arm for hard reset, reset occurs after removing USB to prevent going into bootloader mode
 
     uint32_t nmbrOfArguments{0};
     char commandAsString[maxCommandLineLength];
