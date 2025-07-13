@@ -23,7 +23,7 @@ uint8_t sht40::i2cAddress;
 sensorDeviceState sht40::state{sensorDeviceState::unknown};
 sensorChannel sht40::channels[nmbrChannels] = {
     {1, "temperature", "~C"},
-    {0, "relativeHumidity", "%RH"},
+    {0, "relativeHumidity", "%"},
 };
 
 uint32_t sht40::rawDataTemperature;

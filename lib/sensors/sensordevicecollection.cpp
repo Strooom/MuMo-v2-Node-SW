@@ -141,6 +141,7 @@ bool sensorDeviceCollection::isSamplingReady() {
                     if (scd40::getState() != sensorDeviceState::sleeping) {
                         return false;
                     }
+                    break;
                 // Add more types of sensors here
                 default:
                     break;

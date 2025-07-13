@@ -69,8 +69,6 @@ void measurementGroupCollection::get(measurementGroup& aMeasurementGroup, uint32
     uint32_t remainingLength{lengthInBytes};
     uint32_t currentOffset{offset};
 
-    // TODO : wakeUp NVS if needed
-
     while (remainingLength > 0) {
         uint32_t bytesInThisPage = nonVolatileStorage::bytesInCurrentPage(getAddressFromOffset(currentOffset), remainingLength);
         nonVolatileStorage::readInPage(getAddressFromOffset(currentOffset), remainingData, bytesInThisPage);
@@ -80,8 +78,6 @@ void measurementGroupCollection::get(measurementGroup& aMeasurementGroup, uint32
     }
 
     aMeasurementGroup.fromBytes(buffer);
-
-    // TODO : put NVS back to sleep if it was sleeping
 }
 
 uint32_t measurementGroupCollection::getFreeSpace() {

@@ -19,7 +19,7 @@ bool mockSCD40Present{false};
 sensorDeviceState scd40::state{sensorDeviceState::unknown};
 sensorChannel scd40::channels[nmbrChannels] = {
     {1, "temperature", "~C"},
-    {0, "relativeHumidity", "%RH"},
+    {0, "relativeHumidity", "%"},
     {0, "CO2", "ppm"},
 };
 

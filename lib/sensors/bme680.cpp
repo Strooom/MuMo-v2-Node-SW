@@ -22,7 +22,7 @@ bool mockBME680Present{false};
 sensorDeviceState bme680::state{sensorDeviceState::unknown};
 sensorChannel bme680::channels[nmbrChannels] = {
     {1, "temperature", "~C"},
-    {0, "relativeHumidity", "%RH"},
+    {0, "relativeHumidity", "%"},
     {0, "barometricPressure", "hPa"},
 };
 

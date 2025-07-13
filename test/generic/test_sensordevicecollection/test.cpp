@@ -167,7 +167,7 @@ void test_channelProperties() {
     TEST_ASSERT_EQUAL_STRING("relativeHumidity", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
     TEST_ASSERT_EQUAL_STRING("barometricPressure", sensorDeviceCollection::name(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
     TEST_ASSERT_EQUAL_STRING("~C", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::temperature));
-    TEST_ASSERT_EQUAL_STRING("%RH", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
+    TEST_ASSERT_EQUAL_STRING("%", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::relativeHumidity));
     TEST_ASSERT_EQUAL_STRING("hPa", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::bme680), bme680::barometricPressure));
 
     // mockTSL2591Present = true;
@@ -188,7 +188,7 @@ void test_channelName() {
 void test_units() {
     TEST_ASSERT_EQUAL_STRING("lux", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::tsl2591), tsl2591::visibleLight));
     TEST_ASSERT_EQUAL_STRING("~C", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::temperature));
-    TEST_ASSERT_EQUAL_STRING("%RH", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
+    TEST_ASSERT_EQUAL_STRING("%", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::sht40), sht40::relativeHumidity));
     TEST_ASSERT_EQUAL_STRING("invalid index", sensorDeviceCollection::units(static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices), 0));
 }
 
