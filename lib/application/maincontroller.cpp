@@ -507,7 +507,6 @@ void mainController::runCli() {
                                     cli::sendResponse("invalid argument\n");
                                     break;
                                 }
-                                return;
                             } else {
                                 cli::sendResponse("invalid number of arguments\n");
                             }
