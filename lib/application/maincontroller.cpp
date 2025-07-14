@@ -389,7 +389,7 @@ void mainController::showLoRaWanStatus() {
     snprintf(tmpString, screen::maxConsoleTextLength, "Gateways : %u", static_cast<uint8_t>(LoRaWAN::gatewayCount));
     screen::setText(5, tmpString);
     time_t rtcTime            = realTimeClock::get();
-    const struct tm* rtcTime2 = localtime(&rtcTime);
+    const struct tm* rtcTime2 = gmtime(&rtcTime);
     strftime(tmpString, screen::maxConsoleTextLength, "Date : %Y-%b-%d", rtcTime2);
     screen::setText(6, tmpString);
     strftime(tmpString, screen::maxConsoleTextLength, "Time : %H:%M:%S", rtcTime2);
@@ -613,12 +613,14 @@ void mainController::showHelp() {
 }
 
 void mainController::showDeviceStatus() {
-    cli::sendResponse("UID      : %s\n", uniqueId::asHexString());
-    cli::sendResponse("name     : %s\n", name);
-    cli::sendResponse("display  : %s\n", display::isPresent() ? "present" : "not present");
-    cli::sendResponse("EEPROM   : %d * 64K present\n", nonVolatileStorage::getNmbr64KBanks());
-    cli::sendResponse("battery  : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
-    cli::sendResponse("radioType: %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
+    cli::sendResponse("UID     : %s\n", uniqueId::asHexString());
+    cli::sendResponse("name    : %s\n", name);
+    cli::sendResponse("display : %s\n", display::isPresent() ? "present" : "not present");
+    cli::sendResponse("EEPROM  : %d * 64K present\n", nonVolatileStorage::getNmbr64KBanks());
+    cli::sendResponse("battery : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
+    cli::sendResponse("radio   : %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
+    time_t rtcTime = realTimeClock::get();
+    cli::sendResponse("RTC     : %s", ctime(&rtcTime));
 
     for (uint32_t sensorDeviceIndex = 0; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
         if (sensorDeviceCollection::isPresent(sensorDeviceIndex)) {
@@ -780,6 +782,7 @@ void mainController::setDisplay(const cliCommand& theCommand) {
     displayChannelIndex[tmpLineIndex] = tmpChannelIndex;
 
     cli::sendResponse("display line %u set to %s - %s\n", tmpLineIndex, sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex));
+    showMain();
 }
 
 void mainController::setSensor(const cliCommand& theCommand) {
