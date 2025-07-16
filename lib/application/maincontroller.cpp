@@ -1003,12 +1003,19 @@ void mainController::setSensor(const uint8_t* payload, const uint32_t payloadLen
 }
 
 void mainController::handleDownLink(const uint8_t port, const uint8_t* payload, const uint32_t payloadLength) {
+    if (payload == nullptr || payloadLength == 0) {
+        return;
+    }
     switch (port) {
         case 1:
-            setDisplay(payload, payloadLength);
+            for (uint32_t offset = 0; offset < payloadLength; offset += 3) {
+                setDisplay(payload + offset, 3);
+            }
             break;
         case 2:
-            setSensor(payload, payloadLength);
+            for (uint32_t offset = 0; offset < payloadLength; offset += 4) {
+                setSensor(payload + offset, 4);
+            }
             break;
         default:
             break;
