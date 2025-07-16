@@ -260,6 +260,11 @@ void mainController::handleEventsStateNetworking(applicationEvent theEvent) {
             LoRaWAN::handleEvents(theEvent);
             break;
 
+        case applicationEvent::downlinkApplicationPayloadReceived:
+            handleDownLink(LoRaWAN::getPort(), LoRaWAN::getPayloadPtr(), LoRaWAN::getPayloadLength());
+            LoRaWAN::getReceivedDownlinkMessage();
+            break;
+
         default:
             break;
     }
@@ -389,7 +394,7 @@ void mainController::showLoRaWanStatus() {
     snprintf(tmpString, screen::maxConsoleTextLength, "Gateways : %u", static_cast<uint8_t>(LoRaWAN::gatewayCount));
     screen::setText(5, tmpString);
     time_t rtcTime            = realTimeClock::get();
-    const struct tm* rtcTime2 = localtime(&rtcTime);
+    const struct tm* rtcTime2 = gmtime(&rtcTime);
     strftime(tmpString, screen::maxConsoleTextLength, "Date : %Y-%b-%d", rtcTime2);
     screen::setText(6, tmpString);
     strftime(tmpString, screen::maxConsoleTextLength, "Time : %H:%M:%S", rtcTime2);
@@ -590,7 +595,7 @@ void mainController::showPrompt() {
 }
 
 void mainController::showHelp() {
-    cli::sendResponse("<enter> :show build info and license\n");
+    cli::sendResponse("<enter> : show build info and license\n");
     cli::sendResponse("? : show help\n");
     cli::sendResponse("gds : show device status\n");
     cli::sendResponse("gms : show recorded measurements status\n");
@@ -613,12 +618,14 @@ void mainController::showHelp() {
 }
 
 void mainController::showDeviceStatus() {
-    cli::sendResponse("UID      : %s\n", uniqueId::asHexString());
-    cli::sendResponse("name     : %s\n", name);
-    cli::sendResponse("display  : %s\n", display::isPresent() ? "present" : "not present");
-    cli::sendResponse("EEPROM   : %d * 64K present\n", nonVolatileStorage::getNmbr64KBanks());
-    cli::sendResponse("battery  : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
-    cli::sendResponse("radioType: %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
+    cli::sendResponse("UID     : %s\n", uniqueId::asHexString());
+    cli::sendResponse("name    : %s\n", name);
+    cli::sendResponse("display : %s\n", display::isPresent() ? "present" : "not present");
+    cli::sendResponse("EEPROM  : %d * 64K present\n", nonVolatileStorage::getNmbr64KBanks());
+    cli::sendResponse("battery : %s (%d)\n", toString(battery::getType()), static_cast<uint8_t>(battery::getType()));
+    cli::sendResponse("radio   : %s (%d)\n", toString(sx126x::getType()), static_cast<uint8_t>(sx126x::getType()));
+    time_t rtcTime = realTimeClock::get();
+    cli::sendResponse("RTC     : %s", ctime(&rtcTime));
 
     for (uint32_t sensorDeviceIndex = 0; sensorDeviceIndex < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); sensorDeviceIndex++) {
         if (sensorDeviceCollection::isPresent(sensorDeviceIndex)) {
@@ -780,6 +787,7 @@ void mainController::setDisplay(const cliCommand& theCommand) {
     displayChannelIndex[tmpLineIndex] = tmpChannelIndex;
 
     cli::sendResponse("display line %u set to %s - %s\n", tmpLineIndex, sensorDeviceCollection::name(tmpDeviceIndex), sensorDeviceCollection::name(tmpDeviceIndex, tmpChannelIndex));
+    showMain();
 }
 
 void mainController::setSensor(const cliCommand& theCommand) {
@@ -937,5 +945,72 @@ void mainController::showMeasurementsCsv() {
         }
         nmbrOfGroups++;
         offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
+    }
+}
+
+void mainController::setDisplay(const uint8_t* payload, const uint32_t payloadLength) {
+    if (payload == nullptr) {
+        return;
+    }
+    if (payloadLength != 3) {
+        return;
+    }
+    uint32_t tmpLineIndex = payload[0];
+    if (tmpLineIndex >= screen::nmbrOfMeasurementTextLines) {
+        return;
+    }
+    uint32_t tmpDeviceIndex  = payload[1];
+    uint32_t tmpChannelIndex = payload[2];
+    if (!sensorDeviceCollection::isValid(tmpDeviceIndex, tmpChannelIndex)) {
+        return;
+    }
+    uint8_t tmpDeviceAndChannel = sensorChannel::compressDeviceAndChannelIndex(static_cast<uint8_t>(tmpDeviceIndex), static_cast<uint8_t>(tmpChannelIndex));
+    settingsCollection::save(tmpDeviceAndChannel, settingsCollection::settingIndex::displaySettings, tmpLineIndex);
+    displayDeviceIndex[tmpLineIndex]  = tmpDeviceIndex;
+    displayChannelIndex[tmpLineIndex] = tmpChannelIndex;
+    showMain();
+}
+
+void mainController::setSensor(const uint8_t* payload, const uint32_t payloadLength) {
+    if (payload == nullptr) {
+        return;
+    }
+    if (payloadLength != 4) {
+        return;
+    }
+    uint32_t tmpDeviceIndex  = payload[0];
+    uint32_t tmpChannelIndex = payload[1];
+    if (!sensorDeviceCollection::isValid(tmpDeviceIndex, tmpChannelIndex)) {
+        return;
+    }
+    uint32_t tmpOversamplingIndex = payload[2];
+    ;
+    uint32_t tmpPrescalerIndex = payload[3];
+    ;
+    if (tmpPrescalerIndex > sensorChannel::maxPrescalerIndex) {
+        tmpPrescalerIndex = sensorChannel::maxPrescalerIndex;
+    }
+    if (tmpOversamplingIndex > sensorChannel::maxOversamplingIndex) {
+        tmpOversamplingIndex = sensorChannel::maxOversamplingIndex;
+    }
+    if (tmpOversamplingIndex > tmpPrescalerIndex) {
+        tmpOversamplingIndex = tmpPrescalerIndex;
+    }
+    uint8_t tmpCombined         = sensorChannel::compressOversamplingAndPrescalerIndex(tmpOversamplingIndex, tmpPrescalerIndex);
+    uint8_t tmpDeviceAndChannel = sensorChannel::compressDeviceAndChannelIndex(static_cast<uint8_t>(tmpDeviceIndex), static_cast<uint8_t>(tmpChannelIndex));
+    settingsCollection::save(tmpCombined, settingsCollection::settingIndex::sensorSettings, tmpDeviceAndChannel);
+    sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).setIndex(tmpOversamplingIndex, tmpPrescalerIndex);
+}
+
+void mainController::handleDownLink(const uint8_t port, const uint8_t* payload, const uint32_t payloadLength) {
+    switch (port) {
+        case 1:
+            setDisplay(payload, payloadLength);
+            break;
+        case 2:
+            setSensor(payload, payloadLength);
+            break;
+        default:
+            break;
     }
 }

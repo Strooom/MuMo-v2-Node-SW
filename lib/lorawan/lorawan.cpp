@@ -386,7 +386,7 @@ void LoRaWAN::encryptDecryptPayload(const aesKey& theKey, linkDirection theLinkD
 }
 
 void LoRaWAN::generateKeysK1K2() {
-    for (uint32_t byteIndex=0; byteIndex < aesKey::lengthInBytes; byteIndex++) {
+    for (uint32_t byteIndex = 0; byteIndex < aesKey::lengthInBytes; byteIndex++) {
         K1.setByte(byteIndex, 0);
         K2.setByte(byteIndex, 0);
     }
@@ -627,15 +627,15 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                         case messageType::application:
                             lptim::stop();
                             processMacContents();
-                            applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                             goTo(txRxCycleState::waitForRxMessageReadout);
+                            applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                             return;
                             break;
                         case messageType::lorawanMac:
                             lptim::stop();
                             processMacContents();
-                            applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
                             goTo(txRxCycleState::idle);
+                            applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
                             return;
                             break;
                         case messageType::invalid:        // intentional fallthrough
@@ -676,12 +676,14 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                     messageType receivedMessageType = decodeMessage();
                     switch (receivedMessageType) {
                         case messageType::application:
+                            lptim::stop();
                             processMacContents();
                             applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                             goTo(txRxCycleState::waitForRxMessageReadout);
                             return;
                             break;
                         case messageType::lorawanMac:
+                            lptim::stop();
                             processMacContents();
                             applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
                             goTo(txRxCycleState::idle);
@@ -1099,6 +1101,7 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
 void LoRaWAN::getReceivedDownlinkMessage() {
     // sx126x::getReceivedMessage();
     //  downlinkMessage.processDownlinkMessage(applicationPayloadReceived);
+    goTo(txRxCycleState::idle);
 }
 
 messageType LoRaWAN::decodeMessage() {
@@ -1113,7 +1116,7 @@ messageType LoRaWAN::decodeMessage() {
     // 2. Extract & guess the downLinkFrameCount, as we need this to check the MIC
     uint16_t receivedDownlinkFramecount = receivedFramecount();
     frameCount guessedDownlinkFramecount;
-    guessedDownlinkFramecount = downlinkFrameCount;
+    guessedDownlinkFramecount.setFromWord(downlinkFrameCount.getAsWord());
     guessedDownlinkFramecount.guessFromUint16(receivedDownlinkFramecount);
     logging::snprintf(logging::source::lorawanMac, "receivedFramecount = %u, lastFramecount = %u, guessedFramecount = %u\n", receivedDownlinkFramecount, downlinkFrameCount.getAsWord(), guessedDownlinkFramecount.getAsWord());
 
@@ -1141,13 +1144,13 @@ messageType LoRaWAN::decodeMessage() {
     }
 
     // 5. check if the frameCount is valid
-    if (!isValidDownlinkFrameCount(guessedDownlinkFramecount)) {
+    if (!isValidDownlinkFrameCount(guessedDownlinkFramecount.getAsWord())) {
         logging::snprintf(logging::source::error, "Error : invalid downlinkFrameCount : received %u, current %u\n", guessedDownlinkFramecount.getAsWord(), downlinkFrameCount.getAsWord());
         return messageType::invalid;
     }
 
     // 6. Seems a valid message, so update the downlinkFrameCount to what we've received (not just incrementing it, as there could be gaps in the sequence due to lost packets)
-    downlinkFrameCount = guessedDownlinkFramecount;
+    downlinkFrameCount.setFromWord(guessedDownlinkFramecount.getAsWord());
     settingsCollection::save(downlinkFrameCount.getAsWord(), settingsCollection::settingIndex::downlinkFrameCounter);
 
     // 6.5 If we had sticky macOut stuff, we can clear that now, as we did receive a valid downlink
@@ -1195,11 +1198,11 @@ uint32_t LoRaWAN::getReceiveTimeout(spreadingFactor aSpreadingFactor) {
     }
 }
 
-bool LoRaWAN::isValidDownlinkFrameCount(frameCount testFrameCount) {
+bool LoRaWAN::isValidDownlinkFrameCount(uint32_t testValue) {
     if (downlinkFrameCount.getAsWord() == 0) {
         return true;        // no downlink received yet, so any frameCount is valid
     } else {
-        return (testFrameCount.getAsWord() > downlinkFrameCount.getAsWord());
+        return (testValue > downlinkFrameCount.getAsWord());
     }
 }
 
@@ -1340,4 +1343,28 @@ void LoRaWAN::resetMacLayer() {
     saveState();
     resetChannels();
     saveChannels();
+}
+
+uint8_t LoRaWAN::getPort() {
+    if (framePortLength > 0) {
+        return rawMessage[framePortOffset];
+    } else {
+        return 0;
+    }
+}
+
+uint32_t LoRaWAN::getPayloadLength() {
+    return framePayloadLength;
+}
+
+void LoRaWAN::getPayload(uint8_t* destination, uint32_t length) {
+    memcpy(destination, rawMessage + framePayloadOffset, length);
+}
+
+const uint8_t* LoRaWAN::getPayloadPtr() {
+    if (framePayloadLength > 0) {
+        return rawMessage + framePayloadOffset;
+    } else {
+        return nullptr;
+    }
 }

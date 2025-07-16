@@ -10,6 +10,12 @@
 
 class deviceAddress {
   public:
+    deviceAddress() = default;
+    deviceAddress(const deviceAddress&) = delete;
+    deviceAddress& operator=(const deviceAddress&) = delete;
+    deviceAddress(deviceAddress&&) = delete;
+    deviceAddress& operator=(deviceAddress&&) = delete;
+
     static constexpr uint32_t lengthInBytes{4};
     static constexpr uint32_t lengthAsHexAscii{8};
 
