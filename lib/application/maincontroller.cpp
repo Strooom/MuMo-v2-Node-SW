@@ -260,6 +260,10 @@ void mainController::handleEventsStateNetworking(applicationEvent theEvent) {
             LoRaWAN::handleEvents(theEvent);
             break;
 
+        case applicationEvent::downlinkApplicationPayloadReceived:
+            logging::snprintf("## --> Received application payload ##\n");
+            LoRaWAN::getReceivedDownlinkMessage();
+            break;
         default:
             break;
     }

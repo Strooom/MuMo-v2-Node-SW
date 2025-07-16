@@ -27,6 +27,9 @@ char logging::buffer[bufferLength]{};
 
 void logging::initialize() {
     enable(logging::destination::uart1);
+
+    enable(logging::source::lorawanData);
+
     enable(logging::source::error);
     enable(logging::source::criticalError);
 }

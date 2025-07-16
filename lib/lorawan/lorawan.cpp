@@ -386,7 +386,7 @@ void LoRaWAN::encryptDecryptPayload(const aesKey& theKey, linkDirection theLinkD
 }
 
 void LoRaWAN::generateKeysK1K2() {
-    for (uint32_t byteIndex=0; byteIndex < aesKey::lengthInBytes; byteIndex++) {
+    for (uint32_t byteIndex = 0; byteIndex < aesKey::lengthInBytes; byteIndex++) {
         K1.setByte(byteIndex, 0);
         K2.setByte(byteIndex, 0);
     }
@@ -627,15 +627,15 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                         case messageType::application:
                             lptim::stop();
                             processMacContents();
-                            applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                             goTo(txRxCycleState::waitForRxMessageReadout);
+                            applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                             return;
                             break;
                         case messageType::lorawanMac:
                             lptim::stop();
                             processMacContents();
-                            applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
                             goTo(txRxCycleState::idle);
+                            applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
                             return;
                             break;
                         case messageType::invalid:        // intentional fallthrough
@@ -676,12 +676,14 @@ void LoRaWAN::handleEvents(applicationEvent theEvent) {
                     messageType receivedMessageType = decodeMessage();
                     switch (receivedMessageType) {
                         case messageType::application:
+                            lptim::stop();
                             processMacContents();
                             applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                             goTo(txRxCycleState::waitForRxMessageReadout);
                             return;
                             break;
                         case messageType::lorawanMac:
+                            lptim::stop();
                             processMacContents();
                             applicationEventBuffer.push(applicationEvent::downlinkMacCommandReceived);
                             goTo(txRxCycleState::idle);
@@ -1099,6 +1101,7 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
 void LoRaWAN::getReceivedDownlinkMessage() {
     // sx126x::getReceivedMessage();
     //  downlinkMessage.processDownlinkMessage(applicationPayloadReceived);
+    goTo(txRxCycleState::idle);
 }
 
 messageType LoRaWAN::decodeMessage() {
