@@ -9,6 +9,11 @@
 
 class frameCount {
   public:
+    frameCount() = default;
+    frameCount(const frameCount&) = delete;
+    frameCount& operator=(const frameCount&) = delete;
+    frameCount& operator=(frameCount&&) = delete;
+
     static constexpr uint32_t lengthInBytes{4};
     static constexpr uint32_t lengthInWords{1};
     void guessFromUint16(uint16_t frameCount16Lsb);

@@ -21,25 +21,6 @@ void test_initialize() {
     }
 }
 
-void test_operatorAssign() {
-    frameCount testFrameCount1;
-    frameCount testFrameCount2;
-    TEST_ASSERT_EQUAL(0, testFrameCount1.getAsWord());
-    TEST_ASSERT_EQUAL(0, testFrameCount2.getAsWord());
-    testFrameCount1.setFromWord(0x12345678);
-    TEST_ASSERT_EQUAL(0x12345678, testFrameCount1.getAsWord());
-    uint8_t expectedBytes1[frameCount::lengthInBytes]{0x78, 0x56, 0x34, 0x12};
-    for (uint32_t index = 0; index < frameCount::lengthInBytes; index++) {
-        TEST_ASSERT_EQUAL(expectedBytes1[index], testFrameCount1.getAsByte(index));
-    }
-    testFrameCount2 = testFrameCount1;
-    TEST_ASSERT_EQUAL(0x12345678, testFrameCount2.getAsWord());
-    uint8_t expectedBytes2[frameCount::lengthInBytes]{0x78, 0x56, 0x34, 0x12};
-    for (uint32_t index = 0; index < frameCount::lengthInBytes; index++) {
-        TEST_ASSERT_EQUAL(expectedBytes2[index], testFrameCount2.getAsByte(index));
-    }
-}
-
 void test_setFromByteArray() {
     frameCount testFrameCount;
     uint8_t testBytes[frameCount::lengthInBytes]{0x78, 0x56, 0x34, 0x12};
@@ -106,8 +87,7 @@ int main(int argc, char **argv) {
 #endif
     UNITY_BEGIN();
     RUN_TEST(test_initialize);
-    RUN_TEST(test_operatorAssign);
-    RUN_TEST(test_setFromByteArray);
+     RUN_TEST(test_setFromByteArray);
     RUN_TEST(test_SetFromWord);
     RUN_TEST(test_operatorIncrement);
     RUN_TEST(test_guessFromUint16);

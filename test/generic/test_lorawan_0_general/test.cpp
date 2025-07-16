@@ -112,13 +112,13 @@ void test_isValidDownlinkFrameCount() {
     LoRaWAN::downlinkFrameCount.setFromWord(0);
     frameCount testFrameCount;
     testFrameCount.setFromWord(10);
-    TEST_ASSERT_TRUE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
+    TEST_ASSERT_TRUE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount.getAsWord()));
     LoRaWAN::downlinkFrameCount.setFromWord(9);
-    TEST_ASSERT_TRUE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
+    TEST_ASSERT_TRUE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount.getAsWord()));
     LoRaWAN::downlinkFrameCount.setFromWord(10);
-    TEST_ASSERT_FALSE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
+    TEST_ASSERT_FALSE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount.getAsWord()));
     LoRaWAN::downlinkFrameCount.setFromWord(11);
-    TEST_ASSERT_FALSE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount));
+    TEST_ASSERT_FALSE(LoRaWAN::isValidDownlinkFrameCount(testFrameCount.getAsWord()));
 }
 
 void test_dump() {
@@ -136,44 +136,6 @@ void test_dump() {
     TEST_MESSAGE("For Coverage only");
 }
 
-// void test_saveContext() {
-//     memset(mockEepromMemory, 0x00, 512);
-
-//     LoRaWAN::DevAddr              = 0x44657641;        // reads as DevA in memory
-//     LoRaWAN::uplinkFrameCount     = 0x554C4643;        // reads as ULFC in memory
-//     LoRaWAN::downlinkFrameCount   = 0x444C4643;        // reads as DLFC in memory
-//     LoRaWAN::rx1DelayInSeconds    = 7;
-//     LoRaWAN::currentDataRateIndex = 3;
-//     LoRaWAN::applicationKey.setFromHexString("000102030405060708090A0B0C0D0E0F");
-//     LoRaWAN::networkKey.setFromHexString("101112131415161718191A1B1C1D1E1F");
-
-//     LoRaWAN::saveConfig();
-//     LoRaWAN::saveState();
-//     LoRaWAN::saveChannels();
-
-//     LoRaWAN::DevAddr              = 0;
-//     LoRaWAN::uplinkFrameCount     = 0;
-//     LoRaWAN::downlinkFrameCount   = 0;
-//     LoRaWAN::rx1DelayInSeconds    = 0;
-//     LoRaWAN::currentDataRateIndex = 0;
-//     LoRaWAN::applicationKey.setFromHexString("00000000000000000000000000000000");
-//     LoRaWAN::networkKey.setFromHexString("00000000000000000000000000000000");
-
-//     LoRaWAN::restoreConfig();
-//     LoRaWAN::restoreState();
-//     LoRaWAN::restoreChannels();
-
-//     TEST_ASSERT_EQUAL_UINT32(0x44657641, LoRaWAN::DevAddr.asUint32);
-//     TEST_ASSERT_EQUAL_UINT32(0x554C4643, LoRaWAN::uplinkFrameCount.toUint32());
-//     TEST_ASSERT_EQUAL_UINT32(0x444C4643, LoRaWAN::downlinkFrameCount.toUint32());
-//     TEST_ASSERT_EQUAL_UINT32(7, LoRaWAN::rx1DelayInSeconds);
-//     TEST_ASSERT_EQUAL_UINT32(3, LoRaWAN::currentDataRateIndex);
-//     char tmpKeyAsHexString[33];
-//     hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::applicationKey.asBytes(), 16);
-//     TEST_ASSERT_EQUAL_STRING("000102030405060708090A0B0C0D0E0F", tmpKeyAsHexString);
-//     hexAscii::byteArrayToHexString(tmpKeyAsHexString, LoRaWAN::networkKey.asBytes(), 16);
-//     TEST_ASSERT_EQUAL_STRING("101112131415161718191A1B1C1D1E1F", tmpKeyAsHexString);
-// }
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
@@ -187,7 +149,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_save_restore_channels);
     RUN_TEST(test_isValidDownlinkFrameCount);
     RUN_TEST(test_dump);
-    // RUN_TEST(test_saveContext);
 
     UNITY_END();
 }

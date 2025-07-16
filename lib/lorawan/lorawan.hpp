@@ -186,7 +186,7 @@ class LoRaWAN {
     static uint16_t receivedFramecount();
     static uint32_t receivedDeviceAddress();
     static uint32_t receivedMic();
-    static bool isValidDownlinkFrameCount(frameCount testFrameCount);
+    static bool isValidDownlinkFrameCount(uint32_t testFrameCount);
     static messageType decodeMessage();
 
     // #############################################################
