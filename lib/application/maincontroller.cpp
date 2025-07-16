@@ -605,7 +605,7 @@ void mainController::showPrompt() {
 }
 
 void mainController::showHelp() {
-    cli::sendResponse("<enter> :show build info and license\n");
+    cli::sendResponse("<enter> : show build info and license\n");
     cli::sendResponse("? : show help\n");
     cli::sendResponse("gds : show device status\n");
     cli::sendResponse("gms : show recorded measurements status\n");
@@ -955,5 +955,66 @@ void mainController::showMeasurementsCsv() {
         }
         nmbrOfGroups++;
         offset += measurementGroup::lengthInBytes(tmpGroup.getNumberOfMeasurements());
+    }
+}
+
+void mainController::setDisplay(const uint8_t* payload, const uint32_t payloadLength) {
+    if (payloadLength != 3) {
+        return;
+    }
+    uint32_t tmpLineIndex = payload[0];
+    if (tmpLineIndex >= screen::nmbrOfMeasurementTextLines) {
+        return;
+    }
+    uint32_t tmpDeviceIndex  = payload[1];
+    uint32_t tmpChannelIndex = payload[2];
+    if (!sensorDeviceCollection::isValid(tmpDeviceIndex, tmpChannelIndex)) {
+        return;
+    }
+    uint8_t tmpDeviceAndChannel = sensorChannel::compressDeviceAndChannelIndex(static_cast<uint8_t>(tmpDeviceIndex), static_cast<uint8_t>(tmpChannelIndex));
+    settingsCollection::save(tmpDeviceAndChannel, settingsCollection::settingIndex::displaySettings, tmpLineIndex);
+    displayDeviceIndex[tmpLineIndex]  = tmpDeviceIndex;
+    displayChannelIndex[tmpLineIndex] = tmpChannelIndex;
+    // showMain();
+}
+
+void mainController::setSensor(const uint8_t* payload, const uint32_t payloadLength) {
+    if (payloadLength != 4) {
+        return;
+    }
+    uint32_t tmpDeviceIndex  = payload[0];
+    uint32_t tmpChannelIndex = payload[1];
+    if (!sensorDeviceCollection::isValid(tmpDeviceIndex, tmpChannelIndex)) {
+        return;
+    }
+    uint32_t tmpOversamplingIndex = payload[2];
+    ;
+    uint32_t tmpPrescalerIndex = payload[3];
+    ;
+    if (tmpPrescalerIndex > sensorChannel::maxPrescalerIndex) {
+        tmpPrescalerIndex = sensorChannel::maxPrescalerIndex;
+    }
+    if (tmpOversamplingIndex > sensorChannel::maxOversamplingIndex) {
+        tmpOversamplingIndex = sensorChannel::maxOversamplingIndex;
+    }
+    if (tmpOversamplingIndex > tmpPrescalerIndex) {
+        tmpOversamplingIndex = tmpPrescalerIndex;
+    }
+    uint8_t tmpCombined         = sensorChannel::compressOversamplingAndPrescalerIndex(tmpOversamplingIndex, tmpPrescalerIndex);
+    uint8_t tmpDeviceAndChannel = sensorChannel::compressDeviceAndChannelIndex(static_cast<uint8_t>(tmpDeviceIndex), static_cast<uint8_t>(tmpChannelIndex));
+    settingsCollection::save(tmpCombined, settingsCollection::settingIndex::sensorSettings, tmpDeviceAndChannel);
+    sensorDeviceCollection::channel(tmpDeviceIndex, tmpChannelIndex).setIndex(tmpOversamplingIndex, tmpPrescalerIndex);
+}
+
+void mainController::handleDownLink(const uint8_t port, const uint8_t* payload, const uint32_t payloadLength) {
+    switch (port) {
+        case 1:
+            setDisplay(payload, payloadLength);
+            break;
+        case 2:
+            setSensor(payload, payloadLength);
+            break;
+        default:
+            break;
     }
 }

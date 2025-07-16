@@ -37,11 +37,11 @@ class mainController {
 
     static constexpr uint32_t minNmbrAnswers{2};
     static constexpr uint32_t maxNmbrRequests{12};
-    
-    #ifndef unitTesting
-    
-    // private:
-    #endif
+
+#ifndef unitTesting
+
+// private:
+#endif
     static char name[maxNameLength + 1];
     static uint32_t displayDeviceIndex[screen::nmbrOfMeasurementTextLines];
     static uint32_t displayChannelIndex[screen::nmbrOfMeasurementTextLines];
@@ -80,4 +80,8 @@ class mainController {
     static void setRadioType(const cliCommand& aCommand);
     static void setDisplay(const cliCommand& aCommand);
     static void setSensor(const cliCommand& aCommand);
+
+    static void setSensor(const uint8_t* payload, const uint32_t payloadLength);
+    static void setDisplay(const uint8_t* payload, const uint32_t payloadLength);
+    static void handleDownLink(const uint8_t port, const uint8_t* payload, const uint32_t payloadLength);
 };

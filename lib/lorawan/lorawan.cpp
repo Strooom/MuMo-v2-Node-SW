@@ -1116,7 +1116,7 @@ messageType LoRaWAN::decodeMessage() {
     // 2. Extract & guess the downLinkFrameCount, as we need this to check the MIC
     uint16_t receivedDownlinkFramecount = receivedFramecount();
     frameCount guessedDownlinkFramecount;
-    guessedDownlinkFramecount = downlinkFrameCount;
+    guessedDownlinkFramecount.setFromWord(downlinkFrameCount.getAsWord());
     guessedDownlinkFramecount.guessFromUint16(receivedDownlinkFramecount);
     logging::snprintf(logging::source::lorawanMac, "receivedFramecount = %u, lastFramecount = %u, guessedFramecount = %u\n", receivedDownlinkFramecount, downlinkFrameCount.getAsWord(), guessedDownlinkFramecount.getAsWord());
 
@@ -1144,13 +1144,13 @@ messageType LoRaWAN::decodeMessage() {
     }
 
     // 5. check if the frameCount is valid
-    if (!isValidDownlinkFrameCount(guessedDownlinkFramecount)) {
+    if (!isValidDownlinkFrameCount(guessedDownlinkFramecount.getAsWord())) {
         logging::snprintf(logging::source::error, "Error : invalid downlinkFrameCount : received %u, current %u\n", guessedDownlinkFramecount.getAsWord(), downlinkFrameCount.getAsWord());
         return messageType::invalid;
     }
 
     // 6. Seems a valid message, so update the downlinkFrameCount to what we've received (not just incrementing it, as there could be gaps in the sequence due to lost packets)
-    downlinkFrameCount = guessedDownlinkFramecount;
+    downlinkFrameCount.setFromWord(guessedDownlinkFramecount.getAsWord());
     settingsCollection::save(downlinkFrameCount.getAsWord(), settingsCollection::settingIndex::downlinkFrameCounter);
 
     // 6.5 If we had sticky macOut stuff, we can clear that now, as we did receive a valid downlink
@@ -1198,11 +1198,11 @@ uint32_t LoRaWAN::getReceiveTimeout(spreadingFactor aSpreadingFactor) {
     }
 }
 
-bool LoRaWAN::isValidDownlinkFrameCount(frameCount testFrameCount) {
+bool LoRaWAN::isValidDownlinkFrameCount(uint32_t testValue) {
     if (downlinkFrameCount.getAsWord() == 0) {
         return true;        // no downlink received yet, so any frameCount is valid
     } else {
-        return (testFrameCount.getAsWord() > downlinkFrameCount.getAsWord());
+        return (testValue > downlinkFrameCount.getAsWord());
     }
 }
 
