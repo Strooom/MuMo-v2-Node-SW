@@ -260,20 +260,10 @@ void mainController::handleEventsStateNetworking(applicationEvent theEvent) {
             LoRaWAN::handleEvents(theEvent);
             break;
 
-        case applicationEvent::downlinkApplicationPayloadReceived: {
-            logging::snprintf("## --> Received application payload ##\n");
-            logging::snprintf("port : %u\n", LoRaWAN::getPort());            
-            uint32_t payloadLength = LoRaWAN::getPayloadLength();
-            logging::snprintf("payload length : %u\n", payloadLength);
-            uint8_t payload[payloadLength];
-            LoRaWAN::getPayload(payload, payloadLength);
-            logging::snprintf("payload : ");
-            for (uint8_t i = 0; i < payloadLength; i++) {
-                logging::snprintf("%02X ", payload[i]);
-            }
-            logging::snprintf("\n");
+        case applicationEvent::downlinkApplicationPayloadReceived:
+            handleDownLink(LoRaWAN::getPort(), LoRaWAN::getPayloadPtr(), LoRaWAN::getPayloadLength());
             LoRaWAN::getReceivedDownlinkMessage();
-        } break;
+            break;
 
         default:
             break;
@@ -959,6 +949,9 @@ void mainController::showMeasurementsCsv() {
 }
 
 void mainController::setDisplay(const uint8_t* payload, const uint32_t payloadLength) {
+    if (payload == nullptr) {
+        return;
+    }
     if (payloadLength != 3) {
         return;
     }
@@ -975,10 +968,13 @@ void mainController::setDisplay(const uint8_t* payload, const uint32_t payloadLe
     settingsCollection::save(tmpDeviceAndChannel, settingsCollection::settingIndex::displaySettings, tmpLineIndex);
     displayDeviceIndex[tmpLineIndex]  = tmpDeviceIndex;
     displayChannelIndex[tmpLineIndex] = tmpChannelIndex;
-    // showMain();
+    showMain();
 }
 
 void mainController::setSensor(const uint8_t* payload, const uint32_t payloadLength) {
+    if (payload == nullptr) {
+        return;
+    }
     if (payloadLength != 4) {
         return;
     }

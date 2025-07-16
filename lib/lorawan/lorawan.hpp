@@ -62,9 +62,10 @@ class LoRaWAN {
     static void sendUplink(uint8_t framePort, const uint8_t payload[], uint32_t payloadLength);
     static void sendUplink(const measurementGroup &aMeasurementGroup);
 
-    static uint32_t getPort();
+    static uint8_t getPort();
     static uint32_t getPayloadLength();
     static void getPayload(uint8_t* destination, uint32_t length);
+    static const uint8_t * getPayloadPtr();
 
 
     static void appendMacCommand(macCommand theMacCommand);

@@ -1345,7 +1345,7 @@ void LoRaWAN::resetMacLayer() {
     saveChannels();
 }
 
-uint32_t LoRaWAN::getPort() {
+uint8_t LoRaWAN::getPort() {
     if (framePortLength > 0) {
         return rawMessage[framePortOffset];
     } else {
@@ -1359,4 +1359,12 @@ uint32_t LoRaWAN::getPayloadLength() {
 
 void LoRaWAN::getPayload(uint8_t* destination, uint32_t length) {
     memcpy(destination, rawMessage + framePayloadOffset, length);
+}
+
+const uint8_t* LoRaWAN::getPayloadPtr() {
+    if (framePayloadLength > 0) {
+        return rawMessage + framePayloadOffset;
+    } else {
+        return nullptr;
+    }
 }
