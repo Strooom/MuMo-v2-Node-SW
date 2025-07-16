@@ -58,8 +58,14 @@ class LoRaWAN {
 
     static void handleEvents(applicationEvent theEvent);
     static uint32_t getMaxApplicationPayloadLength();
+
     static void sendUplink(uint8_t framePort, const uint8_t payload[], uint32_t payloadLength);
     static void sendUplink(const measurementGroup &aMeasurementGroup);
+
+    static uint32_t getPort();
+    static uint32_t getPayloadLength();
+    static void getPayload(uint8_t* destination, uint32_t length);
+
 
     static void appendMacCommand(macCommand theMacCommand);
     static void getReceivedDownlinkMessage();
@@ -188,6 +194,8 @@ class LoRaWAN {
     static uint32_t receivedMic();
     static bool isValidDownlinkFrameCount(frameCount testFrameCount);
     static messageType decodeMessage();
+
+
 
     // #############################################################
     // ### Other Helper functions                                ###
