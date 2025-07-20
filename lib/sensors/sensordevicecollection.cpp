@@ -59,30 +59,32 @@ void sensorDeviceCollection::set(uint32_t deviceIndex, uint32_t channelIndex, ui
 
 void sensorDeviceCollection::startSampling() {
     for (auto index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
-        if (isValid(index)) {
-            if (needsSampling(index)) {
-                switch (static_cast<sensorDeviceType>(index)) {
-                    case sensorDeviceType::battery:
-                        battery::startSampling();
-                        break;
-                    case sensorDeviceType::bme680:
-                        bme680::startSampling();
-                        break;
-                    case sensorDeviceType::sht40:
-                        sht40::startSampling();
-                        break;
-                    case sensorDeviceType::tsl2591:
-                        tsl2591::startSampling();
-                        break;
-                    case sensorDeviceType::scd40:
-                        scd40::startSampling();
-                        break;
-                    // Add more types of sensors here
-                    default:
-                        break;
-                }
-            }
+        if (isValid(index) && needsSampling(index)) {
+            startSampling(static_cast<sensorDeviceType>(index));
         }
+    }
+}
+
+void sensorDeviceCollection::startSampling(sensorDeviceType aDeviceType) {
+    switch (aDeviceType) {
+        case sensorDeviceType::battery:
+            battery::startSampling();
+            break;
+        case sensorDeviceType::bme680:
+            bme680::startSampling();
+            break;
+        case sensorDeviceType::sht40:
+            sht40::startSampling();
+            break;
+        case sensorDeviceType::tsl2591:
+            tsl2591::startSampling();
+            break;
+        case sensorDeviceType::scd40:
+            scd40::startSampling();
+            break;
+        // Add more types of sensors here
+        default:
+            break;
     }
 }
 
@@ -113,39 +115,28 @@ void sensorDeviceCollection::run() {
     }
 }
 
+bool sensorDeviceCollection::isSamplingReady(sensorDeviceType aDeviceType) {
+    switch (aDeviceType) {
+        case sensorDeviceType::battery:
+            return (battery::getState() == sensorDeviceState::sleeping);
+        case sensorDeviceType::bme680:
+            return (bme680::getState() == sensorDeviceState::sleeping);
+        case sensorDeviceType::sht40:
+            return (sht40::getState() == sensorDeviceState::sleeping);
+        case sensorDeviceType::tsl2591:
+            return (tsl2591::getState() == sensorDeviceState::sleeping);
+        case sensorDeviceType::scd40:
+            return (scd40::getState() == sensorDeviceState::sleeping);
+        // Add more types of sensors here
+        default:
+            return true;
+    }
+}
+
 bool sensorDeviceCollection::isSamplingReady() {
     for (auto index = 0U; index < static_cast<uint32_t>(sensorDeviceType::nmbrOfKnownDevices); index++) {
-        if (present[index]) {
-            switch (static_cast<sensorDeviceType>(index)) {
-                case sensorDeviceType::battery:
-                    if (battery::getState() != sensorDeviceState::sleeping) {
-                        return false;
-                    }
-                    break;
-                case sensorDeviceType::bme680:
-                    if (bme680::getState() != sensorDeviceState::sleeping) {
-                        return false;
-                    }
-                    break;
-                case sensorDeviceType::sht40:
-                    if (sht40::getState() != sensorDeviceState::sleeping) {
-                        return false;
-                    }
-                    break;
-                case sensorDeviceType::tsl2591:
-                    if (tsl2591::getState() != sensorDeviceState::sleeping) {
-                        return false;
-                    }
-                    break;
-                case sensorDeviceType::scd40:
-                    if (scd40::getState() != sensorDeviceState::sleeping) {
-                        return false;
-                    }
-                    break;
-                // Add more types of sensors here
-                default:
-                    break;
-            }
+        if ((present[index]) && (!isSamplingReady(static_cast<sensorDeviceType>(index)))) {
+            return false;
         }
     }
     return true;

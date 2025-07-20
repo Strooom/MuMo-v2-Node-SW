@@ -459,117 +459,119 @@ void mainController::runCli() {
             break;
 
         default:
-            if (power::hasUsbPower()) {
-                if (cli::hasCommand()) {
-                    cliCommand theCommand;
-                    cli::getCommand(theCommand);
-                    switch (theCommand.commandHash) {
-                        case cliCommand::prompt:
-                            showPrompt();
-                            break;
-
-                        case cliCommand::help:
-                            showHelp();
-                            break;
-
-                        case cliCommand::enableLogging:
-                            cli::sendResponse("logging enabled\n");
-                            logging::enable(logging::destination::uart2);
-                            break;
-
-                        case cliCommand::disableLogging:
-                            cli::sendResponse("logging disabled\n");
-                            logging::disable(logging::destination::uart2);
-                            break;
-
-                        case cliCommand::enableRadio:
-                            LoRaWAN::setEnableRadio(true);
-                            cli::sendResponse("radio enabled\n");
-                            break;
-
-                        case cliCommand::disableRadio:
-                            LoRaWAN::setEnableRadio(false);
-                            cli::sendResponse("radio disabled\n");
-                            break;
-
-                        case cliCommand::getDeviceStatus:
-                            showDeviceStatus();
-                            break;
-
-                        case cliCommand::getMeasurementsStatus:
-                            showMeasurementsStatus();
-                            break;
-
-                        case cliCommand::getMeasurements:
-                            if (theCommand.nmbrOfArguments == 0) {
-                                showMeasurements();
-                            }
-                            if (theCommand.nmbrOfArguments == 1) {
-                                if (strncmp(theCommand.arguments[0], "csv", 3) == 0) {
-                                    showMeasurementsCsv();
-                                    break;
-                                } else {
-                                    cli::sendResponse("invalid argument\n");
-                                    break;
-                                }
-                            } else {
-                                cli::sendResponse("invalid number of arguments\n");
-                            }
-                            break;
-
-                        case cliCommand::getLoRaWANStatus:
-                            showNetworkStatus();
-                            break;
-
-                        case cliCommand::resetMacLayer:
-                            LoRaWAN::resetMacLayer();
-                            cli::sendResponse("mac layer reset\n");
-                            break;
-
-                        case cliCommand::setDeviceAddress:
-                            setDeviceAddress(theCommand);
-                            break;
-
-                        case cliCommand::setNetworkKey:
-                            setNetworkKey(theCommand);
-                            break;
-
-                        case cliCommand::setApplicationKey:
-                            setApplicationKey(theCommand);
-                            break;
-
-                        case cliCommand::setName:
-                            setName(theCommand);
-                            break;
-
-                        case cliCommand::setBattery:
-                            setBatteryType(theCommand);
-                            break;
-
-                        case cliCommand::setRadio:
-                            setRadioType(theCommand);
-                            break;
-
-                        case cliCommand::setSensor:
-                            setSensor(theCommand);
-                            break;
-
-                        case cliCommand::setDisplay:
-                            setDisplay(theCommand);
-                            break;
-
-                        case cliCommand::softwareReset:
-                            initialize();
-                            break;
-
-                        default:
-                            cli::sendResponse("unknown command : ");
-                            cli::sendResponse(theCommand.commandAsString);
-                            cli::sendResponse("\n");
-                            break;
-                    }
-                }
+            if (power::hasUsbPower() && cli::hasCommand()) {
+                cliCommand theCommand;
+                cli::getCommand(theCommand);
+                runCli(theCommand);
             }
+            break;
+    }
+}
+
+void mainController::runCli(const cliCommand& theCommand) {
+    switch (theCommand.commandHash) {
+        case cliCommand::prompt:
+            showPrompt();
+            break;
+
+        case cliCommand::help:
+            showHelp();
+            break;
+
+        case cliCommand::enableLogging:
+            cli::sendResponse("logging enabled\n");
+            logging::enable(logging::destination::uart2);
+            break;
+
+        case cliCommand::disableLogging:
+            cli::sendResponse("logging disabled\n");
+            logging::disable(logging::destination::uart2);
+            break;
+
+        case cliCommand::enableRadio:
+            LoRaWAN::setEnableRadio(true);
+            cli::sendResponse("radio enabled\n");
+            break;
+
+        case cliCommand::disableRadio:
+            LoRaWAN::setEnableRadio(false);
+            cli::sendResponse("radio disabled\n");
+            break;
+
+        case cliCommand::getDeviceStatus:
+            showDeviceStatus();
+            break;
+
+        case cliCommand::getMeasurementsStatus:
+            showMeasurementsStatus();
+            break;
+
+        case cliCommand::getMeasurements:
+            if (theCommand.nmbrOfArguments == 0) {
+                showMeasurements();
+            }
+            if (theCommand.nmbrOfArguments == 1) {
+                if (strncmp(theCommand.arguments[0], "csv", 3) == 0) {
+                    showMeasurementsCsv();
+                    break;
+                } else {
+                    cli::sendResponse("invalid argument\n");
+                    break;
+                }
+            } else {
+                cli::sendResponse("invalid number of arguments\n");
+            }
+            break;
+
+        case cliCommand::getLoRaWANStatus:
+            showNetworkStatus();
+            break;
+
+        case cliCommand::resetMacLayer:
+            LoRaWAN::resetMacLayer();
+            cli::sendResponse("mac layer reset\n");
+            break;
+
+        case cliCommand::setDeviceAddress:
+            setDeviceAddress(theCommand);
+            break;
+
+        case cliCommand::setNetworkKey:
+            setNetworkKey(theCommand);
+            break;
+
+        case cliCommand::setApplicationKey:
+            setApplicationKey(theCommand);
+            break;
+
+        case cliCommand::setName:
+            setName(theCommand);
+            break;
+
+        case cliCommand::setBattery:
+            setBatteryType(theCommand);
+            break;
+
+        case cliCommand::setRadio:
+            setRadioType(theCommand);
+            break;
+
+        case cliCommand::setSensor:
+            setSensor(theCommand);
+            break;
+
+        case cliCommand::setDisplay:
+            setDisplay(theCommand);
+            break;
+
+        case cliCommand::softwareReset:
+            initialize();
+            break;
+
+        default:
+            cli::sendResponse("unknown command : ");
+            cli::sendResponse(theCommand.commandAsString);
+            cli::sendResponse("\n");
             break;
     }
 }
@@ -984,9 +986,8 @@ void mainController::setSensor(const uint8_t* payload, const uint32_t payloadLen
         return;
     }
     uint32_t tmpOversamplingIndex = payload[2];
-    ;
     uint32_t tmpPrescalerIndex = payload[3];
-    ;
+
     if (tmpPrescalerIndex > sensorChannel::maxPrescalerIndex) {
         tmpPrescalerIndex = sensorChannel::maxPrescalerIndex;
     }
