@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 enum class applicationEvent : uint8_t {
-    none = 0x00,        // when an eventBuffer underflows, it pops this dummy event
     usbConnected,
     usbRemoved,
     realTimeClockTick,
@@ -18,7 +17,9 @@ enum class applicationEvent : uint8_t {
     sx126xCadEnd,
     sx126xTxComplete,
     sx126xRxComplete,
-    sx126xTimeout,
+    sx126xTimeout
 };
+
+static constexpr uint8_t nmbrOfApplicationEvents = static_cast<uint8_t>(applicationEvent::sx126xTimeout) + 1;
 
 const char* toString(applicationEvent anEvent);

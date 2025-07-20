@@ -1,0 +1,21 @@
+#include <mainControllerFiniteStateMachine.hpp>
+#include <logging.hpp>
+
+void mainControllerFiniteStateMachine::run(mainState state) {
+}
+
+void mainControllerFiniteStateMachine::run(mainState state, applicationEvent event) {
+    if (onExitState[static_cast<uint8_t>(state)] != nullptr) {
+        onExitState[static_cast<uint8_t>(state)]();
+    }
+    if (onEventInState[static_cast<uint8_t>(state)][static_cast<uint8_t>(event)] != nullptr) {
+        onEventInState[static_cast<uint8_t>(state)][static_cast<uint8_t>(event)]();
+    }
+    logging::snprintf(logging::source::applicationEvents, "mainController stateChange : %s[%u] -> ", toString(state), static_cast<uint32_t>(state));
+    state = nextState[static_cast<uint8_t>(state)][static_cast<uint8_t>(event)];
+    logging::snprintf(logging::source::applicationEvents, "%s[%u]\n", toString(state), static_cast<uint32_t>(state));
+
+    if (onEntryState[static_cast<uint8_t>(state)] != nullptr) {
+        onEntryState[static_cast<uint8_t>(state)]();
+    }
+}

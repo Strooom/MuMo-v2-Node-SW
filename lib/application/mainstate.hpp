@@ -12,8 +12,9 @@ enum class mainState : uint32_t {
     idle,
     sampling,
     networking,
-    fatalError,
-    test
+    fatalError
 };
+
+static constexpr uint8_t nmbrOfMainStates = static_cast<uint8_t>(mainState::fatalError) + 1;
 
 const char* toString(const mainState aState);

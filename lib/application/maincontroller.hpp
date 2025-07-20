@@ -21,8 +21,6 @@ class mainController {
   public:
     mainController() = delete;
     static void initialize();
-    static void initializeLogging();
-    static void initializeNonVolatileStorage();
     static void initializeName();
     static void initializeBattery();
     static void initializeDisplay();
@@ -84,4 +82,6 @@ class mainController {
     static void setSensor(const uint8_t* payload, const uint32_t payloadLength);
     static void setDisplay(const uint8_t* payload, const uint32_t payloadLength);
     static void handleDownLink(const uint8_t port, const uint8_t* payload, const uint32_t payloadLength);
+
+    friend class mainControllerFiniteStateMachine;
 };
