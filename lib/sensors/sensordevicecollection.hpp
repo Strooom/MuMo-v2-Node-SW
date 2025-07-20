@@ -34,8 +34,10 @@ class sensorDeviceCollection {
     static bool needsSampling(uint32_t deviceIndex, uint32_t channelIndex);
 
     static void startSampling();
+    static void startSampling(sensorDeviceType aDeviceType);
 
     static bool isSamplingReady();
+    static bool isSamplingReady(sensorDeviceType aDeviceType);
 
     static bool hasNewMeasurements();
     static bool hasNewMeasurements(uint32_t deviceIndex);

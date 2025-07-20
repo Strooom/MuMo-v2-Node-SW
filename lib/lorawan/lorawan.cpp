@@ -892,7 +892,6 @@ void LoRaWAN::removeNonStickyMacStuff() {
 
     macOut.initialize();
     macOut.append(tmpMacOut.asUint8Ptr(), tmpMacOut.getLevel());
-    // TODO : if we have sticky MACstuff, we could append a linkcheckrequest and thus force the LNS to send us a downlink, which confirms the sticky MAC stuff...
 }
 
 void LoRaWAN::processLinkCheckAnswer() {
@@ -901,7 +900,7 @@ void LoRaWAN::processLinkCheckAnswer() {
     gatewayCount = macIn[2];                            // GwCnt : number of gateways that successfully received the last uplink
     macIn.consume(linkCheckAnswerLength);               // consume all bytes
 
-    logging::snprintf(logging::source::lorawanMac, "LinkCheckAnswer : margin = %d, gatewayCount = %d \n", margin, gatewayCount);        // TODO : For the time being, we just show this info in the logging. Later we could use it to show the quality of the link on the display
+    logging::snprintf(logging::source::lorawanMac, "LinkCheckAnswer : margin = %d, gatewayCount = %d \n", margin, gatewayCount);
 }
 
 void LoRaWAN::processLinkAdaptiveDataRateRequest() {
@@ -912,12 +911,11 @@ void LoRaWAN::processLinkAdaptiveDataRateRequest() {
     macIn.consume(linkAdaptiveDataRateRequestLength);
     logging::snprintf(logging::source::lorawanMac, "LinkAdaptiveDataRateRequest : 0x%02X, 0x%04X, 0x%02X \n", dataRateTxPower, chMask, redundancy);
 
-    // TODO : currently I don't understand the purpose of this mac command, so I just ignore it. Maybe it's more useful in US-915 than EU-868
 
     constexpr uint32_t linkAdaptiveDataRateAnswerLength{2};        // commandId, status
     uint8_t answer[linkAdaptiveDataRateAnswerLength];
     answer[0] = static_cast<uint8_t>(macCommand::linkAdaptiveDataRateAnswer);
-    answer[1] = static_cast<uint8_t>(0);        // TODO : For the time being we just reject this stupid mac command
+    answer[1] = static_cast<uint8_t>(0);
     macOut.append(answer, linkAdaptiveDataRateAnswerLength);
     logging::snprintf(logging::source::lorawanMac, "linkAdaptiveDataRateAnswer : 0x%02X \n", answer[1]);
 }
@@ -928,7 +926,6 @@ void LoRaWAN::processDutyCycleRequest() {
     macIn.consume(dutyCycleRequestLength);
     logging::snprintf(logging::source::lorawanMac, "DutyCycleRequest : 0x%02X \n", dutyCycle);
 
-    // TODO : until we implement dutyCycle management, we ignore this command
 
     constexpr uint32_t dutyCycleAnswerLength{1};
     uint8_t answer[dutyCycleAnswerLength];

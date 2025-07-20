@@ -69,3 +69,10 @@ If the application wants to send certain MAC commands, or needs to respond to re
 When a received LoRaWAN message contains MAC commands, they are stored in **macIn**, and processed afterwards.
 
 Some MAC commands are 'sticky', ie. they need to be repeated on every transmission until confirmed by a received message.
+
+
+# Could Do
+// TODO : if we have sticky MACstuff, we could append a linkcheckrequest and thus force the LNS to send us a downlink, which confirms the sticky MAC stuff...
+processLinkAdaptiveDataRateRequest    // TODO : currently I don't understand the purpose of this mac command, so I just ignore it. Maybe it's more useful in US-915 than EU-868
+processDutyCycleRequest    // TODO : until we implement dutyCycle management, we ignore this command
+        processLinkCheckAnswer// TODO : For the time being, we just show this info in the logging. Later we could use it to show the quality of the link on the display

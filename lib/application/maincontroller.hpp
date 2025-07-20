@@ -32,6 +32,7 @@ class mainController {
     static void runStateMachine();
     static void handleEvents();
     static void runCli();
+    static void runCli(const cliCommand& aCommand);
     static void runDisplayUpdate();
     static void runSleep();
 
