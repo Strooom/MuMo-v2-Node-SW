@@ -28,6 +28,7 @@ class battery {
     static bool samplingIsReady();
     static uint32_t readSample();
     static float voltageFromRaw(const uint32_t rawADC);
+    static uint8_t stateOfChargeLoRaWAN();
 #ifndef unitTesting
 
   private:

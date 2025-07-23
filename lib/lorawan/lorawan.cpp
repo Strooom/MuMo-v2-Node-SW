@@ -12,6 +12,7 @@
 #include <ctime>
 #include <realtimeclock.hpp>
 #include <lptim.hpp>
+#include <battery.hpp>
 
 #ifndef generic
 #include "main.h"
@@ -54,7 +55,7 @@ txRxCycleState LoRaWAN::state{txRxCycleState::idle};
 linearBuffer<LoRaWAN::macInOutLength> LoRaWAN::macIn;
 linearBuffer<LoRaWAN::macInOutLength> LoRaWAN::macOut;
 
-uint32_t LoRaWAN::margin{0};
+uint32_t LoRaWAN::uplinkMargin{0};
 uint32_t LoRaWAN::gatewayCount{0};
 
 #pragma endregion
@@ -896,11 +897,11 @@ void LoRaWAN::removeNonStickyMacStuff() {
 
 void LoRaWAN::processLinkCheckAnswer() {
     constexpr uint32_t linkCheckAnswerLength{3};        // commandId, margin, GwCnt
-    margin       = macIn[1];                            // margin : [0..254] = value in dB above the demodulation floor -> the higher the better,  margin [255] = reserved
+    uplinkMargin = macIn[1];                            // margin : [0..254] = value in dB above the demodulation floor -> the higher the better,  margin [255] = reserved
     gatewayCount = macIn[2];                            // GwCnt : number of gateways that successfully received the last uplink
     macIn.consume(linkCheckAnswerLength);               // consume all bytes
 
-    logging::snprintf(logging::source::lorawanMac, "LinkCheckAnswer : margin = %d, gatewayCount = %d \n", margin, gatewayCount);
+    logging::snprintf(logging::source::lorawanMac, "LinkCheckAnswer : margin = %d, gatewayCount = %d \n", uplinkMargin, gatewayCount);
 }
 
 void LoRaWAN::processLinkAdaptiveDataRateRequest() {
@@ -910,7 +911,6 @@ void LoRaWAN::processLinkAdaptiveDataRateRequest() {
     uint8_t redundancy      = macIn[4];                                                                        // Redundancy : [0..15] = the redundancy used for the last transmission
     macIn.consume(linkAdaptiveDataRateRequestLength);
     logging::snprintf(logging::source::lorawanMac, "LinkAdaptiveDataRateRequest : 0x%02X, 0x%04X, 0x%02X \n", dataRateTxPower, chMask, redundancy);
-
 
     constexpr uint32_t linkAdaptiveDataRateAnswerLength{2};        // commandId, status
     uint8_t answer[linkAdaptiveDataRateAnswerLength];
@@ -925,7 +925,6 @@ void LoRaWAN::processDutyCycleRequest() {
     uint8_t dutyCycle = macIn[1];
     macIn.consume(dutyCycleRequestLength);
     logging::snprintf(logging::source::lorawanMac, "DutyCycleRequest : 0x%02X \n", dutyCycle);
-
 
     constexpr uint32_t dutyCycleAnswerLength{1};
     uint8_t answer[dutyCycleAnswerLength];
@@ -958,8 +957,14 @@ void LoRaWAN::processDeviceStatusRequest() {
     constexpr uint32_t deviceStatusAnswerLength{3};        // commandId, batteryLevel, margin
     uint8_t answer[deviceStatusAnswerLength];
     answer[0] = static_cast<uint8_t>(macCommand::deviceStatusAnswer);
-    answer[1] = static_cast<uint8_t>(255);        // The end-device was not able to measure the battery level
-    answer[2] = static_cast<uint8_t>(10);         // TODO : implement real value here
+    answer[1] = battery::stateOfChargeLoRaWAN();
+    answer[2] = static_cast<uint8_t>(10);        // TODO : implement real value here
+
+    // int8_t snr_db = snr_raw / 4;              // SNR in full dB
+    // if (snr_db < -32) snr_db = -32;
+    // if (snr_db >  31) snr_db = 31;
+    // uint8_t margin = ((uint8_t)snr_db) & 0x3F;  // zero out bits 7 and 6
+
     macOut.append(answer, deviceStatusAnswerLength);
     logging::snprintf(logging::source::lorawanMac, "DeviceStatusAnswer : 0x%02X, 0x%02X \n", answer[1], answer[2]);
 }
@@ -1096,13 +1101,13 @@ void LoRaWAN::sendUplink(uint8_t theFramePort, const uint8_t applicationData[], 
 }
 
 void LoRaWAN::getReceivedDownlinkMessage() {
-    // sx126x::getReceivedMessage();
-    //  downlinkMessage.processDownlinkMessage(applicationPayloadReceived);
     goTo(txRxCycleState::idle);
 }
 
 messageType LoRaWAN::decodeMessage() {
+    // sx126x::getPacketSnr();
     // 1. read the raw message from the radio receiveBuffer
+
     uint8_t response[2];
     sx126x::executeGetCommand(sx126x::command::getRxBufferStatus, response, 2);
     loRaPayloadLength = response[0];

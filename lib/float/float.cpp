@@ -4,11 +4,11 @@
 #include <float.hpp>
 
 int32_t integerPart(const float value, const uint32_t decimals) {
-    return (static_cast<int>(round(value * factorFloat(decimals))) / factorInt(decimals));
+    return static_cast<int32_t>(roundf(value * factorFloat(decimals))) / static_cast<int32_t>(factorInt(decimals));
 }
 
 uint32_t fractionalPart(const float value, const uint32_t decimals) {
-    return static_cast<int>(round(value * factorFloat(decimals))) - (integerPart(value, decimals) * factorInt(decimals));
+    return abs(static_cast<int32_t>(roundf(value * factorFloat(decimals))) - (integerPart(value, decimals) * factorInt(decimals)));
 }
 
 float factorFloat(const uint32_t decimals) {

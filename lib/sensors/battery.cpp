@@ -6,8 +6,8 @@
 #include <sensordevicetype.hpp>
 #include <battery.hpp>
 #include <chargefromvoltage.hpp>
-#include <logging.hpp>
 #include <float.hpp>
+#include <power.hpp>
 
 #ifndef generic
 #include <main.h>
@@ -93,4 +93,21 @@ float battery::voltageFromRaw(const uint32_t rawADC) {
 #else
     return mockBatteryVoltage;
 #endif
+}
+
+uint8_t battery::stateOfChargeLoRaWAN() {
+    if (power::hasUsbPower()) {
+        return 0x00;        // LoRaWAN® L2 1.0.4 Specification - line 1106 : The end-device is connected to an external power source.
+    }
+    if (!channels[stateOfCharge].isActive()) {
+        return 0xFF;        // LoRaWAN® L2 1.0.4 Specification - line 1106 : The end-device was not able to measure the battery level. (because this sensorC channel is not active)
+    }
+    int32_t result = static_cast<int32_t>(channels[stateOfCharge].value() * 254.0F);
+    if (result > 254) {
+        result = 254;
+    }
+    if (result < 1) {
+        result = 1;
+    }
+    return static_cast<uint8_t>(result);
 }
