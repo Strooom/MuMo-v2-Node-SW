@@ -85,8 +85,11 @@ class LoRaWAN {
     static void dumpRawMessagePayload();
     static void dumpTransmitSettings();
 
-    static uint32_t margin;
+    static uint32_t uplinkMargin;
+    static uint32_t downlinkMargin;
     static uint32_t gatewayCount;
+
+
     static uint32_t currentDataRateIndex;
     static deviceAddress DevAddr;
     static aesKey applicationKey;

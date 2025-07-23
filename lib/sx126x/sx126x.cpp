@@ -39,17 +39,12 @@ uint8_t sx126x::getStatus() {
 }
 
 float sx126x::getPacketSnr() {
-    // RssiPkt = (-1 * response[0])/2;
-    // SnrPkt = response[1] / 4;
-    // SignalRssiPkt = -response[2]/2;
-
     uint8_t response[3];
     sx126x::executeGetCommand(sx126x::command::getPacketStatus, response, 3);
-
-    int8_t snr;
-    std::memcpy(&snr, &response[1], 1);
-
-    return (static_cast<float>(snr) / 4.0f);
+    int8_t snrAsByte;
+    std::memcpy(&snrAsByte, &response[1], 1);
+    float result = static_cast<float>(snrAsByte) / 4.0F;
+    return result;
 }
 
 void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t* payload, uint32_t payloadLength) {
