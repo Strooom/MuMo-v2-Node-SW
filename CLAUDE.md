@@ -117,6 +117,8 @@ The firmware uses a layered abstraction approach:
 - Display abstraction (lib/display/) for optional SPI e-paper screen
 - Power management with USB detection and low-power modes
 
+**Detailed documentation**: [lib/gpio/README.md](lib/gpio/README.md) - GPIO configuration and control, [lib/power/README.md](lib/power/README.md) - Power management and low-power modes.
+
 ### Sensor Management
 
 The sensor subsystem (lib/sensors/) provides:
@@ -125,6 +127,8 @@ The sensor subsystem (lib/sensors/) provides:
 - Measurement aggregation into groups with timestamps
 - Storage of measurements in non-volatile memory (EEPROM)
 - Flexible mapping: display lines and LoRaWAN payloads can show any sensor channel
+
+**Detailed documentation**: [lib/sensors/README.md](lib/sensors/README.md) - Sensor architecture, channel configuration, and measurement handling.
 
 ### Data Storage
 
@@ -152,6 +156,8 @@ Optional e-paper display support (lib/display/):
 - Bitmap and QR code rendering capabilities
 - Updates only when content changes to save power
 
+**Detailed documentation**: [lib/display/README.md](lib/display/README.md) - Display system architecture and rendering pipeline, [lib/qrcode/README.md](lib/qrcode/README.md) - QR code generation, [lib/float/README.md](lib/float/README.md) - Floating-point to string conversion for display.
+
 ### Command Line Interface
 
 USB-based CLI (lib/logging/cli.cpp) provides:
@@ -160,6 +166,8 @@ USB-based CLI (lib/logging/cli.cpp) provides:
 - Logging control
 - Measurement export (plain text and CSV formats)
 - All commands parsed and executed via `mainController::runCli()`
+
+**Detailed documentation**: [lib/logging/README.md](lib/logging/README.md) - Logging system and CLI command reference.
 
 ## Build System Details
 
