@@ -1,4 +1,4 @@
-# eps needed to add interrupt to a GPIO pin
+# Steps needed to add interrupt to a GPIO pin
 
 1. set the mode of the pin example : 
     GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
